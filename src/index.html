@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="./output.css" rel="stylesheet" />
+    <link rel="stylesheet" href="./main.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link
       rel="shortcut icon"
       href="./assets//images/favicon.png"
@@ -14,11 +18,14 @@
       src="https://kit.fontawesome.com/28702e0585.js"
       crossorigin="anonymous"
     ></script>
+    <script src="./index.js" defer></script>
     <title>DocMaster</title>
   </head>
   <body>
-    <header>
-      <nav class="flex items-center justify-between p-4 bg-white shadow-md  w-full  bg-[radial-gradient(#EFA751_1px,transparent_1px)] [background-size:16px_16px]">
+    <header class="pb-10">
+      <nav
+        class="flex items-center justify-between p-4 bg-white shadow-md w-full bg-[radial-gradient(#EFA751_1px,transparent_1px)] [background-size:16px_16px]"
+      >
         <div class="logo">
           <a href="index.html">
             <img
@@ -30,21 +37,42 @@
         </div>
         <div class="menu flex items-center justify-center">
           <ul class="flex items-center justify-between space-x-5">
-            <li>
-              <i class="fa-solid fa-house"></i>
-              <a href="index.html">Home</a>
+            <li class="nav-link">
+              <a href="index.html" class="font-bold"
+              >
+                <i class="fa-solid fa-house"></i>
+                Home</a
+              >
             </li>
-            <li>
-              <i class="fa-solid fa-magnifying-glass"></i>
-              <a href="features.html">Recherche</a>
+            <li class="nav-link">
+              <a
+                href="rechercher.html"
+                class="group flex items-center gap-2 text-orange-300 font-bold hover:bg-[#eca85c] hover:text-white p-2 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-110"
+              >
+                <i
+                  class="fa-solid fa-magnifying-glass text-black group-hover:text-white transition-colors duration-300"
+                ></i>
+                Recherche
+              </a>
             </li>
-            <li>
-              <i class="fa-solid fa-box"></i>
-              <a href="features.html">object</a>
+
+            <li class="nav-link">
+              <a
+                href="#"
+                class="group flex items-center gap-2 text-orange-300 font-bold hover:bg-[#eca85c] hover:text-white p-2 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-110"
+              >
+                <i
+                  class="fa-solid fa-box text-black group-hover:text-white transition-colors duration-300"
+                ></i>
+                Object
+              </a>
             </li>
-            <li>
-              <i class="fa-solid fa-file"></i>
-              <a href="features.html">document</a>
+            <li class="nav-link">
+              <a
+                href="features.html"
+                class="group flex items-center gap-2 text-orange-300 font-bold hover:bg-[#eca85c] hover:text-white p-2 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-110"
+                ><i class="fa-solid fa-file text-black group-hover:text-white transition-colors duration-300"></i> document</a
+              >
             </li>
           </ul>
         </div>

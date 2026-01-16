@@ -1,0 +1,15 @@
+/* main.css */
+.nav-link.active a {
+  background-color: #eca85c;
+  color: white;
+  font-weight: bold;
+  border-bottom: 2px solid #eca85c;
+  padding: 10px;
+  border-radius: 10px;
+}
+.clip-curve {
+  clip-path: ellipse(70% 100% at 0% 0%);
+}
+body {
+    font-family: 'Poppins', sans-serif;
+  }

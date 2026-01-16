@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="./output.css" rel="stylesheet" />
+    <link rel="stylesheet" href="./main.css" />
+    <link rel="shortcut icon" href="./assets//images/favicon.png" type="image/x-icon" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome Free CDN -->
+    <script src="https://kit.fontawesome.com/28702e0585.js" crossorigin="anonymous"></script>
+    <script src="./index.js" defer></script>
+    <title>DocMaster</title>
+</head>
+
+<body class="relative min-h-screen bg-white overflow-x-hidden">
+    <style>
+        .search-input:focus,
+        .form-select:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        }
+    </style>
+    <div class="mask-radial-at-top-left mask-radial-from-100% bg-orange-300">
+    </div>
+
+    <div class="absolute inset-0 pointer-events-none"
+        style="background-image: radial-gradient(#EFA751 1px, transparent 1px); background-size: 16px 16px; z-index: 1;">
+    </div>
+
+    <div class="relative" style="z-index: 10;">
+        <header class="pb-5">
+            <nav
+                class="fixed z-1000 flex w-full items-center rounded-xl justify-between p-4 bg-white shadow-md w-full bg-[radial-gradient(#EFA751_1px,transparent_1px)] [background-size:16px_16px]">
+                <div class="logo">
+                    <a href="index.html">
+                        <img src="./assets/images/logo.png" alt="DocMaster Logo" class="h-12" />
+                    </a>
+                </div>
+                <div class="menu flex items-center justify-center">
+                    <ul class="flex items-center justify-between space-x-5">
+                        <li class="nav-link">
+                            <a href="index.html"
+                                class="group flex items-center gap-2 text-orange-300 font-bold hover:bg-[#eca85c] hover:text-white p-2 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-110">
+                                <i
+                                    class="fa-solid fa-house text-black group-hover:text-white transition-colors duration-300"></i>
+                                Home</a>
+                        </li>
+                        <li class="nav-link">
+                            <a href="rechercher.html" class="font-bold">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                Recherche
+                            </a>
+                        </li>
+
+                        <li class="nav-link">
+                            <a href="#"
+                                class="group flex items-center gap-2 text-orange-300 font-bold hover:bg-[#eca85c] hover:text-white p-2 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-110">
+                                <i
+                                    class="fa-solid fa-box text-black group-hover:text-white transition-colors duration-300"></i>
+                                Object
+                            </a>
+                        </li>
+                        <li class="nav-link">
+                            <a href="features.html"
+                                class="group flex items-center gap-2 text-orange-300 font-bold hover:bg-[#eca85c] hover:text-white p-2 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-110"><i
+                                    class="fa-solid fa-file text-black group-hover:text-white transition-colors duration-300"></i>
+                                document</a>
+                        </li>
+                    </ul>
+                </div>
+                <a href="login.html"
+                    class="bg-orange-300 p-1 rounded-full shadow-md hover:bg-orange-400 transition duration-300 transform hover:-translate-y-2 hover:scale-110 inline-block">
+                    <span class="text-white font-semibold">DM</span>
+                </a>
+            </nav>
+        </header>
+        <main class="relative z-10 px-4">
+            <section class="container mx-auto mt-20">
+                <div class="max-w-4xl mx-auto">
+                    <!-- En-tête -->
+
+
+                    <!-- Formulaire de recherche -->
+                    <div class="glass-effect rounded-2xl shadow-2xl p-6 md:p-8 mb-8">
+
+
+                        <form class="space-y-6">
+                            <div class=" grid grid-cols-4 md:grid-cols-5 gap-4 lg:grid-cols-10 space-x-2 lg:justify-between">
+                                <div
+                                    class="px-4 col-span-3 md:col-span-4 lg:col-span-9  space-x-1 flex items-center focus:outline-none focus:border-blue-500 transition-colors  border border-gray-300 rounded-lg">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                                    <input type="text" id="search" placeholder="Rechercher des documents (nom, type, propriétaire...)"
+                                        class="w-full py-3 search-input border-none focus:outline-none ">
+                                </div>
+
+                                <!-- Filtres en ligne sur desktop -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#ECA85C] p-5 rounded-xl">
+                                    <i class="fa-solid fa-calendar-days"></i>
+
+                                    <!-- Filtre par période -->
+
+                                </div>
+
+                            </div>
+                            <!-- Champ de recherche principal -->
+
+
+
+                            <!-- Boutons d'action -->
+                            <div class="flex  sm:flex-row gap-4 pt-4">
+                                <button type="submit"
+                                    class="rounded-2xl border px-5 border-gray-300">
+                                   
+                                    Tous
+                                </button>
+
+                                <button type="reset"
+                                    class="flex-1 px-6 py-3 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 flex items-center justify-center gap-2">
+                                    
+                                    type
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </section>
+            <section>
+                <div id="document-container" class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 p-6">
+  </div>
+            </section>
+        </main>
+    </div>
+</body>
+<footer class="relative bg-[#1a1a1a] text-white py-12 px-6 overflow-hidden bg-[radial-gradient(#EFA751_1px,transparent_1px)] [background-size:16px_16px]">
+  <div class="absolute inset-0 bg-black/40 pointer-events-none"></div>
+
+  <div class="relative z-10 max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 border-b border-gray-700 pb-10">
+      
+      <div class="lg:col-span-1">
+        <div class="flex items-center gap-2 mb-4">
+          <img src="./assets/images/logo.png" alt="Logo" class="h-8">
+          <span class="text-2xl font-bold">DocMaster</span>
+        </div>
+        <p class="text-sm text-gray-300 mb-6 leading-relaxed">
+          Retrouvez vos documents perdus grâce à notre plateforme communautaire. Plus de 2000 documents déjà retrouvés !
+        </p>
+        <div class="flex gap-8">
+          <div>
+            <div class="text-2xl font-black text-gray-500">2000+</div>
+            <div class="text-[10px] uppercase font-bold text-gray-400">Documents retrouvés</div>
+          </div>
+          <div>
+            <div class="text-2xl font-black text-gray-500">500+</div>
+            <div class="text-[10px] uppercase font-bold text-gray-400">Utilisateurs actifs</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-orange-400 font-bold mb-6 text-lg">Navigation</h3>
+        <ul class="space-y-4">
+          <li><a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i class="fa-solid fa-house w-5"></i> Accueil</a></li>
+          <li><a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i class="fa-solid fa-magnifying-glass w-5"></i> Rechercher</a></li>
+          <li><a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i class="fa-solid fa-box w-5"></i> Objets perdus</a></li>
+          <li><a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i class="fa-solid fa-file-lines w-5"></i> Faire une déclaration</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="text-orange-400 font-bold mb-6 text-lg">Services</h3>
+        <ul class="space-y-4">
+          <li><a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i class="fa-solid fa-id-card w-5"></i> Cartes d'identité</a></li>
+          <li><a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i class="fa-solid fa-credit-card w-5"></i> Cartes bancaires</a></li>
+          <li><a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i class="fa-solid fa-graduation-cap w-5"></i> Diplômes</a></li>
+          <li><a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i class="fa-solid fa-key w-5"></i> Clés</a></li>
+          <li><a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i class="fa-solid fa-mobile-screen w-5"></i> Téléphones</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="text-orange-400 font-bold mb-6 text-lg">Support</h3>
+        <ul class="space-y-4">
+          <li><a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i class="fa-solid fa-circle-question w-5"></i> FAQ</a></li>
+          <li><a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i class="fa-solid fa-envelope w-5"></i> Contact</a></li>
+          <li><a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i class="fa-solid fa-shield-halved w-5"></i> Sécurité</a></li>
+          <li><a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i class="fa-solid fa-book-open w-5"></i> Guide d'utilisation</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="text-orange-400 font-bold mb-6 text-lg">Restez connecté</h3>
+        <div class="flex gap-3 mb-8">
+          <a href="#" class="w-10 h-10 bg-blue-700 flex items-center justify-center rounded-full hover:scale-110 transition"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="#" class="w-10 h-10 bg-sky-400 flex items-center justify-center rounded-full hover:scale-110 transition"><i class="fa-brands fa-twitter"></i></a>
+          <a href="#" class="w-10 h-10 bg-pink-600 flex items-center justify-center rounded-full hover:scale-110 transition"><i class="fa-brands fa-instagram"></i></a>
+          <a href="#" class="w-10 h-10 bg-green-500 flex items-center justify-center rounded-full hover:scale-110 transition"><i class="fa-brands fa-whatsapp"></i></a>
+        </div>
+        <h4 class="text-sm font-bold text-orange-400 mb-4 uppercase tracking-wider">Newsletter</h4>
+        <div class="relative">
+          <input type="email" placeholder="Votre email" class="w-full bg-white/10 border border-white/20 rounded-full py-3 px-6 outline-none focus:border-orange-400 transition text-sm">
+          <button class="absolute right-1 top-1 bottom-1 bg-orange-400 hover:bg-orange-500 px-4 rounded-full transition">
+            <i class="fa-solid fa-paper-plane text-white"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap justify-center gap-8 md:gap-16 py-8 text-sm font-medium  border-gray-700/50">
+      <div class="flex items-center gap-3"><i class="fa-solid fa-phone text-orange-400"></i> +237 672 518 313</div>
+      <div class="flex items-center gap-3"><i class="fa-solid fa-envelope text-orange-400"></i> contact@docmaster.cm</div>
+      <div class="flex items-center gap-3"><i class="fa-solid fa-location-dot text-orange-400"></i> Yaoundé, Cameroun</div>
+    </div>
+
+    <div class="flex flex-col md:row justify-between items-center pt-6 text-[12px] text-gray-400 gap-4">
+      <p>© 2025 DocMaster. Tous droits réservés.</p>
+      <div class="flex gap-6">
+        <a href="#" class="hover:text-white transition">Conditions d'utilisation</a>
+        <a href="#" class="hover:text-white transition">Politique de confidentialité</a>
+        <a href="#" class="hover:text-white transition">Mentions légales</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</html>

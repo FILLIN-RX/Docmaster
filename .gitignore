@@ -1,0 +1,24 @@
+# Dépendances Node
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environnement
+.env
+.env.*
+
+# Cache outils
+.cache/
+.parcel-cache/
+.vite/
+
+# Build temporaire (optionnel)
+dist/

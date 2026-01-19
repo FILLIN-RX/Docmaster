@@ -16,43 +16,48 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<style>
-  /* Personnalisation du calendrier pour coller à ton thème orange */
-  .flatpickr-calendar {
-    border-radius: 1rem !important;
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
-    border: 1px solid #e5e7eb !important;
-    font-family: 'Poppins', sans-serif !important;
-  }
-  .flatpickr-day.selected {
-    background: #ECA85C !important;
-    border-color: #ECA85C !important;
-  }
-  .flatpickr-months .flatpickr-month {
-    background: #ECA85C !important;
-    color: white !important;
-    fill: white !important;
-  }
-  .flatpickr-current-month .flatpickr-monthDropdown-months {
-    font-weight: 700 !important;
-  }
-</style>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+    />
+    <style>
+      /* Personnalisation du calendrier pour coller à ton thème orange */
+      .flatpickr-calendar {
+        border-radius: 1rem !important;
+        box-shadow:
+          0 20px 25px -5px rgb(0 0 0 / 0.1),
+          0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
+        border: 1px solid #e5e7eb !important;
+        font-family: "Poppins", sans-serif !important;
+      }
+      .flatpickr-day.selected {
+        background: #eca85c !important;
+        border-color: #eca85c !important;
+      }
+      .flatpickr-months .flatpickr-month {
+        background: #eca85c !important;
+        color: white !important;
+        fill: white !important;
+      }
+      .flatpickr-current-month .flatpickr-monthDropdown-months {
+        font-weight: 700 !important;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
 
-<script>
-  flatpickr("#custom-date", {
-    locale: "fr",
-    dateFormat: "d/m/Y",
-    allowInput: true,
-    disableMobile: "true", // Force le calendrier custom même sur mobile
-    onChange: function(selectedDates, dateStr, instance) {
-      console.log("Date sélectionnée : " + dateStr);
-      // Tu peux ici déclencher une action ou mettre à jour un texte
-    }
-  });
-</script>
+    <script>
+      flatpickr("#custom-date", {
+        locale: "fr",
+        dateFormat: "d/m/Y",
+        allowInput: true,
+        disableMobile: "true", // Force le calendrier custom même sur mobile
+        onChange: function (selectedDates, dateStr, instance) {
+          console.log("Date sélectionnée : " + dateStr);
+          // Tu peux ici déclencher une action ou mettre à jour un texte
+        },
+      });
+    </script>
     <!-- Font Awesome Free CDN -->
     <script
       src="https://kit.fontawesome.com/28702e0585.js"
@@ -215,7 +220,7 @@
         <section class="container mx-auto mt-20 px-4">
           <div class="max-w-4xl mx-auto">
             <div
-              class="glass-effect rounded-2xl shadow-2xl p-6 md:p-8 mb-8 bg-white/70 backdrop-blur-md"
+              class="glass-effect rounded-2xl shadow-2xl p-6 md:p-8 mb-8 bg-white/10 backdrop-blur-md"
             >
               <form class="space-y-6">
                 <div class="flex flex-col md:flex-row gap-4 items-stretch">
@@ -241,13 +246,25 @@
                     </label>
                   </div>
 
-                <div id="calendar-wrapper" class="relative min-w-[64px] flex items-center justify-center bg-[#ECA85C] hover:bg-[#d9974a] text-white rounded-xl transition-all shadow-md cursor-pointer group">
-    <input type="text" id="custom-date" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" placeholder="Sélectionner une date">
-    
-    <div class="px-6 py-4 flex items-center justify-center pointer-events-none">
-      <i class="fa-solid fa-calendar-days text-xl group-hover:scale-110 transition-transform"></i>
-    </div>
-  </div>
+                  <div
+                    id="calendar-wrapper"
+                    class="relative min-w-[64px] flex items-center justify-center bg-[#ECA85C] hover:bg-[#d9974a] text-white rounded-xl transition-all shadow-md cursor-pointer group"
+                  >
+                    <input
+                      type="text"
+                      id="custom-date"
+                      class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      placeholder="Sélectionner une date"
+                    />
+
+                    <div
+                      class="px-6 py-4 flex items-center justify-center pointer-events-none"
+                    >
+                      <i
+                        class="fa-solid fa-calendar-days text-xl group-hover:scale-110 transition-transform"
+                      ></i>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-4">

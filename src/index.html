@@ -1,173 +1,231 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="./output.css" rel="stylesheet" />
-    <link rel="stylesheet" href="./main.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="shortcut icon"
-      href="./assets//images/favicon.png"
-      type="image/x-icon"
-    />
-    <!-- Font Awesome Free CDN -->
-    <script
-      src="https://kit.fontawesome.com/28702e0585.js"
-      crossorigin="anonymous"
-    ></script>
-    <script src="./index.js" defer></script>
-    <title>DocMaster</title>
-  </head>
-  <body>
-      <body class="relative min-h-screen bg-white overflow-x-hidden">
-    <div class="fixed inset-0 pointer-events-none" style="z-index: 0">
-     
 
-      <style>
-        .search-input:focus,
-        .form-select:focus {
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
-        }
-      </style>
-      <div
-        class="mask-radial-at-top-left mask-radial-from-100% bg-orange-300"
-      ></div>
 
-      <div
-        class="absolute inset-0 pointer-events-none z-0"
-        style="
-          background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' fill='rgba(236,168,92,0.15)' viewBox='0 0 512 512'%3E%3Cpath d='M505 442.7L405.3 343a208 208 0 1 0-62.3 62.3L442.7 505a24 24 0 0 0 34-34zM208 336a128 128 0 1 1 0-256 128 128 0 0 1 0 256z'/%3E%3C/svg%3E&quot;);
-          background-repeat: repeat;
-          background-size: 8px 8px;
-        "
-      ></div>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DocMaster</title>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="./main.css" />
+
+  <!-- FontAwesome -->
+  <script src="https://kit.fontawesome.com/28702e0585.js" crossorigin="anonymous" defer></script>
+</head>
+<body class="referral-section"  >
+<div class="absolute inset-0 pointer-events-none"
+        style="background-image: radial-gradient(#EFA751 1px, transparent 1px); background-size: 16px 16px; z-index: 1;">
     </div>
 
-    <div class="relative" style="z-index: 10">
-    <header class="pb-10">
-      <nav
-          class="fixed z-1000 flex w-full items-center rounded-xl justify-between p-4 bg-white shadow-md w-full"
-        >
-          <div
-            class="absolute inset-0 pointer-events-none z-0"
-            style="
-              background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' fill='rgba(236,168,92,0.15)' viewBox='0 0 512 512'%3E%3Cpath d='M505 442.7L405.3 343a208 208 0 1 0-62.3 62.3L442.7 505a24 24 0 0 0 34-34zM208 336a128 128 0 1 1 0-256 128 128 0 0 1 0 256z'/%3E%3C/svg%3E&quot;);
-              background-repeat: repeat;
-              background-size: 8px 8px;
-            "
-          ></div>
-        <div class="logo">
-          <a href="index.html">
-            <img
-              src="./assets/images/logo.png"
-              alt="DocMaster Logo"
-              class="h-12"
-            />
-          </a>
-        </div>
-        <div class="menu flex items-center justify-center">
-          <ul class="flex items-center justify-between space-x-5">
-            <li class="nav-link">
-              <a href="index.html" class="font-bold">
-                <i class="fa-solid fa-house"></i>
-                Home</a
-              >
-            </li>
-            <li class="nav-link">
-              <a
-                href="rechercher.html"
-                class="group flex items-center gap-2 text-orange-300 font-bold hover:bg-[#eca85c] hover:text-white p-2 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-110"
-              >
-                <i
-                  class="fa-solid fa-magnifying-glass text-black group-hover:text-white transition-colors duration-300"
-                ></i>
-                Recherche
-              </a>
-            </li>
+  <!-- HERO (main background) -->
+  <div class="main-background" style="background-image: url('./assets/images/bg2.jpeg');">
+    <div class="containr">
+      <p class="main-text">
+        <span class="line1"><strong>Bienvenue,</strong> DocMaster a permis</span>
+        <span class="line2">de retrouver plus de 2000 cartes</span>
+        <span class="line3">et autres documents à ce jour</span>
+      </p>
+    </div>
+  </div>
 
-            <li class="nav-link">
-              <a
-                href="object.html"
-                class="group flex items-center gap-2 text-orange-300 font-bold hover:bg-[#eca85c] hover:text-white p-2 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-110"
-              >
-                <i
-                  class="fa-solid fa-box text-black group-hover:text-white transition-colors duration-300"
-                ></i>
-                Object
-              </a>
-            </li>
-            <li class="nav-link">
-              <a
-                href="document.html"
-                class="group flex items-center gap-2 text-orange-300 font-bold hover:bg-[#eca85c] hover:text-white p-2 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-110"
-                ><i
-                  class="fa-solid fa-file text-black group-hover:text-white transition-colors duration-300"
-                ></i>
-                document</a
-              >
-            </li>
-          </ul>
-        </div>
-        <div class="p-1">
-            <a
-              href="login.html"
-              class="bg-orange-300 p-1 rounded-full shadow-md hover:bg-orange-400 transition duration-300 transform hover:-translate-y-2 hover:scale-110 inline-block"
-            >
-              <span class="text-white font-semibold">DM</span>
-            </a>
-            <div class="relative inline-block text-left">
-              <button
-                id="langButton"
-                class="flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-gray-200 px-3 py-2 rounded-xl hover:bg-orange-50 transition-all shadow-sm"
-              >
-                <img
-                  id="currentFlag"
-                  src="https://flagcdn.com/w20/fr.png"
-                  alt="Français"
-                  class="w-5 h-auto"
-                />
-                <span class="text-sm font-bold text-gray-700">FR</span>
-                <i
-                  class="fa-solid fa-chevron-down text-[10px] text-gray-400"
-                ></i>
-              </button>
+ 
+  <!-- Documents récemment ajoutés -->
+  <div class="section-title">
+    <h2><i class="fas fa-clock"></i> Documents récemment ajoutés</h2>
+  </div>
 
-              <div
-                id="langDropdown"
-                class="hidden absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
-              >
-                <button
-                  onclick="changeLang('fr', 'https://flagcdn.com/w20/fr.png')"
-                  class="flex items-center gap-3 w-full px-4 py-3 hover:bg-orange-50 transition"
-                >
-                  <img
-                    src="https://flagcdn.com/w20/fr.png"
-                    class="w-5"
-                    alt="FR"
-                  />
-                  <span class="text-sm">Français</span>
-                </button>
-                <button
-                  onclick="changeLang('en', 'https://flagcdn.com/w20/gb.png')"
-                  class="flex items-center gap-3 w-full px-4 py-3 hover:bg-orange-50 transition"
-                >
-                  <img
-                    src="https://flagcdn.com/w20/gb.png"
-                    class="w-5"
-                    alt="EN"
-                  />
-                  <span class="text-sm">English</span>
-                </button>
+  <div class="contain" id="trouve">
+    <div class="cards-grid">
+      <article class="card recent">
+        <img src="./assets/images/Carte d'identité.png" alt="Carte d'identité">
+        <div class="card-content">
+          <div class="title">Carte d'identité</div>
+          <div class="meta">13/08/2025 — Propriétaire: <span class="owner">Jean Dupont</span></div>
+          <div class="restitution-section">
+            <div class="restitution-progress">
+              <div class="progress-circle" style="--progress: 180deg;">
+                <div class="progress-text">50%</div>
               </div>
+              <div class="progress-label">Restitution</div>
+            </div>
+            <div class="restitution-action">
+              <button class="btn-recuperer" onclick="handleRecuperation('123')">Récupérer</button>
             </div>
           </div>
-      </nav>
-    </header>
-  </body>
+        </div>
+      </article>
+      <!-- autres cards dynamiques -->
+    </div>
+  </div>
+
+ 
+
+  <!-- STATS : layout avec positions et décor animé -->
+  <section class="stats-section animate-on-scroll" aria-label="DocMaster en chiffres">
+    <div class="stats-container">
+      <div class="stats-grid" role="list">
+        <!-- Top -->
+        <div class="stat-item" style="--x:50%; --y:12%;">
+          <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+          <div class="stat-number" data-target="2847">0</div>
+          <div class="stat-label">DOCUMENTS<br>DÉCLARÉS</div>
+        </div>
+
+        <!-- Left -->
+        <div class="stat-item" style="--x:18%; --y:45%;">
+          <div class="stat-icon"><i class="fas fa-star"></i></div>
+          <div class="stat-number" data-target="4.8">0</div>
+          <div class="stat-label">NOTE<br>MOYENNE</div>
+        </div>
+
+        <!-- Right -->
+        <div class="stat-item" style="--x:82%; --y:45%;">
+          <div class="stat-icon"><i class="fas fa-search"></i></div>
+          <div class="stat-number" data-target="2156">0</div>
+          <div class="stat-label">DOCUMENTS<br>RETROUVÉS</div>
+        </div>
+
+        <!-- Bottom -->
+        <div class="stat-item" style="--x:50%; --y:82%;">
+          <div class="stat-icon"><i class="fas fa-users"></i></div>
+          <div class="stat-number" data-target="1523">0</div>
+          <div class="stat-label">UTILISATEURS<br>ACTIFS</div>
+        </div>
+
+        <!-- centre décoratif / orbite -->
+        <div class="stats-center-orbit" aria-hidden="true"></div>
+      </div>
+    </div>
+  </section>
+
+   <!-- News / Why -->
+  <!-- ...existing code... -->
+<section class="referral-section animate-on-scroll" aria-labelledby="referral-title">
+  <div class="referral-container containr">
+    <div class="referral-left">
+      <h2 id="referral-title">Système de Parrainage</h2>
+      <p class="referral-lead">
+        Invitez vos amis et gagnez des récompenses ! Plus vous parrainez, plus vous gagnez.
+        Ensemble, construisons une communauté solidaire.
+      </p>
+
+      <ul class="referral-features" aria-hidden="false">
+        <li><i class="fas fa-gift"></i><span>500 FCFA par ami parrainé</span></li>
+        <li><i class="fas fa-coins"></i><span>Bonus de 10% sur leurs gains</span></li>
+        <li><i class="fas fa-crown"></i><span>Statut VIP à partir de 10 parrainages</span></li>
+        <li><i class="fas fa-trophy"></i><span>Récompenses mensuelles exclusives</span></li>
+      </ul>
+    </div>
+
+    <aside class="referral-right" aria-label="Comment ça marche">
+      <div class="steps-card" role="list">
+        <div class="step" role="listitem">
+          <div class="step-num" aria-hidden="true">1</div>
+          <div class="step-body">
+            <h4>Partagez votre code</h4>
+            <p>Envoyez votre code unique à vos amis</p>
+          </div>
+        </div>
+
+        <div class="step" role="listitem">
+          <div class="step-num" aria-hidden="true">2</div>
+          <div class="step-body">
+            <h4>Ils s'inscrivent</h4>
+            <p>Vos amis créent leur compte avec votre code</p>
+          </div>
+        </div>
+
+        <div class="step" role="listitem">
+          <div class="step-num" aria-hidden="true">3</div>
+          <div class="step-body">
+            <h4>Vous gagnez</h4>
+            <p>Recevez vos récompenses automatiquement</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+<!-- ...existing code... -->
+
+  <div class="containr testimonials-header" style="text-align:center;max-width:1100px;margin:48px auto 0;padding:36px 16px 12px;display:block;">
+  <h2 id="testimonials-title" style="font-size:48px;margin:0 auto 12px;color:var(--orange);font-weight:800;letter-spacing:0.5px;text-align:center;">
+    Ce Que Disent Nos Utilisateurs
+  </h2>
+  <p style="margin:12px auto 18px;max-width:760px;color:#111;font-weight:600;text-align:center;">
+    Découvrez les témoignages de ceux qui ont retrouvé leurs documents grâce à DocMaster
+  </p>
+  <div class="header-accent" style="height:6px;width:120px;margin:12px auto;border-radius:6px;background:linear-gradient(90deg,var(--orange),var(--orange-dark));box-shadow:0 6px 18px rgba(249,115,22,0.08);"></div>
+</div>
+
+
+
+  <!-- Testimonials -->
+ 
+      <div class="testimonials-slider">
+        <div class="testimonial-track" id="testimonialTrack">
+          <article class="testimonial-slide">
+            <div class="testimonial-content">
+              Interface intuitive, système de récompenses motivant. J'ai déjà aidé 12 personnes à retrouver leurs documents. Une vraie communauté solidaire !
+            </div>
+
+            <div class="testimonial-footer">
+              <div class="avatar"><i class="fas fa-user"></i></div>
+              <div>
+                <div class="author">Sandra EKOTTO</div>
+                <div class="author-sub"><i class="fas fa-graduation-cap"></i> Étudiante, Bafoussam</div>
+              </div>
+            </div>
+
+            <div class="testimonial-underline" aria-hidden="true"></div>
+          </article>
+
+          <article class="testimonial-slide">
+            <div class="testimonial-content">"En moins de 48h j'ai récupéré ma carte."</div>
+            <div class="testimonial-footer">
+              <div class="avatar"><i class="fas fa-user"></i></div>
+              <div>
+                <div class="author">Pierre MARTIN</div>
+                <div class="author-sub">Employé, Douala</div>
+              </div>
+            </div>
+            <div class="testimonial-underline" aria-hidden="true"></div>
+          </article>
+
+          <article class="testimonial-slide">
+            <div class="testimonial-content">"Service fiable et facile d'utilisation."</div>
+            <div class="testimonial-footer">
+              <div class="avatar"><i class="fas fa-user"></i></div>
+              <div>
+                <div class="author">Amina NDONGO</div>
+                <div class="author-sub">Commerçante, Yaoundé</div>
+              </div>
+            </div>
+            <div class="testimonial-underline" aria-hidden="true"></div>
+          </article>
+  <section class="testimonials-section">
+    <div class="testimonials-container">
+      <div class="testimonials-slider">
+        <div class="testimonial-track" id="testimonialTrack" aria-live="polite"></div>
+        <div class="progress-bar" id="progressBar" aria-hidden="true"></div>
+      </div>
+
+      <div class="testimonial-controls" id="testimonialControls" aria-hidden="false">
+        <button class="nav-btn" id="prevBtn" aria-label="Précédent"><i class="fas fa-chevron-left"></i></button>
+        <div class="indicator-dots" id="dots" role="tablist" aria-label="Indicateurs"></div>
+        <button class="nav-btn" id="nextBtn" aria-label="Suivant"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </div>
+  </section>
+
+        </div>
+
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+  <!-- Scripts -->
+  <script src="./index.js" defer></script>
+</body>
 </html>
+>>>>>>> origin/momo

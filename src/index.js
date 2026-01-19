@@ -5,12 +5,22 @@ document.addEventListener("DOMContentLoaded", () => {
   const recherchePath =
     window.location.pathname.split("/rechercher.html").pop() ||
     "rechercher.html";
+  const objectPath =
+    window.location.pathname.split("/object.html").pop() || "object.html";
+
+  const documentPath =
+    window.location.pathname.split("/document.html").pop() || "document.html";
 
   navLinks.forEach((link) => {
     const anchor = link.querySelector("a");
     const href = anchor.getAttribute("href");
 
-    if (href === currentPath || href === recherchePath) {
+    if (
+      href === currentPath ||
+      href === recherchePath ||
+      href === objectPath ||
+      href === documentPath
+    ) {
       link.classList.add("active");
     } else {
       link.classList.remove("active");
@@ -56,22 +66,38 @@ function renderCards(docs) {
     const strokeOffset = 125 - (125 * doc.pourcentage_restitution) / 100;
 
     const cardHTML = `
-      <div class="bg-white/20 rounded-[35px] hover:-translate-y-2 transition-all overflow-hidden shadow-lg border border-gray-100 flex flex-col relative animate-fadeIn">
+      <div class="bg-white/20  rounded-[35px] hover:-translate-y-2 transition-all overflow-hidden shadow-lg border border-gray-100 flex flex-col relative animate-fadeIn">
   
-  <!-- Partie image avec fond gris clair transparent -->
-  <div class="h-48 bg-gray-200/30 relative overflow-hidden rounded-t-[35px] group">
-  <img src="${doc.image_url}" 
-       alt="${doc.titre}" 
-       class="w-full h-full object-cover transition-transform duration-500 ease-in-out transform group-hover:scale-110">
-    
-    <!-- Badge Statut placé entre image et contenu -->
-    <span class="absolute -bottom-4 left-6 bg-[#2ecc71] text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-md">
-      ${doc.statut}
-    </span>
-    <div class="absolute -buttom-4  right-4 bg-orange-400 text-white w-8 h-8 flex items-center justify-center rounded-full font-bold shadow-md">
-      ${doc.priorite}
-    </div>
+  <div class="relative">
+  <!-- Image -->
+  <div class="h-48 bg-gray-200/30 overflow-hidden rounded-t-[35px] group">
+    <img src="${doc.image_url}" 
+         alt="${doc.titre}" 
+         class="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110">
   </div>
+
+  <!-- Badge Statut -->
+  <span
+    class="absolute left-6 top-48 -translate-y-1/2
+           bg-[#2ecc71] text-white
+           px-4 py-1
+           rounded-full text-xs font-bold uppercase tracking-wider
+           shadow-md z-30">
+    ${doc.statut}
+  </span>
+
+  <!-- Badge Priorité -->
+  <div
+    class="absolute right-6 top-48 -translate-y-1/2
+           bg-orange-400 text-white
+           w-8 h-8
+           flex items-center justify-center
+           rounded-full text-xs font-bold
+           shadow-md z-30">
+    ${doc.priorite}
+  </div>
+</div>
+
 
   <!-- Contenu principal avec fond blanc légèrement transparent -->
   <div class=" p-6 bg-white/30 relative rounded-b-[35px]">
@@ -95,8 +121,8 @@ function renderCards(docs) {
       </p>
     </div>
 
-    <div class="flex items-center justify-between border-t border-dashed border-gray-200 pt-6">
-      <div class="flex items-center gap-3">
+    <div class="flex items-center justify-between border-t border-dashed  border-gray-200 pt-6">
+      <div class="flex items-center text-xs gap-3">
         <div class="relative w-12 h-12 flex items-center justify-center">
           <svg class="w-full h-full transform -rotate-90">
             <circle cx="24" cy="24" r="20" stroke="#f1f2f6" stroke-width="4" fill="transparent"/>
@@ -108,7 +134,7 @@ function renderCards(docs) {
         <span class="font-bold text-gray-500 text-sm italic">Restitution</span>
       </div>
 
-      <button class="bg-[#2ecc71] hover:bg-green-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-green-100 transition-all active:scale-95">
+      <button class="bg-[#2ecc71] hover:bg-green-600 text-white px-6 py-3 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-green-100 transition-all active:scale-95">
         <i class="fa-solid fa-play text-xs"></i> Récupérer
       </button>
     </div>
@@ -124,3 +150,15 @@ function renderCards(docs) {
 document.addEventListener("DOMContentLoaded", () => {
   renderCards(data.documents);
 });
+// Script simple pour ouvrir/fermer et changer le drapeau
+  const btn = document.getElementById('langButton');
+  const dropdown = document.getElementById('langDropdown');
+  
+  btn.onclick = () => dropdown.classList.toggle('hidden');
+
+  function changeLang(code, flagUrl) {
+    document.getElementById('currentFlag').src = flagUrl;
+    btn.querySelector('span').innerText = code.toUpperCase();
+    dropdown.classList.add('hidden');
+    // Ici tu peux ajouter ta logique de changement de langue (i18next, etc.)
+  }

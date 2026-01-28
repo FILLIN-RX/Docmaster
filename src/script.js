@@ -42,13 +42,22 @@ document.addEventListener("DOMContentLoaded", () => {
      */
     const abonnements = [
         {
+            nom:"gratuit",
+            prix: 0,
+            isFeatured:false,
+            features:[
+               { valeur: "fontionaliter de base", label: ""},
+            ],
+
+        },
+        {
             nom: "Standard",
             prix: 500,
             isFeatured: false,
             features: [
                 { valeur: "1 mois", label: "de validité" },
                 { valeur: "1", label: "Document par type" },
-                { valeur: "8", label: "Types de documents" },
+                { valeur: "2", label: "object" },
             ],
         },
         {
@@ -58,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
             features: [
                 { valeur: "12 mois", label: "de validité" },
                 { valeur: "3", label: "Documents par type" },
-                { valeur: "8", label: "Types de documents" },
+                { valeur: "5", label: "objet" },
             ],
         },
         {
@@ -68,7 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
             features: [
                 { valeur: "12 mois", label: "de validité" },
                 { valeur: "5", label: "Documents par type" },
-                { valeur: "8", label: "Types de documents" },
+                { valeur: "7", label: "objet" },
             ],
         },
     ];
@@ -78,55 +87,61 @@ document.addEventListener("DOMContentLoaded", () => {
      * Génération des cartes HTML
      * ==================================
      */
-    const genererCartes = () => {
-        const container = document.getElementById("pricing-container");
-        if (!container) return;
+ const genererCartes = () => {
+    const container = document.getElementById("pricing-container");
+    if (!container) return;
 
-        container.innerHTML = abonnements.map((plan, index) => {
-            const isFeatured = plan.isFeatured;
-            return `
-               <div class="relative flex flex-col items-center text-center transition-all duration-300 
-    ${isFeatured ? "featured-card rounded-[2.5rem] shadow-2xl" : "bg-white border border-slate-100 rounded-[2rem] shadow-sm p-8 md:scale-95"}">
-    
-    ${isFeatured ? `
-        <div class="w-full bg-[#F5A64B] pt-12 pb-16 px-8 text-white relative z-10 rounded-t-[2.4rem] overflow-hidden">
-                            <span class="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-[0.3em] bg-white/20 px-3 py-1 rounded-full">Most Popular</span>
-                            <h3 class="text-3xl font-black tracking-widest uppercase mb-4">${plan.nom}</h3>
-                            <div class="flex justify-center items-start">
-                                <span class="text-6xl font-black">${plan.prix}</span>
-                                <span class="text-sm font-bold mt-2 ml-1">FCFA</span>
-                            </div>
-                            <div class="wave-container">
-                                <svg viewBox="0 0 1200 120" preserveAspectRatio="none" class="w-full h-10"><path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C58.47,105.41,123,106,182.6,90.5,242.3,75,282,63,321.39,56.44Z" fill="#ffffff"></path></svg>
-                            </div>
-                        </div>
-                    ` : `
-                        <div class="w-full mb-6">
-                            <h3 class="text-2xl font-black tracking-widest text-slate-800 mb-4 uppercase">${plan.nom}</h3>
-                            <div class="flex justify-center items-start text-slate-800 mb-6">
-                                <span class="text-5xl font-black text-[#F5A64B]">${plan.prix}</span>
-                                <span class="text-sm font-bold mt-2 ml-1">FCFA</span>
-                            </div>
-                            <div class="w-full h-px bg-slate-100 mb-8"></div>
-                        </div>
-                    `}
+    container.innerHTML = abonnements.map((plan, index) => {
+        const isFeatured = plan.isFeatured;
+        
+        // On définit les classes de la carte mère
+        const cardClasses = isFeatured 
+            ? "relative flex flex-col items-center text-center transition-all duration-300 featured-card rounded-[2.5rem] shadow-2xl z-10 scale-100" 
+            : "relative flex flex-col items-center text-center transition-all duration-300 hover:border hover:border-[#F5A64B] bg-white border border-slate-100 rounded-[2rem] shadow-sm p-4 lg:p-6";
 
-                    <div class="w-full z-10 ${isFeatured ? "p-8 pt-4" : ""}">
-                        <ul class="w-full mb-8">
-                            ${plan.features.map((f, i) => `
-                                <li class="py-3 text-sm text-slate-600 border-b border-slate-50 last:border-0 ${i % 2 !== 0 ? "bg-slate-50/50" : ""}">
-                                    <span class="font-bold text-slate-800">${f.valeur}</span> ${f.label}
-                                </li>
-                            `).join("")}
-                        </ul>
-                        <button onclick="souscrire(${index})" class="w-full py-4 px-6 rounded-full font-black uppercase bg-[#2ecc71] text-white hover:bg-green-600 tracking-widest transition-all active:scale-95 hover:scale-105 shadow-lg shadow-green-200">
-                            Select
-                        </button>
+        return `
+            <div class="${cardClasses}">
+                ${isFeatured ? `
+                    <div class="w-full bg-[#F5A64B] pt-12 pb-16 px-6 text-white relative z-10 rounded-t-[2.4rem] overflow-hidden">
+                        <span class="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-[0.3em] bg-white/20 px-3 py-1 rounded-full whitespace-nowrap">Most Popular</span>
+                        <h3 class="text-2xl font-black tracking-widest uppercase mb-4">${plan.nom}</h3>
+                        <div class="flex justify-center items-start">
+                            <span class="text-5xl font-black">${plan.prix}</span>
+                            <span class="text-xs font-bold mt-2 ml-1">FCFA</span>
+                        </div>
+                        <div class="wave-container absolute bottom-0 left-0 w-full">
+                            <svg viewBox="0 0 1200 120" preserveAspectRatio="none" class="w-full h-10 drop-shadow-sm">
+                                <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C58.47,105.41,123,106,182.6,90.5,242.3,75,282,63,321.39,56.44Z" fill="#ffffff"></path>
+                            </svg>
+                        </div>
                     </div>
+                ` : `
+                    <div class="w-full mb-6">
+                        <h3 class="text-xl font-black tracking-widest text-slate-800 mb-4 uppercase">${plan.nom}</h3>
+                        <div class="flex justify-center items-start text-slate-800 mb-6">
+                            <span class="text-4xl font-black text-[#F5A64B]">${plan.prix}</span>
+                            <span class="text-xs font-bold mt-2 ml-1">FCFA</span>
+                        </div>
+                        <div class="w-full h-px bg-slate-100 mb-2"></div>
+                    </div>
+                `}
+
+                <div class="w-full z-10 p-6 ${isFeatured ? "pt-4" : "pt-0"}">
+                    <ul class="w-full mb-8">
+                        ${plan.features.map((f, i) => `
+                            <li class="py-3 text-[13px] text-slate-600 border-b border-slate-50 last:border-0 ${i % 2 !== 0 ? "bg-slate-50/50" : ""}">
+                                <span class="font-bold text-slate-800">${f.valeur}</span> ${f.label}
+                            </li>
+                        `).join("")}
+                    </ul>
+                    <button onclick="souscrire(${index})" class="w-full py-3 px-4 rounded-full font-black uppercase bg-[#2ecc71] text-white hover:bg-green-600 tracking-tighter text-xs transition-all active:scale-95 shadow-lg">
+                        Choisir
+                    </button>
                 </div>
-            `;
-        }).join("");
-    };
+            </div>
+        `;
+    }).join("");
+};
 
     // Initialisation
     genererCartes();

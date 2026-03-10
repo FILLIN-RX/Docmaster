@@ -42,22 +42,31 @@ document.addEventListener("DOMContentLoaded", () => {
    * ==================================
    * Données des abonnements
    * ==================================
-   */
-  const abonnements = [
+     const abonnements = [
     {
-      nom: "gratuit",
+      nom: "Gratuit",
       prix: 0,
       isFeatured: false,
-      features: [{ valeur: "fontionaliter de base", label: "" }],
+      features: [
+        { valeur: "30 jours", label: "de validité", active: true },
+        { valeur: "1", label: "Signalement / mois", active: true },
+        { valeur: "SMS", label: "Alertes", active: false },
+        { valeur: "Limitée", label: "Géolocalisation", active: false },
+        { valeur: "x", label: "Notification Push", active: false },
+        { valeur: "x", label: "Support prioritaire", active: false }
+      ],
     },
     {
       nom: "Standard",
       prix: 500,
       isFeatured: false,
       features: [
-        { valeur: "1 mois", label: "de validité" },
-        { valeur: "1", label: "Document par type" },
-        { valeur: "2", label: "object" },
+        { valeur: "30 jours", label: "de validité", active: true },
+        { valeur: "5", label: "Signalements / mois", active: true },
+        { valeur: "SMS + Email", label: "Alertes", active: true },
+        { valeur: "Basique", label: "Géolocalisation", active: true },
+        { valeur: "x", label: "Notification Push", active: false },
+        { valeur: "x", label: "Support prioritaire", active: false }
       ],
     },
     {
@@ -65,9 +74,12 @@ document.addEventListener("DOMContentLoaded", () => {
       prix: 1500,
       isFeatured: true,
       features: [
-        { valeur: "12 mois", label: "de validité" },
-        { valeur: "3", label: "Documents par type" },
-        { valeur: "5", label: "objet" },
+        { valeur: "12 mois", label: "de validité", active: true },
+        { valeur: "15", label: "Signalements / mois", active: true },
+        { valeur: "SMS + Email + Push", label: "Alertes", active: true },
+        { valeur: "Avancée", label: "Géolocalisation", active: true },
+        { valeur: "✓", label: "Notification Push", active: true },
+        { valeur: "x", label: "Support prioritaire", active: false }
       ],
     },
     {
@@ -75,10 +87,16 @@ document.addEventListener("DOMContentLoaded", () => {
       prix: 3000,
       isFeatured: false,
       features: [
-        { valeur: "12 mois", label: "de validité" },
-        { valeur: "5", label: "Documents par type" },
-        { valeur: "7", label: "objet" },
+        { valeur: "12 mois", label: "de validité", active: true },
+        { valeur: "Illimité", label: "Signalements / mois", active: true },
+        { valeur: "Toutes", label: "Alertes", active: true },
+        { valeur: "Avancée", label: "Géolocalisation", active: true },
+        { valeur: "✓", label: "Notification Push", active: true },
+        { valeur: "✓", label: "Support prioritaire", active: true }
       ],
+    },
+  ];
+],
     },
   ];
 
@@ -91,69 +109,127 @@ document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("pricing-container");
     if (!container) return;
 
+    // Detect if we are on Abonnement.html (has specific layout)
+    const isAbonnementPage = document.body.classList.contains('md:flex') || !!document.querySelector('.main-wrapper');
+
+    if (isAbonnementPage) {
+       // Optional: Custom rendering for Abonnement.html if needed
+       // For now, we use the standard cards but they should match the new style
+    }
+
     container.innerHTML = abonnements
       .map((plan, index) => {
         const isFeatured = plan.isFeatured;
-
-        // On définit les classes de la carte mère
+        
+        // Classes specific to the dashboard/abonnement style
         const cardClasses = isFeatured
-          ? "relative flex flex-col items-center text-center transition-all duration-300 featured-card rounded-[2.5rem] shadow-2xl z-10 scale-100"
-          : "relative flex flex-col items-center text-center transition-all duration-300 hover:border hover:border-[#F5A64B] bg-white border border-slate-100 rounded-[2rem] shadow-sm p-4 lg:p-6";
+          ? "plan-card featured bg-green-dark rounded-[20px] p-5 flex flex-col relative overflow-hidden"
+          : "plan-card bg-white border border-borderMain rounded-[20px] p-5 flex flex-col";
+
+        const textClass = isFeatured ? "text-white" : "text-textMain";
+        const mutedTextClass = isFeatured ? "text-white/50" : "text-textMuted";
+        const btnClass = isFeatured 
+          ? "w-full py-2.5 rounded-[12px] bg-primary text-white text-[13.5px] font-bold hover:bg-primary-dark transition-all active:scale-[.98] relative z-10 shadow-lg shadow-primary/20"
+          : "w-full py-2.5 rounded-[12px] bg-white border border-borderMain text-textMain text-[13.5px] font-bold hover:border-primary hover:text-primary transition-all active:scale-[.98]";
 
         return `
             <div class="${cardClasses}">
-                ${isFeatured
-            ? `
-                    <div class="w-full bg-[#F5A64B] pt-12 pb-16 px-6 text-white relative z-10 rounded-t-[2.4rem] overflow-hidden">
-                        <span class="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-[0.3em] bg-white/20 px-3 py-1 rounded-full whitespace-nowrap">Most Popular</span>
-                        <h3 class="text-2xl font-black tracking-widest uppercase mb-4">${plan.nom}</h3>
-                        <div class="flex justify-center items-start">
-                            <span class="text-5xl font-black">${plan.prix}</span>
-                            <span class="text-xs font-bold mt-2 ml-1">FCFA</span>
-                        </div>
-                        <div class="wave-container absolute bottom-0 left-0 w-full">
-                            <svg viewBox="0 0 1200 120" preserveAspectRatio="none" class="w-full h-10 drop-shadow-sm">
-                                <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C58.47,105.41,123,106,182.6,90.5,242.3,75,282,63,321.39,56.44Z" fill="#ffffff"></path>
-                            </svg>
-                        </div>
+                ${isFeatured ? '<div class="absolute w-40 h-40 rounded-full bg-primary/8 -bottom-10 -right-10 pointer-events-none"></div>' : ''}
+                <div class="mb-4 relative z-10">
+                    <div class="w-10 h-10 rounded-[12px] ${isFeatured ? 'bg-primary/15' : 'bg-primary/10'} flex items-center justify-center mb-3">
+                        <i class="fa-solid ${isFeatured ? 'fa-rocket text-primary' : 'fa-star text-primary'} text-base"></i>
                     </div>
-                `
-            : `
-                    <div class="w-full mb-6">
-                        <h3 class="text-xl font-black tracking-widest text-slate-800 mb-4 uppercase">${plan.nom}</h3>
-                        <div class="flex justify-center items-start text-slate-800 mb-6">
-                            <span class="text-4xl font-black text-[#F5A64B]">${plan.prix}</span>
-                            <span class="text-xs font-bold mt-2 ml-1">FCFA</span>
-                        </div>
-                        <div class="w-full h-px bg-slate-100 mb-2"></div>
-                    </div>
-                `
-          }
-
-                <div class="w-full z-10 p-6 ${isFeatured ? "pt-4" : "pt-0"}">
-                    <ul class="w-full mb-8">
-                        ${plan.features
-            .map(
-              (f, i) => `
-                            <li class="py-3 text-[13px] text-slate-600 border-b border-slate-50 last:border-0 ${i % 2 !== 0 ? "bg-slate-50/50" : ""}">
-                                <span class="font-bold text-slate-800">${f.valeur}</span> ${f.label}
-                            </li>
-                        `,
-            )
-            .join("")}
-                    </ul>
-                    <button onclick="souscrire(${index})" class="w-full py-3 px-4 rounded-full font-black uppercase bg-[#F5A64B] text-white hover:bg-[#D98A2F] tracking-tighter text-xs transition-all active:scale-95 shadow-lg">
-                        Choisir
-                    </button>
+                    <div class="font-bricolage text-lg font-bold ${textClass}">${plan.nom}</div>
+                    <div class="${mutedTextClass} text-[12.5px] font-medium">${isFeatured ? 'Recommandé' : 'Populaire'}</div>
                 </div>
+                <div class="mb-5 relative z-10">
+                    <div class="font-bricolage text-3xl font-extrabold ${textClass} leading-none">
+                        ${plan.prix} <span class="text-base font-bold ${mutedTextClass}">XAF</span>
+                    </div>
+                    <div class="text-[12px] ${mutedTextClass} mt-0.5">par mois</div>
+                </div>
+                <div class="flex flex-col gap-2.5 flex-1 mb-5 relative z-10">
+                    ${plan.features.map(f => `
+                        <div class="flex items-center gap-2.5 text-[13px]">
+                            <i class="fa-solid ${f.active === false ? 'fa-xmark text-gray-400' : 'fa-check ' + (isFeatured ? 'text-primary' : 'text-green-500')} w-4 flex-shrink-0"></i>
+                            <span class="${textClass} font-medium ${f.active === false ? 'opacity-40 line-through' : ''}">${plan.nom === 'Gratuit' && f.label === 'Signalement / mois' ? '1' : f.valeur} ${f.label}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <button onclick="souscrire(${index})" class="${btnClass}">
+                    ${plan.prix === 0 ? 'Plan actuel' : 'Passer au ' + plan.nom}
+                </button>
             </div>
         `;
       })
       .join("");
   };
 
+  const genererComparatif = () => {
+    const tableBody = document.querySelector("table tbody");
+    if (!tableBody) return;
+
+    // We take the features from the Pro plan as a template for labels
+    const labels = abonnements[2].features.map(f => f.label);
+    
+    tableBody.innerHTML = labels.map((label, featureIndex) => {
+      return `
+        <tr class="hover:bg-surface2 transition-colors">
+          <td class="px-5 py-3 text-[13px] font-medium text-textMain">${label}</td>
+          ${abonnements.map((plan, planIndex) => {
+            const feat = plan.features[featureIndex];
+            if (!feat) return `<td class="px-3 py-3 text-center text-[13px] text-textMuted">-</td>`;
+            
+            const isFeatured = plan.isFeatured;
+            const cellClass = isFeatured ? 'bg-primary/5' : '';
+            const textClass = plan.nom === 'Standard' ? 'text-primary' : (plan.nom === 'VIP' ? 'text-amber-600' : (plan.nom === 'Pro' ? 'text-green-mid' : 'text-textMuted'));
+            
+            let content = feat.valeur;
+            if (feat.valeur === '✓') content = '<i class="fa-solid fa-check text-green-500"></i>';
+            if (feat.valeur === 'x' || feat.active === false) content = '<i class="fa-solid fa-xmark text-gray-300"></i>';
+            if (feat.valeur === '✓' && plan.nom === 'Standard') content = '<i class="fa-solid fa-check text-primary"></i>';
+
+            return `<td class="px-3 py-3 text-center text-[13px] font-semibold ${textClass} ${cellClass}">${content}</td>`;
+          }).join('')}
+        </tr>
+      `;
+    }).join('');
+  };
+
+  const genererFactures = () => {
+    const container = document.getElementById("invoice-container");
+    if (!container) return;
+
+    const factures = [
+      { plan: "Standard", date: "10 Avr. 2024", montant: 500, statut: "Payé", methode: "MTN Money" },
+      { plan: "Standard", date: "10 Mars 2024", montant: 500, statut: "Payé", methode: "Orange Money" },
+      { plan: "Gratuit", date: "10 Fév. 2024", montant: 0, statut: "Actif", methode: "Système" }
+    ];
+
+    container.innerHTML = factures.map(f => `
+      <div class="flex items-center gap-3 px-5 py-3.5 hover:bg-surface2 transition-colors">
+        <div class="w-9 h-9 rounded-[10px] bg-green-light flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-file-invoice text-green-mid text-sm"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-[13.5px] font-semibold text-textMain">Plan ${f.plan} — ${f.date.split(' ')[1]}</div>
+          <div class="text-[11.5px] text-textMuted italic">${f.date} · ${f.methode}</div>
+        </div>
+        <div class="text-right flex-shrink-0">
+          <div class="text-[13.5px] font-bold text-textMain">${f.montant} XAF</div>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${f.statut === 'Payé' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">${f.statut}</span>
+        </div>
+        <button class="ml-2 w-8 h-8 rounded-[8px] bg-bgMain border border-borderMain flex items-center justify-center hover:border-primary hover:text-primary transition-colors text-textMuted flex-shrink-0">
+          <i class="fa-solid fa-download text-[11px]"></i>
+        </button>
+      </div>
+    `).join('');
+  };
+
   // Initialisation
   genererCartes();
+  genererComparatif();
+  genererFactures();
 
   /**
    * ==================================
@@ -198,9 +274,17 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.goToStep2 = function () {
-    document.getElementById("viewStep1").classList.add("hidden");
-    document.getElementById("viewStep2").classList.remove("hidden");
-    document.getElementById("submitBtn").innerText = "Confirmer le paiement";
+    const view1 = document.getElementById("viewStep1");
+    const view2 = document.getElementById("viewStep2");
+    
+    view1.classList.add("opacity-0");
+    setTimeout(() => {
+        view1.classList.add("hidden");
+        view1.classList.remove("opacity-0");
+        view2.classList.remove("hidden");
+        view2.classList.add("animate-fade-in");
+        document.getElementById("submitBtn").innerText = "Confirmer le paiement";
+    }, 200);
   };
 
   window.processPayment = function () {
@@ -218,43 +302,47 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Veuillez remplir votre numéro et votre pseudo.");
         return;
       }
+      
+      const fullNumber = getFullNumber();
+      if (!fullNumber) return; // Error handled in getFullNumber
 
       // Simuler appel API
       const btn = document.getElementById("submitBtn");
-      btn.innerText = "Traitement...";
+      const originalText = btn.innerText;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Traitement...';
       btn.disabled = true;
 
       setTimeout(() => {
         alert(
-          `Transaction réussie !\nPlan: ${currentPlanData.nom}\nClient: ${pseudo}`,
+          `Félicitations !\nVotre abonnement "${currentPlanData.nom}" est maintenant actif.\nNuméro de transaction: #${Math.floor(Math.random() * 1000000)}`,
         );
+        btn.innerHTML = originalText;
         btn.disabled = false;
         closeSubscriptionModal();
-      }, 1500);
+      }, 2000);
     }
   };
   // Sélection de l'élément
   const input = document.querySelector("#payPhone");
+  let iti = null;
 
-  // Initialisation de la bibliothèque
-  const iti = window.intlTelInput(input, {
-    // Pays par défaut (Cameroun)
-    initialCountry: "cm",
-    // Affiche le code (+237) à côté du drapeau
-    separateDialCode: true,
-    // Permet de n'afficher que certains pays si besoin (optionnel)
-    // onlyCountries: ["cm", "ga", "ci", "sn", "fr"],
-    // Charge les scripts de formatage automatique
-    utilsScript:
-      "https://cdn.jsdelivr.net/npm/intl-tel-input@24.5.0/build/js/utils.js",
-  });
+  if (input && window.intlTelInput) {
+    // Initialisation de la bibliothèque
+    iti = window.intlTelInput(input, {
+        initialCountry: "cm",
+        separateDialCode: true,
+        utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@24.5.0/build/js/utils.js",
+    });
+  }
 
   // Pour récupérer le numéro complet (ex: +237690000000) lors du paiement :
   function getFullNumber() {
+    if (!iti) return document.getElementById("payPhone").value;
+    
     if (iti.isValidNumber()) {
       return iti.getNumber();
     } else {
-      alert("Numéro invalide pour le pays sélectionné");
+      alert("Numéro de téléphone invalide pour le pays sélectionné");
       return null;
     }
   }

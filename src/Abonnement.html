@@ -197,40 +197,13 @@ html,body{font-family:'Poppins',sans-serif;background:#F4EFE6}
         </h2>
         <button class="text-[11.5px] font-semibold text-primary hover:underline">Tout exporter</button>
       </div>
-      <div class="divide-y divide-borderMain">
+      <div id="invoice-container" class="divide-y divide-borderMain">
+        <!-- JS will populate this -->
         <div class="flex items-center gap-3 px-5 py-3.5 hover:bg-surface2 transition-colors">
           <div class="w-9 h-9 rounded-[10px] bg-green-light flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-file-invoice text-green-mid text-sm"></i></div>
           <div class="flex-1 min-w-0">
             <div class="text-[13.5px] font-semibold text-textMain">Plan Standard — Avril 2024</div>
             <div class="text-[11.5px] text-textMuted italic">10 avr. 2024 · Paiement automatique</div>
-          </div>
-          <div class="text-right flex-shrink-0">
-            <div class="text-[13.5px] font-bold text-textMain">500 XAF</div>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Payé</span>
-          </div>
-          <button class="ml-2 w-8 h-8 rounded-[8px] bg-bgMain border border-borderMain flex items-center justify-center hover:border-primary hover:text-primary transition-colors text-textMuted flex-shrink-0">
-            <i class="fa-solid fa-download text-[11px]"></i>
-          </button>
-        </div>
-        <div class="flex items-center gap-3 px-5 py-3.5 hover:bg-surface2 transition-colors">
-          <div class="w-9 h-9 rounded-[10px] bg-green-light flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-file-invoice text-green-mid text-sm"></i></div>
-          <div class="flex-1 min-w-0">
-            <div class="text-[13.5px] font-semibold text-textMain">Plan Standard — Mars 2024</div>
-            <div class="text-[11.5px] text-textMuted italic">10 mars 2024 · Paiement automatique</div>
-          </div>
-          <div class="text-right flex-shrink-0">
-            <div class="text-[13.5px] font-bold text-textMain">500 XAF</div>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Payé</span>
-          </div>
-          <button class="ml-2 w-8 h-8 rounded-[8px] bg-bgMain border border-borderMain flex items-center justify-center hover:border-primary hover:text-primary transition-colors text-textMuted flex-shrink-0">
-            <i class="fa-solid fa-download text-[11px]"></i>
-          </button>
-        </div>
-        <div class="flex items-center gap-3 px-5 py-3.5 hover:bg-surface2 transition-colors">
-          <div class="w-9 h-9 rounded-[10px] bg-green-light flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-file-invoice text-green-mid text-sm"></i></div>
-          <div class="flex-1 min-w-0">
-            <div class="text-[13.5px] font-semibold text-textMain">Plan Standard — Février 2024</div>
-            <div class="text-[11.5px] text-textMuted italic">10 fév. 2024 · Paiement automatique</div>
           </div>
           <div class="text-right flex-shrink-0">
             <div class="text-[13.5px] font-bold text-textMain">500 XAF</div>
@@ -293,52 +266,11 @@ html,body{font-family:'Poppins',sans-serif;background:#F4EFE6}
               <th class="px-3 py-3 text-center text-[12.5px] font-bold text-textMuted">Gratuit</th>
               <th class="px-3 py-3 text-center text-[12.5px] font-bold text-primary bg-primary/5">Standard</th>
               <th class="px-3 py-3 text-center text-[12.5px] font-bold text-green-mid">Pro</th>
-              <th class="px-3 py-3 text-center text-[12.5px] font-bold text-amber-600">Premium</th>
+              <th class="px-3 py-3 text-center text-[12.5px] font-bold text-amber-600">VIP</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-borderMain">
-            <tr class="hover:bg-surface2 transition-colors">
-              <td class="px-5 py-3 text-[13px] font-medium text-textMain">Signalements / mois</td>
-              <td class="px-3 py-3 text-center text-[13px] font-semibold text-textMuted">1</td>
-              <td class="px-3 py-3 text-center text-[13px] font-semibold text-primary bg-primary/5">5</td>
-              <td class="px-3 py-3 text-center text-[13px] font-semibold text-green-mid">15</td>
-              <td class="px-3 py-3 text-center text-[13px] font-semibold text-amber-600">∞</td>
-            </tr>
-            <tr class="hover:bg-surface2 transition-colors">
-              <td class="px-5 py-3 text-[13px] font-medium text-textMain">Alertes Email</td>
-              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
-              <td class="px-3 py-3 text-center bg-primary/5"><i class="fa-solid fa-check feature-check"></i></td>
-              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
-              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
-            </tr>
-            <tr class="hover:bg-surface2 transition-colors">
-              <td class="px-5 py-3 text-[13px] font-medium text-textMain">Alertes SMS</td>
-              <td class="px-3 py-3 text-center"><i class="fa-solid fa-xmark text-gray-300"></i></td>
-              <td class="px-3 py-3 text-center bg-primary/5"><i class="fa-solid fa-check feature-check"></i></td>
-              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
-              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
-            </tr>
-            <tr class="hover:bg-surface2 transition-colors">
-              <td class="px-5 py-3 text-[13px] font-medium text-textMain">Géolocalisation avancée</td>
-              <td class="px-3 py-3 text-center"><i class="fa-solid fa-xmark text-gray-300"></i></td>
-              <td class="px-3 py-3 text-center bg-primary/5"><i class="fa-solid fa-xmark text-gray-300"></i></td>
-              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
-              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
-            </tr>
-            <tr class="hover:bg-surface2 transition-colors">
-              <td class="px-5 py-3 text-[13px] font-medium text-textMain">Support prioritaire</td>
-              <td class="px-3 py-3 text-center"><i class="fa-solid fa-xmark text-gray-300"></i></td>
-              <td class="px-3 py-3 text-center bg-primary/5"><i class="fa-solid fa-xmark text-gray-300"></i></td>
-              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
-              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
-            </tr>
-            <tr class="hover:bg-surface2 transition-colors">
-              <td class="px-5 py-3 text-[13px] font-medium text-textMain">API & intégrations</td>
-              <td class="px-3 py-3 text-center"><i class="fa-solid fa-xmark text-gray-300"></i></td>
-              <td class="px-3 py-3 text-center bg-primary/5"><i class="fa-solid fa-xmark text-gray-300"></i></td>
-              <td class="px-3 py-3 text-center"><i class="fa-solid fa-xmark text-gray-300"></i></td>
-              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
-            </tr>
+            <!-- JS will populate this -->
           </tbody>
         </table>
       </div>
@@ -372,55 +304,68 @@ html,body{font-family:'Poppins',sans-serif;background:#F4EFE6}
   </a>
 </nav>
 
-<!-- Subscription Modal (JS required) -->
-<div id="modalWrapper" class="hidden fixed inset-0 z-[100] items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all">
-  <div id="modalBox" class="bg-white rounded-[28px] w-full max-w-md p-6 sm:p-8 transform transition-transform translate-y-full">
-    <div class="flex items-center justify-between mb-6">
-      <h3 id="modalTitle" class="font-bricolage text-xl font-bold text-textMain">Paiement</h3>
-      <button onclick="closeSubscriptionModal()" class="w-8 h-8 rounded-full bg-bgMain flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-colors">
-        <i class="fa-solid fa-xmark"></i>
+<!-- Subscription Modal -->
+<div id="modalWrapper" class="fixed inset-0 z-[10000] hidden items-end md:items-center justify-center p-4">
+  <div id="modalBg" onclick="closeSubscriptionModal()" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300"></div>
+
+  <div id="modalBox" class="relative bg-white w-full max-w-md rounded-t-[2rem] md:rounded-[2rem] p-8 shadow-2xl transform translate-y-full transition-transform duration-300 border border-white/20">
+    <div onclick="closeSubscriptionModal()" class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 cursor-pointer md:hidden"></div>
+
+    <div class="text-center mb-6">
+      <h2 id="modalTitle" class="text-[#F5A64B] font-black text-xl uppercase tracking-tighter">Paiement Plan</h2>
+
+      <div class="mt-4 p-5 bg-slate-50 rounded-2xl border border-slate-100 text-left relative overflow-hidden">
+        <div class="absolute top-0 right-0 p-2 opacity-10">
+          <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+        </div>
+        <div class="flex justify-between items-center mb-3">
+          <span id="displayPlan" class="text-slate-800 font-black text-xl">-</span>
+          <span id="displayPrix" class="text-[#F5A64B] font-black text-2xl">-</span>
+        </div>
+        <div class="grid grid-cols-2 gap-4 border-t border-slate-200 pt-4">
+          <div>
+            <p class="text-[10px] text-slate-400 uppercase font-bold">Signalements</p>
+            <span id="displayDocs" class="text-slate-800 text-sm font-black">-</span>
+          </div>
+          <div>
+            <p class="text-[10px] text-slate-400 uppercase font-bold">Durée</p>
+            <span id="displaytime" class="text-slate-800 text-sm font-black uppercase">30 JOURS</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="paymentFlow" class="space-y-4">
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Choisir la méthode de Paiement</p>
+      
+      <div id="viewStep1" class="grid animate-fade-in space-y-4 grid-cols-2 gap-4">
+        <button onclick="goToStep2()" class="w-full flex items-center justify-between border-2 border-slate-100 bg-white rounded-2xl p-4 hover:border-[#F5A64B] hover:bg-orange-50/30 transition-all group">
+          <div class="flex flex-col items-center text-center justify-center gap-3">
+             <img src="./assets/images/orange_money.jpg" class="w-12 h-12 rounded object-cover" />
+             <span class="font-bold text-slate-700 text-xs">Paiement mobile</span>
+          </div>
+        </button>
+        <button onclick="goToStep2()" class="w-full flex items-center justify-between border-2 border-slate-100 bg-white rounded-2xl p-4 hover:border-[#F5A64B] hover:bg-orange-50/30 transition-all group">
+          <div class="flex flex-col items-center text-center justify-center gap-3 w-full">
+             <img src="./assets/images/paypoint (2).png" class="w-12 h-12 rounded object-cover" />
+             <span class="font-bold text-slate-700 text-xs">PayPoint</span>
+          </div>
+        </button>
+      </div>
+
+      <div id="viewStep2" class="hidden animate-fade-in">
+        <div class="space-y-3">
+          <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Numéro de téléphone</label>
+          <input type="tel" id="payPhone" class="w-full border-2 border-slate-100 rounded-xl p-4 outline-none focus:border-[#F5A64B] font-bold bg-slate-50">
+          <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Nom / Pseudo</label>
+          <input type="text" id="payPseudo" placeholder="@pseudo" class="w-full border-2 border-slate-100 rounded-xl p-4 outline-none focus:border-[#F5A64B] font-bold bg-slate-50 transition-colors">
+        </div>
+      </div>
+
+      <button id="submitBtn" onclick="processPayment()" class="w-full mt-4 bg-[#F5A64B] text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-orange-200 hover:brightness-110 active:scale-95 transition-all">
+        Suivant
       </button>
     </div>
-
-    <!-- Step 1: Info -->
-    <div id="viewStep1">
-      <div class="bg-bgMain rounded-[18px] p-5 mb-6">
-        <div class="flex justify-between mb-2">
-          <span class="text-[13px] text-textMuted">Plan sélectionné</span>
-          <span id="displayPlan" class="text-[13px] font-bold text-textMain">Standard</span>
-        </div>
-        <div class="flex justify-between mb-2">
-          <span class="text-[13px] text-textMuted">Prix</span>
-          <span id="displayPrix" class="text-[13px] font-bold text-primary">500 FCFA</span>
-        </div>
-        <div class="flex justify-between mb-2">
-          <span class="text-[13px] text-textMuted">Signalements</span>
-          <span id="displayDocs" class="text-[13px] font-bold text-textMain">5 / mois</span>
-        </div>
-        <div class="flex justify-between">
-          <span class="text-[13px] text-textMuted">Validité</span>
-          <span id="displaytime" class="text-[13px] font-bold text-textMain">30 jours</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Step 2: Payment details -->
-    <div id="viewStep2" class="hidden">
-      <div class="space-y-4 mb-6">
-        <div>
-          <label class="block text-[12px] font-bold text-textMuted uppercase tracking-wider mb-1.5">Numéro de téléphone</label>
-          <input type="tel" id="payPhone" class="w-full px-4 py-3 bg-bgMain border border-borderMain rounded-[12px] outline-none focus:border-primary">
-        </div>
-        <div>
-          <label class="block text-[12px] font-bold text-textMuted uppercase tracking-wider mb-1.5">Nom / Pseudo</label>
-          <input type="text" id="payPseudo" class="w-full px-4 py-3 bg-bgMain border border-borderMain rounded-[12px] outline-none focus:border-primary" placeholder="Votre nom">
-        </div>
-      </div>
-    </div>
-
-    <button id="submitBtn" onclick="processPayment()" class="w-full py-4 rounded-[16px] bg-primary text-white font-bricolage font-bold shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all active:scale-[.98]">
-      Suivant
-    </button>
   </div>
 </div>
 

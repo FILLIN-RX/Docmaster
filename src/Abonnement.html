@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocMaster — Abonnement</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="./js/auth.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@24.5.0/build/css/intlTelInput.css">
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@24.5.0/build/js/intlTelInput.min.js"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        primary: { DEFAULT: '#F5A64B', dark: '#D98A30', light: '#FEF0DC' },
+        'green-dark': '#1E3A2F', 'green-mid': '#2D5A42', 'green-light': '#E8F5EE',
+        bgMain: '#F4EFE6', surface: '#FFFFFF', surface2: '#FAF7F2',
+        textMain: '#1A1A1A', textMuted: '#9CA3AF', borderMain: '#EAE3D8',
+      },
+      fontFamily: { poppins: ['Poppins','sans-serif'], bricolage: ['"Bricolage Grotesque"','sans-serif'] }
+    }
+  }
+}
+</script>
+<style>
+:root{--sidebar:260px}
+html,body{font-family:'Poppins',sans-serif;background:#F4EFE6}
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar);transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:50;overflow-y:auto}
+.sidebar.open{transform:translateX(0)}
+@media(min-width:900px){
+  body{display:flex;height:100vh;overflow:hidden}
+  .sidebar{position:relative;transform:none!important;flex-shrink:0}
+  .main-wrapper{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+  .main-content{flex:1;overflow-y:auto}
+}
+@media(max-width:899px){
+  .main-wrapper{display:flex;flex-direction:column;min-height:100vh}
+}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .28s}
+.sb-overlay.show{display:block;opacity:1;pointer-events:all}
+.sidebar::after{content:'';position:absolute;width:260px;height:260px;border-radius:50%;background:rgba(245,166,75,.05);bottom:-80px;left:-60px;pointer-events:none}
+.sb-item.active{background:rgba(245,166,75,.15);color:#fff}
+.sb-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:55%;background:#F5A64B;border-radius:0 3px 3px 0}
+.custom-scroll::-webkit-scrollbar{width:4px}
+.custom-scroll::-webkit-scrollbar-thumb{background:#DDD5C8;border-radius:10px}
+.plan-card{transition:transform .2s,box-shadow .2s}
+.plan-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.1)}
+.plan-card.featured{box-shadow:0 8px 32px rgba(245,166,75,.25)}
+.plan-card.featured:hover{box-shadow:0 16px 48px rgba(245,166,75,.3)}
+.toggle-bg{transition:background .2s}
+.tab-btn{transition:all .2s}
+.tab-btn.active{background:#1E3A2F;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.feature-check{color:#10B981}
+.feature-lock{color:#E5E7EB}
+</style>
+</head>
+<body>
+<div class="sb-overlay" id="overlay" onclick="closeSb()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar w-[var(--sidebar)] bg-green-dark flex flex-col" id="sidebar">
+  <div class="flex items-center gap-3 px-6 py-5 border-b border-white/10 flex-shrink-0">
+    <div class="w-9 h-9 rounded-[10px] bg-primary/15 border border-primary/25 flex items-center justify-center flex-shrink-0">
+      <i class="fa-solid fa-file-shield text-primary text-base"></i>
+    </div>
+    <span class="font-bricolage text-[18px] font-bold text-white tracking-tight">DocMaster</span>
+    <button class="ml-auto text-white/40 hover:text-white transition-colors lg:hidden" onclick="closeSb()"><i class="fa-solid fa-xmark text-lg"></i></button>
+  </div>
+  <div class="flex-1 overflow-y-auto py-2">
+    <div class="px-[22px] pt-4 pb-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">Principal</div>
+    <nav class="flex flex-col gap-0.5 px-2.5">
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="dashboard.html"><i class="fa-solid fa-house w-[18px] text-center opacity-80"></i>Tableau de bord</a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="Mesdocument.html"><i class="fa-solid fa-folder-open w-[18px] text-center opacity-80"></i>Mes Documents</a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="#"><i class="fa-solid fa-file-circle-plus w-[18px] text-center opacity-80"></i>Mes Signalements<span class="ml-auto bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span></a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="#"><i class="fa-solid fa-magnifying-glass w-[18px] text-center opacity-80"></i>Rechercher</a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="#"><i class="fa-solid fa-envelope w-[18px] text-center opacity-80"></i>Messages<span class="ml-auto bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">5</span></a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="#"><i class="fa-solid fa-bell w-[18px] text-center opacity-80"></i>Notifications</a>
+    </nav>
+    <div class="px-[22px] pt-5 pb-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">Compte</div>
+    <nav class="flex flex-col gap-0.5 px-2.5">
+      <a class="sb-item active flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white cursor-pointer relative" href="Abonnement.html"><i class="fa-solid fa-crown w-[18px] text-center text-primary"></i>Abonnement</a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="parrainage.html"><i class="fa-solid fa-users-gear w-[18px] text-center opacity-80"></i>Parrainage</a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="#"><i class="fa-solid fa-gear w-[18px] text-center opacity-80"></i>Paramètres</a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-red-400/70 cursor-pointer transition-all hover:bg-white/5 hover:text-red-400 relative" href="#"><i class="fa-solid fa-right-from-bracket w-[18px] text-center opacity-80"></i>Déconnexion</a>
+    </nav>
+  </div>
+  <div class="px-2.5 py-3.5 border-t border-white/10 flex-shrink-0">
+    <div class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-[11px] cursor-pointer hover:bg-white/5 transition-colors">
+      <div class="w-[33px] h-[33px] rounded-[9px] bg-primary flex items-center justify-center font-bricolage text-xs font-extrabold text-white flex-shrink-0" id="userInitial">JM</div>
+      <div><div class="text-[13px] font-semibold text-white leading-tight" id="userName">Jean-Marc D.</div><div class="text-[11px] text-white/40">Plan Standard</div></div>
+      <i class="fa-solid fa-chevron-up ml-auto text-white/30 text-[11px]"></i>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main-wrapper">
+  <header class="sticky top-0 z-30 h-[58px] bg-white border-b border-borderMain flex items-center px-4 gap-3 flex-shrink-0">
+    <button class="w-9 h-9 flex items-center justify-center rounded-[9px] bg-surface2 border border-borderMain text-textMain text-base cursor-pointer hover:border-primary hover:text-primary transition-all md:hidden" onclick="openSb()"><i class="fa-solid fa-bars"></i></button>
+    <span class="font-bricolage text-base font-bold text-textMain tracking-tight">Abonnement</span>
+    <div class="ml-auto flex items-center gap-2">
+      <div class="relative w-9 h-9 rounded-[9px] bg-surface2 border border-borderMain flex items-center justify-center text-sm text-textMain cursor-pointer hover:border-primary hover:text-primary transition-all">
+        <i class="fa-regular fa-bell"></i>
+        <div class="absolute top-[7px] right-[7px] w-[7px] h-[7px] rounded-full bg-primary border-2 border-white"></div>
+      </div>
+      <div class="flex items-center gap-2 pl-1.5 pr-3 py-1 bg-surface2 border border-borderMain rounded-[10px] cursor-pointer hover:border-primary transition-colors">
+        <div class="w-[26px] h-[26px] rounded-[6px] bg-green-dark flex items-center justify-center font-bricolage text-[11px] font-extrabold text-primary" id="topInitial">JM</div>
+        <span class="text-[12.5px] font-semibold text-textMain hidden xs:block" id="topName">Jean-Marc</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-content custom-scroll p-4 sm:p-6 flex flex-col gap-5 pb-24 md:pb-10">
+
+    <!-- Greeting -->
+    <div class="flex items-start justify-between gap-3 flex-wrap">
+      <div>
+        <h1 class="font-bricolage text-xl sm:text-2xl font-extrabold text-textMain tracking-tight leading-tight">Bonjour, <span id="helloName">Jean-Marc</span> </h1>
+        <p class="text-[12.5px] sm:text-[13.5px] text-textMuted font-medium mt-0.5 italic">Gérez votre abonnement</p>
+      </div>
+      <div class="text-[11.5px] text-textMuted font-medium bg-white border border-borderMain px-3 py-1.5 rounded-[9px] flex items-center gap-2 whitespace-nowrap">
+        <i class="fa-regular fa-calendar text-primary"></i>
+        <span id="currentDay">Lundi 9 mars 2026</span>
+      </div>
+    </div>
+
+    <!-- Plan actuel card -->
+    <div class="bg-green-dark rounded-[20px] sm:rounded-[24px] p-5 sm:p-6 relative overflow-hidden">
+      <div class="absolute w-56 h-56 rounded-full bg-primary/6 -top-16 -right-10 pointer-events-none"></div>
+      <div class="absolute w-32 h-32 rounded-full bg-white/3 bottom-0 left-16 pointer-events-none"></div>
+      <div class="relative z-10 flex flex-col sm:flex-row sm:items-center gap-5">
+        <div class="flex-1">
+          <div class="inline-flex items-center gap-2 bg-primary/15 border border-primary/25 rounded-full px-3 py-1 mb-3">
+            <i class="fa-solid fa-bolt text-primary text-[10px]"></i>
+            <span class="text-[11px] font-bold text-primary uppercase tracking-wide">Plan actuel</span>
+          </div>
+          <h1 class="font-bricolage text-3xl font-extrabold text-white leading-tight mb-1">Plan Standard</h1>
+          <p class="text-white/50 text-[13.5px] mb-4">Renouvelé le <strong class="text-white/80">10 avril 2024</strong> · Prochaine échéance le <strong class="text-white/80">10 mai 2024</strong></p>
+          <div class="flex flex-wrap gap-2">
+            <div class="flex items-center gap-2 bg-white/8 border border-white/10 rounded-full px-3 py-1.5">
+              <i class="fa-solid fa-file-circle-plus text-primary text-[11px]"></i>
+              <span class="text-white/80 text-[12.5px] font-medium">5 signalements / mois</span>
+            </div>
+            <div class="flex items-center gap-2 bg-white/8 border border-white/10 rounded-full px-3 py-1.5">
+              <i class="fa-solid fa-bell text-primary text-[11px]"></i>
+              <span class="text-white/80 text-[12.5px] font-medium">Alertes SMS & Email</span>
+            </div>
+          </div>
+        </div>
+        <!-- Usage donut mini -->
+        <div class="bg-white/8 border border-white/10 rounded-[16px] p-4 text-center flex-shrink-0 min-w-[140px]">
+          <div class="relative w-20 h-20 mx-auto mb-2">
+            <svg class="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="8"/>
+              <circle cx="40" cy="40" r="32" fill="none" stroke="#F5A64B" stroke-width="8" stroke-dasharray="201.1" stroke-dashoffset="80.4" stroke-linecap="round"/>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <div class="font-bricolage text-xl font-extrabold text-white leading-none">3/5</div>
+            </div>
+          </div>
+          <div class="text-white/60 text-[12px] font-medium">Utilisés ce mois</div>
+          <div class="mt-2 w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+            <div class="h-full bg-primary rounded-full" style="width:60%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Billing toggle + plans -->
+    <div>
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+        <h2 class="font-bricolage text-xl font-bold text-textMain">Choisir un plan</h2>
+        <!-- Monthly / Annual toggle -->
+        <div class="flex items-center gap-1 self-start sm:self-auto bg-white border border-borderMain rounded-[12px] p-1">
+          <button class="tab-btn active px-4 py-2 rounded-[9px] text-[12.5px] font-bold" id="tab-monthly" onclick="setTab('monthly')">Mensuel</button>
+          <button class="tab-btn px-4 py-2 rounded-[9px] text-[12.5px] font-bold text-textMuted" id="tab-annual" onclick="setTab('annual')">
+            Annuel
+            <span class="ml-1.5 text-[10px] font-bold text-green-mid bg-green-light px-1.5 py-0.5 rounded-full">-20%</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Plans grid (JS injected) -->
+      <div id="pricing-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- JS will populate this -->
+      </div>
+    </div>
+
+    <!-- Factures & Historique -->
+    <div class="bg-white border border-borderMain rounded-[20px] overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-borderMain">
+        <h2 class="font-bricolage text-base font-bold text-textMain flex items-center gap-2">
+          <i class="fa-solid fa-receipt text-primary text-sm"></i>Historique de facturation
+        </h2>
+        <button class="text-[11.5px] font-semibold text-primary hover:underline">Tout exporter</button>
+      </div>
+      <div class="divide-y divide-borderMain">
+        <div class="flex items-center gap-3 px-5 py-3.5 hover:bg-surface2 transition-colors">
+          <div class="w-9 h-9 rounded-[10px] bg-green-light flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-file-invoice text-green-mid text-sm"></i></div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[13.5px] font-semibold text-textMain">Plan Standard — Avril 2024</div>
+            <div class="text-[11.5px] text-textMuted italic">10 avr. 2024 · Paiement automatique</div>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <div class="text-[13.5px] font-bold text-textMain">500 XAF</div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Payé</span>
+          </div>
+          <button class="ml-2 w-8 h-8 rounded-[8px] bg-bgMain border border-borderMain flex items-center justify-center hover:border-primary hover:text-primary transition-colors text-textMuted flex-shrink-0">
+            <i class="fa-solid fa-download text-[11px]"></i>
+          </button>
+        </div>
+        <div class="flex items-center gap-3 px-5 py-3.5 hover:bg-surface2 transition-colors">
+          <div class="w-9 h-9 rounded-[10px] bg-green-light flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-file-invoice text-green-mid text-sm"></i></div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[13.5px] font-semibold text-textMain">Plan Standard — Mars 2024</div>
+            <div class="text-[11.5px] text-textMuted italic">10 mars 2024 · Paiement automatique</div>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <div class="text-[13.5px] font-bold text-textMain">500 XAF</div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Payé</span>
+          </div>
+          <button class="ml-2 w-8 h-8 rounded-[8px] bg-bgMain border border-borderMain flex items-center justify-center hover:border-primary hover:text-primary transition-colors text-textMuted flex-shrink-0">
+            <i class="fa-solid fa-download text-[11px]"></i>
+          </button>
+        </div>
+        <div class="flex items-center gap-3 px-5 py-3.5 hover:bg-surface2 transition-colors">
+          <div class="w-9 h-9 rounded-[10px] bg-green-light flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-file-invoice text-green-mid text-sm"></i></div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[13.5px] font-semibold text-textMain">Plan Standard — Février 2024</div>
+            <div class="text-[11.5px] text-textMuted italic">10 fév. 2024 · Paiement automatique</div>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <div class="text-[13.5px] font-bold text-textMain">500 XAF</div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Payé</span>
+          </div>
+          <button class="ml-2 w-8 h-8 rounded-[8px] bg-bgMain border border-borderMain flex items-center justify-center hover:border-primary hover:text-primary transition-colors text-textMuted flex-shrink-0">
+            <i class="fa-solid fa-download text-[11px]"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Méthode de paiement + Annulation -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="bg-white border border-borderMain rounded-[18px] p-5">
+        <h3 class="font-bricolage text-base font-bold text-textMain mb-4 flex items-center gap-2"><i class="fa-solid fa-credit-card text-primary text-sm"></i>Moyen de paiement</h3>
+        <div class="flex items-center gap-3 p-3.5 bg-bgMain border border-borderMain rounded-[12px] mb-3">
+          <div class="w-10 h-7 bg-[#F96900] rounded-[6px] flex items-center justify-center flex-shrink-0">
+            <span class="text-white text-[9px] font-extrabold tracking-tight">MTN</span>
+          </div>
+          <div class="flex-1">
+            <div class="text-[13px] font-semibold text-textMain">MTN Mobile Money</div>
+            <div class="text-[11.5px] text-textMuted">+237 6XX XXX XXX</div>
+          </div>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Actif</span>
+        </div>
+        <button class="w-full py-2.5 rounded-[12px] bg-bgMain border border-borderMain text-textMain text-[13px] font-bold hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2">
+          <i class="fa-solid fa-plus text-[11px]"></i> Ajouter un moyen de paiement
+        </button>
+      </div>
+
+      <div class="bg-white border border-borderMain rounded-[18px] p-5 flex flex-col justify-between">
+        <div>
+          <h3 class="font-bricolage text-base font-bold text-textMain mb-2 flex items-center gap-2"><i class="fa-solid fa-circle-xmark text-red-400 text-sm"></i>Gestion de l'abonnement</h3>
+          <p class="text-[12.5px] text-textMuted leading-relaxed mb-4">Votre abonnement se renouvelle automatiquement. Vous pouvez l'annuler à tout moment sans frais supplémentaires.</p>
+        </div>
+        <div class="flex flex-col gap-2">
+          <button class="w-full py-2.5 rounded-[12px] bg-bgMain border border-borderMain text-textMain text-[13px] font-bold hover:border-textMain transition-colors">
+            Mettre en pause
+          </button>
+          <button onclick="confirmCancel()" class="w-full py-2.5 rounded-[12px] bg-red-50 border border-red-100 text-red-600 text-[13px] font-bold hover:bg-red-100 transition-colors">
+            Annuler l'abonnement
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparatif des plans -->
+    <div class="bg-white border border-borderMain rounded-[20px] overflow-hidden">
+      <div class="px-5 py-4 border-b border-borderMain">
+        <h2 class="font-bricolage text-base font-bold text-textMain flex items-center gap-2">
+          <i class="fa-solid fa-table-columns text-primary text-sm"></i>Comparatif complet des plans
+        </h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[520px]">
+          <thead>
+            <tr class="border-b border-borderMain">
+              <th class="text-left px-5 py-3 text-[12px] font-bold text-textMuted uppercase tracking-wide w-2/5">Fonctionnalité</th>
+              <th class="px-3 py-3 text-center text-[12.5px] font-bold text-textMuted">Gratuit</th>
+              <th class="px-3 py-3 text-center text-[12.5px] font-bold text-primary bg-primary/5">Standard</th>
+              <th class="px-3 py-3 text-center text-[12.5px] font-bold text-green-mid">Pro</th>
+              <th class="px-3 py-3 text-center text-[12.5px] font-bold text-amber-600">Premium</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-borderMain">
+            <tr class="hover:bg-surface2 transition-colors">
+              <td class="px-5 py-3 text-[13px] font-medium text-textMain">Signalements / mois</td>
+              <td class="px-3 py-3 text-center text-[13px] font-semibold text-textMuted">1</td>
+              <td class="px-3 py-3 text-center text-[13px] font-semibold text-primary bg-primary/5">5</td>
+              <td class="px-3 py-3 text-center text-[13px] font-semibold text-green-mid">15</td>
+              <td class="px-3 py-3 text-center text-[13px] font-semibold text-amber-600">∞</td>
+            </tr>
+            <tr class="hover:bg-surface2 transition-colors">
+              <td class="px-5 py-3 text-[13px] font-medium text-textMain">Alertes Email</td>
+              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
+              <td class="px-3 py-3 text-center bg-primary/5"><i class="fa-solid fa-check feature-check"></i></td>
+              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
+              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
+            </tr>
+            <tr class="hover:bg-surface2 transition-colors">
+              <td class="px-5 py-3 text-[13px] font-medium text-textMain">Alertes SMS</td>
+              <td class="px-3 py-3 text-center"><i class="fa-solid fa-xmark text-gray-300"></i></td>
+              <td class="px-3 py-3 text-center bg-primary/5"><i class="fa-solid fa-check feature-check"></i></td>
+              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
+              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
+            </tr>
+            <tr class="hover:bg-surface2 transition-colors">
+              <td class="px-5 py-3 text-[13px] font-medium text-textMain">Géolocalisation avancée</td>
+              <td class="px-3 py-3 text-center"><i class="fa-solid fa-xmark text-gray-300"></i></td>
+              <td class="px-3 py-3 text-center bg-primary/5"><i class="fa-solid fa-xmark text-gray-300"></i></td>
+              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
+              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
+            </tr>
+            <tr class="hover:bg-surface2 transition-colors">
+              <td class="px-5 py-3 text-[13px] font-medium text-textMain">Support prioritaire</td>
+              <td class="px-3 py-3 text-center"><i class="fa-solid fa-xmark text-gray-300"></i></td>
+              <td class="px-3 py-3 text-center bg-primary/5"><i class="fa-solid fa-xmark text-gray-300"></i></td>
+              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
+              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
+            </tr>
+            <tr class="hover:bg-surface2 transition-colors">
+              <td class="px-5 py-3 text-[13px] font-medium text-textMain">API & intégrations</td>
+              <td class="px-3 py-3 text-center"><i class="fa-solid fa-xmark text-gray-300"></i></td>
+              <td class="px-3 py-3 text-center bg-primary/5"><i class="fa-solid fa-xmark text-gray-300"></i></td>
+              <td class="px-3 py-3 text-center"><i class="fa-solid fa-xmark text-gray-300"></i></td>
+              <td class="px-3 py-3 text-center"><i class="fa-solid fa-check feature-check"></i></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /main-wrapper -->
+
+<!-- ══ BOTTOM NAV (mobile only) ══ -->
+<nav class="bottom-nav fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-borderMain px-2 py-2 justify-around flex md:hidden">
+  <a href="dashboard.html" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted">
+    <i class="fa-solid fa-house text-base"></i>
+    <span class="text-[10px] font-medium">Accueil</span>
+  </a>
+  <a href="Mesdocument.html" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted">
+    <i class="fa-solid fa-file-circle-plus text-base"></i>
+    <span class="text-[10px] font-medium">Signaler</span>
+  </a>
+  <a href="rechercher.html" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted">
+    <i class="fa-solid fa-magnifying-glass text-base"></i>
+    <span class="text-[10px] font-medium">Rechercher</span>
+  </a>
+  <a href="#" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted relative">
+    <i class="fa-solid fa-envelope text-base"></i>
+    <span class="text-[10px] font-medium">Messages</span>
+    <div class="absolute top-1 right-2 w-[7px] h-[7px] rounded-full bg-primary border-2 border-white"></div>
+  </a>
+  <a href="#" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted" onclick="openSb()">
+    <i class="fa-solid fa-bars text-base"></i>
+    <span class="text-[10px] font-medium">Plus</span>
+  </a>
+</nav>
+
+<!-- Subscription Modal (JS required) -->
+<div id="modalWrapper" class="hidden fixed inset-0 z-[100] items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all">
+  <div id="modalBox" class="bg-white rounded-[28px] w-full max-w-md p-6 sm:p-8 transform transition-transform translate-y-full">
+    <div class="flex items-center justify-between mb-6">
+      <h3 id="modalTitle" class="font-bricolage text-xl font-bold text-textMain">Paiement</h3>
+      <button onclick="closeSubscriptionModal()" class="w-8 h-8 rounded-full bg-bgMain flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-colors">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Step 1: Info -->
+    <div id="viewStep1">
+      <div class="bg-bgMain rounded-[18px] p-5 mb-6">
+        <div class="flex justify-between mb-2">
+          <span class="text-[13px] text-textMuted">Plan sélectionné</span>
+          <span id="displayPlan" class="text-[13px] font-bold text-textMain">Standard</span>
+        </div>
+        <div class="flex justify-between mb-2">
+          <span class="text-[13px] text-textMuted">Prix</span>
+          <span id="displayPrix" class="text-[13px] font-bold text-primary">500 FCFA</span>
+        </div>
+        <div class="flex justify-between mb-2">
+          <span class="text-[13px] text-textMuted">Signalements</span>
+          <span id="displayDocs" class="text-[13px] font-bold text-textMain">5 / mois</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-[13px] text-textMuted">Validité</span>
+          <span id="displaytime" class="text-[13px] font-bold text-textMain">30 jours</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Payment details -->
+    <div id="viewStep2" class="hidden">
+      <div class="space-y-4 mb-6">
+        <div>
+          <label class="block text-[12px] font-bold text-textMuted uppercase tracking-wider mb-1.5">Numéro de téléphone</label>
+          <input type="tel" id="payPhone" class="w-full px-4 py-3 bg-bgMain border border-borderMain rounded-[12px] outline-none focus:border-primary">
+        </div>
+        <div>
+          <label class="block text-[12px] font-bold text-textMuted uppercase tracking-wider mb-1.5">Nom / Pseudo</label>
+          <input type="text" id="payPseudo" class="w-full px-4 py-3 bg-bgMain border border-borderMain rounded-[12px] outline-none focus:border-primary" placeholder="Votre nom">
+        </div>
+      </div>
+    </div>
+
+    <button id="submitBtn" onclick="processPayment()" class="w-full py-4 rounded-[16px] bg-primary text-white font-bricolage font-bold shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all active:scale-[.98]">
+      Suivant
+    </button>
+  </div>
+</div>
+
+<!-- Modal confirm cancel -->
+<div id="cancel-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4">
+  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="document.getElementById('cancel-modal').classList.add('hidden')"></div>
+  <div class="relative bg-white rounded-[24px] p-6 max-w-sm w-full shadow-2xl">
+    <div class="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
+      <i class="fa-solid fa-triangle-exclamation text-red-500 text-xl"></i>
+    </div>
+    <h3 class="font-bricolage text-xl font-bold text-textMain text-center mb-2">Annuler l'abonnement ?</h3>
+    <p class="text-[13.5px] text-textMuted text-center mb-5 leading-relaxed">Vous conserverez votre plan Standard jusqu'au <strong class="text-textMain">10 mai 2024</strong>. Aucun remboursement ne sera effectué.</p>
+    <div class="flex gap-3">
+      <button onclick="document.getElementById('cancel-modal').classList.add('hidden')" class="flex-1 py-2.5 rounded-[12px] bg-bgMain border border-borderMain text-textMain font-bold hover:border-textMain transition-colors">Annuler</button>
+      <button class="flex-1 py-2.5 rounded-[12px] bg-red-500 text-white font-bold hover:bg-red-600 transition-colors">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<script src="./js/script.js"></script>
+<script>
+function openSb() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeSb() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+function confirmCancel(){document.getElementById('cancel-modal').classList.remove('hidden')}
+
+const prices = {
+  monthly: { std: '500', pro: '1 500', prem: '2 000' },
+  annual:  { std: '400', pro: '1 200', prem: '1 600' }
+};
+function setTab(tab){
+  ['monthly','annual'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+    document.getElementById('tab-'+t).classList.toggle('text-textMuted',t!==tab);
+  });
+  document.getElementById('std-price').textContent = prices[tab].std;
+  document.getElementById('pro-price').textContent = prices[tab].pro;
+  document.getElementById('prem-price').textContent = prices[tab].prem;
+}
+function selectPlan(plan){alert('Passage au plan '+plan+' en cours de déploiement !')}
+</script>
+</body>
+</html>

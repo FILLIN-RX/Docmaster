@@ -95,6 +95,7 @@ function checkAuth() {
   if (session) {
     const user = JSON.parse(session);
     updateUI(user);
+    markActiveSidebar();
   }
 }
 
@@ -115,6 +116,32 @@ function updateUI(user) {
     if (el) el.innerText = user.initial;
   });
 }
+
+// Highlight the active sidebar link based on current URL
+function markActiveSidebar() {
+  const current = window.location.pathname.split("/").pop();
+  document.querySelectorAll(".sb-item").forEach((a) => {
+    const href = a.getAttribute("href");
+    if (href && href !== "#" && href.split("/").pop() === current) {
+      a.classList.add("active");
+    } else {
+      a.classList.remove("active");
+    }
+  });
+}
+
+// sidebar open/close helpers (used by the hamburger & overlay)
+function openSb() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeSb() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// ensure sidebar starts closed on mobile
+if (window.innerWidth < 900) closeSb();
 
 // Initialize on load
 document.addEventListener("DOMContentLoaded", () => {
@@ -159,6 +186,13 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       logout();
+    });
+  });
+
+  // close sidebar on mobile when a navigation link is tapped
+  document.querySelectorAll(".sb-item").forEach((a) => {
+    a.addEventListener("click", () => {
+      if (window.innerWidth < 900) closeSb();
     });
   });
 });

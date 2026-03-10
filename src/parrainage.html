@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocMaster — Parrainage</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="./js/auth.js"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        primary: { DEFAULT: '#F5A64B', dark: '#D98A30', light: '#FEF0DC' },
+        'green-dark': '#1E3A2F', 'green-mid': '#2D5A42', 'green-light': '#E8F5EE',
+        bgMain: '#F4EFE6', surface: '#FFFFFF', surface2: '#FAF7F2',
+        textMain: '#1A1A1A', textMuted: '#9CA3AF', borderMain: '#EAE3D8',
+      },
+      fontFamily: { poppins: ['Poppins','sans-serif'], bricolage: ['"Bricolage Grotesque"','sans-serif'] }
+    }
+  }
+}
+</script>
+<style>
+:root{--sidebar:260px}
+html,body{font-family:'Poppins',sans-serif;background:#F4EFE6}
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar);transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:50;overflow-y:auto}
+.sidebar.open{transform:translateX(0)}
+@media(min-width:900px){
+  body{display:flex;height:100vh;overflow:hidden}
+  .sidebar{position:relative;transform:none!important;flex-shrink:0}
+  .main-wrapper{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+  .main-content{flex:1;overflow-y:auto}
+}
+@media(max-width:899px){
+  .main-wrapper{display:flex;flex-direction:column;min-height:100vh}
+}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .28s}
+.sb-overlay.show{display:block;opacity:1;pointer-events:all}
+.sidebar::after{content:'';position:absolute;width:260px;height:260px;border-radius:50%;background:rgba(245,166,75,.05);bottom:-80px;left:-60px;pointer-events:none}
+.sb-item.active{background:rgba(245,166,75,.15);color:#fff}
+.sb-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:55%;background:#F5A64B;border-radius:0 3px 3px 0}
+.custom-scroll::-webkit-scrollbar{width:4px}
+.custom-scroll::-webkit-scrollbar-thumb{background:#DDD5C8;border-radius:10px}
+.copy-btn:active{transform:scale(.95)}
+.shimmer{background:linear-gradient(90deg,#f5a64b10 0%,#f5a64b30 50%,#f5a64b10 100%);background-size:200%;animation:shimmer 2s infinite}
+@keyframes shimmer{0%{background-position:200%}100%{background-position:-200%}}
+.step-line::after{content:'';position:absolute;top:50%;left:100%;width:100%;height:2px;background:linear-gradient(90deg,#EAE3D8,transparent);transform:translateY(-50%)}
+</style>
+</head>
+<body>
+<div class="sb-overlay" id="overlay" onclick="closeSb()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar w-[var(--sidebar)] bg-green-dark flex flex-col" id="sidebar">
+  <div class="flex items-center gap-3 px-6 py-5 border-b border-white/10 flex-shrink-0">
+    <div class="w-9 h-9 rounded-[10px] bg-primary/15 border border-primary/25 flex items-center justify-center flex-shrink-0">
+      <i class="fa-solid fa-file-shield text-primary text-base"></i>
+    </div>
+    <span class="font-bricolage text-[18px] font-bold text-white tracking-tight">DocMaster</span>
+    <button class="ml-auto text-white/40 hover:text-white transition-colors lg:hidden" onclick="closeSb()"><i class="fa-solid fa-xmark text-lg"></i></button>
+  </div>
+  <div class="flex-1 overflow-y-auto py-2">
+    <div class="px-[22px] pt-4 pb-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">Principal</div>
+    <nav class="flex flex-col gap-0.5 px-2.5">
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="dashboard.html"><i class="fa-solid fa-house w-[18px] text-center opacity-80"></i>Tableau de bord</a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="Mesdocument.html"><i class="fa-solid fa-folder-open w-[18px] text-center opacity-80"></i>Mes Documents</a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="#"><i class="fa-solid fa-file-circle-plus w-[18px] text-center opacity-80"></i>Mes Signalements<span class="ml-auto bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span></a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="#"><i class="fa-solid fa-magnifying-glass w-[18px] text-center opacity-80"></i>Rechercher</a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="#"><i class="fa-solid fa-envelope w-[18px] text-center opacity-80"></i>Messages<span class="ml-auto bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">5</span></a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="#"><i class="fa-solid fa-bell w-[18px] text-center opacity-80"></i>Notifications</a>
+    </nav>
+    <div class="px-[22px] pt-5 pb-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">Compte</div>
+    <nav class="flex flex-col gap-0.5 px-2.5">
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="Abonnement.html"><i class="fa-solid fa-crown w-[18px] text-center opacity-80"></i>Abonnement</a>
+      <a class="sb-item active flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white cursor-pointer relative" href="parrainage.html"><i class="fa-solid fa-users-gear w-[18px] text-center text-primary"></i>Parrainage</a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="#"><i class="fa-solid fa-gear w-[18px] text-center opacity-80"></i>Paramètres</a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-red-400/70 cursor-pointer transition-all hover:bg-white/5 hover:text-red-400 relative" href="#"><i class="fa-solid fa-right-from-bracket w-[18px] text-center opacity-80"></i>Déconnexion</a>
+    </nav>
+  </div>
+  <div class="px-2.5 py-3.5 border-t border-white/10 flex-shrink-0">
+    <div class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-[11px] cursor-pointer hover:bg-white/5 transition-colors">
+      <div class="w-[33px] h-[33px] rounded-[9px] bg-primary flex items-center justify-center font-bricolage text-xs font-extrabold text-white flex-shrink-0" id="userInitial">JM</div>
+      <div><div class="text-[13px] font-semibold text-white leading-tight" id="userName">Jean-Marc D.</div><div class="text-[11px] text-white/40">Plan Standard</div></div>
+      <i class="fa-solid fa-chevron-up ml-auto text-white/30 text-[11px]"></i>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main-wrapper" id="mainWrapper">
+  <!-- Topbar -->
+  <header class="sticky top-0 z-30 h-[58px] bg-white border-b border-borderMain flex items-center px-4 gap-3 flex-shrink-0">
+    <button class="w-9 h-9 flex items-center justify-center rounded-[9px] bg-surface2 border border-borderMain text-textMain text-base cursor-pointer hover:border-primary hover:text-primary transition-all md:hidden" onclick="openSb()"><i class="fa-solid fa-bars"></i></button>
+    <span class="font-bricolage text-base font-bold text-textMain tracking-tight">Parrainage</span>
+    <div class="ml-auto flex items-center gap-2">
+      <div class="relative w-9 h-9 rounded-[9px] bg-surface2 border border-borderMain flex items-center justify-center text-sm text-textMain cursor-pointer hover:border-primary hover:text-primary transition-all">
+        <i class="fa-regular fa-bell"></i>
+        <div class="absolute top-[7px] right-[7px] w-[7px] h-[7px] rounded-full bg-primary border-2 border-white"></div>
+      </div>
+      <div class="flex items-center gap-2 pl-1.5 pr-3 py-1 bg-surface2 border border-borderMain rounded-[10px] cursor-pointer hover:border-primary transition-colors">
+        <div class="w-[26px] h-[26px] rounded-[6px] bg-green-dark flex items-center justify-center font-bricolage text-[11px] font-extrabold text-primary" id="topInitial">JM</div>
+        <span class="text-[12.5px] font-semibold text-textMain hidden sm:block" id="topName">Jean-Marc</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <div class="main-content custom-scroll p-4 sm:p-6 flex flex-col gap-5 pb-24 md:pb-10">
+
+    <!-- Greeting -->
+    <div class="flex items-start justify-between gap-3 flex-wrap">
+      <div>
+        <h1 class="font-bricolage text-xl sm:text-2xl font-extrabold text-textMain tracking-tight leading-tight">Bonjour, <span id="helloName">Jean-Marc</span> </h1>
+        <p class="text-[12.5px] sm:text-[13.5px] text-textMuted font-medium mt-0.5 italic">Suivez votre programme de parrainage</p>
+      </div>
+      <div class="text-[11.5px] text-textMuted font-medium bg-white border border-borderMain px-3 py-1.5 rounded-[9px] flex items-center gap-2 whitespace-nowrap">
+        <i class="fa-regular fa-calendar text-primary"></i>
+        <span id="currentDay">Lundi 9 mars 2026</span>
+      </div>
+    </div>
+
+    <!-- Hero Banner -->
+    <div class="relative bg-green-dark rounded-[20px] sm:rounded-[24px] overflow-hidden p-6 sm:p-8">
+      <div class="absolute inset-0 pointer-events-none">
+        <div class="absolute w-64 h-64 rounded-full bg-primary/8 -top-16 -right-16"></div>
+        <div class="absolute w-40 h-40 rounded-full bg-primary/5 bottom-0 left-8"></div>
+      </div>
+      <div class="relative z-10 flex flex-col sm:flex-row sm:items-center gap-5">
+        <div class="flex-1">
+          <div class="inline-flex items-center gap-2 bg-primary/15 border border-primary/25 rounded-full px-3 py-1 mb-3">
+            <i class="fa-solid fa-gift text-primary text-[10px]"></i>
+            <span class="text-[11px] font-bold text-primary uppercase tracking-wide">Programme de parrainage</span>
+          </div>
+          <h1 class="font-bricolage text-2xl sm:text-3xl font-extrabold text-white leading-tight mb-2">Parrainez et gagnez<br class="hidden sm:block"> ensemble 🎉</h1>
+          <p class="text-white/60 text-[14px] leading-relaxed">Invitez vos proches sur DocMaster. Pour chaque parrainage validé, vous et votre filleul recevez des avantages exclusifs.</p>
+        </div>
+        <div class="bg-white/8 border border-white/10 rounded-[18px] p-5 flex-shrink-0 text-center min-w-[160px]">
+          <div class="text-[42px] font-bricolage font-extrabold text-primary leading-none">7</div>
+          <div class="text-white/60 text-[12px] font-medium mt-1">Filleuls actifs</div>
+          <div class="mt-3 flex items-center justify-center gap-1">
+            <div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-[9px] font-bold text-white -ml-1 first:ml-0 border-2 border-green-dark">A</div>
+            <div class="w-6 h-6 rounded-full bg-blue-400 flex items-center justify-center text-[9px] font-bold text-white -ml-1 border-2 border-green-dark">B</div>
+            <div class="w-6 h-6 rounded-full bg-purple-400 flex items-center justify-center text-[9px] font-bold text-white -ml-1 border-2 border-green-dark">C</div>
+            <div class="w-6 h-6 rounded-full bg-green-mid flex items-center justify-center text-[9px] font-bold text-white -ml-1 border-2 border-green-dark">+4</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Code + Stats row -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+      <!-- Mon code -->
+      <div class="sm:col-span-2 lg:col-span-1 bg-white border border-borderMain rounded-[18px] p-5">
+        <p class="text-[11px] font-bold text-textMuted uppercase tracking-widest mb-3">Mon code de parrainage</p>
+        <div class="flex items-center gap-2 bg-bgMain border border-borderMain rounded-[12px] px-4 py-3 mb-3">
+          <span class="font-bricolage text-2xl font-extrabold text-textMain tracking-widest flex-1" id="ref-code">DOC-JM2024</span>
+          <button onclick="copyCode()" class="copy-btn flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-[12px] font-bold rounded-[8px] transition-all hover:bg-primary-dark" id="copy-btn">
+            <i class="fa-regular fa-copy text-[11px]"></i> Copier
+          </button>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="shareCode('whatsapp')" class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#25D366]/10 border border-[#25D366]/20 text-[#1a9e4e] text-[12.5px] font-bold rounded-[10px] hover:bg-[#25D366]/20 transition-colors">
+            <i class="fa-brands fa-whatsapp text-base"></i> WhatsApp
+          </button>
+          <button onclick="shareCode('sms')" class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-50 border border-blue-100 text-blue-700 text-[12.5px] font-bold rounded-[10px] hover:bg-blue-100 transition-colors">
+            <i class="fa-solid fa-message text-base"></i> SMS
+          </button>
+          <button onclick="shareCode('copy-link')" class="flex items-center justify-center w-10 py-2.5 bg-surface2 border border-borderMain text-textMuted rounded-[10px] hover:border-primary hover:text-primary transition-colors">
+            <i class="fa-solid fa-link text-[12px]"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat: Total gagné -->
+      <div class="bg-white border border-borderMain rounded-[18px] p-5 flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <div class="w-10 h-10 rounded-[11px] bg-primary/10 flex items-center justify-center">
+            <i class="fa-solid fa-wallet text-primary text-base"></i>
+          </div>
+          <span class="text-[10px] font-bold py-1 px-2.5 rounded-full bg-green-light text-green-mid">Ce mois</span>
+        </div>
+        <div>
+          <div class="font-bricolage text-3xl font-extrabold text-textMain">3 500 <span class="text-lg font-bold text-textMuted">XAF</span></div>
+          <div class="text-[12.5px] text-textMuted font-medium">Gains cumulés</div>
+        </div>
+        <div class="h-1.5 bg-bgMain rounded-full overflow-hidden">
+          <div class="h-full bg-primary rounded-full shimmer" style="width:58%"></div>
+        </div>
+        <div class="text-[11.5px] text-textMuted">Prochain palier : <span class="font-bold text-textMain">5 000 XAF</span></div>
+      </div>
+
+      <!-- Stat: signalements offerts -->
+      <div class="bg-white border border-borderMain rounded-[18px] p-5 flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <div class="w-10 h-10 rounded-[11px] bg-green-light flex items-center justify-center">
+            <i class="fa-solid fa-file-circle-plus text-green-mid text-base"></i>
+          </div>
+          <span class="text-[10px] font-bold py-1 px-2.5 rounded-full bg-primary/10 text-primary-dark">Bonus actifs</span>
+        </div>
+        <div>
+          <div class="font-bricolage text-3xl font-extrabold text-textMain">+14 <span class="text-lg font-bold text-textMuted">slots</span></div>
+          <div class="text-[12.5px] text-textMuted font-medium">Signalements bonus</div>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-info text-textMuted text-[11px]"></i>
+          <span class="text-[11.5px] text-textMuted">2 slots par parrainage validé</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comment ça marche -->
+    <div class="bg-white border border-borderMain rounded-[20px] p-5 sm:p-6">
+      <h2 class="font-bricolage text-lg font-bold text-textMain mb-5 flex items-center gap-2">
+        <i class="fa-solid fa-circle-question text-primary text-base"></i>
+        Comment ça marche ?
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-0 relative">
+        <!-- Step 1 -->
+        <div class="flex sm:flex-col items-start sm:items-center gap-4 sm:gap-3 sm:text-center relative sm:px-4">
+          <div class="w-12 h-12 rounded-2xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-share-nodes text-primary text-lg"></i>
+          </div>
+          <div class="sm:hidden absolute left-6 top-14 h-[calc(100%-56px)] w-px bg-borderMain"></div>
+          <div class="hidden sm:block absolute top-6 left-[60%] w-[40%] h-px bg-gradient-to-r from-borderMain to-transparent"></div>
+          <div>
+            <div class="text-[11px] font-bold text-primary uppercase tracking-wide mb-0.5">Étape 1</div>
+            <div class="text-[14px] font-bold text-textMain mb-1">Partagez votre code</div>
+            <div class="text-[12.5px] text-textMuted leading-snug">Envoyez votre code à un ami via WhatsApp, SMS ou lien direct.</div>
+          </div>
+        </div>
+        <!-- Step 2 -->
+        <div class="flex sm:flex-col items-start sm:items-center gap-4 sm:gap-3 sm:text-center relative sm:px-4">
+          <div class="w-12 h-12 rounded-2xl bg-green-light border-2 border-green-dark/20 flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-user-plus text-green-mid text-lg"></i>
+          </div>
+          <div class="sm:hidden absolute left-6 top-14 h-[calc(100%-56px)] w-px bg-borderMain"></div>
+          <div class="hidden sm:block absolute top-6 left-[60%] w-[40%] h-px bg-gradient-to-r from-borderMain to-transparent"></div>
+          <div>
+            <div class="text-[11px] font-bold text-green-mid uppercase tracking-wide mb-0.5">Étape 2</div>
+            <div class="text-[14px] font-bold text-textMain mb-1">Il s'inscrit & valide</div>
+            <div class="text-[12.5px] text-textMuted leading-snug">Votre filleul crée son compte avec votre code et effectue son 1er signalement.</div>
+          </div>
+        </div>
+        <!-- Step 3 -->
+        <div class="flex sm:flex-col items-start sm:items-center gap-4 sm:gap-3 sm:text-center sm:px-4">
+          <div class="w-12 h-12 rounded-2xl bg-amber-50 border-2 border-amber-200 flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-trophy text-amber-500 text-lg"></i>
+          </div>
+          <div>
+            <div class="text-[11px] font-bold text-amber-600 uppercase tracking-wide mb-0.5">Étape 3</div>
+            <div class="text-[14px] font-bold text-textMain mb-1">Vous gagnez tous les deux</div>
+            <div class="text-[12.5px] text-textMuted leading-snug">500 XAF pour vous + 1 mois gratuit pour votre filleul.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Récompenses -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="bg-white border border-borderMain rounded-[18px] p-5">
+        <h3 class="font-bricolage text-base font-bold text-textMain mb-4 flex items-center gap-2"><i class="fa-solid fa-medal text-primary text-sm"></i>Vos récompenses</h3>
+        <div class="space-y-3">
+          <div class="flex items-center justify-between py-2.5 border-b border-borderMain">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-[8px] bg-primary/10 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-coins text-primary text-xs"></i></div>
+              <div><div class="text-[13px] font-semibold text-textMain">Bonus en cash</div><div class="text-[11px] text-textMuted">Par parrainage validé</div></div>
+            </div>
+            <span class="font-bricolage text-[15px] font-bold text-primary">500 XAF</span>
+          </div>
+          <div class="flex items-center justify-between py-2.5 border-b border-borderMain">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-[8px] bg-green-light flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-file-circle-plus text-green-mid text-xs"></i></div>
+              <div><div class="text-[13px] font-semibold text-textMain">Signalement bonus</div><div class="text-[11px] text-textMuted">Par parrainage validé</div></div>
+            </div>
+            <span class="font-bricolage text-[15px] font-bold text-green-mid">+2 slots</span>
+          </div>
+          <div class="flex items-center justify-between py-2.5">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-[8px] bg-amber-50 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-crown text-amber-500 text-xs"></i></div>
+              <div><div class="text-[13px] font-semibold text-textMain">Upgrade de plan</div><div class="text-[11px] text-textMuted">À partir de 5 filleuls</div></div>
+            </div>
+            <span class="font-bricolage text-[15px] font-bold text-amber-600">1 mois Pro</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cadeau filleul -->
+      <div class="bg-green-dark rounded-[18px] p-5 relative overflow-hidden">
+        <div class="absolute w-40 h-40 rounded-full bg-primary/8 -bottom-10 -right-10 pointer-events-none"></div>
+        <h3 class="font-bricolage text-base font-bold text-white mb-1 flex items-center gap-2 relative z-10"><i class="fa-solid fa-gift text-primary text-sm"></i>Cadeau pour votre filleul</h3>
+        <p class="text-white/50 text-[12px] mb-4 relative z-10">Ce que reçoit chaque personne que vous parrainez</p>
+        <div class="space-y-3 relative z-10">
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-check text-primary text-[10px]"></i></div>
+            <span class="text-[13px] text-white/80">1 mois d'abonnement Standard offert</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-check text-primary text-[10px]"></i></div>
+            <span class="text-[13px] text-white/80">3 signalements gratuits dès l'inscription</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-check text-primary text-[10px]"></i></div>
+            <span class="text-[13px] text-white/80">Accès prioritaire au support</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historique des filleuls -->
+    <div class="bg-white border border-borderMain rounded-[20px] overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-borderMain">
+        <h2 class="font-bricolage text-base font-bold text-textMain flex items-center gap-2">
+          <i class="fa-solid fa-users text-primary text-sm"></i>Mes filleuls (7)
+        </h2>
+        <span class="text-[11.5px] font-semibold text-primary cursor-pointer hover:underline">Tout voir →</span>
+      </div>
+      <div class="divide-y divide-borderMain">
+        <!-- items -->
+        <div class="flex items-center gap-3 px-5 py-3.5 hover:bg-surface2 transition-colors cursor-default" onclick="void(0)">
+          <div class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center font-bricolage text-[13px] font-bold text-blue-700 flex-shrink-0">AM</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[13.5px] font-semibold text-textMain">Alice Mbang</div>
+            <div class="text-[11.5px] text-textMuted italic">Inscrite le 12 jan. 2024</div>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <span class="text-[10.5px] font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">Validé</span>
+            <div class="text-[11px] text-primary font-bold mt-1">+500 XAF</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 px-5 py-3.5 hover:bg-surface2 transition-colors cursor-default">
+          <div class="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center font-bricolage text-[13px] font-bold text-purple-700 flex-shrink-0">PN</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[13.5px] font-semibold text-textMain">Paul Nkeng</div>
+            <div class="text-[11.5px] text-textMuted italic">Inscrit le 28 jan. 2024</div>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <span class="text-[10.5px] font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">Validé</span>
+            <div class="text-[11px] text-primary font-bold mt-1">+500 XAF</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 px-5 py-3.5 hover:bg-surface2 transition-colors cursor-default">
+          <div class="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center font-bricolage text-[13px] font-bold text-amber-700 flex-shrink-0">FB</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[13.5px] font-semibold text-textMain">Fatima Bello</div>
+            <div class="text-[11.5px] text-textMuted italic">Inscrite le 3 fév. 2024</div>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <span class="text-[10.5px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">En attente</span>
+            <div class="text-[11px] text-textMuted font-medium mt-1">1er signalement requis</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 px-5 py-3.5 hover:bg-surface2 transition-colors cursor-default">
+          <div class="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center font-bricolage text-[13px] font-bold text-green-700 flex-shrink-0">KE</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[13.5px] font-semibold text-textMain">Kevin Essomba</div>
+            <div class="text-[11.5px] text-textMuted italic">Inscrit le 15 fév. 2024</div>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <span class="text-[10.5px] font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">Validé</span>
+            <div class="text-[11px] text-primary font-bold mt-1">+500 XAF</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progression vers le palier suivant -->
+    <div class="bg-white border border-borderMain rounded-[20px] p-5 sm:p-6">
+      <h2 class="font-bricolage text-base font-bold text-textMain mb-1 flex items-center gap-2"><i class="fa-solid fa-chart-line text-primary text-sm"></i>Progression vers le palier Pro</h2>
+      <p class="text-[12.5px] text-textMuted mb-4 italic">Encore <strong class="text-textMain">3 filleuls</strong> pour débloquer 1 mois de plan Pro offert</p>
+      <div class="flex items-center gap-3 mb-5">
+        <div class="flex -space-x-2">
+          <div v-for="i in 7" class="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-bold" :class="['bg-primary text-white','bg-blue-400 text-white','bg-purple-400 text-white','bg-green-mid text-white','bg-amber-400 text-white','bg-red-300 text-white','bg-pink-300 text-white'][i-1]">{{ ['A','P','F','K','S','L','R'][i-1] }}</div>
+        </div>
+        <div class="flex-1 h-2.5 bg-bgMain rounded-full overflow-hidden border border-borderMain">
+          <div class="h-full bg-gradient-to-r from-primary to-primary-dark rounded-full transition-all duration-700" style="width:70%"></div>
+        </div>
+        <span class="font-bricolage text-[13px] font-bold text-textMain flex-shrink-0">7 / 10</span>
+      </div>
+      <div class="grid grid-cols-3 gap-3">
+        <div class="text-center p-3 rounded-[12px] bg-bgMain border border-borderMain">
+          <div class="font-bricolage text-xl font-bold text-primary">5</div>
+          <div class="text-[11px] text-textMuted font-medium">Filleuls Standard</div>
+        </div>
+        <div class="text-center p-3 rounded-[12px] bg-bgMain border border-borderMain">
+          <div class="font-bricolage text-xl font-bold text-primary">10</div>
+          <div class="text-[11px] text-textMuted font-medium">→ 1 mois Pro</div>
+        </div>
+        <div class="text-center p-3 rounded-[12px] bg-bgMain border border-borderMain">
+          <div class="font-bricolage text-xl font-bold text-primary">20</div>
+          <div class="text-[11px] text-textMuted font-medium">→ 3 mois Pro</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main-wrapper -->
+
+<!-- ══ BOTTOM NAV (mobile only) ══ -->
+<nav class="bottom-nav fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-borderMain px-2 py-2 justify-around flex md:hidden">
+  <a href="dashboard.html" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted">
+    <i class="fa-solid fa-house text-base"></i>
+    <span class="text-[10px] font-medium">Accueil</span>
+  </a>
+  <a href="Mesdocument.html" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted">
+    <i class="fa-solid fa-file-circle-plus text-base"></i>
+    <span class="text-[10px] font-medium">Signaler</span>
+  </a>
+  <a href="rechercher.html" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted">
+    <i class="fa-solid fa-magnifying-glass text-base"></i>
+    <span class="text-[10px] font-medium">Rechercher</span>
+  </a>
+  <a href="#" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted relative">
+    <i class="fa-solid fa-envelope text-base"></i>
+    <span class="text-[10px] font-medium">Messages</span>
+    <div class="absolute top-1 right-2 w-[7px] h-[7px] rounded-full bg-primary border-2 border-white"></div>
+  </a>
+  <a href="#" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-primary" onclick="openSb()">
+    <i class="fa-solid fa-bars text-base"></i>
+    <span class="text-[10px] font-semibold">Plus</span>
+  </a>
+</nav>
+
+<script>
+function openSb() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeSb() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+function copyCode(){
+  const code=document.getElementById('ref-code').textContent;
+  const btn=document.getElementById('copy-btn');
+  navigator.clipboard.writeText(code.trim()).then(()=>{
+    btn.innerHTML='<i class="fa-solid fa-check text-[11px]"></i> Copié !';
+    btn.classList.add('bg-green-600');btn.classList.remove('bg-primary','hover:bg-primary-dark');
+    setTimeout(()=>{btn.innerHTML='<i class="fa-regular fa-copy text-[11px]"></i> Copier';btn.classList.remove('bg-green-600');btn.classList.add('bg-primary','hover:bg-primary-dark')},2000);
+  });
+}
+function shareCode(method){
+  const code='DOC-JM2024';
+  const msg=`Rejoins DocMaster avec mon code *${code}* et reçois 1 mois offert + 3 signalements gratuits ! https://docmaster.cm/ref/${code}`;
+  if(method==='whatsapp') window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+  else if(method==='sms') window.open('sms:?body='+encodeURIComponent(msg));
+  else copyCode();
+}
+</script>
+</body>
+</html>

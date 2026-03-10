@@ -102,9 +102,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         return `
             <div class="${cardClasses}">
-                ${
-                  isFeatured
-                    ? `
+                ${isFeatured
+            ? `
                     <div class="w-full bg-[#F5A64B] pt-12 pb-16 px-6 text-white relative z-10 rounded-t-[2.4rem] overflow-hidden">
                         <span class="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-[0.3em] bg-white/20 px-3 py-1 rounded-full whitespace-nowrap">Most Popular</span>
                         <h3 class="text-2xl font-black tracking-widest uppercase mb-4">${plan.nom}</h3>
@@ -119,7 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         </div>
                     </div>
                 `
-                    : `
+            : `
                     <div class="w-full mb-6">
                         <h3 class="text-xl font-black tracking-widest text-slate-800 mb-4 uppercase">${plan.nom}</h3>
                         <div class="flex justify-center items-start text-slate-800 mb-6">
@@ -129,19 +128,19 @@ document.addEventListener("DOMContentLoaded", () => {
                         <div class="w-full h-px bg-slate-100 mb-2"></div>
                     </div>
                 `
-                }
+          }
 
                 <div class="w-full z-10 p-6 ${isFeatured ? "pt-4" : "pt-0"}">
                     <ul class="w-full mb-8">
                         ${plan.features
-                          .map(
-                            (f, i) => `
+            .map(
+              (f, i) => `
                             <li class="py-3 text-[13px] text-slate-600 border-b border-slate-50 last:border-0 ${i % 2 !== 0 ? "bg-slate-50/50" : ""}">
                                 <span class="font-bold text-slate-800">${f.valeur}</span> ${f.label}
                             </li>
                         `,
-                          )
-                          .join("")}
+            )
+            .join("")}
                     </ul>
                     <button onclick="souscrire(${index})" class="w-full py-3 px-4 rounded-full font-black uppercase bg-[#F5A64B] text-white hover:bg-[#D98A2F] tracking-tighter text-xs transition-all active:scale-95 shadow-lg">
                         Choisir

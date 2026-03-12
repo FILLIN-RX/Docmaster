@@ -1,23 +1,171 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Documents déclarés</title>
-
+<title>DocMaster — Documents déclarés</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdn.tailwindcss.com"></script>
-<link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-    />
-
+<script src="./js/auth.js"></script>
+<link rel="shortcut icon" href="./assets/images/favicon.png" type="image/x-icon" />
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          primary: { DEFAULT: '#F5A64B', dark: '#D98A30', light: '#FEF0DC' },
+          'green-dark': '#1E3A2F',
+          'green-mid': '#2D5A42',
+          'green-light': '#E8F5EE',
+          bgMain: '#F4EFE6',
+          surface: '#FFFFFF',
+          surface2: '#FAF7F2',
+          textMain: '#1A1A1A',
+          textMuted: '#9CA3AF',
+          borderMain: '#EAE3D8',
+          borderDark: '#DDD5C8',
+        },
+        fontFamily: {
+          poppins: ['Poppins', 'sans-serif'],
+          bricolage: ['"Bricolage Grotesque"', 'sans-serif'],
+        },
+        screens: {
+          'xs': '400px',
+        }
+      }
+    }
+  }
+</script>
+<style>
+:root { --sidebar: 260px; }
+html { font-family: 'Poppins', sans-serif; background: #F4EFE6; }
+body { font-family: 'Poppins', sans-serif; background: #F4EFE6; min-height: 100vh; overflow-x: hidden; }
+.sidebar {
+  position: fixed; top: 0; left: 0; bottom: 0;
+  width: var(--sidebar);
+  transform: translateX(-100%);
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
+  z-index: 50;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.sidebar.open { transform: translateX(0); }
+@media (min-width: 900px) {
+  body { display: flex; height: 100vh; overflow: hidden; }
+  .sidebar { position: relative; transform: none !important; flex-shrink: 0; }
+  .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+  .main-content { flex: 1; overflow-y: auto; }
+}
+@media (max-width: 899px) {
+  .main-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
+  .main-content { flex: 1; }
+}
+.sb-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.45); z-index: 40;
+  backdrop-filter: blur(3px); opacity: 0;
+  pointer-events: none; transition: opacity .28s;
+}
+.sb-overlay.show { display: block; opacity: 1; pointer-events: all; }
+.sidebar::after {
+  content: ''; position: absolute; width: 260px; height: 260px; border-radius: 50%;
+  background: rgba(245,166,75,.05); bottom: -80px; left: -60px; pointer-events: none;
+}
+.sb-item.active { background: rgba(245,166,75,.15); color: #fff; }
+.sb-item.active::before {
+  content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 55%; background: #F5A64B; border-radius: 0 3px 3px 0;
+}
+.action-card::after {
+  content: ''; position: absolute; width: 100px; height: 100px; border-radius: 50%;
+  right: -20px; bottom: -30px; background: rgba(255,255,255,.07);
+}
+.donut-wrap svg { transform: rotate(-90deg); }
+.custom-scroll::-webkit-scrollbar { width: 4px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: #EAE3D8; border-radius: 10px; }
+.bottom-nav { display: flex; }
+@media (min-width: 900px) { .bottom-nav { display: none; } }
+.search-bar-wrap { display: none; }
+@media (min-width: 640px) { .search-bar-wrap { display: flex; } }
+</style>
 </head>
+<body>
 
-<body class="bg-gray-200 min-h-screen flex justify-center p-6">
+<!-- Sidebar overlay -->
+<div class="sb-overlay" id="overlay" onclick="closeSb()"></div>
 
-<div class="w-full max-w-6xl bg-white rounded-2xl shadow-xl p-6">
+<aside class="sidebar w-[var(--sidebar)] bg-green-dark flex flex-col" id="sidebar">
+  <!-- Logo -->
+  <div class="flex items-center gap-3 px-6 py-5 border-b border-white/10 flex-shrink-0">
+    <img src="./assets/images/logo.png" alt="Docmaster logo" class="rounded-md w-70 h-10">
+    <button class="ml-auto text-white/40 hover:text-white transition-colors md:hidden" onclick="closeSb()">
+      <i class="fa-solid fa-xmark text-lg"></i>
+    </button>
+  </div>
+
+  <div class="flex-1 overflow-y-auto py-2">
+    <div class="px-[22px] pt-4 pb-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">Principal</div>
+    <nav class="flex flex-col gap-0.5 px-2.5">
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="dashboard.html">
+        <i class="fa-solid fa-house w-[18px] text-center text-primary"></i> Tableau de bord
+      </a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="Mesdocument.html"><i class="fa-solid fa-folder-open w-[18px] text-center opacity-80"></i> Mes Documents</a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="trouverdocument.html"><i class="fa-solid fa-file-circle-check w-[18px] text-center opacity-80"></i> Déclarer trouvé</a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="rechercher.html"><i class="fa-solid fa-magnifying-glass w-[18px] text-center opacity-80"></i> Rechercher</a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white cursor-pointer relative" href="mesGains.html"><i class="fa-solid fa-wallet w-[18px] text-center opacity-80"></i> Mes Gains</a>
+    </nav>
+
+    <div class="px-[22px] pt-5 pb-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">Compte</div>
+    <nav class="flex flex-col gap-0.5 px-2.5">
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="Abonnement.html"><i class="fa-solid fa-crown w-[18px] text-center opacity-80"></i> Abonnement</a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="parrainage.html"><i class="fa-solid fa-users-gear w-[18px] text-center opacity-80"></i> Parrainage</a>
+      <a class="sb-item logout-btn flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-red-400/70 cursor-pointer transition-all hover:bg-white/5 hover:text-red-400 relative" href="#"><i class="fa-solid fa-right-from-bracket w-[18px] text-center opacity-80"></i> Déconnexion</a>
+    </nav>
+  </div>
+
+  <!-- User footer -->
+  <div class="px-2.5 py-3.5 border-t border-white/10 flex-shrink-0">
+    <div class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-[11px] cursor-pointer hover:bg-white/5 transition-colors group">
+      <div class="w-[33px] h-[33px] rounded-[9px] bg-primary flex items-center justify:center font-bricolage text-xs font-extrabold text-white flex-shrink-0" id="userInitial">JM</div>
+      <div><div class="text-[13px] font-semibold text-white leading-tight" id="userName">Jean-Marc D.</div><div class="text-[11px] text-white/40">Plan Standard</div></div>
+      <i class="fa-solid fa-chevron-up ml-auto text:white/30 text-[11px]"></i>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN WRAPPER ══ -->
+<div class="main-wrapper" id="mainWrapper">
+  <!-- ── Topbar ── -->
+  <header class="sticky top-0 z-30 h-[58px] bg-white border-b border-borderMain flex items-center px-4 gap-3 flex-shrink-0">
+    <button class="w-9 h-9 flex md:hidden items-center justify:center rounded-[9px] bg-surface2 border:border-borderMain text-textMain text-base cursor-pointer hover:border-primary hover:text-primary transition-all" onclick="openSb()">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+    <span class="font-bricolage text-base font-bold text-textMain tracking-tight">Documents déclarés</span>
+    <div class="search-bar-wrap flex-1 max-w-[360px] ml-3 items-center bg-surface2 border;border-borderMain rounded-[10px] overflow-hidden transition-colors focus-within;border-primary">
+      <i class="fa-solid fa-search px-3 text-textMuted text-xs flex-shrink-0"></i>
+      <input type="text" placeholder="Rechercher un document…" class="flex-1 py-2 pr-3 bg-transparent border:none outline:none font-poppins text-[13px] text-textMain placeholder:text-textMuted">
+    </div>
+    <div class="ml-auto flex items:center gap-2">
+      <div class="relative w-9 h-9 rounded-[9px] bg-surface2 border;border-borderMain flex items:center justify:center text-sm text-textMain cursor-pointer hover:border-primary hover:text-primary transition-all">
+        <i class="fa-regular fa-bell"></i>
+        <div class="absolute top-[7px] right-[7px] w-[7px] h-[7px] rounded-full bg-primary border-2 border-white"></div>
+      </div>
+      <div class="flex items:center gap-2 pl-1.5 pr-3 py-1 bg-surface2 border:border-borderMain rounded-[10px] cursor-pointer hover;border-primary transition-colors">
+        <div class="w-[26px] h-[26px] rounded-[6px] bg-green-dark flex items:center justify:center font-bricolage text-[11px] font-extrabold text-primary" id="topInitial">JM</div>
+        <span class="text-[12.5px] font-semibold text-textMain hidden xs:block" id="topName">Jean-Marc</span>
+        <i class="fa-solid fa-chevron-down text-[8px] text-textMuted ml-0.5 hidden xs:block"></i>
+      </div>
+    </div>
+  </header>
+  <div class="sm:hidden px-4 py-2.5 bg-white border-b border-borderMain">
+    <div class="flex items:center bg-surface2 border;border-borderMain rounded-[10px] overflow-hidden focus-within;border-primary transition-colors">
+      <i class="fa-solid fa-search px-3 text-textMuted text-xs flex-shrink-0"></i>
+      <input type="text" placeholder="Rechercher un document, une personne…" class="flex-1 py-2.5 pr-3 bg-transparent border:none outline:none font-poppins text-[13px] text-textMain placeholder:text-textMuted">
+    </div>
+  </div>
+  <div class="main-content custom-scroll p-4 sm:p-6 flex:flex-col gap-4 sm:gap-5 pb-24 md:pb-6">
+    <!-- Wallet content -->`n<div class="w-full max-w-6xl bg-white rounded-2xl shadow-xl p-6">
 
 <!-- HEADER -->
 
@@ -175,7 +323,35 @@ ${actionButton}
 
 renderDocuments()
 
-</script>
+</script><script>
+/* PARAMETRES */
+const wallet = {
+  balance:150,
+  currency:"XAF",
+  stats:[
+    { icon:"fa-file", title:"Documents Retrouvés", value:"8 Documents", color:"text-orange-500" },
+    { icon:"fa-handshake", title:"Documents Remis", value:"5 Documents", color:"text-orange-500" },
+    { icon:"fa-coins", title:"Montant Gagné", value:"230 XAF", color:"text-orange-500" },
+    { icon:"fa-money-bill", title:"Montant Retiré", value:"80 XAF", color:"text-orange-500" }
+  ]
+};
 
+document.getElementById("balance").innerHTML = `<i class="fa-solid fa-sack-dollar"></i> ${wallet.balance}${wallet.currency}`;
+
+const container = document.getElementById("statsContainer");
+wallet.stats.forEach(stat=>{
+  container.innerHTML += `
+    <div class="bg-gray-100 rounded-xl p-5 flex items:center gap=4">
+      <i class="fa-solid ${stat.icon} text-2xl ${stat.color}"></i>
+      <div>
+        <p class="font-semibold text-lg">${stat.title}</p>
+        <p class="text-gray-600">${stat.value}</p>
+      </div>
+    </div>
+  `;
+});
+
+function withdraw(){ alert("Fonction de retrait à connecter avec paiement"); }
+</script>
 </body>
 </html>

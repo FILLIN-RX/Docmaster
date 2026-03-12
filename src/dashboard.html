@@ -141,13 +141,14 @@ body { font-family: 'Poppins', sans-serif; background: #F4EFE6; min-height: 100v
         <i class="fa-solid fa-house w-[18px] text-center text-primary"></i> Tableau de bord
       </a>
       <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="Mesdocument.html"><i class="fa-solid fa-folder-open w-[18px] text-center opacity-80"></i> Mes Documents</a>
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="trouverdocument.html"><i class="fa-solid fa-file-circle-check w-[18px] text-center opacity-80"></i> Déclarer trouvé</a>
       <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="rechercher.html"><i class="fa-solid fa-magnifying-glass w-[18px] text-center opacity-80"></i> Rechercher</a>
       <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="#">
         <i class="fa-solid fa-envelope w-[18px] text-center opacity-80"></i> Messages
         <span class="ml-auto bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-tight">5</span>
       </a>
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="#">
-        <i class="fa-solid fa-bell w-[18px] text-center opacity-80"></i> Notifications
+      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="mesGains.html">
+        <i class="fa-solid fa-wallet w-[18px] text-center opacity-80"></i> Mes Gains
       </a>
     </nav>
 
@@ -190,9 +191,9 @@ body { font-family: 'Poppins', sans-serif; background: #F4EFE6; min-height: 100v
 
     <div class="ml-auto flex items-center gap-2">
       <!-- Notif bell -->
-      <div class="relative w-9 h-9 rounded-[9px] bg-surface2 border border-borderMain flex items-center justify-center text-sm text-textMain cursor-pointer hover:border-primary hover:text-primary transition-all">
+      <div class="relative w-9 h-9 rounded-[9px] bg-surface2 border border-borderMain flex items-center justify-center text-sm text-textMain cursor-pointer hover:border-primary hover:text-primary transition-all" onclick="openNotifModal()">
         <i class="fa-regular fa-bell"></i>
-        <div class="absolute top-[7px] right-[7px] w-[7px] h-[7px] rounded-full bg-primary border-2 border-white"></div>
+        <div id="notifDot" class="absolute top-[7px] right-[7px] w-[7px] h-[7px] rounded-full bg-primary border-2 border-white"></div>
       </div>
       <!-- Profile -->
       <div class="flex items-center gap-2 pl-1.5 pr-3 py-1 bg-surface2 border border-borderMain rounded-[10px] cursor-pointer hover:border-primary transition-colors">
@@ -229,7 +230,7 @@ body { font-family: 'Poppins', sans-serif; background: #F4EFE6; min-height: 100v
     <!-- CTA + Stats: 2 col mobile, 4 col desktop -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
       <!-- J'ai perdu -->
-      <div class="action-card col-span-1 rounded-[16px] sm:rounded-[18px] p-4 sm:p-5 cursor-pointer transition-all duration-200 active:scale-[.98] hover:-translate-y-0.5 relative overflow-hidden flex flex-col gap-3 bg-primary shadow-lg shadow-primary/25 group">
+      <div onclick="window.location.href='rechercher.html'" class="action-card col-span-1 rounded-[16px] sm:rounded-[18px] p-4 sm:p-5 cursor-pointer transition-all duration-200 active:scale-[.98] hover:-translate-y-0.5 relative overflow-hidden flex flex-col gap-3 bg-primary shadow-lg shadow-primary/25 group">
         <div class="w-10 h-10 sm:w-[46px] sm:h-[46px] rounded-[12px] sm:rounded-[14px] bg-white/20 flex items-center justify-center text-lg sm:text-[20px] text-white relative z-10 transition-transform group-hover:scale-110">
           <i class="fa-solid fa-file-circle-xmark"></i>
         </div>
@@ -240,7 +241,7 @@ body { font-family: 'Poppins', sans-serif; background: #F4EFE6; min-height: 100v
       </div>
 
       <!-- J'ai trouvé -->
-      <div class="action-card col-span-1 rounded-[16px] sm:rounded-[18px] p-4 sm:p-5 cursor-pointer transition-all duration-200 active:scale-[.98] hover:-translate-y-0.5 relative overflow-hidden flex flex-col gap-3 bg-green-dark shadow-lg shadow-green-dark/20 group">
+      <div onclick="window.location.href='trouverdocument.html'" class="action-card col-span-1 rounded-[16px] sm:rounded-[18px] p-4 sm:p-5 cursor-pointer transition-all duration-200 active:scale-[.98] hover:-translate-y-0.5 relative overflow-hidden flex flex-col gap-3 bg-green-dark shadow-lg shadow-green-dark/20 group">
         <div class="w-10 h-10 sm:w-[46px] sm:h-[46px] rounded-[12px] sm:rounded-[14px] bg-white/10 flex items-center justify-center text-lg sm:text-[20px] text-white relative z-10 transition-transform group-hover:scale-110">
           <i class="fa-solid fa-file-circle-check"></i>
         </div>
@@ -483,7 +484,7 @@ body { font-family: 'Poppins', sans-serif; background: #F4EFE6; min-height: 100v
                 <i class="fa-solid fa-star text-purple-600"></i>
               </div>
               <div>
-                <div class="text-[12px] sm:text-[12.5px] text-textMain leading-snug italic"><strong>Plan Standard activé.</strong> Vos 5 signalements sont actifs.</div>
+                <div class="text-[12px] sm:text-[12.5px] text-textMain leading-snug italic"><strong>Plan Standard activé.</strong> Vos quotas de documents sont actifs.</div>
                 <div class="text-[10px] sm:text-[10.5px] text-textMuted font-medium italic mt-0.5">Hier</div>
               </div>
             </div>
@@ -550,6 +551,33 @@ body { font-family: 'Poppins', sans-serif; background: #F4EFE6; min-height: 100v
 
 </div><!-- /main-wrapper -->
 
+<!-- Notifications Modal -->
+<div id="notifModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6 relative">
+    <button onclick="closeNotifModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <div class="flex items-center gap-3 mb-6">
+      <i class="fa-solid fa-bell text-xl"></i>
+      <h2 class="text-2xl font-bold">Notifications</h2>
+      <span id="notifCountModal" class="bg-orange-500 text-white text-sm px-2 py-1 rounded-full ml-auto">0</span>
+      <button onclick="toggleNotifSettings()" class="ml-2 text-gray-500 hover:text-black">
+        <i class="fa-solid fa-gear"></i>
+      </button>
+    </div>
+    <div id="notifSettingsModal" class="hidden mb-6 p-4 border rounded-lg bg-white">
+      <h3 class="font-semibold mb-3">Paramètres</h3>
+      <label class="flex items-center gap-2 mb-2"><input type="checkbox" checked>Notifications email</label>
+      <label class="flex items-center gap-2 mb-2"><input type="checkbox" checked>Notifications système</label>
+      <label class="flex items-center gap-2"><input type="checkbox">Mode silencieux</label>
+    </div>
+    <div id="notifListModal" class="space-y-6 border-l-4 border-orange-400 pl-6 max-h-80 overflow-y-auto">
+      <!-- dynamic notifications will appear here -->
+    </div>
+  </div>
+</div>
+
+
 <script>
 function openSb() {
   document.getElementById('sidebar').classList.add('open');
@@ -569,6 +597,47 @@ document.querySelectorAll('.sb-item').forEach(item => {
 });
 const dateOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
 document.getElementById('currentDay').innerText = new Intl.DateTimeFormat('fr-FR', dateOptions).format(new Date());
+
+// notification modal functions
+function openNotifModal() {
+  document.getElementById('notifModal').classList.remove('hidden');
+}
+function closeNotifModal() {
+  document.getElementById('notifModal').classList.add('hidden');
+}
+function toggleNotifSettings() {
+  document.getElementById('notifSettingsModal').classList.toggle('hidden');
+}
+
+// helper to add a notification to modal (and count)
+function addNotification(title, message, time) {
+  const container = document.getElementById('notifListModal');
+  const notif = `
+    <div class="flex gap-4 items-start">
+      <div class="bg-blue-500 text-white w-10 h-10 flex items-center justify-center rounded-full">
+        <i class="fa-solid fa-bell"></i>
+      </div>
+      <div>
+        <p><span class="font-semibold">${title} :</span> ${message}</p>
+        <span class="text-gray-400 text-sm">${time}</span>
+      </div>
+    </div>
+  `;
+  container.insertAdjacentHTML('afterbegin', notif);
+  // update counts
+  const countElm = document.getElementById('notifCountModal');
+  const dashboardDot = document.getElementById('notifDot');
+  const newCount = parseInt(countElm.innerText || '0') + 1;
+  countElm.innerText = newCount;
+  if (dashboardDot) dashboardDot.classList.add('bg-red-500');
+}
+
+// initialize with some example notifications
+addNotification('Document retrouvé', 'Votre document "Carte ID" a été retrouvé.', 'Il y a 2 heures');
+addNotification('Validation', 'Vous avez confirmé la récupération d’un document.', 'Il y a 1 jour');
+addNotification('Paiement reçu', 'Vous avez perçu 30€ pour un document remis.', 'Il y a 3 jours');
+
+
 </script>
 </body>
 </html>

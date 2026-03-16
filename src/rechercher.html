@@ -1,605 +1,679 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DocMaster — Recherche</title>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="./js/auth.js"></script>
-<link rel="shortcut icon" href="./assets/images/favicon.png" type="image/x-icon" />
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          primary: { DEFAULT: '#F5A64B', dark: '#D98A30', light: '#FEF0DC' },
-          'green-dark': '#1E3A2F',
-          'green-mid': '#2D5A42',
-          'green-light': '#E8F5EE',
-          bgMain: '#F4EFE6',
-          surface: '#FFFFFF',
-          surface2: '#FAF7F2',
-          textMain: '#1A1A1A',
-          textMuted: '#9CA3AF',
-          borderMain: '#EAE3D8',
-          borderDark: '#DDD5C8',
-        },
-        fontFamily: {
-          poppins: ['Poppins', 'sans-serif'],
-          bricolage: ['"Bricolage Grotesque"', 'sans-serif'],
-        },
-        screens: {
-          'xs': '400px',
-        }
-      }
-    }
-  }
-</script>
-<style>
-:root { --sidebar: 260px; }
-html { font-family: 'Poppins', sans-serif; background: #F4EFE6; }
-body { font-family: 'Poppins', sans-serif; background: #F4EFE6; min-height: 100vh; overflow-x: hidden; }
-.sidebar {
-  position: fixed; top: 0; left: 0; bottom: 0;
-  width: var(--sidebar);
-  transform: translateX(-100%);
-  transition: transform .28s cubic-bezier(.4,0,.2,1);
-  z-index: 50;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-.sidebar.open { transform: translateX(0); }
-@media (min-width: 900px) {
-  body { display: flex; height: 100vh; overflow: hidden; }
-  .sidebar { position: relative; transform: none !important; flex-shrink: 0; }
-  .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
-  .main-content { flex: 1; overflow-y: auto; }
-}
-@media (max-width: 899px) {
-  .main-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
-  .main-content { flex: 1; }
-}
-.sb-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,.45); z-index: 40;
-  backdrop-filter: blur(3px); opacity: 0;
-  pointer-events: none; transition: opacity .28s;
-}
-.sb-overlay.show { display: block; opacity: 1; pointer-events: all; }
-.sidebar::after {
-  content: ''; position: absolute; width: 260px; height: 260px; border-radius: 50%;
-  background: rgba(245,166,75,.05); bottom: -80px; left: -60px; pointer-events: none;
-}
-.sb-item.active { background: rgba(245,166,75,.15); color: #fff; }
-.sb-item.active::before {
-  content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-  width: 3px; height: 55%; background: #F5A64B; border-radius: 0 3px 3px 0;
-}
-.action-card::after {
-  content: ''; position: absolute; width: 100px; height: 100px; border-radius: 50%;
-  right: -20px; bottom: -30px; background: rgba(255,255,255,.07);
-}
-.donut-wrap svg { transform: rotate(-90deg); }
-.custom-scroll::-webkit-scrollbar { width: 4px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: #EAE3D8; border-radius: 10px; }
-.bottom-nav { display: flex; }
-@media (min-width: 900px) { .bottom-nav { display: none; } }
-.search-bar-wrap { display: none; }
-@media (min-width: 640px) { .search-bar-wrap { display: flex; } }
-</style>
-</head>
-<body>
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="css/output.css" rel="stylesheet" />
+    <link rel="stylesheet" href="css/rechercher.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
 
-<!-- Sidebar overlay -->
-<div class="sb-overlay" id="overlay" onclick="closeSb()"></div>
-
-<aside class="sidebar w-[var(--sidebar)] bg-green-dark flex flex-col" id="sidebar">
-  <!-- Logo -->
-  <div class="flex items-center gap-3 px-6 py-5 border-b border-white/10 flex-shrink-0">
-    <img src="./assets/images/logo.png" alt="Docmaster logo" class="rounded-md w-70 h-10">
-    <button class="ml-auto text-white/40 hover:text-white transition-colors md:hidden" onclick="closeSb()">
-      <i class="fa-solid fa-xmark text-lg"></i>
-    </button>
-  </div>
-
-  <div class="flex-1 overflow-y-auto py-2">
-    <div class="px-[22px] pt-4 pb-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">Principal</div>
-    <nav class="flex flex-col gap-0.5 px-2.5">
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="dashboard.html">
-        <i class="fa-solid fa-house w-[18px] text-center text-primary"></i> Tableau de bord
-      </a>
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="Mesdocument.html"><i class="fa-solid fa-folder-open w-[18px] text-center opacity-80"></i> Mes Documents</a>
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="trouverdocument.html"><i class="fa-solid fa-file-circle-check w-[18px] text-center opacity-80"></i> Déclarer trouvé</a>
-      <a class="sb-item active flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white cursor-pointer relative" href="rechercher.html"><i class="fa-solid fa-magnifying-glass w-[18px] text-center opacity-80"></i> Rechercher</a>
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="mesGains.html"><i class="fa-solid fa-wallet w-[18px] text-center opacity-80"></i> Mes Gains</a>
-    </nav>
-
-    <div class="px-[22px] pt-5 pb-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">Compte</div>
-    <nav class="flex flex-col gap-0.5 px-2.5">
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="Abonnement.html"><i class="fa-solid fa-crown w-[18px] text-center opacity-80"></i> Abonnement</a>
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="parrainage.html"><i class="fa-solid fa-users-gear w-[18px] text-center opacity-80"></i> Parrainage</a>
-      <a class="sb-item logout-btn flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-red-400/70 cursor-pointer transition-all hover:bg-white/5 hover:text-red-400 relative" href="#"><i class="fa-solid fa-right-from-bracket w-[18px] text-center opacity-80"></i> Déconnexion</a>
-    </nav>
-  </div>
-
-  <!-- User footer -->
-  <div class="px-2.5 py-3.5 border-t border-white/10 flex-shrink-0">
-    <div class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-[11px] cursor-pointer hover:bg-white/5 transition-colors group">
-      <div class="w-[33px] h-[33px] rounded-[9px] bg-primary flex items-center justify:center font-bricolage text-xs font-extrabold text-white flex-shrink-0" id="userInitial">JM</div>
-      <div><div class="text-[13px] font-semibold text-white leading-tight" id="userName">Jean-Marc D.</div><div class="text-[11px] text-white/40">Plan Standard</div></div>
-      <i class="fa-solid fa-chevron-up ml-auto text:white/30 text-[11px]"></i>
-    </div>
-  </div>
-</aside>
-
-<!-- ══ MAIN WRAPPER ══ -->
-<div class="main-wrapper" id="mainWrapper">
-  <!-- ── Topbar ── -->
-  <header class="sticky top-0 z-30 h-[58px] bg-white border-b border-borderMain flex items-center px-4 gap-3 flex-shrink-0">
-    <button class="w-9 h-9 flex md:hidden items-center justify:center rounded-[9px] bg-surface2 border:border-borderMain text-textMain text-base cursor-pointer hover:border-primary hover:text-primary transition-all" onclick="openSb()">
-      <i class="fa-solid fa-bars"></i>
-    </button>
-    <span class="font-bricolage text-base font-bold text-textMain tracking-tight">Recherche</span>
-    <div class="search-bar-wrap flex-1 max-w-[360px] ml-3 items-center bg-surface2 border;border-borderMain rounded-[10px] overflow-hidden transition-colors focus-within;border-primary">
-      <i class="fa-solid fa-search px-3 text-textMuted text-xs flex-shrink-0"></i>
-      <input type="text" placeholder="Rechercher un document…" class="flex-1 py-2 pr-3 bg-transparent border:none outline:none font-poppins text-[13px] text-textMain placeholder:text-textMuted">
-    </div>
-    <div class="ml-auto flex items:center gap-2">
-      <div class="relative w-9 h-9 rounded-[9px] bg-surface2 border;border-borderMain flex items:center justify:center text-sm text-textMain cursor-pointer hover:border-primary hover:text-primary transition-all">
-        <i class="fa-regular fa-bell"></i>
-        <div class="absolute top-[7px] right-[7px] w-[7px] h-[7px] rounded-full bg-primary border-2 border-white"></div>
-      </div>
-      <div class="flex items:center gap-2 pl-1.5 pr-3 py-1 bg-surface2 border:border-borderMain rounded-[10px] cursor-pointer hover;border-primary transition-colors">
-        <div class="w-[26px] h-[26px] rounded-[6px] bg-green-dark flex items:center justify:center font-bricolage text-[11px] font-extrabold text-primary" id="topInitial">JM</div>
-        <span class="text-[12.5px] font-semibold text-textMain hidden xs:block" id="topName">Jean-Marc</span>
-        <i class="fa-solid fa-chevron-down text-[8px] text-textMuted ml-0.5 hidden xs:block"></i>
-      </div>
-    </div>
-  </header>
-  <div class="sm:hidden px-4 py-2.5 bg-white border-b border-borderMain">
-    <div class="flex items:center bg-surface2 border;border-borderMain rounded-[10px] overflow-hidden focus-within;border-primary transition-colors">
-      <i class="fa-solid fa-search px-3 text-textMuted text-xs flex-shrink-0"></i>
-      <input type="text" placeholder="Rechercher un document, une personne…" class="flex-1 py-2.5 pr-3 bg-transparent border:none outline:none font-poppins text-[13px] text-textMain placeholder:text-textMuted">
-    </div>
-  </div>
-  <div class="main-content custom-scroll p-4 sm:p-6 flex:flex-col gap-4 sm:gap-5 pb-24 md:pb-6">
-    <!-- Wallet content -->`n
-  <div class="fixed inset-0 pointer-events-none" style="z-index: 0">
-    <div
-      class="absolute -top-32 -left-32 w-70 aspect-square bg-[#F5A64B] rounded-full mix-blend-multiply opacity-70 pointer-events-none z-0 shadow-[0_0_50px_rgba(253,186,116,0.5)]">
-    </div>
-    <div
-      class="absolute -top-32 -right-32 w-70 aspect-square bg-[#F5A64B] rounded-full mix-blend-multiply opacity-70 pointer-events-none z-0 shadow-[0_0_50px_rgba(253,186,116,0.5)]">
-    </div>
+    <link
+      rel="shortcut icon"
+      href="./assets//images/favicon.png"
+      type="image/x-icon"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Bricolage+Grotesque:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+    />
 
     <style>
-      .search-input:focus,
-      .form-select:focus {
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+      /* Personnalisation du calendrier pour coller au thème orange */
+      .flatpickr-calendar {
+        border-radius: 1rem !important;
+        box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1) !important;
+        border: 1px solid #e5e7eb !important;
+        font-family: "Poppins", sans-serif !important;
+      }
+      .flatpickr-months .flatpickr-month {
+        background: #F5A64B !important;
+        color: white !important;
+        fill: white !important;
+        border-radius: 1rem 1rem 0 0;
+      }
+      .flatpickr-current-month .flatpickr-monthDropdown-months {
+        font-weight: 700 !important;
+      }
+      body {
+        font-family: 'Poppins', sans-serif;
+      }
+      h1, h2, h3, h4, .logo-text {
+        font-family: 'Bricolage Grotesque', sans-serif;
+      }
+      .flatpickr-day.selected {
+        background: #F5A64B !important;
+        border-color: #F5A64B !important;
       }
     </style>
-    <div class="mask-radial-at-top-left mask-radial-from-100% bg-[#F5A64B]"></div>
 
-    <div class="absolute inset-0 pointer-events-none z-0" style="
+    <script
+      src="https://kit.fontawesome.com/28702e0585.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="js/index.js"></script>
+    <script src="js/fillin.js"></script>
+    <title>DocMaster-Search</title>
+  </head>
+
+  <body class="relative min-h-screen bg-white overflow-x-hidden">
+    <div class="fixed inset-0 pointer-events-none" style="z-index: 0">
+      <div
+        class="absolute -top-32 -left-32 w-70 aspect-square bg-[#F5A64B] rounded-full mix-blend-multiply opacity-70 pointer-events-none z-0 shadow-[0_0_50px_rgba(253,186,116,0.5)]"
+      ></div>
+      <div
+        class="absolute -top-32 -right-32 w-70 aspect-square bg-[#F5A64B] rounded-full mix-blend-multiply opacity-70 pointer-events-none z-0 shadow-[0_0_50px_rgba(253,186,116,0.5)]"
+      ></div>
+
+      <style>
+        .search-input:focus,
+        .form-select:focus {
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        }
+      </style>
+      <div
+        class="mask-radial-at-top-left mask-radial-from-100% bg-[#F5A64B]"
+      ></div>
+
+      <div
+        class="absolute inset-0 pointer-events-none z-0"
+        style="
           background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' fill='rgba(236,168,92,0.15)' viewBox='0 0 512 512'%3E%3Cpath d='M505 442.7L405.3 343a208 208 0 1 0-62.3 62.3L442.7 505a24 24 0 0 0 34-34zM208 336a128 128 0 1 1 0-256 128 128 0 0 1 0 256z'/%3E%3C/svg%3E&quot;);
           background-repeat: repeat;
           background-size: 8px 8px;
-        "></div>
-  </div>
-  <div class="absolute inset-0 pointer-events-none overflow-hidden" style="z-index: 0; min-height: 100%">
-    <div
-      class="absolute -bottom-32 -left-32 w-60 aspect-square bg-[#F5A64B] rounded-full mix-blend-multiply opacity-70 shadow-[0_0_50px_rgba(253,186,116,0.5)]">
+        "
+      ></div>
     </div>
-  </div>
+    <div
+      class="absolute inset-0 pointer-events-none overflow-hidden"
+      style="z-index: 0; min-height: 100%"
+    >
+      <div
+        class="absolute -bottom-32 -left-32 w-60 aspect-square bg-[#F5A64B] rounded-full mix-blend-multiply opacity-70 shadow-[0_0_50px_rgba(253,186,116,0.5)]"
+      ></div>
+    </div>
 
-  <div class="relative" style="z-index: 10">
-    <header class="pb-5">
-      <nav
-        class="hidden md:flex fixed top-0 z-50 w-full items-center rounded-xl justify-between p-4 bg-white shadow-md">
-        <div class="absolute inset-0 pointer-events-none z-0" style="
+    <div class="relative" style="z-index: 10">
+      <header class="pb-5">
+        <nav
+          class="hidden md:flex fixed top-0 z-50 w-full items-center rounded-xl justify-between p-4 bg-white shadow-md"
+        >
+          <div
+            class="absolute inset-0 pointer-events-none z-0"
+            style="
               background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' fill='rgba(236,168,92,0.15)' viewBox='0 0 512 512'%3E%3Cpath d='M505 442.7L405.3 343a208 208 0 1 0-62.3 62.3L442.7 505a24 24 0 0 0 34-34zM208 336a128 128 0 1 1 0-256 128 128 0 0 1 0 256z'/%3E%3C/svg%3E&quot;);
               background-repeat: repeat;
               background-size: 8px 8px;
-            "></div>
-        <div class="logo">
-          <a href="index.html">
-            <img src="./assets/images/logo.png" alt="DocMaster Logo" class="h-12" />
-          </a>
-        </div>
-        <div class="menu flex items-center justify-center">
-          <ul class="flex items-center justify-between space-x-5">
-            <li class="nav-link">
-              <a href="index.html"
-                class="group flex items-center gap-2 text-[#F5A64B] font-bold hover:bg-[#F5A64B] hover:text-white p-2 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-110">
-                <i class="fa-solid fa-house text-black group-hover:text-white transition-colors duration-300"></i>
-                Home</a>
-            </li>
-            <li class="nav-link">
-              <a href="rechercher.html" class="font-bold">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                Recherche
-              </a>
-            </li>
+            "
+          ></div>
+          <div class="logo">
+            <a href="index.html">
+              <img
+                src="./assets/images/logo.png"
+                alt="DocMaster Logo"
+                class="h-12"
+              />
+            </a>
+          </div>
+          <div class="menu flex items-center justify-center">
+            <ul class="flex items-center justify-between space-x-5">
+              <li class="nav-link">
+                <a
+                  href="index.html"
+                  class="group flex items-center gap-2 text-[#F5A64B] font-bold hover:bg-[#F5A64B] hover:text-white p-2 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-110"
+                >
+                  <i
+                    class="fa-solid fa-house text-black group-hover:text-white transition-colors duration-300"
+                  ></i>
+                  Home</a
+                >
+              </li>
+              <li class="nav-link">
+                <a href="rechercher.html" class="font-bold">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  Recherche
+                </a>
+              </li>
 
-
-          </ul>
-        </div>
-        <div class="p-1">
-          <a href="login.html"
-            class="bg-[#F5A64B] p-1 rounded-full shadow-md hover:bg-orange-400 transition duration-300 transform hover:-translate-y-2 hover:scale-110 inline-block">
-            <span class="text-white font-semibold">DM</span>
-          </a>
-          <div class="relative inline-block text-left">
-            <button id="langButton"
-              class="flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-gray-200 px-3 py-2 rounded-xl hover:bg-orange-50 transition-all shadow-sm">
-              <img id="currentFlag" src="https://flagcdn.com/w20/fr.png" alt="Français" class="w-5 h-auto" />
-              <span class="text-sm font-bold text-gray-700">FR</span>
-              <i class="fa-solid fa-chevron-down text-[10px] text-gray-400"></i>
-            </button>
-
-            <div id="langDropdown"
-              class="hidden absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
-              <button onclick="changeLang('fr', 'https://flagcdn.com/w20/fr.png')"
-                class="flex items-center gap-3 w-full px-4 py-3 hover:bg-orange-50 transition">
-                <img src="https://flagcdn.com/w20/fr.png" class="w-5" alt="FR" />
-                <span class="text-sm">Français</span>
+             
+            </ul>
+          </div>
+          <div class="p-1">
+            <a
+              href="login.html"
+              class="bg-[#F5A64B] p-1 rounded-full shadow-md hover:bg-orange-400 transition duration-300 transform hover:-translate-y-2 hover:scale-110 inline-block"
+            >
+              <span class="text-white font-semibold">DM</span>
+            </a>
+            <div class="relative inline-block text-left">
+              <button
+                id="langButton"
+                class="flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-gray-200 px-3 py-2 rounded-xl hover:bg-orange-50 transition-all shadow-sm"
+              >
+                <img
+                  id="currentFlag"
+                  src="https://flagcdn.com/w20/fr.png"
+                  alt="Français"
+                  class="w-5 h-auto"
+                />
+                <span class="text-sm font-bold text-gray-700">FR</span>
+                <i
+                  class="fa-solid fa-chevron-down text-[10px] text-gray-400"
+                ></i>
               </button>
-              <button onclick="changeLang('en', 'https://flagcdn.com/w20/gb.png')"
-                class="flex items-center gap-3 w-full px-4 py-3 hover:bg-orange-50 transition">
-                <img src="https://flagcdn.com/w20/gb.png" class="w-5" alt="EN" />
-                <span class="text-sm">English</span>
-              </button>
+
+              <div
+                id="langDropdown"
+                class="hidden absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+              >
+                <button
+                  onclick="changeLang('fr', 'https://flagcdn.com/w20/fr.png')"
+                  class="flex items-center gap-3 w-full px-4 py-3 hover:bg-orange-50 transition"
+                >
+                  <img
+                    src="https://flagcdn.com/w20/fr.png"
+                    class="w-5"
+                    alt="FR"
+                  />
+                  <span class="text-sm">Français</span>
+                </button>
+                <button
+                  onclick="changeLang('en', 'https://flagcdn.com/w20/gb.png')"
+                  class="flex items-center gap-3 w-full px-4 py-3 hover:bg-orange-50 transition"
+                >
+                  <img
+                    src="https://flagcdn.com/w20/gb.png"
+                    class="w-5"
+                    alt="EN"
+                  />
+                  <span class="text-sm">English</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </nav>
-      <nav class="flex md:hidden fixed top-0 left-0 z-[999] w-full items-center justify-between p-2 bg-white shadow-md">
-        <div class="absolute inset-0 pointer-events-none z-0" style="
+        </nav>
+        <nav
+          class="flex md:hidden fixed top-0 left-0 z-[999] w-full items-center justify-between p-2 bg-white shadow-md"
+        >
+          <div
+            class="absolute inset-0 pointer-events-none z-0"
+            style="
               background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' fill='rgba(236,168,92,0.15)' viewBox='0 0 512 512'%3E%3Cpath d='M505 442.7L405.3 343a208 208 0 1 0-62.3 62.3L442.7 505a24 24 0 0 0 34-34zM208 336a128 128 0 1 1 0-256 128 128 0 0 1 0 256z'/%3E%3C/svg%3E&quot;);
               background-repeat: repeat;
               background-size: 8px 8px;
-            "></div>
-        <div class="logo">
-          <a href="index.html">
-            <img src="./assets/images/logo.png" alt="DocMaster Logo" class="h-12" />
-          </a>
-        </div>
+            "
+          ></div>
+          <div class="logo">
+            <a href="index.html">
+              <img
+                src="./assets/images/logo.png"
+                alt="DocMaster Logo"
+                class="h-12"
+              />
+            </a>
+          </div>
 
-        <div class="p-1">
-          <a href="login.html"
-            class="bg-[#F5A64B] p-1 rounded-full shadow-md hover:bg-orange-400 transition duration-300 transform hover:-translate-y-2 hover:scale-110 inline-block">
-            <span class="text-white font-semibold">DM</span>
-          </a>
-          <div class="relative inline-block text-left">
-            <button id="langButton"
-              class="flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-gray-200 px-3 py-2 rounded-xl hover:bg-orange-50 transition-all shadow-sm">
-              <img id="currentFlag" src="https://flagcdn.com/w20/fr.png" alt="Français" class="w-5 h-auto" />
-              <span class="text-sm font-bold text-gray-700">FR</span>
-              <i class="fa-solid fa-chevron-down text-[10px] text-gray-400"></i>
-            </button>
+          <div class="p-1">
+            <a
+              href="login.html"
+              class="bg-[#F5A64B] p-1 rounded-full shadow-md hover:bg-orange-400 transition duration-300 transform hover:-translate-y-2 hover:scale-110 inline-block"
+            >
+              <span class="text-white font-semibold">DM</span>
+            </a>
+            <div class="relative inline-block text-left">
+              <button
+                id="langButton"
+                class="flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-gray-200 px-3 py-2 rounded-xl hover:bg-orange-50 transition-all shadow-sm"
+              >
+                <img
+                  id="currentFlag"
+                  src="https://flagcdn.com/w20/fr.png"
+                  alt="Français"
+                  class="w-5 h-auto"
+                />
+                <span class="text-sm font-bold text-gray-700">FR</span>
+                <i
+                  class="fa-solid fa-chevron-down text-[10px] text-gray-400"
+                ></i>
+              </button>
 
-            <div id="langDropdown"
-              class="hidden absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
-              <button onclick="changeLang('fr', 'https://flagcdn.com/w20/fr.png')"
-                class="flex items-center gap-3 w-full px-4 py-3 hover:bg-orange-50 transition">
-                <img src="https://flagcdn.com/w20/fr.png" class="w-5" alt="FR" />
-                <span class="text-sm">Français</span>
-              </button>
-              <button onclick="changeLang('en', 'https://flagcdn.com/w20/gb.png')"
-                class="flex items-center gap-3 w-full px-4 py-3 hover:bg-orange-50 transition">
-                <img src="https://flagcdn.com/w20/gb.png" class="w-5" alt="EN" />
-                <span class="text-sm">English</span>
-              </button>
+              <div
+                id="langDropdown"
+                class="hidden absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+              >
+                <button
+                  onclick="changeLang('fr', 'https://flagcdn.com/w20/fr.png')"
+                  class="flex items-center gap-3 w-full px-4 py-3 hover:bg-orange-50 transition"
+                >
+                  <img
+                    src="https://flagcdn.com/w20/fr.png"
+                    class="w-5"
+                    alt="FR"
+                  />
+                  <span class="text-sm">Français</span>
+                </button>
+                <button
+                  onclick="changeLang('en', 'https://flagcdn.com/w20/gb.png')"
+                  class="flex items-center gap-3 w-full px-4 py-3 hover:bg-orange-50 transition"
+                >
+                  <img
+                    src="https://flagcdn.com/w20/gb.png"
+                    class="w-5"
+                    alt="EN"
+                  />
+                  <span class="text-sm">English</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </nav>
-    </header>
-    <main class="relative z-10 px-4">
-      <section class="container mx-auto mt-20 px-4">
+        </nav>
+      </header>
+      <main class="relative z-10 px-4">
+        <section class="container mx-auto mt-20 px-4">
+          
+          <div class="max-w-4xl mx-auto">
+            <div
+              class="glass-effect rounded-2xl shadow-2xl p-6 md:p-8 mb-8 bg-white/10 backdrop-blur-md"
+            >
+              <div class="fixed inset-0 pointer-events-none" style="z-index: 0">
+     
 
-        <div class="max-w-4xl mx-auto">
-          <div class="glass-effect rounded-2xl shadow-2xl p-6 md:p-8 mb-8 bg-white/10 backdrop-blur-md">
-            <div class="fixed inset-0 pointer-events-none" style="z-index: 0">
+      <style>
+        .search-input:focus,
+        .form-select:focus {
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        }
+      </style>
+      <div
+        class="mask-radial-at-top-left mask-radial-from-100% bg-[#F5A64B]"
+      ></div>
 
-
-              <style>
-                .search-input:focus,
-                .form-select:focus {
-                  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
-                }
-              </style>
-              <div class="mask-radial-at-top-left mask-radial-from-100% bg-[#F5A64B]"></div>
-
-              <div class="absolute inset-0 pointer-events-none z-0" style="
+      <div
+        class="absolute inset-0 pointer-events-none z-0"
+        style="
           background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' fill='rgba(236,168,92,0.15)' viewBox='0 0 512 512'%3E%3Cpath d='M505 442.7L405.3 343a208 208 0 1 0-62.3 62.3L442.7 505a24 24 0 0 0 34-34zM208 336a128 128 0 1 1 0-256 128 128 0 0 1 0 256z'/%3E%3C/svg%3E&quot;);
           background-repeat: repeat;
           background-size: 8px 8px;
-        "></div>
-            </div>
-            <form class="space-y-6">
-              <div class="flex flex-col md:flex-row gap-4 items-stretch">
-                <div
-                  class="relative flex-grow flex items-center border border-gray-300 rounded-xl px-4 transition-all duration-300 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-200 bg-white">
-                  <i class="fa-solid fa-magnifying-glass text-gray-400 mr-3"></i>
+        "
+      ></div>
+    </div>
+              <form class="space-y-6">
+                <div class="flex flex-col md:flex-row gap-4 items-stretch">
+                  <div
+                    class="relative flex-grow flex items-center border border-gray-300 rounded-xl px-4 transition-all duration-300 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-200 bg-white"
+                  >
+                    <i
+                      class="fa-solid fa-magnifying-glass text-gray-400 mr-3"
+                    ></i>
 
-                  <input type="text" id="search" placeholder=" "
-                    class="peer w-full py-4 bg-transparent border-none outline-none focus:ring-0" />
-                  <label for="search"
-                    class="absolute md:hidden left-11 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-ellipsis max-w-[calc(100%-3rem)] transition-all duration-300 peer-focus:top-0 peer-focus:text-xs text-xs peer-focus:text-orange-500 peer-focus:bg-white peer-focus:px-2 peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-orange-500 peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-2">
-                    Rechercher des documents
-                  </label>
+                    <input
+                      type="text"
+                      id="search"
+                      placeholder=" "
+                      class="peer w-full py-4 bg-transparent border-none outline-none focus:ring-0"
+                    />
+                    <label
+                      for="search"
+                      class="absolute md:hidden left-11 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-ellipsis max-w-[calc(100%-3rem)] transition-all duration-300 peer-focus:top-0 peer-focus:text-xs text-xs peer-focus:text-orange-500 peer-focus:bg-white peer-focus:px-2 peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-orange-500 peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-2"
+                    >
+                      Rechercher des documents
+                    </label>
 
-                  <label for="search"
-                    class="absolute hidden md:block left-11 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none whitespace-nowrap text-ellipsis max-w-[calc(100%-3rem)] transition-all duration-300 peer-focus:top-0 peer-focus:text-xs peer-focus:text-orange-500 peer-focus:bg-white peer-focus:px-2 peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-orange-500 peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-2">
-                    Rechercher des documents (nom, type, propriétaire...)
-                  </label>
-                </div>
+                    <label
+                      for="search"
+                      class="absolute hidden md:block left-11 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none whitespace-nowrap text-ellipsis max-w-[calc(100%-3rem)] transition-all duration-300 peer-focus:top-0 peer-focus:text-xs peer-focus:text-orange-500 peer-focus:bg-white peer-focus:px-2 peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-orange-500 peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-2"
+                    >
+                      Rechercher des documents (nom, type, propriétaire...)
+                    </label>
+                  </div>
 
-                <div id="calendar-wrapper"
-                  class="relative min-w-[64px] flex items-center justify-center bg-[#F5A64B] hover:bg-[#d9974a] text-white rounded-xl transition-all shadow-md cursor-pointer group">
-                  <input type="text" id="custom-date" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                    placeholder="Sélectionner une date" />
+                  <div
+                    id="calendar-wrapper"
+                    class="relative min-w-[64px] flex items-center justify-center bg-[#F5A64B] hover:bg-[#d9974a] text-white rounded-xl transition-all shadow-md cursor-pointer group"
+                  >
+                    <input
+                      type="text"
+                      id="custom-date"
+                      class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      placeholder="Sélectionner une date"
+                    />
 
-                  <div class="px-6 py-4 flex items-center justify-center pointer-events-none">
-                    <i class="fa-solid fa-calendar-days text-xl group-hover:scale-110 transition-transform"></i>
+                    <div
+                      class="px-6 py-4 flex items-center justify-center pointer-events-none"
+                    >
+                      <i
+                        class="fa-solid fa-calendar-days text-xl group-hover:scale-110 transition-transform"
+                      ></i>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div class="flex flex-wrap items-center gap-4">
-                <button type="button"
-                  class="flex-1 md:flex-none bg-[#FF8C00] min-w-30 px-6 py-2.5 rounded-xl border border-gray-300 text-white font-medium hover:bg-[#F5A64B] hover:border-orange-300 transition-all transform hover:-translate-y-1.1 hover:scale-105 flex items-center justify-center gap-2">
-                  Tous
-                </button>
-
-                <button type="button"
-                  class="flex-1 md:flex-none min-w-[120px] px-6 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-full hover:bg-gray-200 transition-all flex items-center justify-center gap-2 border border-transparent">
-                  <i class="fa-solid fa-filter text-xs"></i>
-                  Type
-                </button>
-
-                <div class="ml-auto w-full md:w-auto">
-                  <button type="submit"
-                    class="w-full md:w-auto px-8 py-2.5 bg-orange-500 text-white font-bold rounded-full hover:bg-orange-600 transition-all shadow-lg hover:shadow-orange-200">
-                    Rechercher
+                <div class="flex flex-wrap items-center gap-4">
+                  <button
+                    type="button"
+                    class="flex-1 md:flex-none bg-[#FF8C00] min-w-30 px-6 py-2.5 rounded-xl border border-gray-300 text-white font-medium hover:bg-[#F5A64B] hover:border-orange-300 transition-all transform hover:-translate-y-1.1 hover:scale-105 flex items-center justify-center gap-2"
+                  >
+                    Tous
                   </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      </section>
-      <section>
-        <div id="document-container" class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 p-6"></div>
-      </section>
-    </main>
-  </div>
-  <!-- Animated bubble behind footer -->
-  <!-- Single molecule-style bubble behind footer -->
-  <!-- Mobile Bottom Navigation -->
-  <nav class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 -shadow-lg md:hidden">
-    <div class="mask-radial-at-top-left mask-radial-from-100% bg-[#F5A64B]"></div>
 
-    <div class="absolute inset-0 pointer-events-none z-0" style="
+                  <button
+                    type="button"
+                    class="flex-1 md:flex-none min-w-[120px] px-6 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-full hover:bg-gray-200 transition-all flex items-center justify-center gap-2 border border-transparent"
+                  >
+                    <i class="fa-solid fa-filter text-xs"></i>
+                    Type
+                  </button>
+
+                  <div class="ml-auto w-full md:w-auto">
+                    <button
+                      type="submit"
+                      class="w-full md:w-auto px-8 py-2.5 bg-orange-500 text-white font-bold rounded-full hover:bg-orange-600 transition-all shadow-lg hover:shadow-orange-200"
+                    >
+                      Rechercher
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+        <section>
+          <div
+            id="document-container"
+            class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 p-6"
+          ></div>
+        </section>
+      </main>
+    </div>
+    <!-- Animated bubble behind footer -->
+    <!-- Single molecule-style bubble behind footer -->
+    <!-- Mobile Bottom Navigation -->
+    <nav
+      class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 -shadow-lg md:hidden"
+    >
+      <div
+        class="mask-radial-at-top-left mask-radial-from-100% bg-[#F5A64B]"
+      ></div>
+
+      <div
+        class="absolute inset-0 pointer-events-none z-0"
+        style="
           background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' fill='rgba(236,168,92,0.15)' viewBox='0 0 512 512'%3E%3Cpath d='M505 442.7L405.3 343a208 208 0 1 0-62.3 62.3L442.7 505a24 24 0 0 0 34-34zM208 336a128 128 0 1 1 0-256 128 128 0 0 1 0 256z'/%3E%3C/svg%3E&quot;);
           background-repeat: repeat;
           background-size: 8px 8px;
-        "></div>
-    <ul class="flex justify-around items-center py-2">
-      <li class="nav-link">
-        <a href="index.html" class="flex flex-col items-center text-gray-500">
-          <i class="fa-solid fa-house text-xl"></i>
-          <span class="text-xs">Accueil</span>
-        </a>
-      </li>
+        "
+      ></div>
+      <ul class="flex justify-around items-center py-2">
+        <li class="nav-link">
+          <a href="index.html" class="flex flex-col items-center text-gray-500">
+            <i class="fa-solid fa-house text-xl"></i>
+            <span class="text-xs">Accueil</span>
+          </a>
+        </li>
 
-      <li class="nav-link">
-        <a href="rechercher.html" class="flex flex-col items-center text-gray-500">
-          <i class="fa-solid fa-magnifying-glass text-xl"></i>
-          <span class="text-xs">Rechercher</span>
-        </a>
-      </li>
+        <li class="nav-link">
+          <a
+            href="rechercher.html"
+            class="flex flex-col items-center text-gray-500"
+          >
+            <i class="fa-solid fa-magnifying-glass text-xl"></i>
+            <span class="text-xs">Rechercher</span>
+          </a>
+        </li>
 
-    </ul>
-  </nav>
+      </ul>
+    </nav>
 
-  <div class="footer-molecule"></div>
-  <footer class="relative bg-black/40 text-white py-12 pb-24 md:pb-12 overflow-hidden">
-    <div class="absolute inset-0 bg-black/80 pointer-events-none -z-10"></div>
+    <div class="footer-molecule"></div>
+    <footer
+      class="relative bg-black/40 text-white py-12 pb-24 md:pb-12 overflow-hidden"
+    >
+      <div class="absolute inset-0 bg-black/80 pointer-events-none -z-10"></div>
 
-    <div
-      class="absolute -top-32 -right-32 w-80 aspect-square bg-[#F5A64B] rounded-full mix-blend-multiply opacity-30 pointer-events-none -z-10 shadow-[0_0_50px_rgba(253,186,116,0.5)]">
-    </div>
+      <div
+        class="absolute -top-32 -right-32 w-80 aspect-square bg-[#F5A64B] rounded-full mix-blend-multiply opacity-30 pointer-events-none -z-10 shadow-[0_0_50px_rgba(253,186,116,0.5)]"
+      ></div>
 
-    <div class="relative max-w-8xl px-5 mx-auto">
-      <div class="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-5 gap-10 border-b border-gray-700 pb-10">
-        <div class="lg:col-span-1">
-          <div class="flex items-center gap-2 mb-4">
-            <img src="./assets/images/favicon.png" alt="Logo" class="h-8" />
-            <span class="text-2xl font-bold text-[#FFB86A]">DocMaster</span>
-          </div>
-          <p class="text-sm text-gray-300 mb-6 leading-relaxed">
-            Retrouvez vos documents perdus grâce à notre plateforme
-            communautaire. Plus de 2000 documents déjà retrouvés !
-          </p>
-          <div class="flex gap-8">
-            <div>
-              <div class="text-2xl font-black text-gray-500">2000+</div>
-              <div class="text-[10px] uppercase font-bold text-gray-400">
-                Documents retrouvés
+      <div class="relative max-w-8xl px-5 mx-auto">
+        <div
+          class="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-5 gap-10 border-b border-gray-700 pb-10"
+        >
+          <div class="lg:col-span-1">
+            <div class="flex items-center gap-2 mb-4">
+              <img src="./assets/images/favicon.png" alt="Logo" class="h-8" />
+              <span class="text-2xl font-bold text-[#FFB86A]">DocMaster</span>
+            </div>
+            <p class="text-sm text-gray-300 mb-6 leading-relaxed">
+              Retrouvez vos documents perdus grâce à notre plateforme
+              communautaire. Plus de 2000 documents déjà retrouvés !
+            </p>
+            <div class="flex gap-8">
+              <div>
+                <div class="text-2xl font-black text-gray-500">2000+</div>
+                <div class="text-[10px] uppercase font-bold text-gray-400">
+                  Documents retrouvés
+                </div>
+              </div>
+              <div>
+                <div class="text-2xl font-black text-gray-500">500+</div>
+                <div class="text-[10px] uppercase font-bold text-gray-400">
+                  Utilisateurs actifs
+                </div>
               </div>
             </div>
-            <div>
-              <div class="text-2xl font-black text-gray-500">500+</div>
-              <div class="text-[10px] uppercase font-bold text-gray-400">
-                Utilisateurs actifs
-              </div>
+          </div>
+
+          <div>
+            <h3 class="text-orange-400 font-bold mb-6 text-lg">Navigation</h3>
+            <ul class="space-y-4">
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center gap-3 text-gray-300 hover:text-white transition"
+                  ><i class="fa-solid fa-house w-5"></i> Accueil</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center gap-3 text-gray-300 hover:text-white transition"
+                  ><i class="fa-solid fa-magnifying-glass w-5"></i>
+                  Rechercher</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center gap-3 text-gray-300 hover:text-white transition"
+                  ><i class="fa-solid fa-box w-5"></i> Objets perdus</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center gap-3 text-gray-300 hover:text-white transition"
+                  ><i class="fa-solid fa-file-lines w-5"></i> Faire une
+                  déclaration</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="text-orange-400 font-bold mb-6 text-lg">Services</h3>
+            <ul class="space-y-4">
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center gap-3 text-gray-300 hover:text-white transition"
+                  ><i class="fa-solid fa-id-card w-5"></i> Cartes d'identité</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center gap-3 text-gray-300 hover:text-white transition"
+                  ><i class="fa-solid fa-credit-card w-5"></i> Cartes
+                  bancaires</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center gap-3 text-gray-300 hover:text-white transition"
+                  ><i class="fa-solid fa-graduation-cap w-5"></i> Diplômes</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center gap-3 text-gray-300 hover:text-white transition"
+                  ><i class="fa-solid fa-key w-5"></i> Clés</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center gap-3 text-gray-300 hover:text-white transition"
+                  ><i class="fa-solid fa-mobile-screen w-5"></i> Téléphones</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="text-orange-400 font-bold mb-6 text-lg">Support</h3>
+            <ul class="space-y-4">
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center gap-3 text-gray-300 hover:text-white transition"
+                  ><i class="fa-solid fa-circle-question w-5"></i> FAQ</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center gap-3 text-gray-300 hover:text-white transition"
+                  ><i class="fa-solid fa-envelope w-5"></i> Contact</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center gap-3 text-gray-300 hover:text-white transition"
+                  ><i class="fa-solid fa-shield-halved w-5"></i> Sécurité</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center gap-3 text-gray-300 hover:text-white transition"
+                  ><i class="fa-solid fa-book-open w-5"></i> Guide
+                  d'utilisation</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="text-orange-400 font-bold mb-6 text-lg">
+              Restez connecté
+            </h3>
+            <div class="flex gap-3 mb-8">
+              <a
+                href="#"
+                class="w-10 h-10 bg-blue-700 flex items-center justify-center rounded-full hover:scale-110 transition"
+                ><i class="fa-brands fa-facebook-f"></i
+              ></a>
+              <a
+                href="#"
+                class="w-10 h-10 bg-sky-400 flex items-center justify-center rounded-full hover:scale-110 transition"
+                ><i class="fa-brands fa-twitter"></i
+              ></a>
+              <a
+                href="#"
+                class="w-10 h-10 bg-pink-600 flex items-center justify-center rounded-full hover:scale-110 transition"
+                ><i class="fa-brands fa-instagram"></i
+              ></a>
+              <a
+                href="#"
+                class="w-10 h-10 bg-green-500 flex items-center justify-center rounded-full hover:scale-110 transition"
+                ><i class="fa-brands fa-whatsapp"></i
+              ></a>
+            </div>
+            <h4
+              class="text-sm font-bold text-orange-400 mb-4 uppercase tracking-wider"
+            >
+              Newsletter
+            </h4>
+            <div class="relative">
+              <input
+                type="email"
+                placeholder="Votre email"
+                class="w-full bg-white/10 border border-white/20 rounded-full py-3 px-6 outline-none focus:border-orange-400 transition text-sm"
+              />
+              <button
+                class="absolute right-1 top-1 bottom-1 bg-orange-400 hover:bg-orange-500 px-4 rounded-full transition"
+              >
+                <i class="fa-solid fa-paper-plane text-white"></i>
+              </button>
             </div>
           </div>
         </div>
 
-        <div>
-          <h3 class="text-orange-400 font-bold mb-6 text-lg">Navigation</h3>
-          <ul class="space-y-4">
-            <li>
-              <a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i
-                  class="fa-solid fa-house w-5"></i> Accueil</a>
-            </li>
-            <li>
-              <a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i
-                  class="fa-solid fa-magnifying-glass w-5"></i>
-                Rechercher</a>
-            </li>
-            <li>
-              <a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i
-                  class="fa-solid fa-box w-5"></i> Objets perdus</a>
-            </li>
-            <li>
-              <a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i
-                  class="fa-solid fa-file-lines w-5"></i> Faire une
-                déclaration</a>
-            </li>
-          </ul>
-        </div>
-
-        <div>
-          <h3 class="text-orange-400 font-bold mb-6 text-lg">Services</h3>
-          <ul class="space-y-4">
-            <li>
-              <a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i
-                  class="fa-solid fa-id-card w-5"></i> Cartes d'identité</a>
-            </li>
-            <li>
-              <a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i
-                  class="fa-solid fa-credit-card w-5"></i> Cartes
-                bancaires</a>
-            </li>
-            <li>
-              <a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i
-                  class="fa-solid fa-graduation-cap w-5"></i> Diplômes</a>
-            </li>
-            <li>
-              <a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i
-                  class="fa-solid fa-key w-5"></i> Clés</a>
-            </li>
-            <li>
-              <a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i
-                  class="fa-solid fa-mobile-screen w-5"></i> Téléphones</a>
-            </li>
-          </ul>
-        </div>
-
-        <div>
-          <h3 class="text-orange-400 font-bold mb-6 text-lg">Support</h3>
-          <ul class="space-y-4">
-            <li>
-              <a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i
-                  class="fa-solid fa-circle-question w-5"></i> FAQ</a>
-            </li>
-            <li>
-              <a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i
-                  class="fa-solid fa-envelope w-5"></i> Contact</a>
-            </li>
-            <li>
-              <a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i
-                  class="fa-solid fa-shield-halved w-5"></i> Sécurité</a>
-            </li>
-            <li>
-              <a href="#" class="flex items-center gap-3 text-gray-300 hover:text-white transition"><i
-                  class="fa-solid fa-book-open w-5"></i> Guide
-                d'utilisation</a>
-            </li>
-          </ul>
-        </div>
-
-        <div>
-          <h3 class="text-orange-400 font-bold mb-6 text-lg">
-            Restez connecté
-          </h3>
-          <div class="flex gap-3 mb-8">
-            <a href="#"
-              class="w-10 h-10 bg-blue-700 flex items-center justify-center rounded-full hover:scale-110 transition"><i
-                class="fa-brands fa-facebook-f"></i></a>
-            <a href="#"
-              class="w-10 h-10 bg-sky-400 flex items-center justify-center rounded-full hover:scale-110 transition"><i
-                class="fa-brands fa-twitter"></i></a>
-            <a href="#"
-              class="w-10 h-10 bg-pink-600 flex items-center justify-center rounded-full hover:scale-110 transition"><i
-                class="fa-brands fa-instagram"></i></a>
-            <a href="#"
-              class="w-10 h-10 bg-green-500 flex items-center justify-center rounded-full hover:scale-110 transition"><i
-                class="fa-brands fa-whatsapp"></i></a>
+        <div
+          class="flex flex-wrap justify-center gap-8 md:gap-16 py-8 text-sm font-medium border-gray-700/50"
+        >
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-phone text-orange-400"></i> +237 672 518 313
           </div>
-          <h4 class="text-sm font-bold text-orange-400 mb-4 uppercase tracking-wider">
-            Newsletter
-          </h4>
-          <div class="relative">
-            <input type="email" placeholder="Votre email"
-              class="w-full bg-white/10 border border-white/20 rounded-full py-3 px-6 outline-none focus:border-orange-400 transition text-sm" />
-            <button
-              class="absolute right-1 top-1 bottom-1 bg-orange-400 hover:bg-orange-500 px-4 rounded-full transition">
-              <i class="fa-solid fa-paper-plane text-white"></i>
-            </button>
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-envelope text-orange-400"></i>
+            contact@docmaster.cm
+          </div>
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-location-dot text-orange-400"></i> Yaoundé,
+            Cameroun
+          </div>
+        </div>
+
+        <div
+          class="flex flex-col md:row justify-between items-center pt-6 text-[12px] text-gray-400 gap-4"
+        >
+          <p>© 2025 DocMaster. Tous droits réservés.</p>
+          <div class="flex gap-6">
+            <a href="#" class="hover:text-white transition"
+              >Conditions d'utilisation</a
+            >
+            <a href="#" class="hover:text-white transition"
+              >Politique de confidentialité</a
+            >
+            <a href="#" class="hover:text-white transition">Mentions légales</a>
           </div>
         </div>
       </div>
+    </footer>
+  </body>
 
-      <div class="flex flex-wrap justify-center gap-8 md:gap-16 py-8 text-sm font-medium border-gray-700/50">
-        <div class="flex items-center gap-3">
-          <i class="fa-solid fa-phone text-orange-400"></i> +237 672 518 313
-        </div>
-        <div class="flex items-center gap-3">
-          <i class="fa-solid fa-envelope text-orange-400"></i>
-          contact@docmaster.cm
-        </div>
-        <div class="flex items-center gap-3">
-          <i class="fa-solid fa-location-dot text-orange-400"></i> Yaoundé,
-          Cameroun
-        </div>
-      </div>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
+  <script>
+    // Initialisation de Flatpickr
+    flatpickr("#custom-date", {
+      locale: "fr",
+      dateFormat: "d/m/Y",
+      disableMobile: true,
+      animate: true,
+    });
 
-      <div class="flex flex-col md:row justify-between items-center pt-6 text-[12px] text-gray-400 gap-4">
-        <p>© 2025 DocMaster. Tous droits réservés.</p>
-        <div class="flex gap-6">
-          <a href="#" class="hover:text-white transition">Conditions d'utilisation</a>
-          <a href="#" class="hover:text-white transition">Politique de confidentialité</a>
-          <a href="#" class="hover:text-white transition">Mentions légales</a>
-        </div>
-      </div>
-    </div>
-  </footer>
-<script>
-/* PARAMETRES */
-const wallet = {
-  balance:150,
-  currency:"XAF",
-  stats:[
-    { icon:"fa-file", title:"Documents Retrouvés", value:"8 Documents", color:"text-orange-500" },
-    { icon:"fa-handshake", title:"Documents Remis", value:"5 Documents", color:"text-orange-500" },
-    { icon:"fa-coins", title:"Montant Gagné", value:"230 XAF", color:"text-orange-500" },
-    { icon:"fa-money-bill", title:"Montant Retiré", value:"80 XAF", color:"text-orange-500" }
-  ]
-};
-
-document.getElementById("balance").innerHTML = `<i class="fa-solid fa-sack-dollar"></i> ${wallet.balance}${wallet.currency}`;
-
-const container = document.getElementById("statsContainer");
-wallet.stats.forEach(stat=>{
-  container.innerHTML += `
-    <div class="bg-gray-100 rounded-xl p-5 flex items:center gap=4">
-      <i class="fa-solid ${stat.icon} text-2xl ${stat.color}"></i>
-      <div>
-        <p class="font-semibold text-lg">${stat.title}</p>
-        <p class="text-gray-600">${stat.value}</p>
-      </div>
-    </div>
-  `;
-});
-
-function withdraw(){ alert("Fonction de retrait à connecter avec paiement"); }
-</script>
-</body>
+    // Toggle du menu langue (logique simple)
+    function changeLang(code, url) {
+      document.getElementById("currentFlag").src = url;
+      // logic...
+    }
+  </script>
 </html>

@@ -1,16 +1,17 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DocMaster — Mes Gains</title>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<title>DocMaster — Mes Gains</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="./js/auth.js"></script>
-     <link href="css/output.css" rel="stylesheet" />
+<link href="css/output.css" rel="stylesheet"/>
+<script src="./js/sidebar.js"></script>
 
-<link rel="shortcut icon" href="./assets/images/favicon.png" type="image/x-icon" />
+<script src="./js/auth.js"></script>
+<link rel="shortcut icon" href="./assets/images/favicon.png" type="image/x-icon"/>
 <script>
   tailwind.config = {
     theme: {
@@ -18,50 +19,57 @@
         colors: {
           primary: { DEFAULT: '#F5A64B', dark: '#D98A30', light: '#FEF0DC' },
           'green-dark': '#1E3A2F',
-          'green-mid': '#2D5A42',
-          'green-light': '#E8F5EE',
-          bgMain: '#F4EFE6',
-          surface: '#FFFFFF',
-          surface2: '#FAF7F2',
-          textMain: '#1A1A1A',
-          textMuted: '#9CA3AF',
+          'green-mid':  '#2D5A42',
+          'green-light':'#E8F5EE',
+          bgMain:     '#F4EFE6',
+          surface:    '#FFFFFF',
+          surface2:   '#FAF7F2',
+          textMain:   '#1A1A1A',
+          textMuted:  '#9CA3AF',
           borderMain: '#EAE3D8',
-          borderDark: '#DDD5C8',
         },
         fontFamily: {
-          poppins: ['Poppins', 'sans-serif'],
+          poppins:   ['Poppins', 'sans-serif'],
           bricolage: ['"Bricolage Grotesque"', 'sans-serif'],
         },
-        screens: {
-          'xs': '400px',
-        }
       }
     }
   }
 </script>
 <style>
-:root { --sidebar: 260px; }
-html { font-family: 'Poppins', sans-serif; background: #F4EFE6; }
-body { font-family: 'Poppins', sans-serif; background: #F4EFE6; min-height: 100vh; overflow-x: hidden; }
+:root { --sidebar: 240px; }
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  font-family: 'Poppins', sans-serif;
+  background: #F4EFE6;
+  height: 100vh; width: 100vw;
+  overflow: hidden; margin: 0; padding: 0;
+}
+body { display: flex; }
+
+/* ── Sidebar ── */
 .sidebar {
   position: fixed; top: 0; left: 0; bottom: 0;
   width: var(--sidebar);
   transform: translateX(-100%);
   transition: transform .28s cubic-bezier(.4,0,.2,1);
-  z-index: 50;
-  overflow-y: auto;
-  overflow-x: hidden;
+  z-index: 50; overflow-y: auto;
+  display: flex; flex-direction: column;
 }
 .sidebar.open { transform: translateX(0); }
 @media (min-width: 900px) {
-  body { display: flex; height: 100vh; overflow: hidden; }
-  .sidebar { position: relative; transform: none !important; flex-shrink: 0; }
-  .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+  .sidebar { position: relative; transform: none !important; flex-shrink: 0; height: 100vh; }
+   .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
   .main-content { flex: 1; overflow-y: auto; }
 }
-@media (max-width: 899px) {
-  .main-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
-  .main-content { flex: 1; }
+.sidebar::after {
+  content: ''; position: absolute; width: 220px; height: 220px; border-radius: 50%;
+  background: rgba(245,166,75,.05); bottom: -60px; left: -50px; pointer-events: none;
+}
+.sb-item.active { background: rgba(245,166,75,.15); color: #fff; }
+.sb-item.active::before {
+  content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 55%; background: #F5A64B; border-radius: 0 3px 3px 0;
 }
 .sb-overlay {
   display: none; position: fixed; inset: 0;
@@ -70,151 +78,290 @@ body { font-family: 'Poppins', sans-serif; background: #F4EFE6; min-height: 100v
   pointer-events: none; transition: opacity .28s;
 }
 .sb-overlay.show { display: block; opacity: 1; pointer-events: all; }
-.sidebar::after {
-  content: ''; position: absolute; width: 260px; height: 260px; border-radius: 50%;
-  background: rgba(245,166,75,.05); bottom: -80px; left: -60px; pointer-events: none;
+
+/* ── Main shell ── */
+.main-wrapper { display: flex; flex-direction: column; height: 100vh; overflow: hidden; flex: 1; min-width: 0; }
+.main-content { flex: 1; overflow-y: auto; }
+.main-content::-webkit-scrollbar { width: 3px; }
+.main-content::-webkit-scrollbar-thumb { background: #DDD5C8; border-radius: 10px; }
+.custom-scroll::-webkit-scrollbar { width: 3px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: #DDD5C8; border-radius: 10px; }
+
+/* ── Wallet card gradient ── */
+.wallet-card {
+  background: linear-gradient(135deg, #1E3A2F 0%, #2D5A42 55%, #3B7A58 100%);
+  position: relative; overflow: hidden;
 }
-.sb-item.active { background: rgba(245,166,75,.15); color: #fff; }
-.sb-item.active::before {
-  content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-  width: 3px; height: 55%; background: #F5A64B; border-radius: 0 3px 3px 0;
+.wallet-card::before {
+  content: ''; position: absolute;
+  width: 260px; height: 260px; border-radius: 50%;
+  background: rgba(255,255,255,.04);
+  top: -80px; right: -60px;
 }
-.action-card::after {
-  content: ''; position: absolute; width: 100px; height: 100px; border-radius: 50%;
-  right: -20px; bottom: -30px; background: rgba(255,255,255,.07);
+.wallet-card::after {
+  content: ''; position: absolute;
+  width: 180px; height: 180px; border-radius: 50%;
+  background: rgba(245,166,75,.08);
+  bottom: -60px; left: -40px;
 }
-.donut-wrap svg { transform: rotate(-90deg); }
-.custom-scroll::-webkit-scrollbar { width: 4px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: #EAE3D8; border-radius: 10px; }
-.bottom-nav { display: flex; }
-@media (min-width: 900px) { .bottom-nav { display: none; } }
-.search-bar-wrap { display: none; }
-@media (min-width: 640px) { .search-bar-wrap { display: flex; } }
+
+/* ── Stat card hover ── */
+.stat-card { transition: transform .18s, box-shadow .18s; }
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.07); }
+
+/* ── Transaction row ── */
+.tx-row { transition: background .15s; }
+.tx-row:hover { background: #FAF7F2; }
+
+/* ── Badge ── */
+.badge-green { background: #E8F5EE; color: #2D5A42; }
+.badge-orange { background: #FEF0DC; color: #D98A30; }
+.badge-gray   { background: #F3F4F6; color: #6B7280; }
+
+/* ── Progress bar ── */
+.prog-track { background: #EAE3D8; border-radius: 99px; overflow: hidden; height: 6px; }
+.prog-fill   { height: 100%; border-radius: 99px; transition: width .6s ease; }
 </style>
 </head>
 <body>
-
-<!-- Sidebar overlay -->
 <div class="sb-overlay" id="overlay" onclick="closeSb()"></div>
 
-<aside class="sidebar w-[var(--sidebar)] bg-green-dark flex flex-col" id="sidebar">
-  <!-- Logo -->
-  <div class="flex items-center gap-3 px-6 py-5 border-b border-white/10 flex-shrink-0">
-    <img src="./assets/images/logo.png" alt="Docmaster logo" class="rounded-md w-70 h-10">
-    <button class="ml-auto text-white/40 hover:text-white transition-colors md:hidden" onclick="closeSb()">
-      <i class="fa-solid fa-xmark text-lg"></i>
+<!-- ══ SIDEBAR ══ -->
+<div id="sidebar-root"></div>
+
+<!-- ══ MAIN ══ -->
+<div class="main-wrapper">
+
+  <!-- Topbar -->
+  <header class="sticky top-0 z-30 h-[54px] bg-white border-b border-borderMain flex items-center px-4 gap-3 flex-shrink-0">
+    <button class="w-8 h-8 flex items-center justify-center rounded-[8px] bg-surface2 border border-borderMain hover:border-primary hover:text-primary transition-all lg:hidden" onclick="openSb()">
+      <i class="fa-solid fa-bars text-sm"></i>
     </button>
-  </div>
-
-  <div class="flex-1 overflow-y-auto py-2">
-    <div class="px-[22px] pt-4 pb-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">Principal</div>
-    <nav class="flex flex-col gap-0.5 px-2.5">
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="dashboard.html">
-        <i class="fa-solid fa-house w-[18px] text-center text-primary"></i> Tableau de bord
-      </a>
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="Mesdocument.html"><i class="fa-solid fa-folder-open w-[18px] text-center opacity-80"></i> Mes Documents</a>
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="trouverdocument.html"><i class="fa-solid fa-file-circle-check w-[18px] text-center opacity-80"></i> Déclarer trouvé</a>
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="rechercher.html"><i class="fa-solid fa-magnifying-glass w-[18px] text-center opacity-80"></i> Rechercher</a>
-      <a class="sb-item active flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white cursor-pointer relative" href="mesGains.html"><i class="fa-solid fa-wallet w-[18px] text-center opacity-80"></i> Mes Gains</a>
-    </nav>
-
-    <div class="px-[22px] pt-5 pb-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">Compte</div>
-    <nav class="flex flex-col gap-0.5 px-2.5">
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="Abonnement.html"><i class="fa-solid fa-crown w-[18px] text-center opacity-80"></i> Abonnement</a>
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="parrainage.html"><i class="fa-solid fa-users-gear w-[18px] text-center opacity-80"></i> Parrainage</a>
-      <a class="sb-item logout-btn flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-red-400/70 cursor-pointer transition-all hover:bg-white/5 hover:text-red-400 relative" href="#"><i class="fa-solid fa-right-from-bracket w-[18px] text-center opacity-80"></i> Déconnexion</a>
-    </nav>
-  </div>
-
-  <!-- User footer -->
-  <div class="px-2.5 py-3.5 border-t border-white/10 flex-shrink-0">
-    <div class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-[11px] cursor-pointer hover:bg-white/5 transition-colors group">
-      <div class="w-[33px] h-[33px] rounded-[9px] bg-primary flex items-center justify:center font-bricolage text-xs font-extrabold text-white flex-shrink-0" id="userInitial">JM</div>
-      <div><div class="text-[13px] font-semibold text-white leading-tight" id="userName">Jean-Marc D.</div><div class="text-[11px] text-white/40">Plan Standard</div></div>
-      <i class="fa-solid fa-chevron-up ml-auto text:white/30 text-[11px]"></i>
-    </div>
-  </div>
-</aside>
-
-<!-- ══ MAIN WRAPPER ══ -->
-<div class="main-wrapper" id="mainWrapper">
-  <!-- ── Topbar ── -->
-  <header class="sticky top-0 z-30 h-[58px] bg-white border-b border-borderMain flex items-center px-4 gap-3 flex-shrink-0">
-    <button class="w-9 h-9 flex md:hidden items-center justify:center rounded-[9px] bg-surface2 border:border-borderMain text-textMain text-base cursor-pointer hover:border-primary hover:text-primary transition-all" onclick="openSb()">
-      <i class="fa-solid fa-bars"></i>
-    </button>
-    <span class="font-bricolage text-base font-bold text-textMain tracking-tight">Mes Gains</span>
-    <div class="search-bar-wrap flex-1 max-w-[360px] ml-3 items-center bg-surface2 border;border-borderMain rounded-[10px] overflow-hidden transition-colors focus-within;border-primary">
-      <i class="fa-solid fa-search px-3 text-textMuted text-xs flex-shrink-0"></i>
-      <input type="text" placeholder="Rechercher un document…" class="flex-1 py-2 pr-3 bg-transparent border:none outline:none font-poppins text-[13px] text-textMain placeholder:text-textMuted">
-    </div>
-    <div class="ml-auto flex items:center gap-2">
-      <div class="relative w-9 h-9 rounded-[9px] bg-surface2 border;border-borderMain flex items:center justify:center text-sm text-textMain cursor-pointer hover:border-primary hover:text-primary transition-all">
-        <i class="fa-regular fa-bell"></i>
-        <div class="absolute top-[7px] right-[7px] w-[7px] h-[7px] rounded-full bg-primary border-2 border-white"></div>
+    <div class="flex items-center gap-2">
+      <div class="w-6 h-6 rounded-[7px] bg-primary/10 flex items-center justify-center">
+        <i class="fa-solid fa-wallet text-primary text-xs"></i>
       </div>
-      <div class="flex items:center gap-2 pl-1.5 pr-3 py-1 bg-surface2 border:border-borderMain rounded-[10px] cursor-pointer hover;border-primary transition-colors">
-        <div class="w-[26px] h-[26px] rounded-[6px] bg-green-dark flex items:center justify:center font-bricolage text-[11px] font-extrabold text-primary" id="topInitial">JM</div>
-        <span class="text-[12.5px] font-semibold text-textMain hidden xs:block" id="topName">Jean-Marc</span>
-        <i class="fa-solid fa-chevron-down text-[8px] text-textMuted ml-0.5 hidden xs:block"></i>
+      <span class="font-bricolage text-[15px] font-bold text-textMain tracking-tight">Mes Gains</span>
+    </div>
+    <div class="ml-auto flex items-center gap-2">
+      <div class="relative w-8 h-8 rounded-[8px] bg-surface2 border border-borderMain flex items-center justify-center hover:border-primary hover:text-primary transition-all cursor-pointer">
+        <i class="fa-regular fa-bell text-sm"></i>
+        <div class="absolute top-[6px] right-[6px] w-[6px] h-[6px] rounded-full bg-primary border-2 border-white"></div>
+      </div>
+      <div class="flex items-center gap-2 pl-1.5 pr-2.5 py-1 bg-surface2 border border-borderMain rounded-[9px] cursor-pointer hover:border-primary transition-colors">
+        <div class="w-[22px] h-[22px] rounded-[5px] bg-green-dark flex items-center justify-center font-bricolage text-[10px] font-extrabold text-primary">JM</div>
+        <span class="text-[12px] font-semibold text-textMain hidden sm:block">Jean-Marc</span>
       </div>
     </div>
   </header>
-  <div class="sm:hidden px-4 py-2.5 bg-white border-b border-borderMain">
-    <div class="flex items:center bg-surface2 border;border-borderMain rounded-[10px] overflow-hidden focus-within;border-primary transition-colors">
-      <i class="fa-solid fa-search px-3 text-textMuted text-xs flex-shrink-0"></i>
-      <input type="text" placeholder="Rechercher un document, une personne…" class="flex-1 py-2.5 pr-3 bg-transparent border:none outline:none font-poppins text-[13px] text-textMain placeholder:text-textMuted">
-    </div>
-  </div>
-  <div class="main-content custom-scroll p-4 sm:p-6 flex:flex-col gap-4 sm:gap-5 pb-24 md:pb-6">
-    <!-- Wallet content -->
-    <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl p-8 mx-auto">
-      <h1 class="text-2xl font-bold text-center mb-6 flex items:center justify:center gap-3">
-        <i class="fa-solid fa-wallet"></i> Mon Portefeuille
-      </h1>
-      <div class="bg-gradient-to-r from-orange-600 to-orange-400 text-white rounded-xl p-8 text-center mb-8">
-        <p class="text-lg font-semibold">Solde Disponible</p>
-        <p id="balance" class="text-3xl font-bold mt-2"></p>
+
+  <!-- Content -->
+  <div class="main-content custom-scroll">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-col gap-5">
+
+      <!-- ── Wallet Card ── -->
+      <div class="wallet-card rounded-[20px] p-5 sm:p-6 text-white relative z-0">
+        <div class="flex items-start justify-between mb-5 relative z-10">
+          <div>
+            <p class="text-white/60 text-[12px] font-medium uppercase tracking-widest mb-1">Solde disponible</p>
+            <p class="font-bricolage text-4xl font-extrabold tracking-tight" id="balance-display">150 <span class="text-2xl font-bold text-white/70">XAF</span></p>
+          </div>
+          <div class="w-11 h-11 rounded-[13px] bg-white/10 border border-white/15 flex items-center justify-center">
+            <i class="fa-solid fa-sack-dollar text-primary text-lg"></i>
+          </div>
+        </div>
+        <!-- Progress to next payout -->
+        <div class="relative z-10 mb-5">
+          <div class="flex justify-between text-[11.5px] mb-1.5">
+            <span class="text-white/60 font-medium">Progrès vers le prochain retrait</span>
+            <span class="text-white font-bold">150 / 500 XAF</span>
+          </div>
+          <div class="prog-track bg-white/15">
+            <div class="prog-fill bg-gradient-to-r from-primary to-primary-dark" style="width:30%"></div>
+          </div>
+          <p class="text-[11px] text-white/40 mt-1.5">Minimum de retrait : 500 XAF</p>
+        </div>
+        <!-- Actions -->
+        <div class="relative z-10 flex gap-2.5">
+          <button onclick="withdraw()" data-loading-text="Traitement..." class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-primary hover:bg-primary-dark text-white font-bricolage text-[13.5px] font-bold rounded-[12px] transition-all active:scale-[.98]">
+            <i class="fa-solid fa-credit-card text-xs"></i> Retirer mes gains
+          </button>
+          <button class="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/15 border border-white/15 text-white font-semibold text-[13px] rounded-[12px] transition-all">
+            <i class="fa-solid fa-clock-rotate-left text-xs"></i> Historique
+          </button>
+        </div>
       </div>
-      <div id="statsContainer" class="space-y-5"></div>
-      <div class="text-center mt-8">
-        <button onclick="withdraw()" class="bg-green-500 hover:bg-green-700 text-white px-8 py-3 rounded-xl text-lg font-semibold flex items:center gap-3 mx-auto">
-          <i class="fa-solid fa-credit-card"></i> Retirer mes Gains
-        </button>
+
+      <!-- ── Stats grid ── -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="stat-card bg-white border border-borderMain rounded-[16px] p-4 cursor-default">
+          <div class="w-9 h-9 rounded-[10px] bg-green-light flex items-center justify-center mb-3">
+            <i class="fa-solid fa-file-circle-check text-green-mid text-sm"></i>
+          </div>
+          <p class="font-bricolage text-2xl font-extrabold text-textMain leading-none mb-1">8</p>
+          <p class="text-[11.5px] text-textMuted font-medium leading-snug">Documents retrouvés</p>
+        </div>
+        <div class="stat-card bg-white border border-borderMain rounded-[16px] p-4 cursor-default">
+          <div class="w-9 h-9 rounded-[10px] bg-primary/10 flex items-center justify-center mb-3">
+            <i class="fa-solid fa-handshake text-primary text-sm"></i>
+          </div>
+          <p class="font-bricolage text-2xl font-extrabold text-textMain leading-none mb-1">5</p>
+          <p class="text-[11.5px] text-textMuted font-medium leading-snug">Documents remis</p>
+        </div>
+        <div class="stat-card bg-white border border-borderMain rounded-[16px] p-4 cursor-default">
+          <div class="w-9 h-9 rounded-[10px] bg-amber-50 flex items-center justify-center mb-3">
+            <i class="fa-solid fa-coins text-amber-500 text-sm"></i>
+          </div>
+          <p class="font-bricolage text-2xl font-extrabold text-textMain leading-none mb-1">230</p>
+          <p class="text-[11.5px] text-textMuted font-medium leading-snug">XAF gagnés total</p>
+        </div>
+        <div class="stat-card bg-white border border-borderMain rounded-[16px] p-4 cursor-default">
+          <div class="w-9 h-9 rounded-[10px] bg-blue-50 flex items-center justify-center mb-3">
+            <i class="fa-solid fa-arrow-up-right-from-square text-blue-400 text-sm"></i>
+          </div>
+          <p class="font-bricolage text-2xl font-extrabold text-textMain leading-none mb-1">80</p>
+          <p class="text-[11.5px] text-textMuted font-medium leading-snug">XAF retirés</p>
+        </div>
       </div>
+
+      <!-- ── Points DocMaster ── -->
+      <div class="bg-white border border-borderMain rounded-[18px] p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-[9px] bg-primary/10 flex items-center justify-center">
+              <i class="fa-solid fa-star text-primary text-sm"></i>
+            </div>
+            <div>
+              <h2 class="font-bricolage text-[15px] font-bold text-textMain leading-tight">Points DocMaster</h2>
+              <p class="text-[11px] text-textMuted">Programme de fidélité</p>
+            </div>
+          </div>
+          <span class="font-bricolage text-xl font-extrabold text-primary">340 pts</span>
+        </div>
+        <!-- Points breakdown -->
+        <div class="flex flex-col gap-2 mb-4">
+          <div>
+            <div class="flex justify-between text-[12px] mb-1">
+              <span class="text-textMuted font-medium">Documents déclarés <span class="text-textMain font-semibold">(+50 pts × 4)</span></span>
+              <span class="font-bold text-textMain">200 pts</span>
+            </div>
+            <div class="prog-track"><div class="prog-fill bg-primary" style="width:59%"></div></div>
+          </div>
+          <div>
+            <div class="flex justify-between text-[12px] mb-1">
+              <span class="text-textMuted font-medium">Documents remis <span class="text-textMain font-semibold">(+20 pts × 5)</span></span>
+              <span class="font-bold text-textMain">100 pts</span>
+            </div>
+            <div class="prog-track"><div class="prog-fill bg-green-mid" style="width:29%"></div></div>
+          </div>
+          <div>
+            <div class="flex justify-between text-[12px] mb-1">
+              <span class="text-textMuted font-medium">Parrainage <span class="text-textMain font-semibold">(+40 pts × 1)</span></span>
+              <span class="font-bold text-textMain">40 pts</span>
+            </div>
+            <div class="prog-track"><div class="prog-fill bg-amber-400" style="width:12%"></div></div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between p-3 bg-primary/5 border border-primary/15 rounded-[12px]">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-trophy text-primary text-sm"></i>
+            <div>
+              <p class="text-[12.5px] font-bold text-textMain">Niveau Argent</p>
+              <p class="text-[11px] text-textMuted">160 pts pour atteindre Or</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-[11px] text-textMuted">Prochain niveau</p>
+            <p class="text-[13px] font-bold text-primary">500 pts</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Transactions récentes ── -->
+      <div class="bg-white border border-borderMain rounded-[18px] overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-borderMain">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-[9px] bg-green-light flex items-center justify-center">
+              <i class="fa-solid fa-clock-rotate-left text-green-mid text-sm"></i>
+            </div>
+            <h2 class="font-bricolage text-[15px] font-bold text-textMain">Transactions récentes</h2>
+          </div>
+          <button class="text-[12px] font-semibold text-primary hover:text-primary-dark transition-colors">Voir tout</button>
+        </div>
+        <div id="tx-list"></div>
+      </div>
+
+      <!-- ── Méthodes de retrait ── -->
+      <div class="bg-white border border-borderMain rounded-[18px] p-5">
+        <div class="flex items-center gap-2.5 mb-4">
+          <div class="w-8 h-8 rounded-[9px] bg-green-light flex items-center justify-center">
+            <i class="fa-solid fa-mobile-screen-button text-green-mid text-sm"></i>
+          </div>
+          <h2 class="font-bricolage text-[15px] font-bold text-textMain">Méthodes de retrait</h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="payment-methods"></div>
+        <p class="text-[11px] text-textMuted mt-3 text-center">Minimum de retrait : 500 XAF · Délai : 24–48h ouvrables</p>
+      </div>
+
     </div>
   </div>
 </div>
 
 <script>
-/* PARAMETRES */
-const wallet = {
-  balance:150,
-  currency:"XAF",
-  stats:[
-    { icon:"fa-file", title:"Documents Retrouvés", value:"8 Documents", color:"text-orange-500" },
-    { icon:"fa-handshake", title:"Documents Remis", value:"5 Documents", color:"text-orange-500" },
-    { icon:"fa-coins", title:"Montant Gagné", value:"230 XAF", color:"text-orange-500" },
-    { icon:"fa-money-bill", title:"Montant Retiré", value:"80 XAF", color:"text-orange-500" }
-  ]
-};
+function openSb()  { document.getElementById("sidebar").classList.add("open"); document.getElementById("overlay").classList.add("show"); }
+function closeSb() { document.getElementById("sidebar").classList.remove("open"); document.getElementById("overlay").classList.remove("show"); }
 
-document.getElementById("balance").innerHTML = `<i class="fa-solid fa-sack-dollar"></i> ${wallet.balance}${wallet.currency}`;
+/* ── Transactions ── */
+const transactions = [
+  { icon:"fa-file-circle-check", iconBg:"bg-green-light",   iconCls:"text-green-mid", label:"CNI retrouvée — Aminata K.",     sub:"Récompense propriétaire",  date:"12 mars 2025",   amount:"+50 XAF",  badge:"badge-green",  badgeTxt:"Reçu"   },
+  { icon:"fa-file-circle-check", iconBg:"bg-green-light",   iconCls:"text-green-mid", label:"Passeport retrouvé — R. Fotso",  sub:"Récompense propriétaire",  date:"8 mars 2025",    amount:"+80 XAF",  badge:"badge-green",  badgeTxt:"Reçu"   },
+  { icon:"fa-star",              iconBg:"bg-primary/10",    iconCls:"text-primary",   label:"Bonus déclaration",              sub:"Points convertis",         date:"5 mars 2025",    amount:"+20 XAF",  badge:"badge-orange", badgeTxt:"Bonus"  },
+  { icon:"fa-arrow-up",          iconBg:"bg-blue-50",       iconCls:"text-blue-400",  label:"Retrait MTN Mobile Money",       sub:"Compte +237 699 XXX XX",   date:"1 mars 2025",    amount:"−80 XAF",  badge:"badge-gray",   badgeTxt:"Envoyé" },
+  { icon:"fa-file-circle-check", iconBg:"bg-green-light",   iconCls:"text-green-mid", label:"Permis retrouvé — J. Ngono",     sub:"Récompense propriétaire",  date:"24 fév. 2025",   amount:"+80 XAF",  badge:"badge-green",  badgeTxt:"Reçu"   },
+];
 
-const container = document.getElementById("statsContainer");
-wallet.stats.forEach(stat=>{
-  container.innerHTML += `
-    <div class="bg-gray-100 rounded-xl p-5 flex items:center gap=4">
-      <i class="fa-solid ${stat.icon} text-2xl ${stat.color}"></i>
-      <div>
-        <p class="font-semibold text-lg">${stat.title}</p>
-        <p class="text-gray-600">${stat.value}</p>
+const txList = document.getElementById("tx-list");
+transactions.forEach((tx, i) => {
+  txList.innerHTML += `
+    <div class="tx-row flex items-center gap-3 px-5 py-3.5 ${i < transactions.length-1 ? 'border-b border-borderMain' : ''}">
+      <div class="w-9 h-9 rounded-[10px] ${tx.iconBg} flex items-center justify-center flex-shrink-0">
+        <i class="fa-solid ${tx.icon} ${tx.iconCls} text-sm"></i>
       </div>
-    </div>
-  `;
+      <div class="flex-1 min-w-0">
+        <p class="text-[13px] font-semibold text-textMain truncate leading-tight">${tx.label}</p>
+        <p class="text-[11px] text-textMuted mt-0.5">${tx.sub} · ${tx.date}</p>
+      </div>
+      <div class="flex flex-col items-end gap-1 flex-shrink-0">
+        <span class="font-bricolage text-[14px] font-extrabold ${tx.amount.startsWith('+') ? 'text-green-mid' : 'text-textMuted'}">${tx.amount}</span>
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${tx.badge}">${tx.badgeTxt}</span>
+      </div>
+    </div>`;
 });
 
-function withdraw(){ alert("Fonction de retrait à connecter avec paiement"); }
+/* ── Payment methods ── */
+const methods = [
+  { icon:"fa-mobile-screen-button", name:"MTN Mobile Money", color:"text-yellow-500", bg:"bg-yellow-50", connected:true  },
+  { icon:"fa-mobile-screen-button", name:"Orange Money",      color:"text-orange-500", bg:"bg-orange-50", connected:false },
+  { icon:"fa-university",           name:"Virement bancaire", color:"text-blue-400",   bg:"bg-blue-50",   connected:false },
+];
+const pmContainer = document.getElementById("payment-methods");
+methods.forEach(m => {
+  pmContainer.innerHTML += `
+    <div class="flex items-center gap-3 p-3.5 border-2 ${m.connected ? 'border-primary bg-primary/5' : 'border-borderMain bg-surface2'} rounded-[13px] cursor-pointer hover:border-primary transition-all group">
+      <div class="w-9 h-9 rounded-[10px] ${m.bg} flex items-center justify-center flex-shrink-0">
+        <i class="fa-solid ${m.icon} ${m.color} text-sm"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-[12.5px] font-bold text-textMain leading-tight truncate">${m.name}</p>
+        <p class="text-[10.5px] ${m.connected ? 'text-green-mid font-semibold' : 'text-textMuted'}">${m.connected ? '✓ Connecté' : 'Ajouter'}</p>
+      </div>
+      <i class="fa-solid ${m.connected ? 'fa-circle-check text-primary' : 'fa-plus text-textMuted group-hover:text-primary'} text-sm transition-colors"></i>
+    </div>`;
+});
+
+function withdraw() {
+  alert("Solde insuffisant — minimum 500 XAF requis.\nSolde actuel : 150 XAF");
+}
 </script>
 </body>
 </html>

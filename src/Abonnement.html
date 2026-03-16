@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 
 <head>
@@ -11,7 +11,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="./js/auth.js"></script>
-       <link href="css/output.css" rel="stylesheet" />
+  <script src="./js/sidebar.js"></script>
+  <link href="css/output.css" rel="stylesheet" />
 
   <link rel="shortcut icon" href="./assets/images/favicon.png" type="image/x-icon" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@24.5.0/build/css/intlTelInput.css">
@@ -205,65 +206,14 @@
     .opacity-0 {
       opacity: 0;
     }
+
   </style>
 </head>
 
 <body>
-  <div class="sb-overlay" id="overlay" onclick="closeSb()"></div>
-
-  <!-- SIDEBAR -->
-  <aside class="sidebar w-[var(--sidebar)] bg-green-dark flex flex-col" id="sidebar">
-    <div class="flex items-center gap-3 px-6 py-5 border-b border-white/10 flex-shrink-0">
-      
-<img src="./assets/images/logo.png" alt="Docmaster logo" class="rounded-md w-70 h-10">    <!-- Close btn mobile -->
-      <button class="ml-auto text-white/40 hover:text-white transition-colors lg:hidden" onclick="closeSb()"><i
-          class="fa-solid fa-xmark text-lg"></i></button>
-    </div>
-    <div class="flex-1 overflow-y-auto py-2">
-      <div class="px-[22px] pt-4 pb-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">Principal</div>
-      <nav class="flex flex-col gap-0.5 px-2.5">
-        <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative"
-          href="dashboard.html"><i class="fa-solid fa-house w-[18px] text-center opacity-80"></i>Tableau de bord</a>
-        <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative"
-          href="Mesdocument.html"><i class="fa-solid fa-folder-open w-[18px] text-center opacity-80"></i>Mes
-          Documents</a>
-        <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative"
-          href="trouverdocument.html"><i
-            class="fa-solid fa-file-circle-check w-[18px] text-center opacity-80"></i>Déclarer trouvé</a>
-        <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative"
-          href="rechercher.html"><i
-            class="fa-solid fa-magnifying-glass w-[18px] text-center opacity-80"></i>Rechercher</a>
-        <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative"
-          href="mesGains.html"><i class="fa-solid fa-wallet w-[18px] text-center opacity-80"></i>Mes Gains</a>
-      </nav>
-      <div class="px-[22px] pt-5 pb-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">Compte</div>
-      <nav class="flex flex-col gap-0.5 px-2.5">
-        <a class="sb-item active flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white cursor-pointer relative"
-          href="Abonnement.html"><i class="fa-solid fa-crown w-[18px] text-center text-primary"></i>Abonnement</a>
-        <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative"
-          href="parrainage.html"><i class="fa-solid fa-users-gear w-[18px] text-center opacity-80"></i>Parrainage</a>
-        <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative"
-          href="#"><i class="fa-solid fa-gear w-[18px] text-center opacity-80"></i>Paramètres</a>
-        <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-red-400/70 cursor-pointer transition-all hover:bg-white/5 hover:text-red-400 relative"
-          href="#"><i class="fa-solid fa-right-from-bracket w-[18px] text-center opacity-80"></i>Déconnexion</a>
-      </nav>
-    </div>
-    <div class="px-2.5 py-3.5 border-t border-white/10 flex-shrink-0">
-      <div
-        class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-[11px] cursor-pointer hover:bg-white/5 transition-colors">
-        <div
-          class="w-[33px] h-[33px] rounded-[9px] bg-primary flex items-center justify-center font-bricolage text-xs font-extrabold text-white flex-shrink-0"
-          id="userInitial">JM</div>
-        <div>
-          <div class="text-[13px] font-semibold text-white leading-tight" id="userName">Jean-Marc D.</div>
-          <div class="text-[11px] text-white/40">Plan Standard</div>
-        </div>
-        <i class="fa-solid fa-chevron-up ml-auto text-white/30 text-[11px]"></i>
-      </div>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
+  <!-- Sidebar composant (généré par sidebar.js) -->
+  <div id="sidebar-root"></div>
+<!-- MAIN -->
   <div class="main-wrapper">
     <header
       class="sticky top-0 z-30 h-[58px] bg-white border-b border-borderMain flex items-center px-4 gap-3 flex-shrink-0">
@@ -394,7 +344,7 @@
           <h2 class="font-bricolage text-base font-bold text-textMain flex items-center gap-2">
             <i class="fa-solid fa-receipt text-primary text-sm"></i>Historique de facturation
           </h2>
-          <button class="text-[11.5px] font-semibold text-primary hover:underline">Tout exporter</button>
+          <button id="export-btn" data-loading-text="Export..." class="text-[11.5px] font-semibold text-primary hover:underline">Tout exporter</button>
         </div>
         <div id="invoice-container" class="divide-y divide-borderMain">
           <!-- JS will populate this -->
@@ -433,6 +383,7 @@
             <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Actif</span>
           </div>
           <button
+            id="add-payment-btn" data-loading-text="Ouverture..."
             class="w-full py-2.5 rounded-[12px] bg-bgMain border border-borderMain text-textMain text-[13px] font-bold hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2">
             <i class="fa-solid fa-plus text-[11px]"></i> Ajouter un moyen de paiement
           </button>
@@ -447,10 +398,11 @@
           </div>
           <div class="flex flex-col gap-2">
             <button
+              id="pause-plan-btn" data-loading-text="Mise en pause..."
               class="w-full py-2.5 rounded-[12px] bg-bgMain border border-borderMain text-textMain text-[13px] font-bold hover:border-textMain transition-colors">
               Mettre en pause
             </button>
-            <button onclick="confirmCancel()"
+            <button id="cancel-plan-btn" data-loading-text="Ouverture..." onclick="confirmCancel()"
               class="w-full py-2.5 rounded-[12px] bg-red-50 border border-red-100 text-red-600 text-[13px] font-bold hover:bg-red-100 transition-colors">
               Annuler l'abonnement
             </button>
@@ -605,7 +557,7 @@
       <div class="flex gap-3">
         <button onclick="document.getElementById('cancel-modal').classList.add('hidden')"
           class="flex-1 py-2.5 rounded-[12px] bg-bgMain border border-borderMain text-textMain font-bold hover:border-textMain transition-colors">Annuler</button>
-        <button
+        <button id="confirm-cancel-btn" data-loading-text="Confirmation..."
           class="flex-1 py-2.5 rounded-[12px] bg-red-500 text-white font-bold hover:bg-red-600 transition-colors">Confirmer</button>
       </div>
     </div>
@@ -637,6 +589,7 @@
       document.getElementById('prem-price').textContent = prices[tab].prem;
     }
     function selectPlan(plan) { alert('Passage au plan ' + plan + ' en cours de déploiement !') }
+
   </script>
 </body>
 

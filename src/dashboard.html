@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -7,7 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="./js//auth.js"></script>
+<script src="./js/auth.js"></script>
+<script src="./js/sidebar.js"></script>
  <link
       rel="shortcut icon"
       href="./assets/images/favicon.png"
@@ -122,57 +123,8 @@ body { font-family: 'Poppins', sans-serif; background: #F4EFE6; min-height: 100v
 </head>
 <body>
 
-<!-- Sidebar Overlay -->
-<div class="sb-overlay" id="overlay" onclick="closeSb()"></div>
-
-<!-- ══ SIDEBAR ══ -->
-<aside class="sidebar w-[var(--sidebar)] bg-green-dark flex flex-col" id="sidebar">
-  <!-- Logo -->
-  <div class="flex items-center gap-3 px-6 py-5 border-b border-white/10 flex-shrink-0">
-   
-<img src="./assets/images/logo.png" alt="Docmaster logo" class="rounded-md w-70 h-10">    <!-- Close btn mobile -->
-    <button class="ml-auto text-white/40 hover:text-white transition-colors md:hidden" onclick="closeSb()">
-      <i class="fa-solid fa-xmark text-lg"></i>
-    </button>
-  </div>
-
-  <div class="flex-1 overflow-y-auto py-2">
-    <div class="px-[22px] pt-4 pb-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">Principal</div>
-    <nav class="flex flex-col gap-0.5 px-2.5">
-      <a class="sb-item active flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="dashboard.html">
-        <i class="fa-solid fa-house w-[18px] text-center text-primary"></i> Tableau de bord
-      </a>
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="Mesdocument.html"><i class="fa-solid fa-folder-open w-[18px] text-center opacity-80"></i> Mes Documents</a>
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="trouverdocument.html"><i class="fa-solid fa-file-circle-check w-[18px] text-center opacity-80"></i> Déclarer trouvé</a>
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="rechercher.html"><i class="fa-solid fa-magnifying-glass w-[18px] text-center opacity-80"></i> Rechercher</a>
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="#">
-        <i class="fa-solid fa-envelope w-[18px] text-center opacity-80"></i> Messages
-        <span class="ml-auto bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-tight">5</span>
-      </a>
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="mesGains.html">
-        <i class="fa-solid fa-wallet w-[18px] text-center opacity-80"></i> Mes Gains
-      </a>
-    </nav>
-
-    <div class="px-[22px] pt-5 pb-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">Compte</div>
-    <nav class="flex flex-col gap-0.5 px-2.5">
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="Abonnement.html"><i class="fa-solid fa-crown w-[18px] text-center opacity-80"></i> Abonnement</a>
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="parrainage.html"><i class="fa-solid fa-users-gear w-[18px] text-center opacity-80"></i> Parrainage</a>
-      <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 cursor-pointer transition-all hover:bg-white/5 hover:text-white/90 relative" href="#"><i class="fa-solid fa-gear w-[18px] text-center opacity-80"></i> Paramètres</a>
-      <a class="sb-item logout-btn flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-red-400/70 cursor-pointer transition-all hover:bg-white/5 hover:text-red-400 relative" href="#"><i class="fa-solid fa-right-from-bracket w-[18px] text-center opacity-80"></i> Déconnexion</a>
-    </nav>
-  </div>
-
-  <!-- User footer -->
-  <div class="px-2.5 py-3.5 border-t border-white/10 flex-shrink-0">
-    <div class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-[11px] cursor-pointer hover:bg-white/5 transition-colors group">
-      <div class="w-[33px] h-[33px] rounded-[9px] bg-primary flex items-center justify-center font-bricolage text-xs font-extrabold text-white flex-shrink-0" id="userInitial">JM</div>
-      <div><div class="text-[13px] font-semibold text-white leading-tight" id="userName">Jean-Marc D.</div><div class="text-[11px] text-white/40">Plan Standard</div></div>
-      <i class="fa-solid fa-chevron-up ml-auto text-white/30 text-[11px]"></i>
-    </div>
-  </div>
-</aside>
-
+<!-- Sidebar composant (généré par sidebar.js) -->
+<div id="sidebar-root"></div>
 <!-- ══ MAIN WRAPPER ══ -->
 <div class="main-wrapper" id="mainWrapper">
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 
 <head>
@@ -12,6 +12,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="shortcut icon" href="./assets/images/favicon.png" type="image/x-icon" />
      <link href="css/output.css" rel="stylesheet" />
+  <script src="./js/auth.js"></script>
+  <script src="./js/sidebar.js"></script>
 
   <script>
     tailwind.config = {
@@ -413,67 +415,9 @@
 </head>
 
 <body>
-  <div class="sb-overlay" id="overlay" onclick="closeSb()"></div>
-
-  <!-- ══ SIDEBAR ══ -->
-  <aside class="sidebar w-[var(--sidebar)] bg-green-dark flex flex-col" id="sidebar">
-    <div class="flex items-center gap-3 px-6 py-5 border-b border-white/10 flex-shrink-0">
-      <div
-        class="w-9 h-9 rounded-[10px] bg-primary/15 border border-primary/25 flex items-center justify-center flex-shrink-0">
-        <i class="fa-solid fa-file-shield text-primary text-base"></i>
-      </div>
-      <span class="font-bricolage text-[18px] font-bold text-white tracking-tight">DocMaster</span>
-      <button class="ml-auto text-white/40 hover:text-white lg:hidden" onclick="closeSb()"><i
-          class="fa-solid fa-xmark text-lg"></i></button>
-    </div>
-    <div class="flex-1 overflow-y-auto py-2">
-      <div class="px-[22px] pt-4 pb-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">Principal</div>
-      <nav class="flex flex-col gap-0.5 px-2.5">
-        <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90 relative transition-all"
-          href="dashboard.html"><i class="fa-solid fa-house w-[18px] text-center opacity-80"></i>Tableau de bord</a>
-        <a class="sb-item active flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white relative"
-          href="Mesdocument.html"><i class="fa-solid fa-folder-open w-[18px] text-center text-primary"></i>Mes
-          Documents</a>
-        <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90 relative transition-all"
-          href="trouverdocument.html"><i
-            class="fa-solid fa-file-circle-check w-[18px] text-center opacity-80"></i>Déclarer trouvé</a>
-        <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90 relative transition-all"
-          href="rechercher.html"><i
-            class="fa-solid fa-magnifying-glass w-[18px] text-center opacity-80"></i>Rechercher</a>
-        <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90 relative transition-all"
-          href="#"><i class="fa-solid fa-envelope w-[18px] text-center opacity-80"></i>Messages<span
-            class="ml-auto bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">5</span></a>
-        <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90 relative transition-all"
-          href="mesGains.html"><i class="fa-solid fa-wallet w-[18px] text-center opacity-80"></i>Mes Gains</a>
-      </nav>
-      <div class="px-[22px] pt-5 pb-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">Compte</div>
-      <nav class="flex flex-col gap-0.5 px-2.5">
-        <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90 relative transition-all"
-          href="Abonnement.html"><i class="fa-solid fa-crown w-[18px] text-center opacity-80"></i>Abonnement</a>
-        <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90 relative transition-all"
-          href="parrainage.html"><i class="fa-solid fa-users-gear w-[18px] text-center opacity-80"></i>Parrainage</a>
-        <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90 relative transition-all"
-          href="#"><i class="fa-solid fa-gear w-[18px] text-center opacity-80"></i>Paramètres</a>
-        <a class="sb-item flex items-center gap-3 px-3.5 py-2.5 rounded-[11px] text-[13.5px] font-medium text-red-400/70 hover:bg-white/5 hover:text-red-400 relative transition-all"
-          href="#"><i class="fa-solid fa-right-from-bracket w-[18px] text-center opacity-80"></i>Déconnexion</a>
-      </nav>
-    </div>
-    <div class="px-2.5 py-3.5 border-t border-white/10 flex-shrink-0">
-      <div
-        class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-[11px] cursor-pointer hover:bg-white/5 transition-colors">
-        <div
-          class="w-[33px] h-[33px] rounded-[9px] bg-primary flex items-center justify-center font-bricolage text-xs font-extrabold text-white flex-shrink-0">
-          JM</div>
-        <div>
-          <div class="text-[13px] font-semibold text-white leading-tight">Jean-Marc D.</div>
-          <div class="text-[11px] text-white/40">Plan Standard</div>
-        </div>
-        <i class="fa-solid fa-chevron-up ml-auto text-white/30 text-[11px]"></i>
-      </div>
-    </div>
-  </aside>
-
-  <!-- ══ MAIN ══ -->
+  <!-- Sidebar composant (généré par sidebar.js) -->
+  <div id="sidebar-root"></div>
+<!-- ══ MAIN ══ -->
   <div class="main-wrapper">
 
     <!-- Topbar -->
@@ -741,7 +685,7 @@
         </div>
 
         <!-- Add new card -->
-        <button onclick="openModal()"
+        <button onclick="openModal()" data-loading-text="Ouverture..."
           class="drop-zone rounded-[18px] p-6 flex flex-col items-center justify-center gap-3 min-h-[180px] cursor-pointer group">
           <div
             class="w-12 h-12 rounded-2xl bg-primary/10 border-2 border-primary/25 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
@@ -794,7 +738,7 @@
   </nav>
 
   <!-- Mobile FAB -->
-  <button class="fab" onclick="openModal()"><i class="fa-solid fa-plus"></i></button>
+  <button class="fab" onclick="openModal()" data-loading-text="Ouverture..."><i class="fa-solid fa-plus"></i></button>
 
   <!-- ════════════════════════════════════
      MODAL — Enregistrer un document

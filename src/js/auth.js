@@ -6,6 +6,16 @@
 const AUTH_KEY = "docmaster_user_session";
 const USERS_KEY = "docmaster_users_db";
 
+function getInitials(name) {
+  return (name || "DM")
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+    .substring(0, 2);
+}
+
 /**
  * Initialize mock DB with a default user if empty
  */
@@ -51,12 +61,7 @@ function register(name, email, password) {
     name,
     email,
     password,
-    initial: name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2),
+    initial: getInitials(name),
   };
 
   users.push(newUser);
@@ -80,13 +85,12 @@ function logout() {
  */
 function checkAuth() {
   const session = localStorage.getItem(AUTH_KEY);
-  const isLoginPage = window.location.pathname.includes("login.html");
+  const currentPage = window.location.pathname.split("/").pop();
+  const publicPages = ["index.html", "login.html", "rechercher.html", "rechercher.old.html"];
+  const isLoginPage = currentPage === "login.html";
+  const isPublicPage = publicPages.includes(currentPage);
 
-  if (
-    !session &&
-    !isLoginPage &&
-    !window.location.pathname.endsWith("index.html")
-  ) {
+  if (!session && !isPublicPage) {
     window.location.href = "login.html";
   } else if (session && isLoginPage) {
     window.location.href = "dashboard.html";
@@ -117,6 +121,64 @@ function updateUI(user) {
   });
 }
 
+function getCurrentUser() {
+  const session = localStorage.getItem(AUTH_KEY);
+  if (!session) return null;
+
+  try {
+    return JSON.parse(session);
+  } catch {
+    return null;
+  }
+}
+
+function saveCurrentUserProfile(updates) {
+  const currentUser = getCurrentUser();
+  const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+
+  if (!currentUser) {
+    return { success: false, message: "Aucune session active." };
+  }
+
+  const currentIndex = users.findIndex((user) => user.email === currentUser.email);
+  if (currentIndex === -1) {
+    return { success: false, message: "Utilisateur introuvable." };
+  }
+
+  const nextName = (updates.name || currentUser.name || "").trim();
+  const nextEmail = (updates.email || currentUser.email || "").trim();
+
+  if (!nextName || !nextEmail) {
+    return { success: false, message: "Nom et email sont obligatoires." };
+  }
+
+  const emailAlreadyUsed = users.some((user, index) => {
+    return index !== currentIndex && user.email === nextEmail;
+  });
+
+  if (emailAlreadyUsed) {
+    return { success: false, message: "Cet email est déjà utilisé." };
+  }
+
+  const mergedUser = {
+    ...users[currentIndex],
+    ...currentUser,
+    ...updates,
+    name: nextName,
+    email: nextEmail,
+    initial: getInitials(nextName),
+  };
+
+  users[currentIndex] = mergedUser;
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  localStorage.setItem(AUTH_KEY, JSON.stringify(mergedUser));
+
+  updateUI(mergedUser);
+  markActiveSidebar();
+
+  return { success: true, user: mergedUser };
+}
+
 // Highlight the active sidebar link based on current URL
 function markActiveSidebar() {
   const current = window.location.pathname.split("/").pop();
@@ -132,12 +194,51 @@ function markActiveSidebar() {
 
 // sidebar open/close helpers (used by the hamburger & overlay)
 function openSb() {
-  document.getElementById('sidebar').classList.add('open');
-  document.getElementById('overlay').classList.add('show');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+  if (sidebar) sidebar.classList.add('open');
+  if (overlay) overlay.classList.add('show');
 }
 function closeSb() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('overlay').classList.remove('show');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+  if (sidebar) sidebar.classList.remove('open');
+  if (overlay) overlay.classList.remove('show');
+}
+
+function startButtonLoader(button) {
+  if (!button || button.classList.contains('btn-is-loading')) return;
+  button.dataset.originalHtml = button.innerHTML;
+  button.classList.add('btn-is-loading');
+  button.disabled = true;
+  const loadingText = button.dataset.loadingText || 'Chargement...';
+  button.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin" style="margin-right:8px"></i>${loadingText}`;
+}
+
+function stopButtonLoader(button) {
+  if (!button || !button.classList.contains('btn-is-loading')) return;
+  button.classList.remove('btn-is-loading');
+  button.disabled = false;
+  if (button.dataset.originalHtml) {
+    button.innerHTML = button.dataset.originalHtml;
+  }
+}
+
+function setupGlobalButtonLoaders() {
+  if (!document.getElementById('global-loader-style')) {
+    const style = document.createElement('style');
+    style.id = 'global-loader-style';
+    style.textContent = `.btn-is-loading{pointer-events:none;opacity:.9}`;
+    document.head.appendChild(style);
+  }
+
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-loading-text]');
+    if (!button || button.disabled) return;
+    startButtonLoader(button);
+    const delay = Number(button.dataset.loadingDelay || 900);
+    setTimeout(() => stopButtonLoader(button), Number.isFinite(delay) ? delay : 900);
+  });
 }
 
 // ensure sidebar starts closed on mobile
@@ -147,6 +248,7 @@ if (window.innerWidth < 900) closeSb();
 document.addEventListener("DOMContentLoaded", () => {
   initDB();
   checkAuth();
+  setupGlobalButtonLoaders();
 
   // Setup login forms (handles both mobile and desktop)
   document.querySelectorAll(".form-login").forEach((form) => {

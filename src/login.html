@@ -7,28 +7,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-     <link href="css/output.css" rel="stylesheet" />
-      <link
-      rel="shortcut icon"
-      href="./assets//images/favicon.png"
-      type="image/x-icon"
-    />
-
+    <script src="/src/js/auth.js"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-              primary: {
-                DEFAULT: '#F5A64B',
-                dark: '#D98A30',
-                light: '#FEF0DC',
-              },
-              green: {
-                dark: '#1E3A2F',
-                mid: '#2D5A42',
-                light: '#E8F5EE',
-              },
+              primary: { DEFAULT: '#F5A64B', dark: '#D98A30', light: '#FEF0DC' },
+              green: { dark: '#1E3A2F', mid: '#2D5A42', light: '#E8F5EE' },
               accent: '#F5A64B',
               bgMain: '#F2EBD9',
               surface: '#FFFFFF',
@@ -43,18 +29,15 @@
               bricolage: ['"Bricolage Grotesque"', 'sans-serif'],
             },
             borderRadius: {
-              'v12': '12px',
-              'v14': '14px',
-              'v16': '16px',
-              'v24': '24px',
+              'v12': '12px', 'v14': '14px', 'v16': '16px', 'v24': '24px',
             }
           }
         }
       }
     </script>
-    <script src="js/auth.js" defer></script>
+
 <style>
-  html, body { 
+  html, body {
     margin: 0; padding: 0; box-sizing: border-box;
     font-family: 'Poppins', sans-serif;
     background: #F2EBD9;
@@ -62,9 +45,13 @@
     overflow-x: hidden;
   }
 
-  /* ── Forms visibility ── */
+  /* ── Forms ── */
   .auth-form { display: none; flex-direction: column; }
   .auth-form.visible { display: flex; animation: fadeSlide 0.28s ease; }
+
+  /* ── Register steps ── */
+  .reg-step { display: none; flex-direction: column; gap: 14px; animation: fadeSlide 0.28s ease; }
+  .reg-step.active { display: flex; }
 
   /* ── Blobs ── */
   .blob { position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; }
@@ -76,15 +63,107 @@
 
   @keyframes fadeSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* ── Desktop Desktop specificity ── */
+  /* ── Step progress dots ── */
+  .step-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 2px solid #E0D5C4;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #6B7280;
+    background: white;
+    transition: all 0.3s ease;
+    position: relative; z-index: 1;
+  }
+  .step-dot.done {
+    background: #F5A64B; border-color: #F5A64B; color: white;
+  }
+  .step-dot.active {
+    background: #1E3A2F; border-color: #1E3A2F; color: white;
+    box-shadow: 0 0 0 4px rgba(30,58,47,0.12);
+  }
+  .step-line {
+    flex: 1; height: 2px; background: #E0D5C4;
+    transition: background 0.4s ease;
+  }
+  .step-line.done { background: #F5A64B; }
+
+  /* ── PIN inputs ── */
+  .pin-input {
+    width: 48px; height: 56px;
+    text-align: center; font-size: 22px; font-weight: 700;
+    background: white; border: 2px solid #E0D5C4;
+    border-radius: 14px; outline: none;
+    transition: all 0.2s ease;
+    font-family: 'Poppins', sans-serif;
+    color: #1A1A1A;
+  }
+  .pin-input:focus {
+    border-color: #F5A64B;
+    box-shadow: 0 0 0 4px rgba(245,166,75,0.18);
+  }
+  .pin-input.filled { border-color: #1E3A2F; background: #E8F5EE; }
+
+  /* ── Pseudo suggestion chips ── */
+  .pseudo-chip {
+    padding: 8px 14px; border-radius: 20px;
+    border: 1.5px solid #E0D5C4;
+    font-size: 13px; font-weight: 600; color: #1A1A1A;
+    background: white; cursor: pointer;
+    transition: all 0.2s ease; white-space: nowrap;
+  }
+  .pseudo-chip:hover, .pseudo-chip.selected {
+    background: #1E3A2F; color: white; border-color: #1E3A2F;
+  }
+
+  /* ── PW bars ── */
+  .pw-bar { height: 3px; background: rgba(0,0,0,0.1); border-radius: 9999px; transition: all 0.3s; }
+  .pw-bar.weak   { background: #ef4444; }
+  .pw-bar.medium { background: #f59e0b; }
+  .pw-bar.strong { background: #22c55e; }
+
+  /* ── Success animation ── */
+  @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+  .success-icon { animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+  /* ── Desktop panel ── */
   @media (min-width: 900px) {
-    .panel-left-desktop::before { content: ""; position: absolute; width: 220px; height: 220px; background: rgba(255, 255, 255, 0.04); border-radius: 50%; bottom: -70px; left: -50px; }
-    .panel-left-desktop::after { content: ""; position: absolute; width: 160px; height: 160px; background: rgba(255, 255, 255, 0.04); border-radius: 50%; top: -40px; right: -40px; }
+    .panel-left-desktop::before { content: ""; position: absolute; width: 220px; height: 220px; background: rgba(255,255,255,0.04); border-radius: 50%; bottom: -70px; left: -50px; }
+    .panel-left-desktop::after  { content: ""; position: absolute; width: 160px; height: 160px; background: rgba(255,255,255,0.04); border-radius: 50%; top: -40px; right: -40px; }
+  }
+
+  /* ── Input base ── */
+  .field-input {
+    width: 100%;
+    padding: 14px 14px 14px 42px;
+    border: 1.5px solid #E0D5C4;
+    border-radius: 14px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    color: #1A1A1A;
+    outline: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+  }
+  .field-input:focus {
+    border-color: #F5A64B;
+    box-shadow: 0 0 0 4px rgba(245,166,75,0.15);
+    background: white;
+  }
+  .field-input::placeholder { color: #c4bab0; }
+  .field-input-mobile { background: rgba(255,255,255,0.65); backdrop-filter: blur(12px); border-color: rgba(255,255,255,0.9); }
+  .field-input-mobile:focus { border-color: #F5A64B; background: rgba(255,255,255,0.9); }
+  .field-input-desktop { background: #faf8f5; }
+  .field-input-desktop:focus { background: white; }
+
+  .field-input-right { padding: 14px 45px 14px 42px; }
+
+  .field-label {
+    font-size: 12px; font-weight: 700; color: #6B7280;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
   }
 </style>
   </head>
   <body>
-    <!-- Blobs always visible -->
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
     <div class="blob blob-3"></div>
@@ -92,24 +171,23 @@
     <div class="blob blob-5"></div>
 
     <div class="relative z-10 min-h-screen flex flex-col md:flex-row md:items-center md:justify-center p-0 md:p-10">
-      
+
       <!-- ═══════════ MOBILE HEADER ═══════════ -->
       <div class="p-[48px_28px_32px] md:hidden">
         <div class="flex items-center gap-2.5 mb-5">
           <div class="w-10 h-10 bg-green-dark rounded-v12 flex items-center justify-center shrink-0">
             <i class="fa-solid fa-file-shield text-primary text-[18px]"></i>
           </div>
-          <img src="./assets/images//docmaster.png" alt="">
+          <span class="font-bricolage text-[22px] font-extrabold text-textMain">DocMaster</span>
         </div>
         <h2 class="font-bricolage text-[28px] font-extrabold text-textMain leading-[1.2] tracking-tight mb-1.5">Retrouvez vos documents perdus</h2>
-        <p class="text-[13.5px] text-textMuted leading-[1.55] font-medium">
-          La plateforme qui connecte ceux qui perdent avec ceux qui trouvent.
-        </p>
+        <p class="text-[13.5px] text-textMuted leading-[1.55] font-medium">La plateforme qui connecte ceux qui perdent avec ceux qui trouvent.</p>
       </div>
 
+      <!-- ═══════════ MOBILE FORM AREA ═══════════ -->
       <div class="flex-1 p-[0_28px_48px] flex flex-col gap-5 md:hidden" id="mobile-form-area">
         <!-- Pill Toggle (Mobile) -->
-        <div class="relative flex bg-white/50 backdrop-blur-md border-[1.5px] border-white/80 rounded-v16 p-1.5 shadow-sm overflow-hidden auto-cols-fr">
+        <div class="relative flex bg-white/50 backdrop-blur-md border-[1.5px] border-white/80 rounded-v16 p-1.5 shadow-sm overflow-hidden">
           <div id="toggle-slider" class="absolute top-1.5 left-1.5 bottom-1.5 w-[calc(50%-3px)] bg-primary rounded-v12 shadow-[0_3px_12px_rgba(245,166,75,0.4)] transition-all duration-300 ease-out z-0"></div>
           <button id="tab-login" class="relative z-10 flex-1 py-2.5 rounded-v12 font-poppins text-[14px] font-semibold text-white transition-colors duration-200 flex items-center justify-center gap-2" onclick="switchTab('login')">
             <i class="fa-solid fa-right-to-bracket text-[13px]"></i> Connexion
@@ -119,103 +197,237 @@
           </button>
         </div>
 
-        <!-- LOGIN (MOBILE) -->
+        <!-- ── LOGIN MOBILE ── -->
         <form class="auth-form visible flex-col gap-3.5 form-login" id="form-login">
           <div class="mb-1">
             <h1 class="font-bricolage text-[23px] font-extrabold text-textMain tracking-tight mb-[3px]">Bon retour ! 👋</h1>
             <p class="text-[13px] text-textMuted font-medium italic">Connectez-vous à votre espace</p>
           </div>
-
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[12px] font-bold text-gray-500 tracking-wider uppercase flex items-center gap-1.5"><i class="fa-solid fa-envelope text-primary text-[11px]"></i> Adresse e-mail</label>
+          <div class="flex flex-col">
+            <label class="field-label"><i class="fa-solid fa-envelope text-primary text-[11px]"></i> Adresse e-mail</label>
             <div class="relative flex items-center group">
               <i class="fa-regular fa-envelope absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none transition-colors group-focus-within:text-primary"></i>
-              <input type="email" placeholder="vous@exemple.com" class="w-full p-[14px_14px_14px_42px] bg-white/65 backdrop-blur-md border-[1.5px] border-white/90 rounded-v14 font-poppins text-[15px] text-textMain outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/18 focus:bg-white/90 placeholder:text-[#c4bab0]" required />
+              <input type="email" placeholder="vous@exemple.com" class="field-input field-input-mobile" required />
             </div>
           </div>
-
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[12px] font-bold text-gray-500 tracking-wider uppercase flex items-center gap-1.5"><i class="fa-solid fa-lock text-primary text-[11px]"></i> Mot de passe</label>
+          <div class="flex flex-col">
+            <label class="field-label"><i class="fa-solid fa-lock text-primary text-[11px]"></i> Mot de passe</label>
             <div class="relative flex items-center group">
               <i class="fa-solid fa-lock absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none transition-colors group-focus-within:text-primary"></i>
-              <input type="password" id="login-pw" placeholder="••••••••" class="w-full p-[14px_45px_14px_42px] bg-white/65 backdrop-blur-md border-[1.5px] border-white/90 rounded-v14 font-poppins text-[15px] text-textMain outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/18 focus:bg-white/90 placeholder:text-[#c4bab0]" required />
-              <button class="absolute right-3 p-1.5 text-textMuted hover:text-primary transition-colors cursor-pointer" onclick="togglePw('login-pw', this)" type="button">
-                <i class="fa-regular fa-eye"></i>
-              </button>
+              <input type="password" id="login-pw" placeholder="••••••••" class="field-input field-input-mobile field-input-right" required />
+              <button class="absolute right-3 p-1.5 text-textMuted hover:text-primary transition-colors cursor-pointer" onclick="togglePw('login-pw', this)" type="button"><i class="fa-regular fa-eye"></i></button>
             </div>
           </div>
-
           <div class="text-right -mt-1">
             <a href="#" class="text-[12.5px] text-primary font-semibold hover:underline"><i class="fa-solid fa-key mr-1.5"></i>Mot de passe oublié ?</a>
           </div>
-
-          <button type="submit" class="p-[15px_20px] bg-primary text-white rounded-v14 font-bricolage text-[16px] font-bold cursor-pointer flex items-center justify-center gap-[9px] transition-all shadow-lg shadow-primary/40 active:scale-[0.98] active:shadow-none mt-1">
+          <button type="submit" class="p-[15px_20px] bg-primary text-white rounded-v14 font-bricolage text-[16px] font-bold cursor-pointer flex items-center justify-center gap-[9px] transition-all shadow-lg shadow-primary/40 active:scale-[0.98] mt-1">
             <i class="fa-solid fa-right-to-bracket"></i> Se connecter
           </button>
-
           <div class="flex items-center gap-2.5 text-textMuted text-[11.5px] font-medium before:content-[''] before:flex-1 before:h-[1px] before:bg-black/10 after:content-[''] after:flex-1 after:h-[1px] after:bg-black/10">ou continuer avec</div>
-
           <div class="flex gap-2.5">
-            <button type="button" class="flex-1 p-[13px_12px] bg-white/65 backdrop-blur-md border-[1.5px] border-white/90 rounded-v14 font-poppins text-[13.5px] font-semibold text-gray-700 cursor-pointer flex items-center justify-center gap-2 shadow-sm active:scale-[0.97] transition-all">
+            <button type="button" class="flex-1 p-[13px_12px] bg-white/65 backdrop-blur-md border-[1.5px] border-white/90 rounded-v14 text-[13.5px] font-semibold text-gray-700 flex items-center justify-center gap-2 shadow-sm active:scale-[0.97] transition-all">
               <i class="fa-brands fa-google text-[#db4437]"></i> Google
             </button>
-            <button type="button" class="flex-1 p-[13px_12px] bg-white/65 backdrop-blur-md border-[1.5px] border-white/90 rounded-v14 font-poppins text-[13.5px] font-semibold text-gray-700 cursor-pointer flex items-center justify-center gap-2 shadow-sm active:scale-[0.97] transition-all">
+            <button type="button" class="flex-1 p-[13px_12px] bg-white/65 backdrop-blur-md border-[1.5px] border-white/90 rounded-v14 text-[13.5px] font-semibold text-gray-700 flex items-center justify-center gap-2 shadow-sm active:scale-[0.97] transition-all">
               <i class="fa-brands fa-apple text-[#1a1a1a]"></i> Apple
             </button>
           </div>
         </form>
 
-        <!-- REGISTER (MOBILE) -->
-        <form class="auth-form flex-col gap-3.5 form-register" id="form-register">
+        <!-- ── REGISTER MOBILE (multi-step) ── -->
+        <div class="auth-form flex-col gap-4 form-register" id="form-register">
+          <!-- Step header -->
           <div class="mb-1">
-            <h1 class="font-bricolage text-[23px] font-extrabold text-textMain tracking-tight mb-[3px]">Créer un compte ✨</h1>
-            <p class="text-[13px] text-textMuted font-medium italic">Rejoignez la communauté DocMaster</p>
+            <h1 class="font-bricolage text-[23px] font-extrabold text-textMain tracking-tight mb-[3px]" id="m-step-title">Créer un compte ✨</h1>
+            <p class="text-[13px] text-textMuted font-medium italic" id="m-step-subtitle">Rejoignez la communauté DocMaster</p>
           </div>
 
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[12px] font-bold text-gray-500 tracking-wider uppercase flex items-center gap-1.5"><i class="fa-solid fa-user text-primary text-[11px]"></i> Nom Complet</label>
-            <div class="relative flex items-center group">
-              <i class="fa-regular fa-user absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none transition-colors group-focus-within:text-primary"></i>
-              <input type="text" placeholder="Jean Dupont" class="w-full p-[14px_14px_14px_42px] bg-white/65 backdrop-blur-md border-[1.5px] border-white/90 rounded-v14 font-poppins text-[15px] text-textMain outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/18 focus:bg-white/90 placeholder:text-[#c4bab0]" required />
-            </div>
+          <!-- Progress stepper -->
+          <div class="flex items-center gap-0 mb-1" id="m-stepper">
+            <div class="step-dot active" id="m-dot-1">1</div>
+            <div class="step-line" id="m-line-1"></div>
+            <div class="step-dot" id="m-dot-2">2</div>
+            <div class="step-line" id="m-line-2"></div>
+            <div class="step-dot" id="m-dot-3">3</div>
+            <div class="step-line" id="m-line-3"></div>
+            <div class="step-dot" id="m-dot-4">4</div>
           </div>
 
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[12px] font-bold text-gray-500 tracking-wider uppercase flex items-center gap-1.5"><i class="fa-solid fa-envelope text-primary text-[11px]"></i> Adresse e-mail</label>
-            <div class="relative flex items-center group">
-              <i class="fa-regular fa-envelope absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none transition-colors group-focus-within:text-primary"></i>
-              <input type="email" placeholder="vous@exemple.com" class="w-full p-[14px_14px_14px_42px] bg-white/65 backdrop-blur-md border-[1.5px] border-white/90 rounded-v14 font-poppins text-[15px] text-textMain outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/18 focus:bg-white/90 placeholder:text-[#c4bab0]" required />
-            </div>
-          </div>
+          <!-- STEP 1 : Identité + Contact -->
+          <div class="reg-step active" id="m-step-1" data-prefix="m">
 
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[12px] font-bold text-gray-500 tracking-wider uppercase flex items-center gap-1.5"><i class="fa-solid fa-lock text-primary text-[11px]"></i> Mot de passe</label>
-            <div class="relative flex items-center group">
-              <i class="fa-solid fa-lock absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none transition-colors group-focus-within:text-primary"></i>
-              <input type="password" id="register-pw" placeholder="Min. 8 caractères" class="w-full p-[14px_45px_14px_42px] bg-white/65 backdrop-blur-md border-[1.5px] border-white/90 rounded-v14 font-poppins text-[15px] text-textMain outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/18 focus:bg-white/90 placeholder:text-[#c4bab0]" oninput="checkStrength(this)" required />
-              <button class="absolute right-3 p-1.5 text-textMuted hover:text-primary transition-colors cursor-pointer" onclick="togglePw('register-pw', this)" type="button">
-                <i class="fa-regular fa-eye"></i>
+            <!-- Social register -->
+            <div class="flex gap-2.5">
+              <button type="button" class="flex-1 p-[13px_12px] bg-white/65 backdrop-blur-md border-[1.5px] border-white/90 rounded-v14 text-[13.5px] font-semibold text-gray-700 flex items-center justify-center gap-2 shadow-sm active:scale-[0.97] transition-all">
+                <i class="fa-brands fa-google text-[#db4437]"></i> Google
+              </button>
+              <button type="button" class="flex-1 p-[13px_12px] bg-white/65 backdrop-blur-md border-[1.5px] border-white/90 rounded-v14 text-[13.5px] font-semibold text-gray-700 flex items-center justify-center gap-2 shadow-sm active:scale-[0.97] transition-all">
+                <i class="fa-brands fa-facebook text-blue-500"></i> Facebook
+              </button>
+              <button type="button" class="flex-1 p-[13px_12px] bg-white/65 backdrop-blur-md border-[1.5px] border-white/90 rounded-v14 text-[13.5px] font-semibold text-gray-700 flex items-center justify-center gap-2 shadow-sm active:scale-[0.97] transition-all">
+                <i class="fa-brands fa-apple text-[#1a1a1a]"></i> Apple
               </button>
             </div>
-            <div class="flex gap-1 mt-1">
-              <div class="pw-bar flex-1 h-[3px] bg-black/10 rounded-full transition-all" id="bar1"></div>
-              <div class="pw-bar flex-1 h-[3px] bg-black/10 rounded-full transition-all" id="bar2"></div>
-              <div class="pw-bar flex-1 h-[3px] bg-black/10 rounded-full transition-all" id="bar3"></div>
-              <div class="pw-bar flex-1 h-[3px] bg-black/10 rounded-full transition-all" id="bar4"></div>
+            <div class="flex items-center gap-2.5 text-textMuted text-[11.5px] font-medium before:content-[''] before:flex-1 before:h-[1px] before:bg-black/10 after:content-[''] after:flex-1 after:h-[1px] after:bg-black/10">ou s'inscrire avec</div>
+
+            <div class="flex gap-2.5">
+              <div class="flex flex-col flex-1">
+                <label class="field-label"><i class="fa-solid fa-user text-primary text-[11px]"></i> Nom</label>
+                <div class="relative flex items-center group">
+                  <i class="fa-regular fa-user absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
+                  <input type="text" id="m-nom" placeholder="Dupont" class="field-input field-input-mobile" required />
+                </div>
+              </div>
+              <div class="flex flex-col flex-1">
+                <label class="field-label"><i class="fa-solid fa-user text-primary text-[11px]"></i> Prénom</label>
+                <div class="relative flex items-center group">
+                  <i class="fa-regular fa-user absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
+                  <input type="text" id="m-prenom" placeholder="Jean" class="field-input field-input-mobile" required />
+                </div>
+              </div>
+            </div>
+            <div class="flex flex-col">
+              <label class="field-label"><i class="fa-solid fa-phone text-primary text-[11px]"></i> Téléphone</label>
+              <div class="relative flex items-center group">
+                <i class="fa-solid fa-phone absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
+                <input type="tel" id="m-phone" placeholder="+237 6XX XXX XXX" class="field-input field-input-mobile" required />
+              </div>
+            </div>
+            <div class="flex flex-col">
+              <label class="field-label"><i class="fa-solid fa-envelope text-primary text-[11px]"></i> E-mail</label>
+              <div class="relative flex items-center group">
+                <i class="fa-regular fa-envelope absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
+                <input type="email" id="m-email" placeholder="vous@exemple.com" class="field-input field-input-mobile" required />
+              </div>
+            </div>
+            <div class="flex flex-col">
+              <label class="field-label"><i class="fa-solid fa-lock text-primary text-[11px]"></i> Mot de passe</label>
+              <div class="relative flex items-center group">
+                <i class="fa-solid fa-lock absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
+                <input type="password" id="m-pw1" placeholder="Min. 8 caractères" class="field-input field-input-mobile field-input-right" oninput="checkStrength(this,'m')" required />
+                <button class="absolute right-3 p-1.5 text-textMuted hover:text-primary transition-colors cursor-pointer" onclick="togglePw('m-pw1',this)" type="button"><i class="fa-regular fa-eye"></i></button>
+              </div>
+              <div class="flex gap-1 mt-1.5">
+                <div class="pw-bar flex-1" id="mbar1"></div>
+                <div class="pw-bar flex-1" id="mbar2"></div>
+                <div class="pw-bar flex-1" id="mbar3"></div>
+                <div class="pw-bar flex-1" id="mbar4"></div>
+              </div>
+            </div>
+            <button type="button" onclick="nextStep('m',1)" class="p-[15px_20px] bg-primary text-white rounded-v14 font-bricolage text-[16px] font-bold cursor-pointer flex items-center justify-center gap-[9px] transition-all shadow-lg shadow-primary/40 active:scale-[0.98] mt-1">
+              Continuer <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+
+          <!-- STEP 2 : Confirmation mot de passe -->
+          <div class="reg-step" id="m-step-2" data-prefix="m">
+            <div class="flex flex-col gap-1">
+              <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-1">
+                <i class="fa-solid fa-shield-halved text-primary text-[20px]"></i>
+              </div>
+              <p class="text-[13px] text-textMuted">Confirmez votre mot de passe pour sécuriser votre compte.</p>
+            </div>
+            <div class="flex flex-col">
+              <label class="field-label"><i class="fa-solid fa-lock text-primary text-[11px]"></i> Nouveau mot de passe</label>
+              <div class="relative flex items-center group">
+                <i class="fa-solid fa-lock absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
+                <input type="password" id="m-pw1-show" placeholder="••••••••" class="field-input field-input-mobile field-input-right" disabled />
+                <button class="absolute right-3 p-1.5 text-textMuted hover:text-primary transition-colors cursor-pointer" onclick="togglePw('m-pw1-show',this)" type="button"><i class="fa-regular fa-eye"></i></button>
+              </div>
+            </div>
+            <div class="flex flex-col">
+              <label class="field-label"><i class="fa-solid fa-lock-open text-primary text-[11px]"></i> Confirmer le mot de passe</label>
+              <div class="relative flex items-center group">
+                <i class="fa-solid fa-lock-open absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
+                <input type="password" id="m-pw2" placeholder="Répétez votre mot de passe" class="field-input field-input-mobile field-input-right" oninput="checkMatch('m')" required />
+                <button class="absolute right-3 p-1.5 text-textMuted hover:text-primary transition-colors cursor-pointer" onclick="togglePw('m-pw2',this)" type="button"><i class="fa-regular fa-eye"></i></button>
+              </div>
+              <p class="text-[12px] font-medium mt-1.5 hidden text-red-500" id="m-pw-error"><i class="fa-solid fa-circle-xmark mr-1"></i>Les mots de passe ne correspondent pas.</p>
+              <p class="text-[12px] font-medium mt-1.5 hidden text-green-600" id="m-pw-ok"><i class="fa-solid fa-circle-check mr-1"></i>Parfait, les mots de passe correspondent !</p>
+            </div>
+            <div class="flex gap-2.5 mt-1">
+              <button type="button" onclick="prevStep('m',2)" class="p-[14px_16px] bg-white/65 backdrop-blur-md border-[1.5px] border-white/90 rounded-v14 font-poppins text-[14px] font-semibold text-textMain cursor-pointer flex items-center justify-center gap-2 transition-all active:scale-[0.97]">
+                <i class="fa-solid fa-arrow-left"></i>
+              </button>
+              <button type="button" onclick="nextStep('m',2)" id="m-step2-btn" class="flex-1 p-[14px_20px] bg-primary text-white rounded-v14 font-bricolage text-[16px] font-bold cursor-pointer flex items-center justify-center gap-[9px] transition-all shadow-lg shadow-primary/40 active:scale-[0.98]">
+                Valider <i class="fa-solid fa-arrow-right"></i>
+              </button>
             </div>
           </div>
 
-          <button type="submit" class="p-[15px_20px] bg-primary text-white rounded-v14 font-bricolage text-[16px] font-bold cursor-pointer flex items-center justify-center gap-[9px] transition-all shadow-lg shadow-primary/40 active:scale-[0.98] active:shadow-none mt-1">
-            <i class="fa-solid fa-user-plus"></i> Créer mon compte
-          </button>
+          <!-- STEP 3 : Code PIN -->
+          <div class="reg-step" id="m-step-3" data-prefix="m">
+            <div class="flex flex-col items-center text-center gap-2 py-2">
+              <div class="w-14 h-14 bg-green-dark rounded-full flex items-center justify-center mb-1">
+                <i class="fa-solid fa-mobile-screen-button text-primary text-[22px]"></i>
+              </div>
+              <p class="text-[13px] text-textMuted leading-[1.6]">Un code PIN à 6 chiffres a été envoyé au numéro <span class="font-semibold text-textMain" id="m-phone-display"></span></p>
+            </div>
+            <div class="flex justify-center gap-2.5 my-2">
+              <input class="pin-input" maxlength="1" type="text" inputmode="numeric" data-idx="0" data-prefix="m" />
+              <input class="pin-input" maxlength="1" type="text" inputmode="numeric" data-idx="1" data-prefix="m" />
+              <input class="pin-input" maxlength="1" type="text" inputmode="numeric" data-idx="2" data-prefix="m" />
+              <input class="pin-input" maxlength="1" type="text" inputmode="numeric" data-idx="3" data-prefix="m" />
+              <input class="pin-input" maxlength="1" type="text" inputmode="numeric" data-idx="4" data-prefix="m" />
+              <input class="pin-input" maxlength="1" type="text" inputmode="numeric" data-idx="5" data-prefix="m" />
+            </div>
+            <p class="text-[12px] text-textMuted text-center">Vous n'avez pas reçu le code ? <a href="#" onclick="resendPin(event)" class="text-primary font-semibold hover:underline">Renvoyer</a></p>
+            <div class="flex gap-2.5 mt-1">
+              <button type="button" onclick="prevStep('m',3)" class="p-[14px_16px] bg-white/65 backdrop-blur-md border-[1.5px] border-white/90 rounded-v14 font-poppins text-[14px] font-semibold text-textMain cursor-pointer flex items-center justify-center gap-2 transition-all active:scale-[0.97]">
+                <i class="fa-solid fa-arrow-left"></i>
+              </button>
+              <button type="button" onclick="nextStep('m',3)" class="flex-1 p-[14px_20px] bg-primary text-white rounded-v14 font-bricolage text-[16px] font-bold cursor-pointer flex items-center justify-center gap-[9px] transition-all shadow-lg shadow-primary/40 active:scale-[0.98]">
+                Vérifier <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
 
-          <p class="text-[11px] text-textMuted text-center leading-[1.6]">
-            En vous inscrivant, vous acceptez nos
-            <a href="#" class="text-primary font-semibold hover:underline">Conditions d'utilisation</a> et notre
-            <a href="#" class="text-primary font-semibold hover:underline">Politique de confidentialité</a>.
-          </p>
-        </form>
+          <!-- STEP 4 : Pseudo -->
+          <div class="reg-step" id="m-step-4" data-prefix="m">
+            <div class="flex flex-col gap-1">
+              <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-1">
+                <i class="fa-solid fa-id-badge text-primary text-[20px]"></i>
+              </div>
+              <p class="text-[13px] text-textMuted leading-[1.6]">Choisissez un pseudonyme unique. C'est ainsi que la communauté vous connaîtra.</p>
+            </div>
+            <div class="flex flex-col">
+              <label class="field-label"><i class="fa-solid fa-at text-primary text-[11px]"></i> Votre pseudo</label>
+              <div class="relative flex items-center group">
+                <span class="absolute left-3.5 text-[#c4bab0] text-[14px] font-bold">@</span>
+                <input type="text" id="m-pseudo" placeholder="jean_dupont42" class="field-input field-input-mobile" style="padding-left: 28px;" oninput="checkPseudo(this,'m')" required />
+                <span class="absolute right-3.5 text-[14px] hidden" id="m-pseudo-icon"></span>
+              </div>
+              <p class="text-[11.5px] text-textMuted mt-1.5">Entre 3 et 20 caractères, lettres, chiffres et _</p>
+            </div>
+            <div>
+              <p class="text-[12px] font-bold text-gray-500 uppercase tracking-wider mb-2">Suggestions</p>
+              <div class="flex flex-wrap gap-2" id="m-suggestions"></div>
+            </div>
 
+            <!-- Parrainage (optionnel) -->
+            <div class="flex flex-col gap-2">
+              <button type="button" onclick="toggleReferral('m')" class="flex items-center gap-2 text-[12.5px] font-semibold text-textMuted hover:text-primary transition-colors w-fit">
+                <i class="fa-solid fa-users text-primary text-[11px]"></i>
+                Vous avez un code de parrainage ?
+                <i class="fa-solid fa-chevron-down text-[10px] transition-transform" id="m-referral-chevron"></i>
+              </button>
+              <div id="m-referral-field" class="hidden flex flex-col gap-1.5">
+                <div class="relative flex items-center group">
+                  <i class="fa-solid fa-link absolute left-3.5 text-[#c4bab0] text-[13px] pointer-events-none group-focus-within:text-primary"></i>
+                  <input type="text" id="m-referral" placeholder="Code ou lien de parrainage" class="field-input field-input-mobile" />
+                </div>
+                <p class="text-[11.5px] text-textMuted">✨ Votre parrain recevra une récompense et vous bénéficierez de <span class="font-semibold text-primary">3 déclarations gratuites</span>.</p>
+              </div>
+            </div>
+
+            <button type="button" onclick="submitRegister('m')" class="p-[15px_20px] bg-green-dark text-white rounded-v14 font-bricolage text-[16px] font-bold cursor-pointer flex items-center justify-center gap-[9px] transition-all shadow-lg shadow-black/20 active:scale-[0.98] mt-1">
+              <i class="fa-solid fa-rocket"></i> Créer mon compte
+            </button>
+          </div>
+        </div>
+
+        <!-- Social proof -->
         <div class="flex flex-col gap-2 mt-2">
           <div class="flex items-center gap-2.5 p-[10px_14px] bg-white/45 backdrop-blur-md border-white/70 border rounded-v12">
             <i class="fa-solid fa-circle-check text-primary text-[13px] w-3.5 text-center"></i>
@@ -234,22 +446,20 @@
 
 
       <!-- ═══════════ DESKTOP CARD ═══════════ -->
-      <!-- ═══════════ DESKTOP CARD ═══════════ -->
-      <div class="hidden md:flex w-full max-w-[960px] min-h-[560px] bg-white rounded-v24 shadow-2xl shadow-black/10 overflow-hidden relative z-20">
-        
+      <div class="hidden md:flex w-full max-w-[980px] min-h-[580px] bg-white rounded-v24 shadow-2xl shadow-black/10 overflow-hidden relative z-20">
+
         <!-- LEFT PANEL -->
         <aside class="w-[300px] shrink-0 bg-green-dark p-[44px_36px] flex flex-col justify-between relative overflow-hidden panel-left-desktop">
           <div class="flex items-center gap-2.5 relative z-10">
-           <a href="./index.html"> <img src="./assets/images/logo.png" alt="Docmaster logo" class="rounded-md"></a> 
+            <div class="w-9 h-9 bg-primary/20 rounded-v12 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-file-shield text-primary text-[16px]"></i>
+            </div>
+            <span class="font-bricolage text-[20px] font-extrabold text-white">DocMaster</span>
           </div>
-          
           <div class="relative z-10">
             <h2 class="font-bricolage text-[26px] font-extrabold text-white leading-[1.25] mb-3 tracking-tight">Retrouvez vos documents perdus</h2>
-            <p class="text-[13.5px] text-white/60 leading-[1.6]">
-              La plateforme communautaire qui connecte ceux qui perdent avec ceux qui trouvent.
-            </p>
+            <p class="text-[13.5px] text-white/60 leading-[1.6]">La plateforme communautaire qui connecte ceux qui perdent avec ceux qui trouvent.</p>
           </div>
-
           <div class="flex flex-col gap-2.5 relative z-10">
             <div class="flex items-center gap-2.5 p-[10px_14px] bg-white/5 border-white/10 border rounded-v12">
               <i class="fa-solid fa-circle-check text-primary text-[13px] w-3.5 text-center"></i>
@@ -267,178 +477,542 @@
         </aside>
 
         <!-- RIGHT FORM PANEL -->
-        <main class="flex-1 p-[44px_48px] bg-white flex flex-col gap-[22px] justify-center">
-          <!-- Pill Toggle (Desktop) -->
-          <div class="relative flex bg-surface2 border-[1.5px] border-borderMain rounded-v16 p-1.5 shadow-sm overflow-hidden auto-cols-fr">
+        <main class="flex-1 p-[44px_48px] bg-white flex flex-col gap-[22px] justify-center overflow-y-auto">
+          <!-- Pill Toggle -->
+          <div class="relative flex bg-[#faf8f5] border-[1.5px] border-borderMain rounded-v16 p-1.5 shadow-sm overflow-hidden">
             <div id="dtoggle-slider" class="absolute top-1.5 left-1.5 bottom-1.5 w-[calc(50%-3px)] bg-primary rounded-v12 shadow-[0_3px_12px_rgba(245,166,75,0.4)] transition-all duration-300 ease-out z-0"></div>
-            <button id="dtab-login" class="relative z-10 flex-1 py-1.5 rounded-v12 font-poppins text-[14px] font-semibold text-white transition-colors duration-200 flex items-center justify-center gap-2" onclick="switchTab('login', 'd')">
+            <button id="dtab-login" class="relative z-10 flex-1 py-1.5 rounded-v12 font-poppins text-[14px] font-semibold text-white transition-colors duration-200 flex items-center justify-center gap-2" onclick="switchTab('login','d')">
               <i class="fa-solid fa-right-to-bracket"></i> Connexion
             </button>
-            <button id="dtab-register" class="relative z-10 flex-1 py-1.5 rounded-v12 font-poppins text-[14px] font-semibold text-textMuted transition-colors duration-200 flex items-center justify-center gap-2" onclick="switchTab('register', 'd')">
+            <button id="dtab-register" class="relative z-10 flex-1 py-1.5 rounded-v12 font-poppins text-[14px] font-semibold text-textMuted transition-colors duration-200 flex items-center justify-center gap-2" onclick="switchTab('register','d')">
               <i class="fa-solid fa-user-plus"></i> Inscription
             </button>
           </div>
 
-          <!-- LOGIN (DESKTOP) -->
+          <!-- ── LOGIN DESKTOP ── -->
           <form class="auth-form visible flex-col gap-3.5 form-login" id="dform-login">
             <div class="mb-1">
               <h1 class="font-bricolage text-[26px] font-extrabold text-textMain tracking-tight mb-[3px]">Bon retour !</h1>
               <p class="text-[13px] text-textMuted font-medium italic">Connectez-vous à votre espace DocMaster</p>
             </div>
-
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[12px] font-bold text-gray-500 tracking-wider uppercase flex items-center gap-1.5"><i class="fa-solid fa-envelope text-primary text-[11px]"></i> Adresse e-mail</label>
+            <div class="flex flex-col">
+              <label class="field-label"><i class="fa-solid fa-envelope text-primary text-[11px]"></i> Adresse e-mail</label>
               <div class="relative flex items-center group">
-                <i class="fa-regular fa-envelope absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none transition-colors group-focus-within:text-primary"></i>
-                <input type="email" placeholder="vous@exemple.com" class="w-full p-[14px_14px_14px_42px] bg-surface2 border-[1.5px] border-borderMain rounded-v14 font-poppins text-[15px] text-textMain outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/15 focus:bg-white placeholder:text-[#c4bab0]" required />
+                <i class="fa-regular fa-envelope absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
+                <input type="email" placeholder="vous@exemple.com" class="field-input field-input-desktop" required />
               </div>
             </div>
-
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[12px] font-bold text-gray-500 tracking-wider uppercase flex items-center gap-1.5"><i class="fa-solid fa-lock text-primary text-[11px]"></i> Mot de passe</label>
+            <div class="flex flex-col">
+              <label class="field-label"><i class="fa-solid fa-lock text-primary text-[11px]"></i> Mot de passe</label>
               <div class="relative flex items-center group">
-                <i class="fa-solid fa-lock absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none transition-colors group-focus-within:text-primary"></i>
-                <input type="password" id="dlogin-pw" placeholder="••••••••" class="w-full p-[14px_45px_14px_42px] bg-surface2 border-[1.5px] border-borderMain rounded-v14 font-poppins text-[15px] text-textMain outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/15 focus:bg-white placeholder:text-[#c4bab0]" required />
-                <button class="absolute right-3 p-1.5 text-textMuted hover:text-primary transition-colors cursor-pointer" onclick="togglePw('dlogin-pw', this)" type="button">
-                  <i class="fa-regular fa-eye"></i>
-                </button>
+                <i class="fa-solid fa-lock absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
+                <input type="password" id="dlogin-pw" placeholder="••••••••" class="field-input field-input-desktop field-input-right" required />
+                <button class="absolute right-3 p-1.5 text-textMuted hover:text-primary transition-colors cursor-pointer" onclick="togglePw('dlogin-pw',this)" type="button"><i class="fa-regular fa-eye"></i></button>
               </div>
             </div>
-
             <div class="text-right -mt-1">
               <a href="#" class="text-[12.5px] text-primary font-semibold hover:underline"><i class="fa-solid fa-key mr-1.5"></i>Mot de passe oublié ?</a>
             </div>
-
-            <button type="submit" class="p-[15px_20px] bg-primary text-white rounded-v14 font-bricolage text-[16px] font-bold cursor-pointer flex items-center justify-center gap-[9px] transition-all shadow-lg shadow-primary/40 active:scale-[0.98] active:shadow-none mt-1">
+            <button type="submit" class="p-[15px_20px] bg-primary text-white rounded-v14 font-bricolage text-[16px] font-bold cursor-pointer flex items-center justify-center gap-[9px] transition-all shadow-lg shadow-primary/40 active:scale-[0.98] mt-1">
               <i class="fa-solid fa-right-to-bracket"></i> Se connecter
             </button>
-
             <div class="flex items-center gap-2.5 text-textMuted text-[11.5px] font-medium before:content-[''] before:flex-1 before:h-[1px] before:bg-borderMain after:content-[''] after:flex-1 after:h-[1px] after:bg-borderMain">ou continuer avec</div>
-
             <div class="flex gap-2.5">
-               <button type="button" class="flex-1 p-[13px_12px] bg-surface2 border-[1.5px] border-borderMain rounded-v14 font-poppins text-[13.5px] font-semibold text-gray-700 cursor-pointer flex items-center justify-center gap-2 transition-all hover:border-gray-300 hover:bg-white active:scale-[0.97]">
-                <i class="fa-brands fa-facebook text-blue-500"></i>facebook
+              <button type="button" class="flex-1 p-[12px] bg-[#faf8f5] border-[1.5px] border-borderMain rounded-v14 text-[13px] font-semibold text-gray-700 flex items-center justify-center gap-2 transition-all hover:border-gray-300 hover:bg-white active:scale-[0.97]">
+                <i class="fa-brands fa-facebook text-blue-500"></i>Facebook
               </button>
-               <button type="button" class="flex-1 p-[13px_12px] bg-surface2 border-[1.5px] border-borderMain rounded-v14 font-poppins text-[13.5px] font-semibold text-gray-700 cursor-pointer flex items-center justify-center gap-2 transition-all hover:border-gray-300 hover:bg-white active:scale-[0.97]">
-                <i class="fa-brands fa-instagram text-red-700"></i>instagram
-              </button>
-
-              <button type="button" class="flex-1 p-[13px_12px] bg-surface2 border-[1.5px] border-borderMain rounded-v14 font-poppins text-[13.5px] font-semibold text-gray-700 cursor-pointer flex items-center justify-center gap-2 transition-all hover:border-gray-300 hover:bg-white active:scale-[0.97]">
+              <button type="button" class="flex-1 p-[12px] bg-[#faf8f5] border-[1.5px] border-borderMain rounded-v14 text-[13px] font-semibold text-gray-700 flex items-center justify-center gap-2 transition-all hover:border-gray-300 hover:bg-white active:scale-[0.97]">
                 <i class="fa-brands fa-google text-[#db4437]"></i> Google
               </button>
-              <button type="button" class="flex-1 p-[13px_12px] bg-surface2 border-[1.5px] border-borderMain rounded-v14 font-poppins text-[13.5px] font-semibold text-gray-700 cursor-pointer flex items-center justify-center gap-2 transition-all hover:border-gray-300 hover:bg-white active:scale-[0.97]">
+              <button type="button" class="flex-1 p-[12px] bg-[#faf8f5] border-[1.5px] border-borderMain rounded-v14 text-[13px] font-semibold text-gray-700 flex items-center justify-center gap-2 transition-all hover:border-gray-300 hover:bg-white active:scale-[0.97]">
                 <i class="fa-brands fa-apple text-[#1a1a1a]"></i> Apple
               </button>
             </div>
           </form>
 
-          <!-- REGISTER (DESKTOP) -->
-          <form class="auth-form flex-col gap-3.5 form-register" id="dform-register">
-            <div class="mb-1">
-              <h1 class="font-bricolage text-[26px] font-extrabold text-textMain tracking-tight mb-[3px]">Créer un compte</h1>
-              <p class="text-[13px] text-textMuted font-medium italic">Rejoignez la communauté DocMaster</p>
+          <!-- ── REGISTER DESKTOP (multi-step) ── -->
+          <div class="auth-form flex-col gap-4 form-register" id="dform-register">
+            <!-- Step header -->
+            <div>
+              <h1 class="font-bricolage text-[26px] font-extrabold text-textMain tracking-tight mb-[3px]" id="d-step-title">Créer un compte</h1>
+              <p class="text-[13px] text-textMuted font-medium italic" id="d-step-subtitle">Rejoignez la communauté DocMaster</p>
             </div>
 
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[12px] font-bold text-gray-500 tracking-wider uppercase flex items-center gap-1.5"><i class="fa-solid fa-user text-primary text-[11px]"></i> Nom Complet</label>
-              <div class="relative flex items-center group">
-                <i class="fa-regular fa-user absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none transition-colors group-focus-within:text-primary"></i>
-                <input type="text" placeholder="Jean Dupont" class="w-full p-[14px_14px_14px_42px] bg-surface2 border-[1.5px] border-borderMain rounded-v14 font-poppins text-[15px] text-textMain outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/15 focus:bg-white placeholder:text-[#c4bab0]" required />
-              </div>
+            <!-- Progress stepper -->
+            <div class="flex items-center gap-0" id="d-stepper">
+              <div class="step-dot active" id="d-dot-1">1</div>
+              <div class="step-line" id="d-line-1"></div>
+              <div class="step-dot" id="d-dot-2">2</div>
+              <div class="step-line" id="d-line-2"></div>
+              <div class="step-dot" id="d-dot-3">3</div>
+              <div class="step-line" id="d-line-3"></div>
+              <div class="step-dot" id="d-dot-4">4</div>
             </div>
 
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[12px] font-bold text-gray-500 tracking-wider uppercase flex items-center gap-1.5"><i class="fa-solid fa-envelope text-primary text-[11px]"></i> Adresse e-mail</label>
-              <div class="relative flex items-center group">
-                <i class="fa-regular fa-envelope absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none transition-colors group-focus-within:text-primary"></i>
-                <input type="email" placeholder="vous@exemple.com" class="w-full p-[14px_14px_14px_42px] bg-surface2 border-[1.5px] border-borderMain rounded-v14 font-poppins text-[15px] text-textMain outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/15 focus:bg-white placeholder:text-[#c4bab0]" required />
-              </div>
-            </div>
+            <!-- STEP 1 : Identité + Contact -->
+            <div class="reg-step active" id="d-step-1" data-prefix="d">
 
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[12px] font-bold text-gray-500 tracking-wider uppercase flex items-center gap-1.5"><i class="fa-solid fa-lock text-primary text-[11px]"></i> Mot de passe</label>
-              <div class="relative flex items-center group">
-                <i class="fa-solid fa-lock absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none transition-colors group-focus-within:text-primary"></i>
-                <input type="password" id="dregister-pw" placeholder="Min. 8 caractères" class="w-full p-[14px_45px_14px_42px] bg-surface2 border-[1.5px] border-borderMain rounded-v14 font-poppins text-[15px] text-textMain outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/15 focus:bg-white placeholder:text-[#c4bab0]" oninput="checkStrength(this, 'd')" required />
-                <button class="absolute right-3 p-1.5 text-textMuted hover:text-primary transition-colors cursor-pointer" onclick="togglePw('dregister-pw', this)" type="button">
-                  <i class="fa-regular fa-eye"></i>
+              <!-- Social register -->
+              <div class="flex gap-2.5">
+                <button type="button" class="flex-1 p-[12px] bg-[#faf8f5] border-[1.5px] border-borderMain rounded-v14 text-[13px] font-semibold text-gray-700 flex items-center justify-center gap-2 transition-all hover:border-gray-300 hover:bg-white active:scale-[0.97]">
+                  <i class="fa-brands fa-facebook text-blue-500"></i> Facebook
+                </button>
+                <button type="button" class="flex-1 p-[12px] bg-[#faf8f5] border-[1.5px] border-borderMain rounded-v14 text-[13px] font-semibold text-gray-700 flex items-center justify-center gap-2 transition-all hover:border-gray-300 hover:bg-white active:scale-[0.97]">
+                  <i class="fa-brands fa-google text-[#db4437]"></i> Google
+                </button>
+                <button type="button" class="flex-1 p-[12px] bg-[#faf8f5] border-[1.5px] border-borderMain rounded-v14 text-[13px] font-semibold text-gray-700 flex items-center justify-center gap-2 transition-all hover:border-gray-300 hover:bg-white active:scale-[0.97]">
+                  <i class="fa-brands fa-apple text-[#1a1a1a]"></i> Apple
                 </button>
               </div>
-              <div class="flex gap-1 mt-1">
-                <div class="pw-bar flex-1 h-[3px] bg-black/10 rounded-full transition-all" id="dbar1"></div>
-                <div class="pw-bar flex-1 h-[3px] bg-black/10 rounded-full transition-all" id="dbar2"></div>
-                <div class="pw-bar flex-1 h-[3px] bg-black/10 rounded-full transition-all" id="dbar3"></div>
-                <div class="pw-bar flex-1 h-[3px] bg-black/10 rounded-full transition-all" id="dbar4"></div>
+              <div class="flex items-center gap-2.5 text-textMuted text-[11.5px] font-medium before:content-[''] before:flex-1 before:h-[1px] before:bg-borderMain after:content-[''] after:flex-1 after:h-[1px] after:bg-borderMain">ou s'inscrire avec</div>
+
+              <div class="flex gap-3">
+                <div class="flex flex-col flex-1">
+                  <label class="field-label"><i class="fa-solid fa-user text-primary text-[11px]"></i> Nom</label>
+                  <div class="relative flex items-center group">
+                    <i class="fa-regular fa-user absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
+                    <input type="text" id="d-nom" placeholder="Dupont" class="field-input field-input-desktop" required />
+                  </div>
+                </div>
+                <div class="flex flex-col flex-1">
+                  <label class="field-label"><i class="fa-solid fa-user text-primary text-[11px]"></i> Prénom</label>
+                  <div class="relative flex items-center group">
+                    <i class="fa-regular fa-user absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
+                    <input type="text" id="d-prenom" placeholder="Jean" class="field-input field-input-desktop" required />
+                  </div>
+                </div>
+              </div>
+              <div class="flex gap-3">
+                <div class="flex flex-col flex-1">
+                  <label class="field-label"><i class="fa-solid fa-phone text-primary text-[11px]"></i> Téléphone</label>
+                  <div class="relative flex items-center group">
+                    <i class="fa-solid fa-phone absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
+                    <input type="tel" id="d-phone" placeholder="+237 6XX XXX XXX" class="field-input field-input-desktop" required />
+                  </div>
+                </div>
+                <div class="flex flex-col flex-1">
+                  <label class="field-label"><i class="fa-solid fa-envelope text-primary text-[11px]"></i> E-mail</label>
+                  <div class="relative flex items-center group">
+                    <i class="fa-regular fa-envelope absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
+                    <input type="email" id="d-email" placeholder="vous@exemple.com" class="field-input field-input-desktop" required />
+                  </div>
+                </div>
+              </div>
+              <div class="flex flex-col">
+                <label class="field-label"><i class="fa-solid fa-lock text-primary text-[11px]"></i> Mot de passe</label>
+                <div class="relative flex items-center group">
+                  <i class="fa-solid fa-lock absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
+                  <input type="password" id="d-pw1" placeholder="Min. 8 caractères" class="field-input field-input-desktop field-input-right" oninput="checkStrength(this,'d')" required />
+                  <button class="absolute right-3 p-1.5 text-textMuted hover:text-primary transition-colors cursor-pointer" onclick="togglePw('d-pw1',this)" type="button"><i class="fa-regular fa-eye"></i></button>
+                </div>
+                <div class="flex gap-1 mt-1.5">
+                  <div class="pw-bar flex-1" id="dbar1"></div>
+                  <div class="pw-bar flex-1" id="dbar2"></div>
+                  <div class="pw-bar flex-1" id="dbar3"></div>
+                  <div class="pw-bar flex-1" id="dbar4"></div>
+                </div>
+              </div>
+              <button type="button" onclick="nextStep('d',1)" class="p-[14px_20px] bg-primary text-white rounded-v14 font-bricolage text-[16px] font-bold cursor-pointer flex items-center justify-center gap-[9px] transition-all shadow-lg shadow-primary/40 active:scale-[0.98] mt-1">
+                Continuer <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+
+            <!-- STEP 2 : Confirmation mot de passe -->
+            <div class="reg-step" id="d-step-2" data-prefix="d">
+              <div class="flex items-start gap-4 p-4 bg-primary/8 rounded-v14 border border-primary/20">
+                <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                  <i class="fa-solid fa-shield-halved text-white text-[16px]"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-textMain text-[14px] mb-0.5">Sécurisation du compte</p>
+                  <p class="text-[12.5px] text-textMuted leading-[1.6]">Confirmez votre mot de passe pour valider la sécurité de votre compte DocMaster.</p>
+                </div>
+              </div>
+              <div class="flex flex-col">
+                <label class="field-label"><i class="fa-solid fa-lock text-primary text-[11px]"></i> Mot de passe saisi</label>
+                <div class="relative flex items-center group">
+                  <i class="fa-solid fa-lock absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
+                  <input type="password" id="d-pw1-show" placeholder="••••••••" class="field-input field-input-desktop field-input-right" disabled />
+                  <button class="absolute right-3 p-1.5 text-textMuted hover:text-primary transition-colors cursor-pointer" onclick="togglePw('d-pw1-show',this)" type="button"><i class="fa-regular fa-eye"></i></button>
+                </div>
+              </div>
+              <div class="flex flex-col">
+                <label class="field-label"><i class="fa-solid fa-lock-open text-primary text-[11px]"></i> Confirmer le mot de passe</label>
+                <div class="relative flex items-center group">
+                  <i class="fa-solid fa-lock-open absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
+                  <input type="password" id="d-pw2" placeholder="Répétez votre mot de passe" class="field-input field-input-desktop field-input-right" oninput="checkMatch('d')" required />
+                  <button class="absolute right-3 p-1.5 text-textMuted hover:text-primary transition-colors cursor-pointer" onclick="togglePw('d-pw2',this)" type="button"><i class="fa-regular fa-eye"></i></button>
+                </div>
+                <p class="text-[12px] font-medium mt-1.5 hidden text-red-500" id="d-pw-error"><i class="fa-solid fa-circle-xmark mr-1"></i>Les mots de passe ne correspondent pas.</p>
+                <p class="text-[12px] font-medium mt-1.5 hidden text-green-600" id="d-pw-ok"><i class="fa-solid fa-circle-check mr-1"></i>Parfait, les mots de passe correspondent !</p>
+              </div>
+              <div class="flex gap-3 mt-1">
+                <button type="button" onclick="prevStep('d',2)" class="p-[14px_18px] bg-[#faf8f5] border-[1.5px] border-borderMain rounded-v14 font-poppins text-[14px] font-semibold text-textMain cursor-pointer flex items-center justify-center gap-2 transition-all hover:bg-white active:scale-[0.97]">
+                  <i class="fa-solid fa-arrow-left"></i> Retour
+                </button>
+                <button type="button" onclick="nextStep('d',2)" id="d-step2-btn" class="flex-1 p-[14px_20px] bg-primary text-white rounded-v14 font-bricolage text-[16px] font-bold cursor-pointer flex items-center justify-center gap-[9px] transition-all shadow-lg shadow-primary/40 active:scale-[0.98]">
+                  Valider <i class="fa-solid fa-arrow-right"></i>
+                </button>
               </div>
             </div>
 
-            <button type="submit" class="p-[15px_20px] bg-primary text-white rounded-v14 font-bricolage text-[16px] font-bold cursor-pointer flex items-center justify-center gap-[9px] transition-all shadow-lg shadow-primary/40 active:scale-[0.98] active:shadow-none mt-1">
-              <i class="fa-solid fa-user-plus"></i> Créer mon compte
-            </button>
+            <!-- STEP 3 : Code PIN -->
+            <div class="reg-step" id="d-step-3" data-prefix="d">
+              <div class="flex items-start gap-4 p-4 bg-green-light rounded-v14 border border-green-mid/20">
+                <div class="w-10 h-10 bg-green-dark rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                  <i class="fa-solid fa-mobile-screen-button text-primary text-[16px]"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-textMain text-[14px] mb-0.5">Vérification du numéro</p>
+                  <p class="text-[12.5px] text-textMuted leading-[1.6]">Un code PIN à 6 chiffres a été envoyé au <span class="font-semibold text-textMain" id="d-phone-display"></span></p>
+                </div>
+              </div>
+              <div class="flex justify-center gap-3 py-2">
+                <input class="pin-input" maxlength="1" type="text" inputmode="numeric" data-idx="0" data-prefix="d" />
+                <input class="pin-input" maxlength="1" type="text" inputmode="numeric" data-idx="1" data-prefix="d" />
+                <input class="pin-input" maxlength="1" type="text" inputmode="numeric" data-idx="2" data-prefix="d" />
+                <input class="pin-input" maxlength="1" type="text" inputmode="numeric" data-idx="3" data-prefix="d" />
+                <input class="pin-input" maxlength="1" type="text" inputmode="numeric" data-idx="4" data-prefix="d" />
+                <input class="pin-input" maxlength="1" type="text" inputmode="numeric" data-idx="5" data-prefix="d" />
+              </div>
+              <p class="text-[12px] text-textMuted text-center">Vous n'avez pas reçu le code ? <a href="#" onclick="resendPin(event)" class="text-primary font-semibold hover:underline">Renvoyer</a></p>
+              <div class="flex gap-3 mt-1">
+                <button type="button" onclick="prevStep('d',3)" class="p-[14px_18px] bg-[#faf8f5] border-[1.5px] border-borderMain rounded-v14 font-poppins text-[14px] font-semibold text-textMain cursor-pointer flex items-center justify-center gap-2 transition-all hover:bg-white active:scale-[0.97]">
+                  <i class="fa-solid fa-arrow-left"></i> Retour
+                </button>
+                <button type="button" onclick="nextStep('d',3)" class="flex-1 p-[14px_20px] bg-primary text-white rounded-v14 font-bricolage text-[16px] font-bold cursor-pointer flex items-center justify-center gap-[9px] transition-all shadow-lg shadow-primary/40 active:scale-[0.98]">
+                  Vérifier <i class="fa-solid fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
 
-            <p class="text-[11px] text-textMuted text-center leading-[1.6]">
-              En vous inscrivant, vous acceptez nos
-              <a href="#" class="text-primary font-semibold hover:underline">Conditions</a> et notre
-              <a href="#" class="text-primary font-semibold hover:underline">Politique de confidentialité</a>.
-            </p>
-          </form>
+            <!-- STEP 4 : Pseudo -->
+            <div class="reg-step" id="d-step-4" data-prefix="d">
+              <div class="flex items-start gap-4 p-4 bg-primary/8 rounded-v14 border border-primary/20">
+                <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                  <i class="fa-solid fa-id-badge text-white text-[16px]"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-textMain text-[14px] mb-0.5">Votre identité sur DocMaster</p>
+                  <p class="text-[12.5px] text-textMuted leading-[1.6]">Choisissez un pseudonyme unique. C'est ainsi que la communauté vous reconnaîtra.</p>
+                </div>
+              </div>
+              <div class="flex flex-col">
+                <label class="field-label"><i class="fa-solid fa-at text-primary text-[11px]"></i> Votre pseudo</label>
+                <div class="relative flex items-center group">
+                  <span class="absolute left-3.5 text-[#c4bab0] text-[14px] font-bold">@</span>
+                  <input type="text" id="d-pseudo" placeholder="jean_dupont42" class="field-input field-input-desktop" style="padding-left: 28px;" oninput="checkPseudo(this,'d')" required />
+                  <span class="absolute right-3.5 text-[14px] hidden" id="d-pseudo-icon"></span>
+                </div>
+                <p class="text-[11.5px] text-textMuted mt-1.5">Entre 3 et 20 caractères, lettres, chiffres et _</p>
+              </div>
+              <div>
+                <p class="text-[12px] font-bold text-gray-500 uppercase tracking-wider mb-2">Suggestions basées sur votre nom</p>
+                <div class="flex flex-wrap gap-2" id="d-suggestions"></div>
+              </div>
+
+              <!-- Parrainage (optionnel) -->
+              <div class="flex flex-col gap-2">
+                <button type="button" onclick="toggleReferral('d')" class="flex items-center gap-2 text-[12.5px] font-semibold text-textMuted hover:text-primary transition-colors w-fit">
+                  <i class="fa-solid fa-users text-primary text-[11px]"></i>
+                  Vous avez un code de parrainage ?
+                  <i class="fa-solid fa-chevron-down text-[10px] transition-transform" id="d-referral-chevron"></i>
+                </button>
+                <div id="d-referral-field" class="hidden flex flex-col gap-1.5">
+                  <div class="relative flex items-center group">
+                    <i class="fa-solid fa-link absolute left-3.5 text-[#c4bab0] text-[13px] pointer-events-none group-focus-within:text-primary"></i>
+                    <input type="text" id="d-referral" placeholder="Code ou lien de parrainage" class="field-input field-input-desktop" />
+                  </div>
+                  <p class="text-[11.5px] text-textMuted">✨ Votre parrain recevra une récompense et vous bénéficierez de <span class="font-semibold text-primary">3 déclarations gratuites</span>.</p>
+                </div>
+              </div>
+
+              <button type="button" onclick="submitRegister('d')" class="p-[15px_20px] bg-green-dark text-white rounded-v14 font-bricolage text-[16px] font-bold cursor-pointer flex items-center justify-center gap-[9px] transition-all shadow-lg shadow-black/20 active:scale-[0.98]">
+                <i class="fa-solid fa-rocket"></i> Créer mon compte
+              </button>
+            </div>
+          </div>
         </main>
       </div>
-      <!-- /card-desktop -->
     </div>
-    <!-- /page-wrapper -->
+
 
     <script>
-      function switchTab(tab, prefix) {
-        prefix = prefix || "";
-        const isLogin = tab === "login";
-        
-        // Toggle forms visibility
-        ["login", "register"].forEach((t) => {
-          const form = document.getElementById(prefix + "form-" + t);
-          if (form) form.classList.toggle("visible", t === tab);
-          
-          const btn = document.getElementById(prefix + "tab-" + t);
-          if (btn) {
-            btn.classList.toggle("text-white", t === tab);
-            btn.classList.toggle("text-textMuted", t !== tab);
+    /* ════════════════════════════════════════
+       STEP CONFIG
+    ════════════════════════════════════════ */
+    const STEP_META = {
+      1: { title: 'Créer un compte ✨', subtitle: 'Vos informations personnelles', dtitle: 'Créer un compte', dsubtitle: 'Vos informations personnelles' },
+      2: { title: 'Sécurisez votre compte 🔐', subtitle: 'Confirmez votre mot de passe', dtitle: 'Validation du mot de passe', dsubtitle: 'Confirmez votre mot de passe' },
+      3: { title: 'Vérification 📱', subtitle: 'Entrez le code reçu par SMS', dtitle: 'Confirmation par code PIN', dsubtitle: 'Entrez le code reçu par SMS' },
+      4: { title: 'Votre pseudo 🎭', subtitle: 'Choisissez comment vous appeler', dtitle: 'Attribution du pseudo', dsubtitle: 'Comment la communauté vous appellera' },
+    };
+
+    let currentStep = { m: 1, d: 1 };
+
+    /* ── Tab switch ── */
+    function switchTab(tab, prefix) {
+      prefix = prefix || '';
+      const isLogin = tab === 'login';
+      ['login', 'register'].forEach(t => {
+        const form = document.getElementById(prefix + 'form-' + t);
+        if (form) form.classList.toggle('visible', t === tab);
+        const btn = document.getElementById(prefix + 'tab-' + t);
+        if (btn) {
+          btn.classList.toggle('text-white', t === tab);
+          btn.classList.toggle('text-textMuted', t !== tab);
+        }
+      });
+      const slider = document.getElementById(prefix + 'toggle-slider');
+      if (slider) slider.style.left = isLogin ? '1.5px' : 'calc(50% + 1.5px)';
+    }
+
+    /* ── Password toggle ── */
+    function togglePw(id, btn) {
+      const input = document.getElementById(id);
+      const icon = btn.querySelector('i');
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      icon.className = show ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+    }
+
+    /* ── Password strength ── */
+    function checkStrength(input, prefix) {
+      const v = input.value;
+      const bars = [1,2,3,4].map(n => document.getElementById(prefix+'bar'+n));
+      bars.forEach(b => { if(b) b.className = 'pw-bar flex-1'; });
+      let s = 0;
+      if (v.length >= 6) s++;
+      if (v.length >= 10) s++;
+      if (/[A-Z]/.test(v) && /[0-9]/.test(v)) s++;
+      if (/[^A-Za-z0-9]/.test(v)) s++;
+      const cls = s <= 1 ? 'weak' : s <= 2 ? 'medium' : 'strong';
+      for (let i = 0; i < s; i++) { if(bars[i]) bars[i].classList.add(cls); }
+    }
+
+    /* ── Password match check ── */
+    function checkMatch(prefix) {
+      const pw1 = document.getElementById(prefix + '-pw1');
+      const pw2 = document.getElementById(prefix + '-pw2');
+      const err = document.getElementById(prefix + '-pw-error');
+      const ok  = document.getElementById(prefix + '-pw-ok');
+      if (!pw1 || !pw2 || !pw2.value) { if(err) err.classList.add('hidden'); if(ok) ok.classList.add('hidden'); return; }
+      const match = pw1.value === pw2.value;
+      if (err) err.classList.toggle('hidden', match);
+      if (ok)  ok.classList.toggle('hidden', !match);
+    }
+
+    /* ── Next step ── */
+    function nextStep(prefix, from) {
+      // Validation
+      if (from === 1) {
+        const nom    = document.getElementById(prefix + '-nom');
+        const prenom = document.getElementById(prefix + '-prenom');
+        const phone  = document.getElementById(prefix + '-phone');
+        const email  = document.getElementById(prefix + '-email');
+        const pw1    = document.getElementById(prefix + '-pw1');
+        if (!nom.value.trim() || !prenom.value.trim() || !phone.value.trim() || !email.value.trim() || !pw1.value.trim()) {
+          shake(prefix + '-step-1'); return;
+        }
+        if (pw1.value.length < 8) { shake(prefix + '-step-1'); alert('Le mot de passe doit avoir au moins 8 caractères.'); return; }
+        // Populate step 2 mirror field
+        const mirror = document.getElementById(prefix + '-pw1-show');
+        if (mirror) { mirror.value = pw1.value; }
+        // Show phone in step 3
+        const phoneDisplay = document.getElementById(prefix + '-phone-display');
+        if (phoneDisplay) phoneDisplay.textContent = phone.value;
+      }
+      if (from === 2) {
+        const pw1 = document.getElementById(prefix + '-pw1');
+        const pw2 = document.getElementById(prefix + '-pw2');
+        if (!pw2.value || pw1.value !== pw2.value) {
+          document.getElementById(prefix + '-pw-error').classList.remove('hidden');
+          document.getElementById(prefix + '-pw-ok').classList.add('hidden');
+          shake(prefix + '-step-2'); return;
+        }
+        // Setup PIN
+        setupPinInputs(prefix);
+      }
+      if (from === 3) {
+        // Collect PIN
+        const pins = document.querySelectorAll(`#${prefix}-step-3 .pin-input`);
+        const code = [...pins].map(p => p.value).join('');
+        if (code.length < 6) { shake(prefix + '-step-3'); alert('Veuillez saisir le code PIN complet.'); return; }
+        // Setup pseudo suggestions
+        const nom    = document.getElementById(prefix + '-nom').value.toLowerCase().trim();
+        const prenom = document.getElementById(prefix + '-prenom').value.toLowerCase().trim();
+        generateSuggestions(prefix, nom, prenom);
+      }
+
+      goToStep(prefix, from + 1);
+    }
+
+    /* ── Prev step ── */
+    function prevStep(prefix, from) {
+      goToStep(prefix, from - 1);
+    }
+
+    /* ── Go to step ── */
+    function goToStep(prefix, step) {
+      const old = currentStep[prefix];
+      // Hide old step
+      const oldEl = document.getElementById(prefix + '-step-' + old);
+      if (oldEl) oldEl.classList.remove('active');
+      // Show new step
+      const newEl = document.getElementById(prefix + '-step-' + step);
+      if (newEl) newEl.classList.add('active');
+      // Update dots
+      for (let i = 1; i <= 4; i++) {
+        const dot  = document.getElementById(prefix + '-dot-' + i);
+        const line = document.getElementById(prefix + '-line-' + i);
+        if (dot) {
+          dot.classList.remove('active','done');
+          if (i < step) dot.classList.add('done');
+          if (i === step) dot.classList.add('active');
+        }
+        if (line) {
+          line.classList.toggle('done', i < step);
+        }
+      }
+      // Update title
+      const meta = STEP_META[step];
+      if (meta) {
+        const titleEl    = document.getElementById(prefix + '-step-title');
+        const subtitleEl = document.getElementById(prefix + '-step-subtitle');
+        if (titleEl) titleEl.textContent    = prefix === 'm' ? meta.title    : meta.dtitle;
+        if (subtitleEl) subtitleEl.textContent = prefix === 'm' ? meta.subtitle : meta.dsubtitle;
+      }
+      currentStep[prefix] = step;
+    }
+
+    /* ── PIN inputs logic ── */
+    function setupPinInputs(prefix) {
+      const container = document.getElementById(prefix + '-step-3');
+      if (!container) return;
+      const inputs = container.querySelectorAll('.pin-input');
+      inputs.forEach((inp, idx) => {
+        inp.value = '';
+        inp.classList.remove('filled');
+        inp.addEventListener('input', function() {
+          this.value = this.value.replace(/[^0-9]/g,'').slice(-1);
+          if (this.value) {
+            this.classList.add('filled');
+            if (idx < inputs.length - 1) inputs[idx+1].focus();
+          } else {
+            this.classList.remove('filled');
           }
+        }, { once: false });
+        inp.addEventListener('keydown', function(e) {
+          if (e.key === 'Backspace' && !this.value && idx > 0) inputs[idx-1].focus();
         });
+      });
+      setTimeout(() => inputs[0].focus(), 100);
+    }
 
-        // Toggle background slider position
-        const slider = document.getElementById(prefix + "toggle-slider");
-        if (slider) {
-          slider.style.left = isLogin ? "1.5px" : "calc(50% + 1.5px)";
-        }
-      }
+    /* ── Pseudo suggestions ── */
+    function generateSuggestions(prefix, nom, prenom) {
+      const container = document.getElementById(prefix + '-suggestions');
+      if (!container) return;
+      const n = nom.charAt(0).toUpperCase() + nom.slice(1);
+      const p = prenom.charAt(0).toUpperCase() + prenom.slice(1);
+      const suggs = [
+        `${prenom}_${nom}`,
+        `${prenom}.${nom}`,
+        `${prenom}${Math.floor(Math.random()*90+10)}`,
+        `${nom}_${prenom.charAt(0)}`,
+        `${prenom}_dm`,
+      ];
+      container.innerHTML = suggs.map(s =>
+        `<button type="button" class="pseudo-chip" onclick="selectPseudo('${prefix}','${s}',this)">${s}</button>`
+      ).join('');
+    }
 
-      function togglePw(id, btn) {
-        const input = document.getElementById(id);
-        const icon = btn.querySelector("i");
-        const show = input.type === "password";
-        input.type = show ? "text" : "password";
-        icon.className = show ? "fa-regular fa-eye-slash" : "fa-regular fa-eye";
-      }
+    function selectPseudo(prefix, value, btn) {
+      const input = document.getElementById(prefix + '-pseudo');
+      if (input) { input.value = value; checkPseudo(input, prefix); }
+      const chips = btn.closest('[id$="-suggestions"]').querySelectorAll('.pseudo-chip');
+      chips.forEach(c => c.classList.remove('selected'));
+      btn.classList.add('selected');
+    }
 
-      function checkStrength(input, prefix) {
-        prefix = prefix || "";
-        const v = input.value;
-        const bars = [1, 2, 3, 4].map((n) =>
-          document.getElementById(prefix + "bar" + n),
-        );
-        bars.forEach((b) => {
-          if (b) b.className = "pw-bar";
-        });
-        let s = 0;
-        if (v.length >= 6) s++;
-        if (v.length >= 10) s++;
-        if (/[A-Z]/.test(v) && /[0-9]/.test(v)) s++;
-        if (/[^A-Za-z0-9]/.test(v)) s++;
-        const cls = s <= 1 ? "weak" : s <= 2 ? "medium" : "strong";
-        for (let i = 0; i < s; i++) {
-          if (bars[i]) bars[i].classList.add(cls);
-        }
+    function checkPseudo(input, prefix) {
+      const v = input.value;
+      const icon = document.getElementById(prefix + '-pseudo-icon');
+      if (!icon) return;
+      if (v.length >= 3 && /^[a-zA-Z0-9_]+$/.test(v)) {
+        icon.innerHTML = '<i class="fa-solid fa-circle-check text-green-500"></i>';
+        icon.classList.remove('hidden');
+      } else if (v.length > 0) {
+        icon.innerHTML = '<i class="fa-solid fa-circle-xmark text-red-400"></i>';
+        icon.classList.remove('hidden');
+      } else {
+        icon.classList.add('hidden');
       }
+    }
+
+    /* ── Submit ── */
+    /* ── Parrainage toggle ── */
+    function toggleReferral(prefix) {
+      const field   = document.getElementById(prefix + '-referral-field');
+      const chevron = document.getElementById(prefix + '-referral-chevron');
+      if (!field) return;
+      const open = field.classList.toggle('hidden');
+      if (chevron) chevron.style.transform = open ? '' : 'rotate(180deg)';
+      if (!open) {
+        const input = document.getElementById(prefix + '-referral');
+        if (input) setTimeout(() => input.focus(), 50);
+      }
+    }
+
+    function submitRegister(prefix) {
+      const pseudo = document.getElementById(prefix + '-pseudo');
+      if (!pseudo || pseudo.value.length < 3 || !/^[a-zA-Z0-9_]+$/.test(pseudo.value)) {
+        shake(prefix + '-step-4'); return;
+      }
+      const referralInput = document.getElementById(prefix + '-referral');
+      const referral = referralInput ? referralInput.value.trim() : '';
+      const msg = referral
+        ? '🎉 Compte créé avec succès ! Bienvenue, @' + pseudo.value + '\n🤝 Code parrainage appliqué : ' + referral
+        : '🎉 Compte créé avec succès ! Bienvenue sur DocMaster, @' + pseudo.value;
+      alert(msg);
+    }
+
+    /* ── Resend PIN ── */
+    function resendPin(e) {
+      e.preventDefault();
+      const link = e.target;
+      link.textContent = 'Code renvoyé ✓';
+      link.style.color = '#22c55e';
+      setTimeout(() => { link.textContent = 'Renvoyer'; link.style.color = ''; }, 3000);
+    }
+
+    /* ── Shake animation ── */
+    function shake(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.style.animation = 'none';
+      el.offsetHeight; // reflow
+      el.style.animation = 'shakeX 0.4s ease';
+      setTimeout(() => el.style.animation = '', 400);
+    }
+
+    // Inject shake keyframes
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes shakeX {
+        0%, 100% { transform: translateX(0); }
+        20% { transform: translateX(-6px); }
+        40% { transform: translateX(6px); }
+        60% { transform: translateX(-4px); }
+        80% { transform: translateX(4px); }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Init PIN listeners on load (for both prefixes)
+    document.addEventListener('DOMContentLoaded', () => {
+      // setupPinInputs is called lazily in nextStep
+    });
     </script>
   </body>
 </html>

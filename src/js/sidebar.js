@@ -18,6 +18,11 @@ const SIDEBAR_NAV = {
       label: "Tableau de bord",
     },
     {
+      href: "declarer.html",
+      icon: "fa-triangle-exclamation",
+      label: "Déclarer une perte",
+    },
+    {
       href: "Mesdocument.html",
       icon: "fa-folder-open",
       label: "Mes Documents",

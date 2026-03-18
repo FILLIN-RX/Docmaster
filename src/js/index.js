@@ -39,7 +39,7 @@ const data = {
       proprietaire: "Jean Dupont",
       retrouve_par: "Pierre Martin",
       pourcentage_restitution: 50,
-      image_url: "assets/images/carte.jpeg",
+      image_url: "assets/images/images.jpg",
     },
     {
       id: 2,
@@ -50,8 +50,19 @@ const data = {
       proprietaire: "Awa Traoré",
       retrouve_par: "Koffi Paul",
       pourcentage_restitution: 80,
-      image_url: "assets/images/téléchargement (1).jpg",
+      image_url: "assets/images/passport.jpg",
     },
+    {
+      "id": 3,
+      "titre": "acte de naissance",
+      "date_retrouve": "10/08/2025",
+      "statut": "RÉCENT",
+      "priorite": 3,
+      "proprietaire": "Marie Curie",
+      "retrouve_par": "Albert Einstein",
+      "pourcentage_restitution": 90,
+      "image_url": "assets/images/1.webp"
+    }
   ],
 };
 

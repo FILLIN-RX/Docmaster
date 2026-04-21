@@ -37,7 +37,6 @@ const SIDEBAR_NAV = {
       icon: "fa-magnifying-glass",
       label: "Rechercher",
     },
-
   ],
   compte: [
     {

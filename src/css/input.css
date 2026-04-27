@@ -1,1 +1,27 @@
 @import "tailwindcss";
+
+@theme {
+  --color-primary: #F5A64B;
+  --color-primary-dark: #D98A30;
+  --color-primary-light: #FEF0DC;
+  
+  --color-green-dark: #1E3A2F;
+  --color-green-mid: #2D5A42;
+  --color-green-light: #E8F5EE;
+  
+  --color-bg-main: #F4EFE6;
+  --color-surface: #FFFFFF;
+  --color-surface-2: #FAF7F2;
+  
+  --color-text-main: #1A1A1A;
+  --color-text-muted: #6B7280;
+  --color-border-main: #EAE3D8;
+  
+  /* Spécifiques à Login */
+  --color-accent: #F5A64B;
+  --color-blob-green: #A8CBAF;
+  --color-blob-peach: #E8B89A;
+  
+  --font-poppins: "Poppins", sans-serif;
+  --font-bricolage: "Bricolage Grotesque", sans-serif;
+}

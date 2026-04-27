@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 
 <head>
@@ -223,10 +223,10 @@
       <span class="font-bricolage text-base font-bold text-textMain tracking-tight">Abonnement</span>
       <div class="ml-auto flex items-center gap-2">
         <div
-          class="relative w-9 h-9 rounded-[9px] bg-surface2 border border-borderMain flex items-center justify-center text-sm text-textMain cursor-pointer hover:border-primary hover:text-primary transition-all">
+          class="relative w-9 h-9 rounded-[9px] bg-surface2 border border-borderMain flex items-center justify-center text-sm text-textMain cursor-pointer hover:border-primary hover:text-primary transition-all"
+          onclick="openNotifModal()">
           <i class="fa-regular fa-bell"></i>
-          <div class="absolute top-[7px] right-[7px] w-[7px] h-[7px] rounded-full bg-primary border-2 border-white">
-          </div>
+          <div id="notifDot" class="absolute top-[7px] right-[7px] w-[7px] h-[7px] rounded-full border-2 border-white transition-colors"></div>
         </div>
         <div
           class="flex items-center gap-2 pl-1.5 pr-3 py-1 bg-surface2 border border-borderMain rounded-[10px] cursor-pointer hover:border-primary transition-colors">
@@ -439,31 +439,7 @@
     </div>
   </div><!-- /main-wrapper -->
 
-  <!-- ══ BOTTOM NAV (mobile only) ══ -->
-  <nav
-    class="bottom-nav fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-borderMain px-2 py-2 justify-around flex md:hidden">
-    <a href="dashboard.html" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted">
-      <i class="fa-solid fa-house text-base"></i>
-      <span class="text-[10px] font-medium">Accueil</span>
-    </a>
-    <a href="Mesdocument.html"
-      class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted hover:text-primary transition-colors">
-      <i class="fa-solid fa-plus-circle text-base"></i>
-      <span class="text-[10px] font-medium">Ajouter</span>
-    </a>
-    <a href="rechercher.html" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted">
-      <i class="fa-solid fa-magnifying-glass text-base"></i>
-      <span class="text-[10px] font-medium">Rechercher</span>
-    </a>
-    <a href="mesGains.html" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted">
-      <i class="fa-solid fa-wallet text-base"></i>
-      <span class="text-[10px] font-medium">Mes Gains</span>
-    </a>
-    <a href="#" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted" onclick="openSb()">
-      <i class="fa-solid fa-bars text-base"></i>
-      <span class="text-[10px] font-medium">Plus</span>
-    </a>
-  </nav>
+
 
   <!-- Subscription Modal -->
   <div id="modalWrapper" class="fixed inset-0 z-[10000] hidden items-end md:items-center justify-center p-4">
@@ -564,14 +540,7 @@
 
   <script src="./js/script.js"></script>
   <script>
-    function openSb() {
-      document.getElementById('sidebar').classList.add('open');
-      document.getElementById('overlay').classList.add('show');
-    }
-    function closeSb() {
-      document.getElementById('sidebar').classList.remove('open');
-      document.getElementById('overlay').classList.remove('show');
-    }
+
     function confirmCancel() { document.getElementById('cancel-modal').classList.remove('hidden') }
 
     const prices = {

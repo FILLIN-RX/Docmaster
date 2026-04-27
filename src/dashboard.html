@@ -9,40 +9,12 @@
     href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800;900&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="./js/auth.js"></script>
-  <script src="./js/sidebar.js"></script>
-  <link rel="shortcut icon" href="./assets/images/favicon.png" type="image/x-icon" />
-  <link href="css/output.css" rel="stylesheet" />
+  <link href="/css/input.css" rel="stylesheet" />
+  <script type="module" src="/js/auth.js"></script>
+  <script type="module" src="/js/sidebar.js"></script>
 
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: { DEFAULT: '#F5A64B', dark: '#D98A30', light: '#FEF0DC' },
-            'green-dark': '#1E3A2F',
-            'green-mid': '#2D5A42',
-            'green-light': '#E8F5EE',
-            bgMain: '#F4EFE6',
-            surface: '#FFFFFF',
-            surface2: '#FAF7F2',
-            textMain: '#1A1A1A',
-            textMuted: '#9CA3AF',
-            borderMain: '#EAE3D8',
-            borderDark: '#DDD5C8',
-          },
-          fontFamily: {
-            poppins: ['Poppins', 'sans-serif'],
-            bricolage: ['"Bricolage Grotesque"', 'sans-serif'],
-          },
-          screens: {
-            'xs': '400px',
-          }
-        }
-      }
-    }
-  </script>
+  <link rel="shortcut icon" href="/assets/images/favicon.png" type="image/x-icon" />
+
   <style>
     :root {
       --sidebar: 260px;
@@ -223,8 +195,8 @@
 
 <body>
 
-  <!-- Sidebar composant (généré par sidebar.js) -->
   <div id="sidebar-root"></div>
+  <script src="js/notifications.js"></script>
   <!-- ══ MAIN WRAPPER ══ -->
   <div class="main-wrapper" id="mainWrapper">
 
@@ -377,20 +349,44 @@
                     <div class="text-[10px] text-textMuted italic">Réf: SE-9428 · Recherche active</div>
                   </div>
                 </div>
-                <div class="relative flex justify-between items-center px-4">
-                  <div class="absolute top-1/2 left-[40px] right-[40px] h-[2px] bg-red-100 -translate-y-1/2"></div>
-                  <div class="absolute top-1/2 left-[40px] w-[33%] h-[2px] bg-red-500 -translate-y-1/2"></div>
-                  <div
-                    class="relative z-10 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-[8px]">
-                    <i class="fa-solid fa-check"></i>
+                <div class="relative flex justify-between items-start px-2 mt-4">
+                  <div class="absolute top-3 left-[40px] right-[40px] h-[2px] bg-red-100"></div>
+                  <div class="absolute top-3 left-[40px] w-[33%] h-[2px] bg-red-500"></div>
+
+                  <!-- Step 1 -->
+                  <div class="relative z-10 flex flex-col items-center gap-1.5 min-w-[60px]">
+                    <div
+                      class="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-[8px] shadow-sm shadow-red-200">
+                      <i class="fa-solid fa-check"></i>
+                    </div>
+                    <span class="text-[9px] font-bold text-red-600 uppercase tracking-tighter">Soumission</span>
                   </div>
-                  <div
-                    class="relative z-10 w-6 h-6 rounded-full bg-white border-2 border-red-500 text-red-500 flex items-center justify-center text-[8px]">
-                    <i class="fa-solid fa-search"></i>
+
+                  <!-- Step 2 -->
+                  <div class="relative z-10 flex flex-col items-center gap-1.5 min-w-[60px]">
+                    <div
+                      class="w-6 h-6 rounded-full bg-white border-2 border-red-500 text-red-500 flex items-center justify-center text-[8px] shadow-sm">
+                      <i class="fa-solid fa-search"></i>
+                    </div>
+                    <span class="text-[9px] font-bold text-red-600 uppercase tracking-tighter">Recherche</span>
                   </div>
-                  <div
-                    class="relative z-10 w-6 h-6 rounded-full bg-white border-2 border-red-100 text-red-200 flex items-center justify-center text-[8px]">
-                    <i class="fa-solid fa-handshake"></i>
+
+                  <!-- Step 3 -->
+                  <div class="relative z-10 flex flex-col items-center gap-1.5 min-w-[60px]">
+                    <div
+                      class="w-6 h-6 rounded-full bg-white border-2 border-red-200 text-red-300 flex items-center justify-center text-[8px]">
+                      <i class="fa-solid fa-handshake"></i>
+                    </div>
+                    <span class="text-[9px] font-bold text-red-300 uppercase tracking-tighter">Matching</span>
+                  </div>
+
+                  <!-- Step 4 -->
+                  <div class="relative z-10 flex flex-col items-center gap-1.5 min-w-[60px]">
+                    <div
+                      class="w-6 h-6 rounded-full bg-white border-2 border-red-200 text-red-300 flex items-center justify-center text-[8px]">
+                      <i class="fa-solid fa-check-double"></i>
+                    </div>
+                    <span class="text-[9px] font-bold text-red-300 uppercase tracking-tighter">Récupéré</span>
                   </div>
                 </div>
               </div>
@@ -414,20 +410,51 @@
                     <div class="text-[10px] text-textMuted italic">Réf: FI-1102 · Propriétaire notifié</div>
                   </div>
                 </div>
-                <div class="relative flex justify-between items-center px-4">
-                  <div class="absolute top-1/2 left-[40px] right-[40px] h-[2px] bg-blue-100 -translate-y-1/2"></div>
-                  <div class="absolute top-1/2 left-[40px] w-full h-[2px] bg-blue-500 -translate-y-1/2"></div>
-                  <div
-                    class="relative z-10 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-[8px]">
-                    <i class="fa-solid fa-check"></i>
+                <div class="relative flex justify-between items-start px-2 mt-4">
+                  <div class="absolute top-3 left-[40px] right-[40px] h-[2px] bg-blue-100"></div>
+                  <div class="absolute top-3 left-[40px] w-2/3 h-[2px] bg-blue-500"></div>
+
+                  <!-- Step 1 -->
+                  <div class="relative z-10 flex flex-col items-center gap-1.5 min-w-[60px]">
+                    <div
+                      class="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-[8px] shadow-sm shadow-blue-200">
+                      <i class="fa-solid fa-check"></i>
+                    </div>
+                    <span class="text-[9px] font-bold text-blue-600 uppercase tracking-tighter">Trouvé</span>
                   </div>
-                  <div
-                    class="relative z-10 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-[8px]">
-                    <i class="fa-solid fa-check"></i>
+
+                  <!-- Step 2 -->
+                  <div class="relative z-10 flex flex-col items-center gap-1.5 min-w-[60px]">
+                    <div
+                      class="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-[8px] shadow-sm shadow-blue-200">
+                      <i class="fa-solid fa-bullhorn"></i>
+                    </div>
+                    <span class="text-[9px] font-bold text-blue-600 uppercase tracking-tighter">Signalé</span>
                   </div>
-                  <div
-                    class="relative z-10 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-[8px] font-bold">
-                    OK</div>
+
+                  <!-- Step 3 -->
+                  <div class="relative z-10 flex flex-col items-center gap-1.5 min-w-[60px]">
+                    <div
+                      class="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-[8px] shadow-sm shadow-blue-200">
+                      <i class="fa-solid fa-handshake"></i>
+                    </div>
+                    <span class="text-[9px] font-bold text-blue-600 uppercase tracking-tighter">Matching</span>
+                  </div>
+
+                  <!-- Step 4 -->
+                  <div class="relative z-10 flex flex-col items-center gap-1.5 min-w-[60px]">
+                    <div
+                      class="w-6 h-6 rounded-full bg-white border-2 border-blue-500 text-blue-500 flex items-center justify-center text-[8px] shadow-sm font-bold">
+                      <i class="fa-solid fa-hand-holding-heart"></i>
+                    </div>
+                    <span class="text-[9px] font-bold text-blue-600 uppercase tracking-tighter">Rendre</span>
+                  </div>
+                </div>
+                <div class="mt-6 flex justify-end">
+                  <button
+                    class="px-4 py-2 bg-blue-600 text-white rounded-[10px] text-[11px] font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20">
+                    <i class="fa-solid fa-hand-holding-heart"></i> Rendre le document
+                  </button>
                 </div>
               </div>
             </div>
@@ -699,154 +726,86 @@
             <button
               class="w-full py-2.5 rounded-[11px] bg-primary text-white font-bricolage text-[13.5px] font-bold cursor-pointer flex items-center justify-center gap-2 transition-all hover:bg-primary-dark active:scale-[.98] shadow-lg shadow-primary/20 relative z-10">
               <i class="fa-solid fa-rocket"></i> Passer au plan Pro
-            </button>
+              </but class="text-xs font-bold text-primary hover:underline">Marquer tout comme lu</button>
           </div>
-
         </div>
       </div>
 
-    </div><!-- /content -->
 
-    <!-- ══ BOTTOM NAV (mobile only) ══ -->
-    <nav
-      class="bottom-nav fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-borderMain px-2 py-2 justify-around">
-      <a href="dashboard.html" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-primary">
-        <i class="fa-solid fa-house text-base"></i>
-        <span class="text-[10px] font-semibold">Accueil</span>
-      </a>
-      <a href="Mesdocument.html" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted">
-        <i class="fa-solid fa-plus-circle text-base"></i>
-        <span class="text-[10px] font-medium">Ajouter</span>
-      </a>
-      <a href="recherche-auth.html" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted">
-        <i class="fa-solid fa-magnifying-glass text-base"></i>
-        <span class="text-[10px] font-medium">Rechercher</span>
-      </a>
-      <a href="mesGains.html" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted">
-        <i class="fa-solid fa-wallet text-base"></i>
-        <span class="text-[10px] font-medium">Mes Gains</span>
-      </a>
-      <a href="#" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted" onclick="openSb()">
-        <i class="fa-solid fa-bars text-base"></i>
-        <span class="text-[10px] font-medium">Plus</span>
-      </a>
-    </nav>
+      <script>
 
-  </div><!-- /main-wrapper -->
+        const dateOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+        document.getElementById('currentDay').innerText = new Intl.DateTimeFormat('fr-FR', dateOptions).format(new Date());
 
-  <!-- Notifications Modal -->
-  <div id="notifModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6 relative">
-      <button onclick="closeNotifModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-      <div class="flex items-center gap-3 mb-6">
-        <i class="fa-solid fa-bell text-xl"></i>
-        <h2 class="text-2xl font-bold">Notifications</h2>
-        <span id="notifCountModal" class="bg-orange-500 text-white text-sm px-2 py-1 rounded-full ml-auto">0</span>
-        <button onclick="toggleNotifSettings()" class="ml-2 text-gray-500 hover:text-black">
-          <i class="fa-solid fa-gear"></i>
-        </button>
-      </div>
-      <div id="notifSettingsModal" class="hidden mb-6 p-4 border rounded-lg bg-white">
-        <h3 class="font-semibold mb-3">Paramètres</h3>
-        <label class="flex items-center gap-2 mb-2"><input type="checkbox" checked>Notifications email</label>
-        <label class="flex items-center gap-2 mb-2"><input type="checkbox" checked>Notifications système</label>
-        <label class="flex items-center gap-2"><input type="checkbox">Mode silencieux</label>
-      </div>
-      <div id="notifListModal" class="space-y-6 border-l-4 border-orange-400 pl-6 max-h-80 overflow-y-auto">
-        <!-- dynamic notifications will appear here -->
-      </div>
-    </div>
-  </div>
-
-
-  <script>
-    function openSb() {
-      document.getElementById('sidebar').classList.add('open');
-      document.getElementById('overlay').classList.add('show');
-    }
-    function closeSb() {
-      document.getElementById('sidebar').classList.remove('open');
-      document.getElementById('overlay').classList.remove('show');
-    }
-    document.querySelectorAll('.sb-item').forEach(item => {
-      item.addEventListener('click', function (e) {
-        if (this.classList.contains('logout-btn')) return;
-        document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
-        this.classList.add('active');
-        if (window.innerWidth < 900) closeSb();
-      });
-    });
-    const dateOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-    document.getElementById('currentDay').innerText = new Intl.DateTimeFormat('fr-FR', dateOptions).format(new Date());
-
-    function getDeviceStorageKeyForDashboard() {
-      if (typeof getCurrentUser === 'function') {
-        const user = getCurrentUser();
-        if (user && user.email) {
-          return `dm_devices_${user.email.toLowerCase()}`;
+        function getDeviceStorageKeyForDashboard() {
+          if (typeof getCurrentUser === 'function') {
+            const user = getCurrentUser();
+            if (user && user.email) {
+              return `dm_devices_${user.email.toLowerCase()}`;
+            }
+          }
+          return 'dm_devices';
         }
-      }
-      return 'dm_devices';
-    }
 
-    function updateDashboardTopStats() {
-      const statDevices = document.getElementById('statDevicesCount');
-      if (!statDevices) return;
+        function updateDashboardTopStats() {
+          const statDevices = document.getElementById('statDevicesCount');
+          if (!statDevices) return;
 
-      try {
-        const raw = localStorage.getItem(getDeviceStorageKeyForDashboard()) || '[]';
-        const list = JSON.parse(raw);
-        statDevices.innerText = Array.isArray(list) ? list.length : 0;
-      } catch (_) {
-        statDevices.innerText = '0';
-      }
-    }
+          try {
+            const raw = localStorage.getItem(getDeviceStorageKeyForDashboard()) || '[]';
+            const list = JSON.parse(raw);
+            statDevices.innerText = Array.isArray(list) ? list.length : 0;
+          } catch (_) {
+            statDevices.innerText = '0';
+          }
+        }
 
-    // notification modal functions
-    function openNotifModal() {
-      document.getElementById('notifModal').classList.remove('hidden');
-    }
-    function closeNotifModal() {
-      document.getElementById('notifModal').classList.add('hidden');
-    }
-    function toggleNotifSettings() {
-      document.getElementById('notifSettingsModal').classList.toggle('hidden');
-    }
+        // notification modal functions
+        function openNotifModal() {
+          document.getElementById('notifModal').classList.remove('hidden');
+        }
+        function closeNotifModal() {
+          document.getElementById('notifModal').classList.add('hidden');
+        }
+        function toggleNotifSettings() {
+          document.getElementById('notifSettingsModal').classList.toggle('hidden');
+        }
 
-    // helper to add a notification to modal (and count)
-    function addNotification(title, message, time) {
-      const container = document.getElementById('notifListModal');
-      const notif = `
-    <div class="flex gap-4 items-start">
-      <div class="bg-blue-500 text-white w-10 h-10 flex items-center justify-center rounded-full">
-        <i class="fa-solid fa-bell"></i>
-      </div>
-      <div>
-        <p><span class="font-semibold">${title} :</span> ${message}</p>
-        <span class="text-gray-400 text-sm">${time}</span>
-      </div>
-    </div>
-  `;
-      container.insertAdjacentHTML('afterbegin', notif);
-      // update counts
-      const countElm = document.getElementById('notifCountModal');
-      const dashboardDot = document.getElementById('notifDot');
-      const newCount = parseInt(countElm.innerText || '0') + 1;
-      countElm.innerText = newCount;
-      if (dashboardDot) dashboardDot.classList.add('bg-red-500');
-    }
+        // helper to add a notification to modal (and count)
+        function addNotification(title, message, time) {
+          const container = document.getElementById('notifListModal');
+          const notif = `
+        <div class="flex gap-4 items-start group">
+          <div class="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center shadow-sm text-primary flex-shrink-0 group-hover:scale-110 transition-transform">
+            <i class="fa-solid fa-bell text-base"></i>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between mb-0.5">
+              <h4 class="text-[14px] font-bold text-slate-800">${title}</h4>
+              <span class="text-[10px] text-slate-400 font-bold uppercase">${time}</span>
+            </div>
+            <p class="text-[13px] text-slate-500 leading-relaxed">${message}</p>
+          </div>
+        </div>
+      `;
+          container.insertAdjacentHTML('afterbegin', notif);
 
-    // initialize with some example notifications
-    addNotification('Document retrouvé', 'Votre document "Carte ID" a été retrouvé.', 'Il y a 2 heures');
-    addNotification('Validation', 'Vous avez confirmé la récupération d’un document.', 'Il y a 1 jour');
-    addNotification('Paiement reçu', 'Vous avez perçu 30€ pour un document remis.', 'Il y a 3 jours');
+          const countElm = document.getElementById('notifCountModal');
+          const dashboardDot = document.getElementById('notifDot');
+          const newCount = parseInt(countElm.innerText || '0') + 1;
+          countElm.innerText = newCount;
+          if (dashboardDot) dashboardDot.classList.add('bg-primary');
+        }
 
-    updateDashboardTopStats();
+        // initialize with some example notifications
+        addNotification('Document retrouvé', 'Votre document "Carte ID" a été retrouvé.', 'Il y a 2 heures');
+        addNotification('Validation', 'Vous avez confirmé la récupération d’un document.', 'Il y a 1 jour');
+        addNotification('Paiement reçu', 'Vous avez perçu 30€ pour un document remis.', 'Il y a 3 jours');
+
+        updateDashboardTopStats();
 
 
-  </script>
+      </script>
 </body>
 
 </html>

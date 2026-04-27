@@ -77,81 +77,63 @@ function renderCards(docs) {
     const strokeOffset = 125 - (125 * doc.pourcentage_restitution) / 100;
 
     const cardHTML = `
-      <div class="bg-white/20  rounded-[35px] hover:-translate-y-2 transition-all overflow-hidden shadow-lg border border-gray-100 flex flex-col relative animate-fadeIn">
+      <div class="bg-white rounded-[24px] hover:-translate-y-1.5 transition-all overflow-hidden shadow-sm hover:shadow-xl border border-gray-100/50 flex flex-col relative animate-fadeIn group">
   
-  <div class="relative">
-  <!-- Image -->
-  <div class="h-48 bg-gray-200/30 overflow-hidden rounded-t-[35px] group">
-    <img src="${doc.image_url}" 
-         alt="${doc.titre}" 
-         class="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110">
-  </div>
+        <div class="relative">
+          <!-- Image -->
+          <div class="h-44 bg-gray-50 overflow-hidden">
+            <img src="${doc.image_url}" 
+                 alt="${doc.titre}" 
+                 class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105">
+          </div>
 
-  <!-- Badge Statut -->
-  <span
-    class="absolute left-6 top-48 -translate-y-1/2
-           bg-[#F5A64B] text-white
-           px-4 py-1
-           rounded-full text-xs font-bold uppercase tracking-wider
-           shadow-md z-30">
-    ${doc.statut}
-  </span>
-
-  <!-- Badge Priorité -->
-  <div
-    class="absolute right-6 top-48 -translate-y-1/2
-           bg-[#F5A64B]/80 text-white
-           w-8 h-8
-           flex items-center justify-center
-           rounded-full text-xs font-bold
-           shadow-md z-30">
-    ${doc.priorite}
-  </div>
-</div>
-
-
-  <!-- Contenu principal avec fond blanc légèrement transparent -->
-  <div class=" p-6 bg-white/30 relative rounded-b-[35px]">
-    
-
-    <div class="flex items-center gap-2 text-gray-400 mb-2">
-      <i class="fa-solid fa-calendar-days"></i>
-      <span class="font-semibold text-sm">${doc.date_retrouve}</span>
-    </div>
-    
-    <h2 class="text-2xl font-black text-[#1e272e] mb-4">${doc.titre}</h2>
-
-    <div class="space-y-3 mb-8">
-      <p class="flex items-center gap-2 font-bold text-gray-600">
-        <i class="fa-solid fa-user text-gray-400"></i> Propriétaire: 
-        <span class="text-[#F5A64B] font-bold">${doc.proprietaire}</span>
-      </p>
-      <p class="flex items-center gap-2 font-bold text-gray-600">
-        <i class="fa-solid fa-magnifying-glass text-gray-400"></i> Retrouvé par: 
-        <span class="text-[#F5A64B] font-bold">@ ${doc.retrouve_par}</span>
-      </p>
-    </div>
-
-    <div class="flex items-center justify-between border-t border-dashed  border-gray-200 pt-6">
-      <div class="flex items-center text-xs gap-3">
-        <div class="relative w-12 h-12 flex items-center justify-center">
-          <svg class="w-full h-full transform -rotate-90">
-            <circle cx="24" cy="24" r="20" stroke="#f1f2f6" stroke-width="4" fill="transparent"/>
-            <circle cx="24" cy="24" r="20" stroke="#F5A64B" stroke-width="4" fill="transparent" 
-                    stroke-dasharray="125" stroke-dashoffset="${strokeOffset}" class="transition-all duration-1000"/>
-          </svg>
-          <span class="absolute text-[10px] font-black">${doc.pourcentage_restitution}%</span>
+          <!-- Badge Statut -->
+          <span class="absolute left-4 top-4 bg-primary text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm z-10">
+            ${doc.statut}
+          </span>
         </div>
-        <span class="font-bold text-gray-500 text-sm italic">Restitution</span>
+
+        <!-- Contenu principal -->
+        <div class="p-5 flex flex-col flex-1">
+          <div class="flex items-center gap-1.5 text-textMuted mb-1">
+            <i class="fa-solid fa-calendar-days text-[10px]"></i>
+            <span class="font-medium text-[11px]">${doc.date_retrouve}</span>
+          </div>
+          
+          <h2 class="text-lg font-bold text-green-dark mb-3 leading-tight group-hover:text-primary transition-colors">${doc.titre}</h2>
+
+          <div class="space-y-2 mb-6 flex-1">
+            <p class="flex items-center gap-2 text-[12.5px] font-medium text-textMuted">
+              <i class="fa-solid fa-user text-[11px] opacity-50"></i> 
+              Propriétaire: <span class="text-green-mid font-semibold">${doc.proprietaire}</span>
+            </p>
+            <p class="flex items-center gap-2 text-[12.5px] font-medium text-textMuted">
+              <i class="fa-solid fa-location-dot text-[11px] opacity-50"></i> 
+              Retrouvé le: <span class="text-green-mid font-semibold">${doc.date_retrouve}</span>
+            </p>
+          </div>
+
+          <div class="flex items-center justify-between border-t border-gray-100 pt-4 mt-auto">
+            <div class="flex items-center gap-2.5">
+              <div class="relative w-9 h-9 flex items-center justify-center">
+                <svg class="w-full h-full transform -rotate-90">
+                  <circle cx="18" cy="18" r="16" stroke="#f1f2f6" stroke-width="3" fill="transparent"/>
+                  <circle cx="18" cy="18" r="16" stroke="var(--color-primary)" stroke-width="3" fill="transparent" 
+                          stroke-dasharray="100.5" stroke-dashoffset="${100.5 - (100.5 * doc.pourcentage_restitution) / 100}" 
+                          class="transition-all duration-1000"/>
+                </svg>
+                <span class="absolute text-[9px] font-bold">${doc.pourcentage_restitution}%</span>
+              </div>
+              <span class="font-semibold text-textMuted text-[11px] italic">Restitution</span>
+            </div>
+
+            <button class="bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-xl text-[11px] font-bold flex items-center gap-2 shadow-sm transition-all active:scale-95">
+              <i class="fa-solid fa-play text-[10px]"></i> Récupérer
+            </button>
+          </div>
+        </div>
       </div>
-
-      <button class="bg-[#F5A64B] hover:bg-[#D98A2F] text-white px-6 py-3 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-orange-100 transition-all active:scale-95">
-        <i class="fa-solid fa-play text-xs"></i> Récupérer
-      </button>
-    </div>
-  </div>
-</div>
-
+    `;
     `;
     container.innerHTML += cardHTML;
   });

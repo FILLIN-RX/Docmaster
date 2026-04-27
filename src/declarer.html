@@ -175,6 +175,7 @@
 <body>
 
 <div id="sidebar-root"></div>
+<script src="./js/notifications.js"></script>
 
 <div class="main-wrap">
 
@@ -192,7 +193,10 @@
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
-      <button style="width:36px;height:36px;border-radius:10px;border:1.5px solid #E0D5C4;background:white;color:#6B7280;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.borderColor='#F5A64B';this.style.color='#F5A64B'" onmouseout="this.style.borderColor='#E0D5C4';this.style.color='#6B7280'"><i class="fa-solid fa-bell"></i></button>
+      <button onclick="openNotifModal()" style="width:36px;height:36px;border-radius:10px;border:1.5px solid #E0D5C4;background:white;color:#6B7280;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;" onmouseover="this.style.borderColor='#F5A64B';this.style.color='#F5A64B'" onmouseout="this.style.borderColor='#E0D5C4';this.style.color='#6B7280'">
+        <i class="fa-solid fa-bell"></i>
+        <div id="notifDot" style="position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;border:2px solid white;transition:background 0.3s;"></div>
+      </button>
       <div style="width:36px;height:36px;border-radius:10px;background:#1E3A2F;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-size:13px;font-weight:800;color:#F5A64B;cursor:pointer;">JD</div>
     </div>
   </header>

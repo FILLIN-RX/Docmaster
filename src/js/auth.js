@@ -1,32 +1,23 @@
 /**
  * ═════════════════════════════════════════════════════════════════
  * AUTH.JS - Authentication System for DocMaster
- * Handles login, registration, and session management with localStorage
+ * Handles login, registration, and session management with Firebase
  * ═════════════════════════════════════════════════════════════════
  */
+
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged 
+} from "firebase/auth";
+import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+import { auth, db } from "./firebase.js";
 
 const AUTH_KEY = "docmaster_user_session";
 const USERS_KEY = "docmaster_users_db";
 
-/**
- * Initialize database with default user
- */
-function initDB() {
-  if (!localStorage.getItem(USERS_KEY)) {
-    const defaultUsers = [
-      {
-        id: 1,
-        name: "Jean-Marc D.",
-        email: "user@example.com",
-        password: "password123",
-        initial: "JM",
-        createdAt: new Date().toISOString(),
-      },
-    ];
-    localStorage.setItem(USERS_KEY, JSON.stringify(defaultUsers));
-    console.log("✓ Base de données initialisée");
-  }
-}
+
 
 /**
  * Get initials from full name
@@ -43,113 +34,126 @@ function getInitials(name) {
 }
 
 /**
- * Login function - Authenticate user
+ * Login function - Authenticate user with Firebase
  */
-function login(email, password) {
+async function login(email, password) {
   try {
     if (!email || !password) {
       return { success: false, message: "Email et mot de passe requis." };
     }
 
-    const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
-    const user = users.find((u) => u.email === email && u.password === password);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-    if (user) {
-      // Save session immediately
-      const sessionData = JSON.stringify(user);
-      localStorage.setItem(AUTH_KEY, sessionData);
-      
-      // Verify session was saved
-      const verification = localStorage.getItem(AUTH_KEY);
-      if (!verification) {
-        console.error("❌ Impossible de sauvegarder la session!");
-        return { success: false, message: "Erreur: Impossible de sauvegarder la session." };
-      }
+    // Get additional data from Firestore
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const userData = userDoc.exists() ? userDoc.data() : { name: user.displayName || email, email: user.email };
 
-      console.log("✓ Connexion réussie:", email);
-      console.log("✓ Session sauvegardée dans localStorage");
-      return { success: true, user };
-    }
+    const fullUser = {
+      uid: user.uid,
+      ...userData
+    };
 
-    console.warn("❌ Identifiants invalides pour:", email);
-    return { success: false, message: "Email ou mot de passe incorrect." };
+    localStorage.setItem(AUTH_KEY, JSON.stringify(fullUser));
+    console.log("✓ Connexion Firebase réussie:", email);
+    return { success: true, user: fullUser };
   } catch (error) {
-    console.error("❌ Erreur lors de la connexion:", error);
-    return { success: false, message: "Erreur lors de la connexion." };
+    console.error("❌ Erreur Firebase Auth:", error.code, error.message);
+    let message = "Erreur lors de la connexion.";
+    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+      message = "Email ou mot de passe incorrect.";
+    }
+    return { success: false, message };
   }
 }
 
 /**
- * Register function - Save new user to localStorage
+ * Register function - Save new user to Firebase
  */
-function register(name, email, password) {
+async function register(name, email, password) {
   try {
-    // Initialize DB
-    initDB();
+    // Create user in Firebase Auth
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-    // Get current users
-    const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
-
-    // Check if email already exists
-    if (users.some((u) => u.email === email)) {
-      return { success: false, message: "Cet email est déjà utilisé." };
-    }
-
-    // Create new user
-    const newUser = {
-      id: Date.now(),
+    // Create user profile in Firestore
+    const userData = {
+      uid: user.uid,
       name: name || "Anonymous",
       email: email,
-      password: password,
       initial: getInitials(name),
       createdAt: new Date().toISOString(),
     };
 
-    // Save to database
-    users.push(newUser);
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    console.log("✓ Utilisateur enregistré dans la BD:", newUser);
+    await setDoc(doc(db, "users", user.uid), userData);
+    console.log("✓ Profil utilisateur créé dans Firestore:", userData);
 
-    // Auto-login
-    localStorage.setItem(AUTH_KEY, JSON.stringify(newUser));
-    console.log("✓ Session créée pour:", email);
+    // Save session
+    localStorage.setItem(AUTH_KEY, JSON.stringify(userData));
 
-    return { success: true, user: newUser };
+    return { success: true, user: userData };
   } catch (error) {
-    console.error("❌ Erreur lors de l'enregistrement:", error);
-    return { success: false, message: "Erreur lors de l'enregistrement." };
+    console.error("❌ Erreur Inscription Firebase:", error.code, error.message);
+    let message = "Erreur lors de l'enregistrement.";
+    if (error.code === 'auth/email-already-in-use') {
+      message = "Cet email est déjà utilisé.";
+    } else if (error.code === 'auth/weak-password') {
+      message = "Le mot de passe est trop faible.";
+    }
+    return { success: false, message };
   }
 }
 
 /**
  * Logout function
  */
-function logout() {
-  localStorage.removeItem(AUTH_KEY);
-  window.location.href = "login.html";
+async function logout() {
+  try {
+    await signOut(auth);
+    localStorage.removeItem(AUTH_KEY);
+    window.location.href = "login.html";
+  } catch (error) {
+    console.error("❌ Erreur de déconnexion:", error);
+  }
 }
 
 /**
- * Check if user is authenticated
+ * Check if user is authenticated with Firebase observer
  */
 function checkAuth() {
-  const session = localStorage.getItem(AUTH_KEY);
-  const currentPage = window.location.pathname.split("/").pop();
-  const publicPages = ["index.html", "login.html", "rechercher.html", "rechercher.old.html"];
-  const isLoginPage = currentPage === "login.html";
-  const isPublicPage = publicPages.includes(currentPage);
+  onAuthStateChanged(auth, async (user) => {
+    const currentPage = window.location.pathname.split("/").pop();
+    const publicPages = ["index.html", "login.html", "rechercher.html", "rechercher.old.html", ""];
+    const isLoginPage = currentPage === "login.html";
+    const isPublicPage = publicPages.includes(currentPage) || currentPage === "";
 
-  if (!session && !isPublicPage) {
-    window.location.href = "login.html";
-  } else if (session && isLoginPage) {
-    window.location.href = "dashboard.html";
-  }
+    if (user) {
+      console.log("👤 Utilisateur connecté:", user.email);
+      
+      // Get full data from Firestore if not in localStorage or outdated
+      let session = JSON.parse(localStorage.getItem(AUTH_KEY) || "{}");
+      if (!session.uid || session.uid !== user.uid) {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          session = { uid: user.uid, ...userDoc.data() };
+          localStorage.setItem(AUTH_KEY, JSON.stringify(session));
+        }
+      }
 
-  if (session) {
-    const user = JSON.parse(session);
-    updateUI(user);
-    markActiveSidebar();
-  }
+      updateUI(session);
+      markActiveSidebar();
+
+      if (isLoginPage) {
+        window.location.href = "dashboard.html";
+      }
+    } else {
+      console.log("👤 Aucun utilisateur connecté.");
+      localStorage.removeItem(AUTH_KEY);
+      if (!isPublicPage) {
+        window.location.href = "login.html";
+      }
+    }
+  });
 }
 
 /**
@@ -181,51 +185,35 @@ function getCurrentUser() {
   }
 }
 
-function saveCurrentUserProfile(updates) {
-  const currentUser = getCurrentUser();
-  const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
-
-  if (!currentUser) {
+async function saveCurrentUserProfile(updates) {
+  const user = auth.currentUser;
+  if (!user) {
     return { success: false, message: "Aucune session active." };
   }
 
-  const currentIndex = users.findIndex((user) => user.email === currentUser.email);
-  if (currentIndex === -1) {
-    return { success: false, message: "Utilisateur introuvable." };
+  try {
+    const nextName = (updates.name || "").trim();
+    const nextEmail = (updates.email || "").trim();
+
+    const userRef = doc(db, "users", user.uid);
+    const updatedData = {
+      ...updates,
+      initial: nextName ? getInitials(nextName) : undefined
+    };
+
+    await updateDoc(userRef, updatedData);
+    
+    // Update local storage
+    const session = JSON.parse(localStorage.getItem(AUTH_KEY) || "{}");
+    const merged = { ...session, ...updatedData };
+    localStorage.setItem(AUTH_KEY, JSON.stringify(merged));
+
+    updateUI(merged);
+    return { success: true, user: merged };
+  } catch (error) {
+    console.error("❌ Erreur mise à jour profil:", error);
+    return { success: false, message: "Erreur lors de la mise à jour." };
   }
-
-  const nextName = (updates.name || currentUser.name || "").trim();
-  const nextEmail = (updates.email || currentUser.email || "").trim();
-
-  if (!nextName || !nextEmail) {
-    return { success: false, message: "Nom et email sont obligatoires." };
-  }
-
-  const emailAlreadyUsed = users.some((user, index) => {
-    return index !== currentIndex && user.email === nextEmail;
-  });
-
-  if (emailAlreadyUsed) {
-    return { success: false, message: "Cet email est déjà utilisé." };
-  }
-
-  const mergedUser = {
-    ...users[currentIndex],
-    ...currentUser,
-    ...updates,
-    name: nextName,
-    email: nextEmail,
-    initial: getInitials(nextName),
-  };
-
-  users[currentIndex] = mergedUser;
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  localStorage.setItem(AUTH_KEY, JSON.stringify(mergedUser));
-
-  updateUI(mergedUser);
-  markActiveSidebar();
-
-  return { success: true, user: mergedUser };
 }
 
 // Highlight the active sidebar link based on current URL
@@ -440,7 +428,7 @@ window.prevStep = function (prefix, currentStep) {
 /**
  * Submit the multi-step register form
  */
-window.submitRegister = function (prefix) {
+window.submitRegister = async function (prefix) {
   try {
     // Get form inputs
     const nomInput = document.getElementById(`${prefix}-nom`);
@@ -471,59 +459,35 @@ window.submitRegister = function (prefix) {
       return;
     }
 
-    if (!email.includes("@")) {
-      alert("Veuillez entrer une adresse email valide.");
-      return;
-    }
-
-    // Validate pseudo (step 4 field)
+    // Validate pseudo
     const pseudoVal = document.getElementById(`${prefix}-pseudo`)?.value.trim() || '';
     if (pseudoVal.length < 3 || !/^[a-zA-Z0-9_]+$/.test(pseudoVal)) {
-      alert("Veuillez choisir un pseudo valide (min. 3 caractères, lettres, chiffres et _).");
+      alert("Veuillez choisir un pseudo valide (min. 3 caractères).");
       return;
     }
 
-    // Try to register
+    // Try to register with Firebase
     const fullName = prenom ? `${nom} ${prenom}` : nom;
-    const pseudo = document.getElementById(`${prefix}-pseudo`)?.value.trim() || '';
-    console.log("📝 Inscription en cours pour:", email);
+    console.log("📝 Inscription Firebase en cours...");
     
-    const result = register(fullName, email, password);
+    // Show loader if possible
+    const submitBtn = document.querySelector('button[onclick*="submitRegister"]');
+    if (submitBtn && typeof startButtonLoader === 'function') startButtonLoader(submitBtn);
+
+    const result = await register(fullName, email, password);
+
+    if (submitBtn && typeof stopButtonLoader === 'function') stopButtonLoader(submitBtn);
 
     if (result.success) {
-      // Attach pseudo to the saved user
-      if (pseudo) {
-        const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-        const idx = users.findIndex(u => u.email === email);
-        if (idx > -1) {
-          users[idx].pseudo = pseudo;
-          localStorage.setItem(USERS_KEY, JSON.stringify(users));
-          const session = JSON.parse(localStorage.getItem(AUTH_KEY) || '{}');
-          session.pseudo = pseudo;
-          localStorage.setItem(AUTH_KEY, JSON.stringify(session));
-        }
-      }
-      console.log("✓ Inscription réussie!");
-      console.log("✓ Utilisateur sauvegardé dans la BD");
-      
-      // Verify session was saved
-      const savedSession = localStorage.getItem(AUTH_KEY);
-      if (savedSession) {
-        console.log("✓ Session créée et sauvegardée");
-        console.log("✓ Redirection vers le dashboard...");
-        // Redirect immediately
-        window.location.href = "dashboard.html";
-      } else {
-        console.error("❌ Session non sauvegardée!");
-        alert("❌ Erreur: Session non sauvegardée. Veuillez vous reconnecter.");
-      }
+      // Profile is already in Firestore via register()
+      console.log("✓ Inscription réussie! Redirection...");
+      window.location.href = "dashboard.html";
     } else {
-      console.error("❌ Erreur d'inscription:", result.message);
       alert("❌ " + result.message);
     }
   } catch (error) {
     console.error("❌ Erreur:", error);
-    alert("Une erreur est survenue. Veuillez réessayer.");
+    alert("Une erreur est survenue lors de l'inscription.");
   }
 };
 
@@ -591,7 +555,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Setup login forms (handles both mobile and desktop)
   document.querySelectorAll(".form-login").forEach((form) => {
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const emailInput = form.querySelector('input[type="email"]');
       const passwordInput = form.querySelector('input[type="password"]') ||
@@ -610,15 +574,16 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      console.log("🔐 Tentative de connexion pour:", email);
-      const result = login(email, password);
+      console.log("🔐 Tentative de connexion Firebase pour:", email);
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) startButtonLoader(submitBtn);
+      
+      const result = await login(email, password);
+
+      if (submitBtn) stopButtonLoader(submitBtn);
 
       if (result.success) {
-        console.log("✓ Connexion réussie! Redirection vers le dashboard...");
-        // Vérifier que la session est bien sauvegardée
-        const savedSession = localStorage.getItem(AUTH_KEY);
-        console.log("✓ Session sauvegardée:", savedSession ? "OUI" : "NON");
-        // Redirection
+        console.log("✓ Connexion réussie!");
         window.location.href = "dashboard.html";
       } else {
         console.error("❌ Erreur de connexion:", result.message);
@@ -629,7 +594,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Setup register forms (handles both mobile and desktop)
   document.querySelectorAll(".form-register").forEach((form) => {
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
       
       // Detect if mobile or desktop form by checking for mobile-specific IDs
@@ -644,11 +609,6 @@ document.addEventListener("DOMContentLoaded", () => {
       
       // Validate that all inputs exist
       if (!nomInput || !emailInput || !passwordInput) {
-        console.error("Form inputs not found. Missing:", { 
-          nom: !nomInput, 
-          email: !emailInput, 
-          password: !passwordInput 
-        });
         alert("Erreur: Formulaire incomplet");
         return;
       }
@@ -662,7 +622,13 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const result = register(name, email, password);
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) startButtonLoader(submitBtn);
+
+      const result = await register(name, email, password);
+
+      if (submitBtn) stopButtonLoader(submitBtn);
+
       if (result.success) {
         window.location.href = "dashboard.html";
       } else {

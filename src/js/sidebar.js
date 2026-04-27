@@ -316,42 +316,108 @@ function _sbInjectMobileBottomNav() {
   if (document.querySelector('.bottom-nav')) return;
 
   const nav = document.createElement('nav');
-  nav.className = 'bottom-nav fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-borderMain px-2 py-2 justify-around flex md:hidden';
+  nav.className = 'bottom-nav fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-borderMain px-1 pb-safe pt-2 flex items-center md:hidden shadow-[0_-10px_30px_rgba(0,0,0,0.08)]';
   nav.innerHTML = `
-    <a href="dashboard.html" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted">
-      <i class="fa-solid fa-house text-base"></i>
-      <span class="text-[10px] font-medium">Accueil</span>
+    <a href="dashboard.html" class="nav-accueil flex-1 flex flex-col items-center gap-1.5 py-1 transition-all text-textMuted hover:text-primary active:scale-90">
+      <i class="fa-solid fa-house text-xl"></i>
+      <span class="text-[10px] font-bold uppercase tracking-tight">Accueil</span>
     </a>
-    <a href="Mesdocument.html" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted">
-      <i class="fa-solid fa-plus-circle text-base"></i>
-      <span class="text-[10px] font-medium">Ajouter</span>
+     <a href="javascript:void(0)" onclick="toggleDeclModal()" class="nav-plus flex-1 flex flex-col items-center gap-1.5 py-1 transition-all text-textMuted hover:text-primary active:scale-90">
+      <i class="fa-solid fa-circle-plus text-2xl text-primary"></i>
+      <span class="text-[10px] font-bold uppercase tracking-tight text-primary">Déclaration</span>
     </a>
-    <a href="rechercher.html" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted">
-      <i class="fa-solid fa-magnifying-glass text-base"></i>
-      <span class="text-[10px] font-medium">Rechercher</span>
+    <a href="Mesdocument.html" class="nav-documents flex-1 flex flex-col items-center gap-1.5 py-1 transition-all text-textMuted hover:text-primary active:scale-90">
+      <i class="fa-solid fa-folder-open text-xl"></i>
+      <span class="text-[10px] font-bold uppercase tracking-tight">Documents</span>
     </a>
-    <a href="mesGains.html" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-textMuted">
-      <i class="fa-solid fa-wallet text-base"></i>
-      <span class="text-[10px] font-medium">Mes Gains</span>
+  
+    <a href="Mesappareils.html" class="nav-objets flex-1 flex flex-col items-center gap-1.5 py-1 transition-all text-textMuted hover:text-primary active:scale-90">
+      <i class="fa-solid fa-mobile-screen-button text-xl"></i>
+      <span class="text-[10px] font-bold uppercase tracking-tight">Mes Objets</span>
     </a>
-    <a href="#" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-primary" onclick="openSb()">
-      <i class="fa-solid fa-bars text-base"></i>
-      <span class="text-[10px] font-semibold">Plus</span>
-    </a>
+   
   `;
 
   document.body.appendChild(nav);
 }
 
+function toggleDeclModal() {
+  const overlay = document.getElementById('decl-modal-overlay');
+  const content = document.getElementById('decl-modal-content');
+  if (!overlay || !content) return;
+
+  const isHidden = overlay.classList.contains('hidden');
+  if (isHidden) {
+    overlay.classList.remove('hidden');
+    setTimeout(() => {
+      overlay.style.opacity = '1';
+      content.classList.remove('translate-y-full');
+    }, 10);
+  } else {
+    overlay.style.opacity = '0';
+    content.classList.add('translate-y-full');
+    setTimeout(() => {
+      overlay.classList.add('hidden');
+    }, 300);
+  }
+}
+
+function _sbInjectDeclarationModal() {
+  if (document.getElementById('decl-modal-overlay')) return;
+
+  const modalHtml = `
+    <div id="decl-modal-overlay" class="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm hidden transition-opacity duration-300 opacity-0" onclick="toggleDeclModal()"></div>
+    <div id="decl-modal-content" class="fixed bottom-0 left-0 right-0 z-[110] bg-white rounded-t-[32px] p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.2)] transform translate-y-full transition-transform duration-300 ease-out md:hidden">
+      <div class="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6"></div>
+      <h3 class="font-bricolage text-xl font-extrabold text-textMain text-center mb-6">Faire une déclaration</h3>
+      <div class="grid grid-cols-1 gap-4">
+        <a href="declarer.html" class="flex items-center gap-4 p-4 rounded-2xl bg-red-50 border border-red-100 active:scale-[0.98] transition-all">
+          <div class="w-12 h-12 rounded-xl bg-red-500 flex items-center justify-center text-white text-xl">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div class="flex-1">
+            <p class="font-bold text-textMain text-[15px]">Déclarer une perte</p>
+            <p class="text-[11px] text-red-600/70 font-medium font-poppins">J'ai perdu un document</p>
+          </div>
+          <i class="fa-solid fa-chevron-right text-red-300"></i>
+        </a>
+        <a href="trouverdocument.html" class="flex items-center gap-4 p-4 rounded-2xl bg-blue-50 border border-blue-100 active:scale-[0.98] transition-all">
+          <div class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white text-xl">
+            <i class="fa-solid fa-file-circle-check"></i>
+          </div>
+          <div class="flex-1">
+            <p class="font-bold text-textMain text-[15px]">Déclarer un objet trouvé</p>
+            <p class="text-[11px] text-blue-600/70 font-medium font-poppins">J'ai retrouvé quelque chose</p>
+          </div>
+          <i class="fa-solid fa-chevron-right text-blue-300"></i>
+        </a>
+      </div>
+      <button onclick="toggleDeclModal()" class="w-full mt-6 py-4 text-sm font-bold text-textMuted uppercase tracking-widest font-poppins">Annuler</button>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
 function _sbSetBottomNavItemState(link, isActive) {
   if (!link) return;
-  link.classList.toggle('text-primary', isActive);
-  link.classList.toggle('text-textMuted', !isActive);
-
-  const label = link.querySelector('span');
-  if (label) {
-    label.classList.toggle('font-semibold', isActive);
-    label.classList.toggle('font-medium', !isActive);
+  if (isActive) {
+    link.classList.remove('text-textMuted');
+    link.classList.add('text-primary', 'font-black');
+    // Add a glow effect to the icon
+    const icon = link.querySelector('i');
+    if (icon) {
+      icon.style.filter = 'drop-shadow(0 0 8px rgba(245, 166, 75, 0.6))';
+      icon.style.transform = 'scale(1.1)';
+    }
+  } else {
+    link.classList.remove('text-primary', 'font-black');
+    link.classList.add('text-textMuted');
+    const icon = link.querySelector('i');
+    if (icon) {
+      icon.style.filter = '';
+      icon.style.transform = '';
+    }
   }
 }
 
@@ -378,60 +444,12 @@ function _sbApplyMobileBottomNavActiveState() {
 
   if (!hasDirectMatch) {
     const plusLink = links.find(function (link) {
-      const href = link.getAttribute('href') || '';
       const onClick = link.getAttribute('onclick') || '';
-      return href === '#' || onClick.includes('openSb()');
+      return onClick.includes('toggleDeclModal()');
     });
-    _sbSetBottomNavItemState(plusLink, true);
+    if (plusLink) _sbSetBottomNavItemState(plusLink, true);
   }
 }
-
-function _sbInjectMobileFab() {
-  if (document.getElementById('dm-mobile-fab')) return;
-  if (document.querySelector('.fab')) return;
-
-  if (!document.getElementById('dm-mobile-fab-style')) {
-    const style = document.createElement('style');
-    style.id = 'dm-mobile-fab-style';
-    style.textContent = `
-      .dm-mobile-fab-wrap{position:fixed;right:16px;bottom:82px;z-index:35;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
-      .dm-mobile-fab-main{width:52px;height:52px;border:none;border-radius:999px;background:#1E3A2F;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(30,58,47,.35);cursor:pointer;transition:transform .2s ease, background .2s ease}
-      .dm-mobile-fab-main:active{transform:scale(.96)}
-      .dm-mobile-fab-main i{font-size:18px}
-      .dm-mobile-fab-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px;opacity:0;transform:translateY(6px);pointer-events:none;transition:opacity .18s ease, transform .18s ease}
-      .dm-mobile-fab-wrap.open .dm-mobile-fab-actions{opacity:1;transform:translateY(0);pointer-events:auto}
-      .dm-mobile-fab-wrap.open .dm-mobile-fab-main{background:#2D5A42}
-      .dm-mobile-fab-link{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;background:#fff;border:1px solid #EAE3D8;color:#1A1A1A;font-size:12px;font-weight:700;text-decoration:none;box-shadow:0 8px 20px rgba(0,0,0,.08)}
-      .dm-mobile-fab-link i{color:#F5A64B;font-size:12px}
-      @media (min-width: 900px){.dm-mobile-fab-wrap{display:none}}
-    `;
-    document.head.appendChild(style);
-  }
-
-  const wrap = document.createElement('div');
-  wrap.className = 'dm-mobile-fab-wrap';
-  wrap.id = 'dm-mobile-fab';
-  wrap.innerHTML = `
-    <div class="dm-mobile-fab-actions">
-      <a class="dm-mobile-fab-link" href="declarer.html"><i class="fa-solid fa-triangle-exclamation"></i>Déclarer un doc</a>
-      <a class="dm-mobile-fab-link" href="Mesdocument.html"><i class="fa-solid fa-folder-plus"></i>Enregistrer un doc</a>
-      <a class="dm-mobile-fab-link" href="trouverdocument.html"><i class="fa-solid fa-file-circle-check"></i>Déclarer trouvé</a>
-    </div>
-    <button type="button" class="dm-mobile-fab-main" aria-label="Actions rapides"><i class="fa-solid fa-plus"></i></button>
-  `;
-
-  document.body.appendChild(wrap);
-
-  const mainButton = wrap.querySelector('.dm-mobile-fab-main');
-  mainButton.addEventListener('click', function () {
-    wrap.classList.toggle('open');
-  });
-
-  document.addEventListener('click', function (event) {
-    if (!wrap.contains(event.target)) wrap.classList.remove('open');
-  });
-}
-
 window.openSb = openSb;
 window.closeSb = closeSb;
 window.toggleSb = toggleSb;
@@ -470,8 +488,8 @@ document.addEventListener("DOMContentLoaded", function () {
   _sbInjectTopbarActions();
   _sbToggleTopRightControlsByViewport();
   _sbInjectMobileBottomNav();
+  _sbInjectDeclarationModal();
   _sbApplyMobileBottomNavActiveState();
-  _sbInjectMobileFab();
 
   _sbSetState(window.innerWidth >= 900);
 

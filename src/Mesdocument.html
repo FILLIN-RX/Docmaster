@@ -14,6 +14,7 @@
      <link href="css/output.css" rel="stylesheet" />
   <script src="./js/auth.js"></script>
   <script src="./js/sidebar.js"></script>
+  <script src="./js/notifications.js"></script>
 
   <script>
     tailwind.config = {
@@ -407,10 +408,10 @@
           <i class="fa-solid fa-plus text-[11px]"></i> Enregistrer un document
         </button>
         <div
-          class="relative w-9 h-9 rounded-[9px] bg-surface2 border border-borderMain flex items-center justify-center text-sm hover:border-primary hover:text-primary transition-all cursor-pointer">
+          class="relative w-9 h-9 rounded-[9px] bg-surface2 border border-borderMain flex items-center justify-center text-sm text-textMain cursor-pointer hover:border-primary hover:text-primary transition-all"
+          onclick="openNotifModal()">
           <i class="fa-regular fa-bell"></i>
-          <div class="absolute top-[7px] right-[7px] w-[7px] h-[7px] rounded-full bg-primary border-2 border-white">
-          </div>
+          <div id="notifDot" class="absolute top-[7px] right-[7px] w-[7px] h-[7px] rounded-full border-2 border-white transition-colors"></div>
         </div>
         <div
           class="flex items-center gap-2 pl-1.5 pr-3 py-1 bg-surface2 border border-borderMain rounded-[10px] cursor-pointer hover:border-primary transition-colors">
@@ -491,14 +492,14 @@
 
         <!-- CNI -->
         <div class="doc-card" data-cat="identity">
-          <div
-            class="card-thumb bg-gradient-to-br from-green-dark to-green-mid flex items-center justify-center relative">
-            <i class="fa-solid fa-id-card text-4xl text-white/30"></i>
+          <div class="card-thumb relative overflow-hidden group">
+            <img src="./assets/images/carte.jpeg" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="CNI">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
             <div class="absolute top-2.5 right-2.5">
               <span class="text-[10px] font-bold px-2 py-0.5 rounded-full badge-verified">Vérifié</span>
             </div>
             <div class="absolute bottom-2.5 left-3">
-              <span class="text-white/60 text-[10px] font-medium">CNI</span>
+              <span class="text-white text-[10px] font-bold tracking-widest uppercase">Carte ID</span>
             </div>
           </div>
           <div class="p-4">
@@ -530,11 +531,12 @@
 
         <!-- Passeport -->
         <div class="doc-card" data-cat="travel">
-          <div class="card-thumb bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center relative">
-            <i class="fa-solid fa-passport text-4xl text-white/30"></i>
+          <div class="card-thumb relative overflow-hidden group">
+            <img src="./assets/images/passport.jpg" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Passport">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
             <div class="absolute top-2.5 right-2.5"><span
                 class="text-[10px] font-bold px-2 py-0.5 rounded-full badge-verified">Vérifié</span></div>
-            <div class="absolute bottom-2.5 left-3"><span class="text-white/60 text-[10px] font-medium">PASSEPORT</span>
+            <div class="absolute bottom-2.5 left-3"><span class="text-white text-[10px] font-bold tracking-widest uppercase">PASSEPORT</span>
             </div>
           </div>
           <div class="p-4">
@@ -566,12 +568,12 @@
 
         <!-- Permis de conduire -->
         <div class="doc-card" data-cat="vehicle">
-          <div
-            class="card-thumb bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center relative">
-            <i class="fa-solid fa-car text-4xl text-white/30"></i>
+          <div class="card-thumb relative overflow-hidden group">
+            <img src="./assets/images/images.jpg" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Permis">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
             <div class="absolute top-2.5 right-2.5"><span
                 class="text-[10px] font-bold px-2 py-0.5 rounded-full badge-verified">Vérifié</span></div>
-            <div class="absolute bottom-2.5 left-3"><span class="text-white/60 text-[10px] font-medium">PERMIS</span>
+            <div class="absolute bottom-2.5 left-3"><span class="text-white text-[10px] font-bold tracking-widest uppercase">PERMIS</span>
             </div>
           </div>
           <div class="p-4">
@@ -603,12 +605,12 @@
 
         <!-- Diplôme BAC -->
         <div class="doc-card" data-cat="study">
-          <div
-            class="card-thumb bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center relative">
-            <i class="fa-solid fa-graduation-cap text-4xl text-white/30"></i>
+          <div class="card-thumb relative overflow-hidden group">
+            <img src="./assets/images/1.webp" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Diplome">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
             <div class="absolute top-2.5 right-2.5"><span
                 class="text-[10px] font-bold px-2 py-0.5 rounded-full badge-verified">Vérifié</span></div>
-            <div class="absolute bottom-2.5 left-3"><span class="text-white/60 text-[10px] font-medium">DIPLÔME</span>
+            <div class="absolute bottom-2.5 left-3"><span class="text-white text-[10px] font-bold tracking-widest uppercase">DIPLÔME</span>
             </div>
           </div>
           <div class="p-4">
@@ -640,12 +642,12 @@
 
         <!-- Acte de naissance — En attente -->
         <div class="doc-card" data-cat="identity">
-          <div class="card-thumb bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center relative">
-            <i class="fa-solid fa-file-lines text-4xl text-white/30"></i>
+          <div class="card-thumb relative overflow-hidden group">
+            <img src="./assets/images/Abonnement_image.png" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 filter grayscale" alt="Acte">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
             <div class="absolute top-2.5 right-2.5"><span
                 class="text-[10px] font-bold px-2 py-0.5 rounded-full badge-pending">En attente</span></div>
-            <div class="absolute bottom-2.5 left-3"><span class="text-white/60 text-[10px] font-medium">ÉTAT
-                CIVIL</span></div>
+            <div class="absolute bottom-2.5 left-3"><span class="text-white text-[10px] font-bold tracking-widest uppercase">ÉTAT CIVIL</span></div>
           </div>
           <div class="p-4">
             <div class="flex items-start justify-between gap-2 mb-2">
@@ -740,7 +742,13 @@
       </div>
       <h2 style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:800;color:#1A1A1A;margin-bottom:8px;">Déclaration enregistrée !</h2>
       <p style="font-size:13px;color:#6B7280;line-height:1.6;margin-bottom:24px;">Votre document a été marqué comme perdu. Nous vous préviendrons dès qu'il sera retrouvé.</p>
-      <button onclick="document.getElementById('successOverlay').classList.add('hidden')" style="width:100%;padding:14px;background:#1E3A2F;color:white;border:none;border-radius:14px;font-family:'Bricolage Grotesque',sans-serif;font-size:15px;font-weight:800;cursor:pointer;">D'accord</button>
+      
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button onclick="downloadDeclarationPdf()" style="width:100%;padding:14px;background:#F5A64B;color:white;border:none;border-radius:14px;font-family:'Bricolage Grotesque',sans-serif;font-size:15px;font-weight:800;cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+          <i class="fa-solid fa-file-pdf"></i> Télécharger le rapport
+        </button>
+        <button onclick="document.getElementById('successOverlay').classList.add('hidden')" style="width:100%;padding:14px;background:#1E3A2F;color:white;border:none;border-radius:14px;font-family:'Bricolage Grotesque',sans-serif;font-size:15px;font-weight:800;cursor:pointer;">D'accord</button>
+      </div>
     </div>
   </div>
   <div class="modal-overlay hidden" id="add-modal">
@@ -986,29 +994,54 @@
     </div>
   </div>
 
-  <!-- View modal -->
+  <!-- View modal (Updated Detail) -->
   <div class="modal-overlay hidden" id="view-modal">
-    <div class="modal-box max-w-sm" style="padding:24px">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="font-bricolage text-lg font-bold text-textMain" id="view-title">Document</h3>
+    <div class="modal-box max-w-md" style="padding:0; overflow:hidden;">
+      <div class="relative h-48 bg-green-dark flex items-center justify-center">
+        <i class="fa-solid fa-file-shield text-6xl text-white/10 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></i>
+        <img id="view-img" src="./assets/images/carte.jpeg" class="w-full h-full object-cover opacity-60" alt="Doc">
+        <div class="absolute inset-0 bg-gradient-to-t from-green-dark to-transparent"></div>
         <button onclick="document.getElementById('view-modal').classList.add('hidden')"
-          class="w-8 h-8 rounded-full bg-bgMain border border-borderMain flex items-center justify-center text-textMuted hover:text-red-500 transition-colors"><i
-            class="fa-solid fa-xmark text-sm"></i></button>
+          class="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-red-500 transition-all">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="absolute bottom-4 left-6">
+          <h3 class="font-bricolage text-2xl font-extrabold text-white" id="view-title">Document</h3>
+          <span class="text-[11px] font-bold text-primary uppercase tracking-widest" id="view-status">Vérifié ✓</span>
+        </div>
       </div>
-      <div
-        class="w-full h-40 bg-gradient-to-br from-green-dark to-green-mid rounded-[14px] flex items-center justify-center mb-4">
-        <i class="fa-solid fa-file-shield text-5xl text-white/30"></i>
+      <div class="p-8">
+        <div class="grid grid-cols-2 gap-y-6 gap-x-4">
+          <div class="space-y-1">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Numéro</p>
+            <p class="text-[14px] font-bold text-slate-800" id="view-number-txt">—</p>
+          </div>
+          <div class="space-y-1">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Expiration</p>
+            <p class="text-[14px] font-bold text-slate-800" id="view-expiry-txt">—</p>
+          </div>
+          <div class="space-y-1">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Autorité délivrante</p>
+            <p class="text-[14px] font-bold text-slate-800" id="view-authority-txt">—</p>
+          </div>
+          <div class="space-y-1">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Chiffrement</p>
+            <p class="text-[14px] font-bold text-green-mid">AES-256 (Actif)</p>
+          </div>
+          <div class="col-span-2 space-y-1 pt-2">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Notes complémentaires</p>
+            <p class="text-[13px] text-slate-600 italic" id="view-notes-txt">—</p>
+          </div>
+        </div>
+        <div class="mt-8 pt-6 border-t border-slate-100 flex gap-3">
+          <button class="flex-1 py-3 bg-primary text-white rounded-xl font-bold text-[14px] flex items-center justify-center gap-2">
+            <i class="fa-solid fa-download"></i> Télécharger Copie
+          </button>
+          <button class="w-12 h-12 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center">
+            <i class="fa-solid fa-share-nodes"></i>
+          </button>
+        </div>
       </div>
-      <div class="p-3.5 bg-bgMain border border-borderMain rounded-[12px] text-[12.5px] space-y-1.5 mb-4">
-        <div class="flex justify-between"><span class="text-textMuted">Statut</span><span
-            class="font-bold text-green-mid">Vérifié ✓</span></div>
-        <div class="flex justify-between"><span class="text-textMuted">Chiffrement</span><span
-            class="font-bold text-textMain">AES-256</span></div>
-        <div class="flex justify-between"><span class="text-textMuted">Enregistré le</span><span
-            class="font-bold text-textMain">15 jan. 2024</span></div>
-      </div>
-      <p class="text-[12px] text-textMuted text-center italic">Le contenu complet n'est visible que sur demande
-        officielle.</p>
     </div>
   </div>
 
@@ -1083,6 +1116,84 @@
         document.getElementById('successOverlay').querySelector('p').textContent = 'Votre document a été marqué comme perdu.';
         document.getElementById('successOverlay').classList.remove('hidden');
       }, 1000);
+    }
+
+    function downloadDeclarationPdf() {
+      const type = typeLabels[pendingDocType] || "Document";
+      const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      const ref = "DOC-" + Math.random().toString(36).substr(2, 9).toUpperCase();
+      
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Rapport de Perte - DocMaster</title>
+            <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+            <style>
+              body { font-family: 'Poppins', sans-serif; padding: 40px; color: #1A1A1A; line-height: 1.6; }
+              .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #F5A64B; padding-bottom: 20px; margin-bottom: 40px; }
+              .logo { font-family: 'Bricolage Grotesque', sans-serif; font-size: 24px; font-weight: 800; color: #1E3A2F; }
+              .title { font-family: 'Bricolage Grotesque', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 10px; }
+              .ref { color: #F5A64B; font-weight: 600; font-size: 14px; margin-bottom: 30px; }
+              .section { margin-bottom: 25px; }
+              .label { font-size: 11px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 1px; }
+              .value { font-size: 16px; font-weight: 600; color: #1A1A1A; }
+              .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #EAE3D8; font-size: 12px; color: #9CA3AF; text-align: center; }
+              .stamp { margin-top: 40px; border: 2px solid #10B981; color: #10B981; display: inline-block; padding: 10px 20px; border-radius: 8px; font-weight: 800; transform: rotate(-5deg); }
+              @media print { .no-print { display: none; } }
+              .btn-print { background: #1E3A2F; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-bottom: 20px; }
+            </style>
+          </head>
+          <body>
+            <div class="no-print" style="text-align: right;">
+              <button class="btn-print" onclick="window.print()">Imprimer / Enregistrer PDF</button>
+            </div>
+            <div class="header">
+              <div class="logo">DocMaster<span style="color:#F5A64B">.</span></div>
+              <div style="text-align: right;">
+                <div style="font-weight: 700;">RECEPISSE DE DECLARATION</div>
+                <div style="font-size: 12px; color: #6B7280;">Document officiel numérisé</div>
+              </div>
+            </div>
+            
+            <div class="title">Rapport de Perte</div>
+            <div class="ref">Référence : ${ref}</div>
+            
+            <div class="section">
+              <div class="label">Propriétaire</div>
+              <div class="value">Jean-Marc (Utilisateur vérifié)</div>
+            </div>
+            
+            <div class="section">
+              <div class="label">Type de document</div>
+              <div class="value">${type}</div>
+            </div>
+            
+            <div class="section">
+              <div class="label">Date de déclaration</div>
+              <div class="value">${date}</div>
+            </div>
+            
+            <div class="section">
+              <div class="label">Statut DocMaster</div>
+              <div class="value" style="color:#ef4444">RECHERCHE ACTIVE</div>
+            </div>
+            
+            <div style="background: #F9FAFB; padding: 20px; border-radius: 12px; font-size: 13px; color: #4B5563;">
+              <strong>Note importante :</strong> Ce document atteste que la perte a été signalée sur la plateforme DocMaster. 
+              En cas de matching, le détenteur actuel sera informé et la procédure de restitution sera engagée.
+            </div>
+            
+            <div class="stamp">DOCMASTER CERTIFIED</div>
+            
+            <div class="footer">
+              Ce document est généré automatiquement par DocMaster. L'authenticité peut être vérifiée via la référence unique.<br>
+              © 2026 DocMaster — Sécurisation et Restitution de documents officiels.
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
     }
 
     function confirmFoundDoc(type, btn) {
@@ -1267,7 +1378,23 @@
     }
 
     function viewDoc(name) {
+      const docData = {
+        'CNI': { number: '123456789CM', expiry: '15/06/2028', status: 'Vérifié ✓', authority: 'DGSN Cameroun', notes: 'Délivrée à Yaoundé • Titulaire vérifié par DocMaster.', img: './assets/images/carte.jpeg' },
+        'Passeport': { number: 'CM456789', expiry: '03/09/2029', status: 'Vérifié ✓', authority: 'EMI-IMM Yaoundé', notes: 'Passeport biométrique • Puce électronique valide.', img: './assets/images/passport.jpg' },
+        'Permis': { number: 'PC-7823', expiry: '22/11/2026', status: 'Vérifié ✓', authority: 'Ministère Transports', notes: 'Catégorie B • Permis de conduire national.', img: './assets/images/images.jpg' },
+        'BAC': { number: 'BAC-2019-33', expiry: 'Aucune', status: 'Vérifié ✓', authority: 'OBC Cameroun', notes: 'Série C (Mathématiques et Physiques) • Obtenu à Yaoundé.', img: './assets/images/1.webp' },
+        'Acte': { number: 'AC-1994-01', expiry: 'Aucune', status: 'En attente', authority: 'Mairie Yaoundé 1', notes: 'Copie certifiée conforme à l\'originale.', img: './assets/images/Abonnement_image.png' }
+      };
+      
+      const data = docData[name] || docData['CNI'];
       document.getElementById('view-title').textContent = name;
+      document.getElementById('view-status').textContent = data.status;
+      document.getElementById('view-number-txt').textContent = data.number;
+      document.getElementById('view-expiry-txt').textContent = data.expiry;
+      document.getElementById('view-authority-txt').textContent = data.authority;
+      document.getElementById('view-notes-txt').textContent = data.notes;
+      document.getElementById('view-img').src = data.img;
+      
       document.getElementById('view-modal').classList.remove('hidden');
     }
     function openDeleteModal(name) {

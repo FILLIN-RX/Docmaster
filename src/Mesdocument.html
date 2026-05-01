@@ -11,10 +11,16 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="shortcut icon" href="./assets/images/favicon.png" type="image/x-icon" />
-     <link href="css/output.css" rel="stylesheet" />
-  <script src="./js/auth.js"></script>
-  <script src="./js/sidebar.js"></script>
-  <script src="./js/notifications.js"></script>
+    <link href="/css/main.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
+
+  <script type="module" src="/js/services/auth.js"></script>
+  <script src="/js/ui/sidebar.js"></script>
+  <script src="/js/ui/notifications.js"></script>
+  <script type="module" src="/js/services/document.js"></script>
+
 
   <script>
     tailwind.config = {
@@ -22,11 +28,21 @@
         extend: {
           colors: {
             primary: { DEFAULT: '#F5A64B', dark: '#D98A30', light: '#FEF0DC' },
-            'green-dark': '#1E3A2F', 'green-mid': '#2D5A42', 'green-light': '#E8F5EE',
-            bgMain: '#F4EFE6', surface: '#FFFFFF', surface2: '#FAF7F2',
-            textMain: '#1A1A1A', textMuted: '#9CA3AF', borderMain: '#EAE3D8',
+            green: { dark: '#1E3A2F', mid: '#2D5A42', light: '#E8F5EE' },
+            bgMain: '#F4EFE6',
+            surface: '#FFFFFF',
+            surface2: '#FAF7F2',
+            textMain: '#1A1A1A',
+            textMuted: '#6B7280',
+            borderMain: '#EAE3D8',
+            accent: '#F5A64B',
+            blobGreen: '#A8CBAF',
+            blobPeach: '#E8B89A',
           },
-          fontFamily: { poppins: ['Poppins', 'sans-serif'], bricolage: ['"Bricolage Grotesque"', 'sans-serif'] }
+          fontFamily: {
+            poppins: ['Poppins', 'sans-serif'],
+            bricolage: ['"Bricolage Grotesque"', 'sans-serif'],
+          }
         }
       }
     }
@@ -85,6 +101,8 @@
       }
     }
 
+    /* card-thumb & doc-card defined below */
+
     @media(max-width:899px) {
       .main-wrapper {
         display: flex;
@@ -125,7 +143,7 @@
 
     .sb-item.active {
       background: rgba(245, 166, 75, .15);
-      color: #fff
+      color: #1E3A2F
     }
 
     .sb-item.active::before {
@@ -151,15 +169,37 @@
 
     /* Upload zone */
     .drop-zone {
-      border: 2px dashed #EAE3D8;
-      transition: all .2s
+      border: 2px dashed #D1C9BC;
+      background: #FAF7F2;
+      transition: border-color .2s, background .2s;
     }
 
     .drop-zone:hover,
     .drop-zone.drag-over {
       border-color: #F5A64B;
-      background: #FEF0DC
+      background: #FEF0DC;
     }
+
+    /* modal-overlay defined below with correct flex centering */
+
+    /* Glass Effect */
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* Animations */
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+
+    .animate-float {
+      animation: float 4s ease-in-out infinite;
+    }
+    /* drag-over handled above */
 
     /* Modal */
     .modal-overlay {
@@ -169,13 +209,13 @@
       backdrop-filter: blur(6px);
       z-index: 100;
       display: flex;
-      align-items: flex-end;
-      justify-content: center
+      align-items: center;
+      justify-content: center;
     }
 
-    @media(min-width:640px) {
+    @media(max-width:639px) {
       .modal-overlay {
-        align-items: center
+        align-items: flex-end
       }
     }
 
@@ -312,7 +352,7 @@
 
     .upload-bar {
       height: 100%;
-      background: linear-gradient(90deg, #F5A64B, #D98A30);
+      background: #F5A64B;
       border-radius: 10px;
       transition: width .4s ease;
       width: 0%
@@ -328,8 +368,9 @@
     }
 
     .doc-card:hover {
-      border-color: #ef4444;
-      box-shadow: 0 4px 20px rgba(239, 68, 68, .12)
+      border-color: #F5A64B;
+      box-shadow: 0 8px 24px rgba(245, 166, 75, .15);
+      transform: translateY(-3px);
     }
     .doc-card.is-lost {
       border-color: #ef4444 !important;
@@ -338,8 +379,7 @@
 
     .doc-card .card-thumb {
       width: 100%;
-      height: 80px;
-      object-fit: cover;
+      aspect-ratio: 16/9;
       background: #F4EFE6;
       display: flex;
       align-items: center;
@@ -416,9 +456,11 @@
         <div
           class="flex items-center gap-2 pl-1.5 pr-3 py-1 bg-surface2 border border-borderMain rounded-[10px] cursor-pointer hover:border-primary transition-colors">
           <div
-            class="w-[26px] h-[26px] rounded-[6px] bg-green-dark flex items-center justify-center font-bricolage text-[11px] font-extrabold text-primary">
-            JM</div>
-          <span class="text-[12.5px] font-semibold text-textMain hidden sm:block">Jean-Marc</span>
+            class="w-[26px] h-[26px] rounded-[6px] bg-green-dark flex items-center justify-center font-bricolage text-[11px] font-extrabold text-primary overflow-hidden" id="topInitialWrap">
+            <img id="topPhoto" src="" class="w-full h-full object-cover hidden" />
+            <span id="topInitial">JM</span>
+          </div>
+          <span class="text-[12.5px] font-semibold text-textMain hidden sm:block" id="topName">Jean-Marc</span>
         </div>
       </div>
     </header>
@@ -447,25 +489,25 @@
         <div class="bg-white border border-borderMain rounded-[16px] p-4 flex flex-col gap-2">
           <div class="w-9 h-9 rounded-[10px] bg-primary/10 flex items-center justify-center"><i
               class="fa-solid fa-folder-open text-primary text-sm"></i></div>
-          <div class="font-bricolage text-2xl font-extrabold text-textMain">6</div>
+          <div class="font-bricolage text-2xl font-extrabold text-textMain" id="statsTotal">0</div>
           <div class="text-[12px] text-textMuted font-medium">Total enregistrés</div>
         </div>
         <div class="bg-white border border-borderMain rounded-[16px] p-4 flex flex-col gap-2">
           <div class="w-9 h-9 rounded-[10px] bg-green-light flex items-center justify-center"><i
               class="fa-solid fa-shield-check text-green-mid text-sm"></i></div>
-          <div class="font-bricolage text-2xl font-extrabold text-textMain">4</div>
+          <div class="font-bricolage text-2xl font-extrabold text-textMain" id="statsVerified">0</div>
           <div class="text-[12px] text-textMuted font-medium">Vérifiés</div>
         </div>
         <div class="bg-white border border-borderMain rounded-[16px] p-4 flex flex-col gap-2">
           <div class="w-9 h-9 rounded-[10px] bg-amber-50 flex items-center justify-center"><i
               class="fa-solid fa-clock text-amber-500 text-sm"></i></div>
-          <div class="font-bricolage text-2xl font-extrabold text-textMain">2</div>
+          <div class="font-bricolage text-2xl font-extrabold text-textMain" id="statsPending">0</div>
           <div class="text-[12px] text-textMuted font-medium">En attente</div>
         </div>
         <div class="bg-white border border-borderMain rounded-[16px] p-4 flex flex-col gap-2">
           <div class="w-9 h-9 rounded-[10px] bg-blue-50 flex items-center justify-center"><i
               class="fa-solid fa-cloud-arrow-up text-blue-500 text-sm"></i></div>
-          <div class="font-bricolage text-2xl font-extrabold text-textMain">94%</div>
+          <div class="font-bricolage text-2xl font-extrabold text-textMain" id="profileCompletion">94%</div>
           <div class="text-[12px] text-textMuted font-medium">Profil complété</div>
         </div>
       </div>
@@ -479,7 +521,7 @@
             class="flex-1 py-2.5 pr-3 bg-transparent border-none outline-none font-poppins text-[13.5px] text-textMain placeholder:text-textMuted">
         </div>
         <div class="flex items-center gap-2 flex-wrap">
-          <button class="tab-filter active" onclick="filterDocs(this,'all')">Tous (6)</button>
+          <button class="tab-filter active" onclick="filterDocs(this,'all')">Tous (...)</button>
           <button class="tab-filter" onclick="filterDocs(this,'identity')">Identité</button>
           <button class="tab-filter" onclick="filterDocs(this,'travel')">Voyage</button>
           <button class="tab-filter" onclick="filterDocs(this,'study')">Études</button>
@@ -489,191 +531,6 @@
 
       <!-- Documents grid -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="docs-grid">
-
-        <!-- CNI -->
-        <div class="doc-card" data-cat="identity">
-          <div class="card-thumb relative overflow-hidden group">
-            <img src="./assets/images/carte.jpeg" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="CNI">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-            <div class="absolute top-2.5 right-2.5">
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full badge-verified">Vérifié</span>
-            </div>
-            <div class="absolute bottom-2.5 left-3">
-              <span class="text-white text-[10px] font-bold tracking-widest uppercase">Carte ID</span>
-            </div>
-          </div>
-          <div class="p-4">
-            <div class="flex items-start justify-between gap-2 mb-2">
-              <div>
-                <div class="text-[14px] font-bold text-textMain leading-tight">Carte Nationale d'Identité</div>
-                <div class="text-[12px] text-textMuted mt-0.5 italic">N° 123456789CM</div>
-              </div>
-              <div class="flex gap-1 flex-shrink-0">
-                <button onclick="viewDoc('CNI')"
-                  class="w-7 h-7 rounded-[7px] bg-bgMain border border-borderMain flex items-center justify-center hover:border-primary hover:text-primary transition-colors text-textMuted"><i
-                    class="fa-solid fa-eye text-[10px]"></i></button>
-                <button onclick="openDeleteModal('CNI')"
-                  class="w-7 h-7 rounded-[7px] bg-bgMain border border-borderMain flex items-center justify-center hover:border-red-300 hover:text-red-500 transition-colors text-textMuted"><i
-                    class="fa-solid fa-trash text-[10px]"></i></button>
-              </div>
-            </div>
-            <div class="flex items-center gap-3 text-[11.5px] text-textMuted">
-              <span class="flex items-center gap-1"><i class="fa-regular fa-calendar text-[10px]"></i>Expire le
-                15/06/2028</span>
-              <span class="flex items-center gap-1 text-green-mid font-semibold"><i
-                  class="fa-solid fa-shield-check text-[10px]"></i>Sécurisé</span>
-            </div>
-            <button onclick="confirmLost('cni', this)" class="mt-3 w-full py-2 bg-red-500 text-white rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-lg shadow-red-500/20">
-              <i class="fa-solid fa-triangle-exclamation"></i> Déclarer comme perdu
-            </button>
-          </div>
-        </div>
-
-        <!-- Passeport -->
-        <div class="doc-card" data-cat="travel">
-          <div class="card-thumb relative overflow-hidden group">
-            <img src="./assets/images/passport.jpg" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Passport">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-            <div class="absolute top-2.5 right-2.5"><span
-                class="text-[10px] font-bold px-2 py-0.5 rounded-full badge-verified">Vérifié</span></div>
-            <div class="absolute bottom-2.5 left-3"><span class="text-white text-[10px] font-bold tracking-widest uppercase">PASSEPORT</span>
-            </div>
-          </div>
-          <div class="p-4">
-            <div class="flex items-start justify-between gap-2 mb-2">
-              <div>
-                <div class="text-[14px] font-bold text-textMain leading-tight">Passeport Camerounais</div>
-                <div class="text-[12px] text-textMuted mt-0.5 italic">N° CM456789</div>
-              </div>
-              <div class="flex gap-1 flex-shrink-0">
-                <button onclick="viewDoc('Passeport')"
-                  class="w-7 h-7 rounded-[7px] bg-bgMain border border-borderMain flex items-center justify-center hover:border-primary hover:text-primary transition-colors text-textMuted"><i
-                    class="fa-solid fa-eye text-[10px]"></i></button>
-                <button onclick="openDeleteModal('Passeport')"
-                  class="w-7 h-7 rounded-[7px] bg-bgMain border border-borderMain flex items-center justify-center hover:border-red-300 hover:text-red-500 transition-colors text-textMuted"><i
-                    class="fa-solid fa-trash text-[10px]"></i></button>
-              </div>
-            </div>
-            <div class="flex items-center gap-3 text-[11.5px] text-textMuted">
-              <span class="flex items-center gap-1"><i class="fa-regular fa-calendar text-[10px]"></i>Expire le
-                03/09/2029</span>
-              <span class="flex items-center gap-1 text-green-mid font-semibold"><i
-                  class="fa-solid fa-shield-check text-[10px]"></i>Sécurisé</span>
-            </div>
-            <button onclick="confirmLost('passport', this)" class="mt-3 w-full py-2 bg-red-500 text-white rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-lg shadow-red-500/20">
-              <i class="fa-solid fa-triangle-exclamation"></i> Déclarer comme perdu
-            </button>
-          </div>
-        </div>
-
-        <!-- Permis de conduire -->
-        <div class="doc-card" data-cat="vehicle">
-          <div class="card-thumb relative overflow-hidden group">
-            <img src="./assets/images/images.jpg" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Permis">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-            <div class="absolute top-2.5 right-2.5"><span
-                class="text-[10px] font-bold px-2 py-0.5 rounded-full badge-verified">Vérifié</span></div>
-            <div class="absolute bottom-2.5 left-3"><span class="text-white text-[10px] font-bold tracking-widest uppercase">PERMIS</span>
-            </div>
-          </div>
-          <div class="p-4">
-            <div class="flex items-start justify-between gap-2 mb-2">
-              <div>
-                <div class="text-[14px] font-bold text-textMain leading-tight">Permis de conduire</div>
-                <div class="text-[12px] text-textMuted mt-0.5 italic">Catégorie B · N° PC-7823</div>
-              </div>
-              <div class="flex gap-1 flex-shrink-0">
-                <button onclick="viewDoc('Permis')"
-                  class="w-7 h-7 rounded-[7px] bg-bgMain border border-borderMain flex items-center justify-center hover:border-primary hover:text-primary transition-colors text-textMuted"><i
-                    class="fa-solid fa-eye text-[10px]"></i></button>
-                <button onclick="openDeleteModal('Permis')"
-                  class="w-7 h-7 rounded-[7px] bg-bgMain border border-borderMain flex items-center justify-center hover:border-red-300 hover:text-red-500 transition-colors text-textMuted"><i
-                    class="fa-solid fa-trash text-[10px]"></i></button>
-              </div>
-            </div>
-            <div class="flex items-center gap-3 text-[11.5px] text-textMuted">
-              <span class="flex items-center gap-1"><i class="fa-regular fa-calendar text-[10px]"></i>Expire le
-                22/11/2026</span>
-              <span class="flex items-center gap-1 text-amber-500 font-semibold"><i
-                  class="fa-solid fa-triangle-exclamation text-[10px]"></i>Bientôt expiré</span>
-            </div>
-            <button onclick="confirmLost('permis', this)" class="mt-3 w-full py-2 bg-red-500 text-white rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-lg shadow-red-500/20">
-              <i class="fa-solid fa-triangle-exclamation"></i> Déclarer comme perdu
-            </button>
-          </div>
-        </div>
-
-        <!-- Diplôme BAC -->
-        <div class="doc-card" data-cat="study">
-          <div class="card-thumb relative overflow-hidden group">
-            <img src="./assets/images/1.webp" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Diplome">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-            <div class="absolute top-2.5 right-2.5"><span
-                class="text-[10px] font-bold px-2 py-0.5 rounded-full badge-verified">Vérifié</span></div>
-            <div class="absolute bottom-2.5 left-3"><span class="text-white text-[10px] font-bold tracking-widest uppercase">DIPLÔME</span>
-            </div>
-          </div>
-          <div class="p-4">
-            <div class="flex items-start justify-between gap-2 mb-2">
-              <div>
-                <div class="text-[14px] font-bold text-textMain leading-tight">Baccalauréat Général</div>
-                <div class="text-[12px] text-textMuted mt-0.5 italic">Série C · Yaoundé · 2019</div>
-              </div>
-              <div class="flex gap-1 flex-shrink-0">
-                <button onclick="viewDoc('BAC')"
-                  class="w-7 h-7 rounded-[7px] bg-bgMain border border-borderMain flex items-center justify-center hover:border-primary hover:text-primary transition-colors text-textMuted"><i
-                    class="fa-solid fa-eye text-[10px]"></i></button>
-                <button onclick="openDeleteModal('BAC')"
-                  class="w-7 h-7 rounded-[7px] bg-bgMain border border-borderMain flex items-center justify-center hover:border-red-300 hover:text-red-500 transition-colors text-textMuted"><i
-                    class="fa-solid fa-trash text-[10px]"></i></button>
-              </div>
-            </div>
-            <div class="flex items-center gap-2 text-[11.5px] text-textMuted">
-              <span class="flex items-center gap-1"><i class="fa-solid fa-infinity text-[10px]"></i>Pas
-                d'expiration</span>
-              <span class="flex items-center gap-1 text-green-mid font-semibold"><i
-                  class="fa-solid fa-shield-check text-[10px]"></i>Sécurisé</span>
-            </div>
-            <button onclick="confirmLost('diplome', this)" class="mt-3 w-full py-2 bg-red-500 text-white rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-lg shadow-red-500/20">
-              <i class="fa-solid fa-triangle-exclamation"></i> Déclarer comme perdu
-            </button>
-          </div>
-        </div>
-
-        <!-- Acte de naissance — En attente -->
-        <div class="doc-card" data-cat="identity">
-          <div class="card-thumb relative overflow-hidden group">
-            <img src="./assets/images/Abonnement_image.png" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 filter grayscale" alt="Acte">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-            <div class="absolute top-2.5 right-2.5"><span
-                class="text-[10px] font-bold px-2 py-0.5 rounded-full badge-pending">En attente</span></div>
-            <div class="absolute bottom-2.5 left-3"><span class="text-white text-[10px] font-bold tracking-widest uppercase">ÉTAT CIVIL</span></div>
-          </div>
-          <div class="p-4">
-            <div class="flex items-start justify-between gap-2 mb-2">
-              <div>
-                <div class="text-[14px] font-bold text-textMain leading-tight">Acte de naissance</div>
-                <div class="text-[12px] text-textMuted mt-0.5 italic">Mairie de Yaoundé · 1994</div>
-              </div>
-              <div class="flex gap-1 flex-shrink-0">
-                <button onclick="viewDoc('Acte')"
-                  class="w-7 h-7 rounded-[7px] bg-bgMain border border-borderMain flex items-center justify-center hover:border-primary hover:text-primary transition-colors text-textMuted"><i
-                    class="fa-solid fa-eye text-[10px]"></i></button>
-                <button onclick="openDeleteModal('Acte')"
-                  class="w-7 h-7 rounded-[7px] bg-bgMain border border-borderMain flex items-center justify-center hover:border-red-300 hover:text-red-500 transition-colors text-textMuted"><i
-                    class="fa-solid fa-trash text-[10px]"></i></button>
-              </div>
-            </div>
-            <div class="flex items-center gap-2 text-[11.5px]">
-              <span class="flex items-center gap-1 text-amber-600 font-semibold"><i
-                  class="fa-solid fa-clock text-[10px]"></i>Vérification en cours…</span>
-            </div>
-            <button onclick="confirmLost('naissance', this)" class="mt-3 w-full py-2 bg-red-500 text-white rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-lg shadow-red-500/20">
-              <i class="fa-solid fa-triangle-exclamation"></i> Déclarer comme perdu
-            </button>
-          </div>
-        </div>
-
         <!-- Add new card -->
         <button onclick="openModal()" data-loading-text="Ouverture..."
           class="drop-zone rounded-[18px] p-6 flex flex-col items-center justify-center gap-3 min-h-[180px] cursor-pointer group">
@@ -826,6 +683,11 @@
         <div class="flex flex-col gap-4 mb-6">
 
           <div>
+            <label class="form-label">Nom complet sur le document *</label>
+            <input type="text" id="doc-name" class="form-input" placeholder="Ex: Ruxel Djeutchou">
+          </div>
+
+          <div>
             <label class="form-label">Numéro du document *</label>
             <input type="text" id="doc-number" class="form-input" placeholder="Ex: 123456789CM">
           </div>
@@ -833,11 +695,17 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="form-label">Date de délivrance</label>
-              <input type="date" id="doc-issued" class="form-input">
+              <div class="relative">
+                <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" id="doc-issued" class="form-input !pl-9 datepicker" placeholder="Sélectionner">
+              </div>
             </div>
             <div>
               <label class="form-label">Date d'expiration</label>
-              <input type="date" id="doc-expiry" class="form-input">
+              <div class="relative">
+                <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" id="doc-expiry" class="form-input !pl-9 datepicker" placeholder="Sélectionner">
+              </div>
             </div>
           </div>
 
@@ -852,40 +720,80 @@
               placeholder="Couleur, signes distinctifs, contenu…"></textarea>
           </div>
 
-          <!-- Upload zone -->
+          <!-- Upload zone (Recto) -->
           <div>
             <label class="form-label">Photo du document (recto) *</label>
-            <div class="drop-zone rounded-[13px] p-5 text-center cursor-pointer relative" id="drop-recto"
-              onclick="document.getElementById('file-recto').click()" ondragover="onDragOver(event,'drop-recto')"
-              ondragleave="onDragLeave('drop-recto')" ondrop="onDrop(event,'drop-recto','preview-recto')">
-              <input type="file" id="file-recto" class="hidden" accept="image/*,.pdf"
-                onchange="onFileSelect(this,'preview-recto','drop-recto')">
-              <div id="preview-recto" class="hidden"><img id="img-recto"
-                  class="w-full max-h-32 object-contain rounded-[9px] mb-2" src="" alt="">
-                <p class="text-[12px] text-green-mid font-semibold">Fichier sélectionné ✓</p>
-              </div>
-              <div id="placeholder-recto">
-                <i class="fa-solid fa-cloud-arrow-up text-2xl text-textMuted mb-2 block"></i>
-                <p class="text-[13px] font-semibold text-textMain">Glissez ou cliquez pour uploader</p>
-                <p class="text-[11.5px] text-textMuted">JPG, PNG, PDF · Max 5 Mo</p>
+            <div class="relative group">
+              <div class="drop-zone rounded-2xl p-6 text-center cursor-pointer relative overflow-hidden" id="drop-recto">
+                <input type="file" id="file-recto" class="hidden" accept="image/*,.pdf"
+                  onchange="onFileSelect(this,'preview-recto','drop-recto')">
+                
+                <div id="preview-recto" class="hidden relative z-10">
+                  <img id="img-recto" class="w-full max-h-40 object-contain rounded-xl mb-3 shadow-sm" src="" alt="">
+                  <div class="flex items-center justify-center gap-2">
+                    <span class="text-[12px] text-green-600 font-bold flex items-center gap-1">
+                      <i class="fa-solid fa-check-circle"></i> Capturé avec succès
+                    </span>
+                    <button onclick="clearCapture('recto')" class="text-[11px] text-red-500 font-bold underline">Changer</button>
+                  </div>
+                </div>
+
+                <div id="placeholder-recto" class="space-y-4">
+                  <div class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto text-slate-400 group-hover:text-primary group-hover:bg-primary/5 transition-all">
+                    <i class="fa-solid fa-camera-retro text-2xl"></i>
+                  </div>
+                  <div class="space-y-1">
+                    <p class="text-[14px] font-bold text-slate-900">Ajouter le recto</p>
+                    <p class="text-[11px] text-slate-500">Capturez une photo nette ou importez un fichier</p>
+                  </div>
+                  <div class="flex items-center justify-center gap-3 pt-2">
+                    <button onclick="openCameraModal('recto')" class="px-4 py-2 bg-slate-900 text-white rounded-xl text-[11px] font-bold flex items-center gap-2 hover:bg-primary transition-all">
+                      <i class="fa-solid fa-camera"></i> Caméra
+                    </button>
+                    <button onclick="document.getElementById('file-recto').click()" class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-[11px] font-bold flex items-center gap-2 hover:bg-slate-50 transition-all">
+                      <i class="fa-solid fa-folder-open"></i> Fichier
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
+          <!-- Upload zone (Verso) -->
           <div>
-            <label class="form-label">Photo du document (verso) <span class="text-textMuted font-normal normal-case">—
-                optionnel</span></label>
-            <div class="drop-zone rounded-[13px] p-4 text-center cursor-pointer relative" id="drop-verso"
-              onclick="document.getElementById('file-verso').click()">
-              <input type="file" id="file-verso" class="hidden" accept="image/*,.pdf"
-                onchange="onFileSelect(this,'preview-verso','drop-verso')">
-              <div id="preview-verso" class="hidden"><img id="img-verso"
-                  class="w-full max-h-28 object-contain rounded-[9px] mb-1" src="" alt="">
-                <p class="text-[11px] text-green-mid font-semibold">Fichier sélectionné ✓</p>
-              </div>
-              <div id="placeholder-verso">
-                <i class="fa-solid fa-plus text-textMuted text-sm mb-1 block"></i>
-                <p class="text-[12px] font-medium text-textMuted">Ajouter le verso</p>
+            <label class="form-label">Photo du document (verso) <span class="text-slate-400 font-normal lowercase">— Optionnel</span></label>
+            <div class="relative group">
+              <div class="drop-zone rounded-2xl p-6 text-center cursor-pointer relative overflow-hidden" id="drop-verso">
+                <input type="file" id="file-verso" class="hidden" accept="image/*,.pdf"
+                  onchange="onFileSelect(this,'preview-verso','drop-verso')">
+                
+                <div id="preview-verso" class="hidden relative z-10">
+                  <img id="img-verso" class="w-full max-h-40 object-contain rounded-xl mb-3 shadow-sm" src="" alt="">
+                  <div class="flex items-center justify-center gap-2">
+                    <span class="text-[12px] text-green-600 font-bold flex items-center gap-1">
+                      <i class="fa-solid fa-check-circle"></i> Capturé avec succès
+                    </span>
+                    <button onclick="clearCapture('verso')" class="text-[11px] text-red-500 font-bold underline">Changer</button>
+                  </div>
+                </div>
+
+                <div id="placeholder-verso" class="space-y-3">
+                  <div class="flex items-center justify-center gap-4">
+                    <button onclick="openCameraModal('verso')" class="flex flex-col items-center gap-2 group/cam">
+                      <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover/cam:bg-primary/5 group-hover/cam:text-primary transition-all">
+                        <i class="fa-solid fa-camera text-lg"></i>
+                      </div>
+                      <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Caméra</span>
+                    </button>
+                    <div class="w-px h-8 bg-slate-100"></div>
+                    <button onclick="document.getElementById('file-verso').click()" class="flex flex-col items-center gap-2 group/file">
+                      <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover/file:bg-primary/5 group-hover/file:text-primary transition-all">
+                        <i class="fa-solid fa-folder-open text-lg"></i>
+                      </div>
+                      <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Fichier</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -908,6 +816,8 @@
         <div class="p-4 bg-bgMain border border-borderMain rounded-[14px] mb-5">
           <p class="text-[12px] font-bold text-textMuted uppercase tracking-wide mb-3">Récapitulatif</p>
           <div class="space-y-2">
+            <div class="flex justify-between text-[13.5px]"><span class="text-textMuted font-medium">Nom</span><span
+                class="font-bold text-textMain" id="recap-name">—</span></div>
             <div class="flex justify-between text-[13.5px]"><span class="text-textMuted font-medium">Type</span><span
                 class="font-bold text-textMain" id="recap-type">—</span></div>
             <div class="flex justify-between text-[13.5px]"><span class="text-textMuted font-medium">Numéro</span><span
@@ -996,56 +906,281 @@
 
   <!-- View modal (Updated Detail) -->
   <div class="modal-overlay hidden" id="view-modal">
-    <div class="modal-box max-w-md" style="padding:0; overflow:hidden;">
-      <div class="relative h-48 bg-green-dark flex items-center justify-center">
-        <i class="fa-solid fa-file-shield text-6xl text-white/10 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></i>
-        <img id="view-img" src="./assets/images/carte.jpeg" class="w-full h-full object-cover opacity-60" alt="Doc">
-        <div class="absolute inset-0 bg-gradient-to-t from-green-dark to-transparent"></div>
+    <div class="modal-box max-w-5xl w-[95%] h-[90vh] flex flex-col md:flex-row overflow-hidden border border-slate-200" style="padding:0; background: #ffffff;">
+      <!-- Image Side: Professional Viewer -->
+      <div class="relative w-full md:w-3/5 h-1/2 md:h-auto bg-[#f1f5f9] flex items-center justify-center overflow-hidden group border-r border-slate-100">
+        <div id="view-img-container" class="relative z-10 w-full h-full p-8 flex items-center justify-center transition-all duration-300">
+          <img id="view-img" src="./assets/images/carte.jpeg" 
+            class="max-w-full max-h-full object-contain rounded-sm shadow-2xl" 
+            alt="Doc">
+          
+          <!-- Image Overlay Details -->
+          <div class="absolute top-6 left-6 flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg">
+            <div class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
+            <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Aperçu Sécurisé</span>
+          </div>
+        </div>
+        
+        <!-- Flip Button (Recto/Verso) -->
+        <button id="flip-btn" onclick="flipViewImage()" 
+          class="absolute bottom-8 left-1/2 -translate-x-1/2 px-8 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center gap-3 hover:bg-primary transition-all z-20 font-bold text-xs uppercase tracking-widest">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          <span id="flip-label">Voir le Verso</span>
+        </button>
+
+        <!-- Close Button (Mobile) -->
         <button onclick="document.getElementById('view-modal').classList.add('hidden')"
-          class="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-red-500 transition-all">
+          class="md:hidden absolute top-6 right-6 w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-900 text-xl">
           <i class="fa-solid fa-xmark"></i>
         </button>
-        <div class="absolute bottom-4 left-6">
-          <h3 class="font-bricolage text-2xl font-extrabold text-white" id="view-title">Document</h3>
-          <span class="text-[11px] font-bold text-primary uppercase tracking-widest" id="view-status">Vérifié ✓</span>
-        </div>
       </div>
-      <div class="p-8">
-        <div class="grid grid-cols-2 gap-y-6 gap-x-4">
-          <div class="space-y-1">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Numéro</p>
-            <p class="text-[14px] font-bold text-slate-800" id="view-number-txt">—</p>
+
+      <!-- Info Side: Professional Sidebar -->
+      <div class="flex-1 flex flex-col h-1/2 md:h-auto bg-white">
+        <div class="p-8 md:p-10 overflow-y-auto flex-1">
+          <div class="flex justify-between items-start mb-8">
+            <div class="space-y-1">
+              <span class="text-[11px] font-bold text-primary uppercase tracking-[0.1em]" id="view-cat-label">Identité</span>
+              <h3 class="font-bricolage text-3xl font-extrabold text-slate-900" id="view-title">Document</h3>
+              <div id="view-status-container">
+                <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-green-600 uppercase" id="view-status">
+                  <i class="fa-solid fa-circle-check"></i> Authentifié
+                </span>
+              </div>
+            </div>
+            <button onclick="document.getElementById('view-modal').classList.add('hidden')"
+              class="hidden md:flex w-10 h-10 rounded-xl border border-slate-100 text-slate-400 items-center justify-center hover:bg-slate-50 hover:text-slate-900 transition-all">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
           </div>
-          <div class="space-y-1">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Expiration</p>
-            <p class="text-[14px] font-bold text-slate-800" id="view-expiry-txt">—</p>
-          </div>
-          <div class="space-y-1">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Autorité délivrante</p>
-            <p class="text-[14px] font-bold text-slate-800" id="view-authority-txt">—</p>
-          </div>
-          <div class="space-y-1">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Chiffrement</p>
-            <p class="text-[14px] font-bold text-green-mid">AES-256 (Actif)</p>
-          </div>
-          <div class="col-span-2 space-y-1 pt-2">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Notes complémentaires</p>
-            <p class="text-[13px] text-slate-600 italic" id="view-notes-txt">—</p>
+
+          <!-- Structured Data Grid -->
+          <div class="space-y-8">
+            <div class="grid grid-cols-2 gap-4">
+              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Numéro du document</p>
+                <p class="text-[15px] font-bold text-slate-900" id="view-number-txt">—</p>
+              </div>
+              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Date d'expiration</p>
+                <p class="text-[15px] font-bold text-slate-900" id="view-expiry-txt">—</p>
+              </div>
+            </div>
+
+            <div class="p-5 border border-slate-200 rounded-2xl space-y-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 border border-slate-200">
+                  <i class="fa-solid fa-id-card-clip"></i>
+                </div>
+                <div>
+                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Propriétaire déclaré</p>
+                  <p class="text-[16px] font-bold text-slate-900" id="view-authority-txt">Jean Dupont</p>
+                </div>
+              </div>
+              <div class="pt-4 border-t border-slate-100 flex items-center gap-2 text-[11px] text-slate-500">
+                <i class="fa-solid fa-shield-halved text-green-600"></i>
+                <span>Document protégé par DocMaster Vault™</span>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Notes & Observations</p>
+              <div class="p-5 bg-[#fffbeb] border border-[#fef3c7] rounded-2xl">
+                <p class="text-[13px] text-amber-900 leading-relaxed font-medium" id="view-notes-txt">—</p>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="mt-8 pt-6 border-t border-slate-100 flex gap-3">
-          <button class="flex-1 py-3 bg-primary text-white rounded-xl font-bold text-[14px] flex items-center justify-center gap-2">
-            <i class="fa-solid fa-download"></i> Télécharger Copie
+
+        <!-- Action Footer -->
+        <div class="p-6 md:p-8 bg-slate-50 border-t border-slate-100 flex items-center gap-4">
+          <button class="flex-1 h-14 bg-slate-900 text-white rounded-xl font-bold text-[13px] uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-[0.98]">
+            <i class="fa-solid fa-file-export"></i>
+            Certifier la Copie
           </button>
-          <button class="w-12 h-12 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center">
-            <i class="fa-solid fa-share-nodes"></i>
+          <button onclick="openShareModalDirect()" class="w-14 h-14 bg-white text-slate-600 rounded-xl flex items-center justify-center hover:border-primary hover:text-primary border border-slate-200 transition-all active:scale-[0.98]">
+            <i class="fa-solid fa-share-nodes text-lg"></i>
           </button>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Share Modal -->
+  <div class="modal-overlay hidden" id="share-modal" style="z-index: 1000;">
+    <div class="modal-box max-w-lg w-[90%] overflow-hidden border border-slate-200 shadow-2xl bg-white">
+      <div class="p-8 md:p-10">
+        <div class="flex justify-between items-start mb-8">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-900 shadow-sm">
+              <i class="fa-solid fa-paper-plane"></i>
+            </div>
+            <div>
+              <h3 class="font-bricolage text-2xl font-extrabold text-slate-900 leading-tight">Partage Sécurisé</h3>
+              <p class="text-[12px] text-slate-500 font-medium">Contrôlez l'accès au document</p>
+            </div>
+          </div>
+          <button onclick="document.getElementById('share-modal').classList.add('hidden')" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-colors">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        
+        <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 mb-8 flex items-center gap-4">
+          <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center border border-slate-200">
+            <i class="fa-solid fa-file-shield text-slate-600"></i>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Fichier sélectionné</p>
+            <p class="text-[14px] font-extrabold text-slate-900" id="share-doc-title">Document</p>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 mb-2 uppercase tracking-widest ml-1">Durée de validité</label>
+            <div class="relative">
+              <select id="share-expiry" class="w-full px-5 py-4 bg-white border border-slate-200 rounded-xl font-poppins text-[14px] text-slate-700 outline-none focus:border-primary transition-all appearance-none cursor-pointer">
+                <option value="1">Expire après 24 heures</option>
+                <option value="7">Expire après 7 jours</option>
+                <option value="30">Expire après 30 jours</option>
+                <option value="0">Accès permanent</option>
+              </select>
+              <i class="fa-solid fa-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+            </div>
+          </div>
+
+          <button id="generate-link-btn" class="w-full h-14 bg-slate-900 text-white rounded-xl font-bold text-[14px] uppercase tracking-wider hover:bg-slate-800 transition-all flex items-center justify-center gap-3 active:scale-[0.98]">
+            <i class="fa-solid fa-link"></i>
+            Générer un lien
+          </button>
+
+          <div id="share-link-container" class="hidden space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
+            <div class="space-y-2">
+              <label class="block text-[11px] font-bold text-green-600 mb-1 uppercase tracking-widest ml-1">Lien prêt à l'emploi</label>
+              <div class="flex gap-2">
+                <input type="text" id="share-link-input" readonly 
+                  class="flex-1 px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl font-poppins text-[13px] text-slate-600 outline-none font-bold">
+                <button onclick="copyShareLink()" 
+                  class="px-6 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all font-bold text-xs uppercase tracking-widest">
+                  Copier
+                </button>
+              </div>
+            </div>
+
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-3">
+              <i class="fa-solid fa-shield-halved text-slate-400 mt-0.5"></i>
+              <p class="text-[11px] text-slate-500 leading-relaxed font-medium">Ce lien est privé. Toute personne disposant de ce lien pourra consulter les données sensibles de ce document.</p>
+            </div>
+
+            <!-- Social Share -->
+            <div class="pt-6 border-t border-slate-100">
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-5 text-center">Partage Rapide</p>
+              <div class="flex items-center justify-center gap-3">
+                <button onclick="shareSocial('whatsapp')" class="w-12 h-12 rounded-xl bg-white border border-slate-200 text-slate-600 flex items-center justify-center hover:bg-[#25D366] hover:text-white hover:border-[#25D366] transition-all group">
+                  <i class="fa-brands fa-whatsapp text-xl"></i>
+                </button>
+                <button onclick="shareSocial('facebook')" class="w-12 h-12 rounded-xl bg-white border border-slate-200 text-slate-600 flex items-center justify-center hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2] transition-all group">
+                  <i class="fa-brands fa-facebook-f text-lg"></i>
+                </button>
+                <button onclick="shareSocial('twitter')" class="w-12 h-12 rounded-xl bg-white border border-slate-200 text-slate-600 flex items-center justify-center hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all group">
+                  <i class="fa-brands fa-x-twitter text-lg"></i>
+                </button>
+                <button id="download-doc-btn" class="w-12 h-12 rounded-xl bg-white border border-slate-200 text-slate-600 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all group" title="Télécharger">
+                  <i class="fa-solid fa-download text-lg"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Camera Modal -->
+  <div class="modal-overlay hidden" id="camera-modal" style="z-index: 2000;">
+    <div class="modal-box max-w-lg w-[95%] overflow-hidden border border-slate-200 shadow-2xl bg-white p-0">
+      <div class="relative bg-slate-900 aspect-video flex items-center justify-center overflow-hidden">
+        <video id="camera-video" class="w-full h-full object-cover" autoplay playsinline></video>
+        <div class="absolute inset-0 border-2 border-dashed border-white/30 m-8 rounded-lg pointer-events-none"></div>
+        
+        <!-- Controls Overlay -->
+        <div class="absolute top-4 right-4">
+          <button onclick="closeCameraModal()" class="w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black transition-all">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="p-6 text-center space-y-4">
+        <div>
+          <h4 class="font-bricolage text-xl font-bold text-slate-900">Capture de document</h4>
+          <p class="text-[12px] text-slate-500">Alignez bien le document dans le cadre pour une meilleure netteté.</p>
+        </div>
+        
+        <div class="flex items-center justify-center gap-6 pb-2">
+          <button onclick="capturePhoto()" class="w-16 h-16 rounded-full bg-primary border-4 border-white shadow-lg flex items-center justify-center text-white text-2xl hover:scale-110 active:scale-95 transition-all">
+            <i class="fa-solid fa-camera"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/utils/camera.js"></script>
   <script>
+    let cameraActiveSide = null; // 'recto' or 'verso'
+    window.capturedBlobs = { recto: null, verso: null };
+
+    async function openCameraModal(side) {
+      cameraActiveSide = side;
+      const modal = document.getElementById('camera-modal');
+      const video = document.getElementById('camera-video');
+      
+      modal.classList.remove('hidden');
+      
+      const success = await window.cameraService.start(video);
+      if (!success) {
+        alert("Impossible d'accéder à la caméra. Vérifiez les permissions.");
+        closeCameraModal();
+      }
+    }
+
+    function closeCameraModal() {
+      window.cameraService.stop();
+      document.getElementById('camera-modal').classList.add('hidden');
+      cameraActiveSide = null;
+    }
+
+    async function capturePhoto() {
+      if (!cameraActiveSide) return;
+      
+      const blob = await window.cameraService.capture();
+      if (blob) {
+        window.capturedBlobs[cameraActiveSide] = blob;
+        
+        // Show preview
+        const previewId = 'preview-' + cameraActiveSide;
+        const imgId = 'img-' + cameraActiveSide;
+        const placeholderId = 'placeholder-' + cameraActiveSide;
+        
+        document.getElementById(imgId).src = URL.createObjectURL(blob);
+        document.getElementById(previewId).classList.remove('hidden');
+        document.getElementById(placeholderId).classList.add('hidden');
+        
+        // If it was captured via camera, clear the file input
+        document.getElementById('file-' + cameraActiveSide).value = '';
+      }
+      
+      closeCameraModal();
+    }
+
+    function clearCapture(side) {
+      window.capturedBlobs[side] = null;
+      document.getElementById('preview-' + side).classList.add('hidden');
+      document.getElementById('placeholder-' + side).classList.remove('hidden');
+      document.getElementById('file-' + side).value = '';
+    }
+
     function openSb() {
       document.getElementById('sidebar').classList.add('open');
       document.getElementById('overlay').classList.add('show');
@@ -1055,294 +1190,9 @@
       document.getElementById('overlay').classList.remove('show');
     }
 
-    let currentStep = 1;
-    let selectedType = null;
-    let fileCount = 0;
+    // Functions like openModal, closeModal, resetModal, goStep are now handled by /js/services/document.js
 
-    const typeLabels = { cni: 'CNI', passport: 'Passeport', permis: 'Permis de conduire', diplome: 'Diplôme', naissance: 'Acte de naissance', autre: 'Autre document' };
-
-    let pendingDocType = null;
-    let pendingBtn = null;
-
-    function confirmLost(type, btn) {
-      pendingDocType = type;
-      pendingBtn = btn;
-      
-      // Highlight the card
-      const card = btn.closest('.doc-card');
-      if(card) card.classList.add('is-lost');
-      
-      document.getElementById('confirmLostModal').classList.remove('hidden');
-      document.getElementById('confirmPassword').value = '';
-      document.getElementById('passwordError').classList.add('hidden');
-      document.getElementById('confirmPassword').focus();
-    }
-
-    function closeConfirmLost() {
-      if(pendingBtn) {
-        const card = pendingBtn.closest('.doc-card');
-        if(card) card.classList.remove('is-lost');
-      }
-      document.getElementById('confirmLostModal').classList.add('hidden');
-      pendingDocType = null;
-    }
-
-    function validateAndSubmitLost() {
-      const pass = document.getElementById('confirmPassword').value;
-      const btn = document.getElementById('finalSubmitBtn');
-      
-      if(pass.length < 4) {
-        document.getElementById('passwordError').classList.remove('hidden');
-        return;
-      }
-      
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-      
-      setTimeout(() => {
-        // Save status
-        const lostDocs = JSON.parse(localStorage.getItem('dm_lost_docs') || '[]');
-        if(!lostDocs.includes(pendingDocType)) lostDocs.push(pendingDocType);
-        localStorage.setItem('dm_lost_docs', JSON.stringify(lostDocs));
-        
-        closeConfirmLost();
-        btn.disabled = false;
-        btn.innerHTML = 'Confirmer';
-        
-        updateDocsUI();
-        
-        // Show success overlay instead of redirecting
-        document.getElementById('successOverlay').querySelector('h2').textContent = 'Déclaration enregistrée !';
-        document.getElementById('successOverlay').querySelector('p').textContent = 'Votre document a été marqué comme perdu.';
-        document.getElementById('successOverlay').classList.remove('hidden');
-      }, 1000);
-    }
-
-    function downloadDeclarationPdf() {
-      const type = typeLabels[pendingDocType] || "Document";
-      const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-      const ref = "DOC-" + Math.random().toString(36).substr(2, 9).toUpperCase();
-      
-      const printWindow = window.open('', '_blank');
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Rapport de Perte - DocMaster</title>
-            <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-            <style>
-              body { font-family: 'Poppins', sans-serif; padding: 40px; color: #1A1A1A; line-height: 1.6; }
-              .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #F5A64B; padding-bottom: 20px; margin-bottom: 40px; }
-              .logo { font-family: 'Bricolage Grotesque', sans-serif; font-size: 24px; font-weight: 800; color: #1E3A2F; }
-              .title { font-family: 'Bricolage Grotesque', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 10px; }
-              .ref { color: #F5A64B; font-weight: 600; font-size: 14px; margin-bottom: 30px; }
-              .section { margin-bottom: 25px; }
-              .label { font-size: 11px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 1px; }
-              .value { font-size: 16px; font-weight: 600; color: #1A1A1A; }
-              .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #EAE3D8; font-size: 12px; color: #9CA3AF; text-align: center; }
-              .stamp { margin-top: 40px; border: 2px solid #10B981; color: #10B981; display: inline-block; padding: 10px 20px; border-radius: 8px; font-weight: 800; transform: rotate(-5deg); }
-              @media print { .no-print { display: none; } }
-              .btn-print { background: #1E3A2F; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-bottom: 20px; }
-            </style>
-          </head>
-          <body>
-            <div class="no-print" style="text-align: right;">
-              <button class="btn-print" onclick="window.print()">Imprimer / Enregistrer PDF</button>
-            </div>
-            <div class="header">
-              <div class="logo">DocMaster<span style="color:#F5A64B">.</span></div>
-              <div style="text-align: right;">
-                <div style="font-weight: 700;">RECEPISSE DE DECLARATION</div>
-                <div style="font-size: 12px; color: #6B7280;">Document officiel numérisé</div>
-              </div>
-            </div>
-            
-            <div class="title">Rapport de Perte</div>
-            <div class="ref">Référence : ${ref}</div>
-            
-            <div class="section">
-              <div class="label">Propriétaire</div>
-              <div class="value">Jean-Marc (Utilisateur vérifié)</div>
-            </div>
-            
-            <div class="section">
-              <div class="label">Type de document</div>
-              <div class="value">${type}</div>
-            </div>
-            
-            <div class="section">
-              <div class="label">Date de déclaration</div>
-              <div class="value">${date}</div>
-            </div>
-            
-            <div class="section">
-              <div class="label">Statut DocMaster</div>
-              <div class="value" style="color:#ef4444">RECHERCHE ACTIVE</div>
-            </div>
-            
-            <div style="background: #F9FAFB; padding: 20px; border-radius: 12px; font-size: 13px; color: #4B5563;">
-              <strong>Note importante :</strong> Ce document atteste que la perte a été signalée sur la plateforme DocMaster. 
-              En cas de matching, le détenteur actuel sera informé et la procédure de restitution sera engagée.
-            </div>
-            
-            <div class="stamp">DOCMASTER CERTIFIED</div>
-            
-            <div class="footer">
-              Ce document est généré automatiquement par DocMaster. L'authenticité peut être vérifiée via la référence unique.<br>
-              © 2026 DocMaster — Sécurisation et Restitution de documents officiels.
-            </div>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-    }
-
-    function confirmFoundDoc(type, btn) {
-      const lostDocs = JSON.parse(localStorage.getItem('dm_lost_docs') || '[]');
-      const newLostDocs = lostDocs.filter(d => d !== type);
-      localStorage.setItem('dm_lost_docs', JSON.stringify(newLostDocs));
-      
-      updateDocsUI();
-      
-      document.getElementById('successOverlay').querySelector('h2').textContent = 'Document Retrouvé !';
-      document.getElementById('successOverlay').querySelector('p').textContent = 'Félicitations ! Votre document est de nouveau marqué comme actif.';
-      document.getElementById('successOverlay').classList.remove('hidden');
-    }
-
-    function updateDocsUI() {
-      const lostDocs = JSON.parse(localStorage.getItem('dm_lost_docs') || '[]');
-      
-      document.querySelectorAll('.doc-card').forEach(card => {
-        const btn = card.querySelector('button[onclick*="confirmLost"]');
-        const foundBtn = card.querySelector('button[onclick*="confirmFoundDoc"]');
-        
-        // Try to identify doc type from the card data or button
-        let type = '';
-        if(btn) {
-           const match = btn.getAttribute('onclick').match(/'([^']+)'/);
-           if(match) type = match[1];
-        } else if(foundBtn) {
-           const match = foundBtn.getAttribute('onclick').match(/'([^']+)'/);
-           if(match) type = match[1];
-        }
-        
-        if(!type) return;
-        
-        const isLost = lostDocs.includes(type);
-        card.classList.toggle('is-lost', isLost);
-        
-        // Update button
-        if(isLost) {
-          if(btn) {
-            btn.outerHTML = `<button onclick="confirmFoundDoc('${type}', this)" class="mt-3 w-full py-2 bg-green-600 text-white rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-lg shadow-green-600/20">
-              <i class="fa-solid fa-check-circle"></i> Déclarer comme retrouvé
-            </button>`;
-          }
-        } else {
-          if(foundBtn) {
-            foundBtn.outerHTML = `<button onclick="confirmLost('${type}', this)" class="mt-3 w-full py-2 bg-red-500 text-white rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-lg shadow-red-500/20">
-              <i class="fa-solid fa-triangle-exclamation"></i> Déclarer comme perdu
-            </button>`;
-          }
-        }
-      });
-    }
-
-    // Initial UI update
-    document.addEventListener('DOMContentLoaded', updateDocsUI);
-
-    function openModal() {
-      resetModal();
-      document.getElementById('add-modal').classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
-    }
-    function closeModal() {
-      document.getElementById('add-modal').classList.add('hidden');
-      document.body.style.overflow = '';
-    }
-
-    function resetModal() {
-      currentStep = 1; selectedType = null; fileCount = 0;
-      ['step-1', 'step-2', 'step-3', 'step-success'].forEach(id => document.getElementById(id).classList.add('hidden'));
-      document.getElementById('step-1').classList.remove('hidden');
-      document.querySelectorAll('.doc-type-btn').forEach(b => b.classList.remove('selected'));
-      document.getElementById('btn-step1').disabled = true;
-      document.getElementById('step-num').textContent = '1';
-      ['dot-1', 'dot-2', 'dot-3'].forEach((id, i) => {
-        const d = document.getElementById(id);
-        d.className = 'step-dot ' + (i === 0 ? 'active' : 'pending');
-        d.textContent = i + 1;
-      });
-      ['line-1', 'line-2'].forEach(id => document.getElementById(id).classList.remove('done'));
-      // reset files
-      ['preview-recto', 'preview-verso'].forEach(id => document.getElementById(id).classList.add('hidden'));
-      ['placeholder-recto', 'placeholder-verso'].forEach(id => document.getElementById(id).classList.remove('hidden'));
-    }
-
-    function selectType(btn, type) {
-      document.querySelectorAll('.doc-type-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      selectedType = type;
-      document.getElementById('btn-step1').disabled = false;
-    }
-
-    function goStep(n) {
-      ['step-1', 'step-2', 'step-3'].forEach(id => document.getElementById(id).classList.add('hidden'));
-      document.getElementById('step-' + n).classList.remove('hidden');
-      document.getElementById('step-num').textContent = n;
-      currentStep = n;
-
-      // update indicators
-      for (let i = 1; i <= 3; i++) {
-        const d = document.getElementById('dot-' + i);
-        if (i < n) { d.className = 'step-dot done'; d.innerHTML = '<i class="fa-solid fa-check text-[10px]"></i>' }
-        else if (i === n) { d.className = 'step-dot active'; d.textContent = i }
-        else { d.className = 'step-dot pending'; d.textContent = i }
-      }
-      for (let i = 1; i <= 2; i++) {
-        document.getElementById('line-' + i).classList.toggle('done', i < n);
-      }
-
-      if (n === 3) fillRecap();
-    }
-
-    function fillRecap() {
-      fileCount = (document.getElementById('file-recto').files.length + document.getElementById('file-verso').files.length);
-      document.getElementById('recap-type').textContent = typeLabels[selectedType] || '—';
-      document.getElementById('recap-number').textContent = document.getElementById('doc-number').value || '—';
-      const expiry = document.getElementById('doc-expiry').value;
-      document.getElementById('recap-expiry').textContent = expiry ? new Date(expiry).toLocaleDateString('fr-FR') : 'Aucune';
-      document.getElementById('recap-files').textContent = fileCount + ' fichier(s)';
-    }
-
-    function submitDocument() {
-      if (!document.getElementById('consent').checked) {
-        alert('Veuillez accepter les conditions pour continuer.'); return;
-      }
-      const wrap = document.getElementById('upload-progress-wrap');
-      const bar = document.getElementById('upload-bar');
-      const pct = document.getElementById('progress-pct');
-      const btn = document.getElementById('submit-btn');
-      wrap.classList.remove('hidden');
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-[13px]"></i> Envoi en cours…';
-      let p = 0;
-      const iv = setInterval(() => {
-        p += Math.random() * 12 + 4;
-        if (p >= 100) {
-          p = 100; clearInterval(iv);
-          setTimeout(() => {
-            document.getElementById('step-3').classList.add('hidden');
-            document.getElementById('step-success').classList.remove('hidden');
-            ['dot-1', 'dot-2', 'dot-3'].forEach(id => { const d = document.getElementById(id); d.className = 'step-dot done'; d.innerHTML = '<i class="fa-solid fa-check text-[10px]"></i>' });
-            document.getElementById('line-1').classList.add('done');
-            document.getElementById('line-2').classList.add('done');
-          }, 400);
-        }
-        bar.style.width = p + '%';
-        pct.textContent = Math.round(p) + '%';
-      }, 180);
-    }
-
+    // UI Helpers for Drag & Drop and Previews
     function onDragOver(e, id) { e.preventDefault(); document.getElementById(id).classList.add('drag-over') }
     function onDragLeave(id) { document.getElementById(id).classList.remove('drag-over') }
     function onDrop(e, id, preview) {
@@ -1351,7 +1201,12 @@
       if (file) showPreview(file, preview, id);
     }
     function onFileSelect(input, preview, zone) {
-      if (input.files[0]) showPreview(input.files[0], preview, zone);
+      const side = preview.split('-')[1]; // 'recto' or 'verso'
+      if (input.files[0]) {
+        // Clear camera capture if file is selected
+        window.capturedBlobs[side] = null;
+        showPreview(input.files[0], preview, zone);
+      }
     }
     function showPreview(file, previewId, zoneId) {
       const p = document.getElementById(previewId);
@@ -1377,35 +1232,189 @@
       });
     }
 
-    function viewDoc(name) {
-      const docData = {
-        'CNI': { number: '123456789CM', expiry: '15/06/2028', status: 'Vérifié ✓', authority: 'DGSN Cameroun', notes: 'Délivrée à Yaoundé • Titulaire vérifié par DocMaster.', img: './assets/images/carte.jpeg' },
-        'Passeport': { number: 'CM456789', expiry: '03/09/2029', status: 'Vérifié ✓', authority: 'EMI-IMM Yaoundé', notes: 'Passeport biométrique • Puce électronique valide.', img: './assets/images/passport.jpg' },
-        'Permis': { number: 'PC-7823', expiry: '22/11/2026', status: 'Vérifié ✓', authority: 'Ministère Transports', notes: 'Catégorie B • Permis de conduire national.', img: './assets/images/images.jpg' },
-        'BAC': { number: 'BAC-2019-33', expiry: 'Aucune', status: 'Vérifié ✓', authority: 'OBC Cameroun', notes: 'Série C (Mathématiques et Physiques) • Obtenu à Yaoundé.', img: './assets/images/1.webp' },
-        'Acte': { number: 'AC-1994-01', expiry: 'Aucune', status: 'En attente', authority: 'Mairie Yaoundé 1', notes: 'Copie certifiée conforme à l\'originale.', img: './assets/images/Abonnement_image.png' }
-      };
+    let currentViewDoc = null;
+    let showingVerso = false;
+
+    function openShareModalDirect() {
+      if (!currentViewDoc) return;
+      document.getElementById('view-modal').classList.add('hidden');
+      if (typeof window.openShareModal === 'function') {
+        window.openShareModal(currentViewDoc.id);
+      }
+    }
+
+    function flipViewImage() {
+      if (!currentViewDoc) return;
+      showingVerso = !showingVerso;
       
-      const data = docData[name] || docData['CNI'];
-      document.getElementById('view-title').textContent = name;
-      document.getElementById('view-status').textContent = data.status;
-      document.getElementById('view-number-txt').textContent = data.number;
-      document.getElementById('view-expiry-txt').textContent = data.expiry;
-      document.getElementById('view-authority-txt').textContent = data.authority;
-      document.getElementById('view-notes-txt').textContent = data.notes;
-      document.getElementById('view-img').src = data.img;
+      const viewImg = document.getElementById('view-img');
+      const label = document.getElementById('flip-label');
+      const container = document.getElementById('view-img-container');
+
+      // Professional flip animation
+      container.style.transform = 'scale(0.95) rotateY(10deg)';
+      container.style.opacity = '0';
+      
+      setTimeout(() => {
+        const photo = showingVerso ? currentViewDoc.photo_verso : currentViewDoc.photo_recto;
+        viewImg.src = photo.startsWith('http') ? photo : '/' + photo.replace(/^\//, '');
+        label.textContent = showingVerso ? 'Voir le Recto' : 'Voir le Verso';
+        
+        container.style.transform = 'scale(1) rotateY(0deg)';
+        container.style.opacity = '1';
+      }, 300);
+    }
+
+    function viewDoc(id) {
+      const documents = window.lastFetchedDocuments || [];
+      const data = documents.find(d => d.id === id);
+      
+      if (!data) return;
+      currentViewDoc = data;
+      showingVerso = false;
+
+      // Reset UI
+      document.getElementById('view-img-container').style.opacity = '1';
+      document.getElementById('view-img-container').style.transform = 'none';
+      document.getElementById('flip-label').textContent = 'Voir le Verso';
+      
+      // Show/Hide flip button based on verso availability
+      const flipBtn = document.getElementById('flip-btn');
+      if (data.photo_verso) {
+        flipBtn.classList.remove('hidden');
+      } else {
+        flipBtn.classList.add('hidden');
+      }
+
+      const typeLabels = {
+        cni: 'Carte Nationale d\'Identité',
+        passport: 'Passeport International',
+        permis: 'Permis de Conduire',
+        diplome: 'Diplôme Académique',
+        naissance: 'Acte de Naissance',
+        autre: 'Document Officiel'
+      };
+
+      const catLabels = {
+        cni: 'Identité',
+        passport: 'Voyage',
+        permis: 'Transport',
+        diplome: 'Éducation',
+        naissance: 'Civil',
+        autre: 'Divers'
+      };
+
+      document.getElementById('view-title').textContent = typeLabels[data.type_doc] || 'Document';
+      document.getElementById('view-cat-label').textContent = catLabels[data.type_doc] || 'Document';
+      
+      const statusEl = document.getElementById('view-status');
+      if (data.is_verified) {
+        statusEl.innerHTML = '<i class="fa-solid fa-check-circle"></i> Authentifié ✓';
+        statusEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/10 text-green-600 rounded-full text-[10px] font-black uppercase tracking-wider border border-green-500/20';
+      } else {
+        statusEl.innerHTML = '<i class="fa-solid fa-clock"></i> En attente de validation';
+        statusEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-wider border border-amber-500/20';
+      }
+
+      document.getElementById('view-number-txt').textContent = data.numero_doc || 'Non renseigné';
+      document.getElementById('view-expiry-txt').textContent = data.date_expiration ? new Date(data.date_expiration).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Indéfinie';
+      document.getElementById('view-authority-txt').textContent = data.nom_sur_doc || '—';
+      document.getElementById('view-notes-txt').textContent = data.notes || 'Aucune information complémentaire pour ce document.';
+      
+      const viewImg = document.getElementById('view-img');
+      if (data.photo_recto) {
+        viewImg.src = data.photo_recto.startsWith('http') ? data.photo_recto : '/' + data.photo_recto.replace(/^\//, '');
+      } else {
+        viewImg.src = './assets/images/carte.jpeg';
+      }
       
       document.getElementById('view-modal').classList.remove('hidden');
     }
-    function openDeleteModal(name) {
-      document.getElementById('delete-doc-name').textContent = name;
-      document.getElementById('delete-modal').classList.remove('hidden');
+
+    async function openDeleteModal(id) {
+      const documents = window.lastFetchedDocuments || [];
+      const data = documents.find(d => d.id === id);
+      if (!data) return;
+
+      const displayName = data.nom_sur_doc || (data.type_doc ? data.type_doc.toUpperCase() : 'Document');
+      document.getElementById('delete-doc-name').textContent = displayName + ' - ' + (data.numero_doc || '---');
+      const modal = document.getElementById('delete-modal');
+      modal.classList.remove('hidden');
+      
+      // Update delete button
+      const confirmBtn = modal.querySelector('button.bg-red-500');
+      confirmBtn.onclick = async () => {
+        confirmBtn.disabled = true;
+        const originalHtml = confirmBtn.innerHTML;
+        confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        
+        const result = await window.deleteDocument(id);
+        if (result.success) {
+          modal.classList.add('hidden');
+          window.initDocumentList(); // Refresh list
+        } else {
+          alert(result.message);
+        }
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = 'Supprimer';
+      };
+    }
+
+    function selectType(btn, type) {
+      document.querySelectorAll('.doc-type-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      window.selectedType = type;
+      document.getElementById('btn-step1').disabled = false;
+    }
+
+    // --- LOST DECLARATION LOGIC ---
+    let documentToMarkLost = null;
+
+    function confirmLost(id, btn) {
+      documentToMarkLost = id;
+      document.getElementById('confirmLostModal').classList.remove('hidden');
+    }
+
+    function closeConfirmLost() {
+      document.getElementById('confirmLostModal').classList.add('hidden');
+      documentToMarkLost = null;
+    }
+
+    async function validateAndSubmitLost() {
+      const pwd = document.getElementById('confirmPassword').value;
+      if (!pwd) {
+        document.getElementById('passwordError').classList.remove('hidden');
+        return;
+      }
+
+      const btn = document.getElementById('finalSubmitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Traitement…';
+
+      // Simulate API call
+      setTimeout(() => {
+        document.getElementById('confirmLostModal').classList.add('hidden');
+        document.getElementById('successOverlay').classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Confirmer';
+        document.getElementById('confirmPassword').value = '';
+        
+        // Refresh UI if we had a real API
+        // window.initDocumentList();
+      }, 1500);
+    }
+
+    function downloadDeclarationPdf() {
+      alert('Génération du rapport PDF en cours... Le téléchargement débutera sous peu.');
     }
 
     // Close modals on overlay click
     document.getElementById('add-modal').addEventListener('click', function (e) { if (e.target === this) closeModal() });
     document.getElementById('delete-modal').addEventListener('click', function (e) { if (e.target === this) this.classList.add('hidden') });
     document.getElementById('view-modal').addEventListener('click', function (e) { if (e.target === this) this.classList.add('hidden') });
+    document.getElementById('confirmLostModal').addEventListener('click', function (e) { if (e.target === this) closeConfirmLost() });
+    document.getElementById('successOverlay').addEventListener('click', function (e) { if (e.target === this) this.classList.add('hidden') });
+
   </script>
 </body>
 

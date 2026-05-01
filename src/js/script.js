@@ -1,67 +1,39 @@
+import { subscribeToPlan } from './services/api.js';
+import { planService } from './services/plan.js';
+
 document.addEventListener("DOMContentLoaded", () => {
   /**
    * ==================================
    * Données des abonnements
    * ==================================
    */
-  const abonnements = [
-    {
-      nom: "Gratuit",
-      prix: 0,
-      isFeatured: false,
-      features: [
-        { valeur: "Indéfinie", label: "de validité", active: true },
-        { valeur: "1", label: "Document par type", active: true },
-        { valeur: "2", label: "objets", active: true },
-        { valeur: "Email", label: "Alertes", active: true },
-        { valeur: "Limitée", label: "Géolocalisation", active: false },
-        { valeur: "x", label: "Notification Push", active: false },
-        { valeur: "x", label: "Support prioritaire", active: false }
-      ],
-    },
-    {
-      nom: "Standard",
-      prix: 500,
-      isFeatured: false,
-      features: [
-        { valeur: "1 mois", label: "de validité", active: true },
-        { valeur: "1", label: "Document par type", active: true },
-        { valeur: "2", label: "objets", active: true },
-        { valeur: "SMS + Email", label: "Alertes", active: true },
-        { valeur: "Basique", label: "Géolocalisation", active: true },
-        { valeur: "x", label: "Notification Push", active: false },
-        { valeur: "x", label: "Support prioritaire", active: false }
-      ],
-    },
-    {
-      nom: "Pro",
-      prix: 1500,
-      isFeatured: true,
-      features: [
-        { valeur: "12 mois", label: "de validité", active: true },
-        { valeur: "3", label: "Documents par type", active: true },
-        { valeur: "5", label: "objets", active: true },
-        { valeur: "SMS + Email + Push", label: "Alertes", active: true },
-        { valeur: "Avancée", label: "Géolocalisation", active: true },
-        { valeur: "✓", label: "Notification Push", active: true },
-        { valeur: "x", label: "Support prioritaire", active: false }
-      ],
-    },
-    {
-      nom: "VIP",
-      prix: 3000,
-      isFeatured: false,
-      features: [
-        { valeur: "12 mois", label: "de validité", active: true },
-        { valeur: "5", label: "Documents par type", active: true },
-        { valeur: "7", label: "objets", active: true },
-        { valeur: "Toutes", label: "Alertes", active: true },
-        { valeur: "Avancée", label: "Géolocalisation", active: true },
-        { valeur: "✓", label: "Notification Push", active: true },
-        { valeur: "✓", label: "Support prioritaire", active: true }
-      ],
-    },
-  ];
+  let abonnements = [];
+
+  const loadPlans = async () => {
+    try {
+      const data = await planService.getPlans();
+      // Format backend data to match expected frontend structure
+      abonnements = data.map(plan => ({
+        id: plan.id,
+        nom: plan.name,
+        prix: plan.price,
+        isFeatured: plan.is_featured,
+        features: [
+          { valeur: plan.features?.docs_per_type || 1, label: "Document par type", active: true },
+          { valeur: plan.features?.objects || 2, label: "objets", active: true },
+          { valeur: plan.features?.alerts ? "✓" : "x", label: "Alertes", active: !!plan.features?.alerts },
+          { valeur: plan.features?.geo === 'advanced' ? "✓" : "Basique", label: "Géolocalisation", active: true },
+          { valeur: plan.is_active ? "✓" : "x", label: "Support", active: plan.is_active }
+        ],
+      }));
+      
+      // Refresh UI
+      genererCartes();
+      genererComparatif();
+    } catch (error) {
+      console.error("Erreur chargement plans script.js:", error);
+    }
+  };
 
   const factures = [
     { plan: "Standard", date: "10 avr. 2024", mode: "Automatique", montant: 500, status: "Payé" },
@@ -153,7 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  window.processPayment = function () {
+  window.processPayment = async function () {
     const vStep2 = document.getElementById("viewStep2");
     const step2Visible = vStep2 && !vStep2.classList.contains("hidden");
 
@@ -175,16 +147,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const btn = document.getElementById("submitBtn");
       if(btn){
-        const originalText = btn.innerText;
+        const originalText = btn.innerHTML;
         btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Traitement...';
         btn.disabled = true;
 
-        setTimeout(() => {
-          alert(`Félicitations !\nVotre abonnement "${currentPlanData.nom}" est maintenant actif.\nNuméro de transaction: #${Math.floor(Math.random() * 1000000)}`);
+        const planId = currentPlanData.nom.toLowerCase();
+        // Determine months based on features or defaults
+        const monthsFeat = currentPlanData.features.find(f => f.label.includes("validité"));
+        let months = 1;
+        if (monthsFeat) {
+          if (monthsFeat.valeur.includes("12")) months = 12;
+        }
+
+        try {
+          const result = await subscribeToPlan(planId, months);
+          if (result.success) {
+            alert(`Félicitations !\nVotre abonnement "${currentPlanData.nom}" est maintenant actif.\nID Souscription: #${result.data.data.id}`);
+            window.closeSubscriptionModal();
+            // Optional: refresh page to see new status
+            window.location.reload();
+          } else {
+            alert(result.message);
+          }
+        } catch (error) {
+          alert("Une erreur est survenue lors de la souscription.");
+        } finally {
           btn.innerHTML = originalText;
           btn.disabled = false;
-          window.closeSubscriptionModal();
-        }, 2000);
+        }
       }
     }
   };
@@ -343,8 +333,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Initializations
-  genererCartes();
-  genererComparatif();
+  loadPlans();
   genererFactures();
   animateCounters();
 

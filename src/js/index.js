@@ -1,4 +1,7 @@
+import { initDatePickers } from "./utils/index.js";
+
 document.addEventListener("DOMContentLoaded", () => {
+  initDatePickers();
   const navLinks = document.querySelectorAll(".nav-link");
   // On récupère le chemin actuel, par défaut "index.html" si vide
   const currentPath = window.location.pathname.split("/").pop() || "index.html";
@@ -26,9 +29,19 @@ document.addEventListener("DOMContentLoaded", () => {
       link.classList.remove("active");
     }
   });
+
+  // Update dynamic counts if they exist
+  const updateCounts = () => {
+    const totalDocs = data.documents.length;
+    const countElements = document.querySelectorAll(".dynamic-doc-count");
+    countElements.forEach(el => {
+      el.textContent = totalDocs;
+    });
+  };
+  updateCounts();
 });
 // 1. Vos données JSON
-const data = {
+window.data = {
   documents: [
     {
       id: 1,
@@ -133,7 +146,6 @@ function renderCards(docs) {
           </div>
         </div>
       </div>
-    `;
     `;
     container.innerHTML += cardHTML;
   });

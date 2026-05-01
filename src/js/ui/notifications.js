@@ -189,7 +189,9 @@
     </div>
   `;
 
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  document.addEventListener('DOMContentLoaded', () => {
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  });
 
   // 3. Global Functions
   window.openNotifModal = function() {
@@ -209,21 +211,35 @@
     settings.style.display = settings.style.display === 'none' ? 'block' : 'none';
   };
 
-  window.markAllRead = function() {
+  window.markAllRead = async function() {
+    // If a custom handler is defined (e.g. in dashboard.js), call it
+    if (window.customMarkAllReadHandler) {
+      await window.customMarkAllReadHandler();
+    }
+
     const countElm = document.getElementById('notifCountModal');
     if (countElm) countElm.innerText = '0';
+    
+    const dot = document.getElementById('notifDot');
+    if (dot) dot.style.display = 'none';
+
     document.querySelectorAll('.notif-item').forEach(function(item) {
       item.style.background = '#f8fafc';
+      item.style.borderColor = '#f1f5f9';
     });
   };
 
-  window.addNotification = function(title, message, time, icon) {
+
+  window.addNotification = function(title, message, time, icon, isRead = false) {
     const container = document.getElementById('notifListModal');
     if (!container) return;
 
     const iconClass = icon || 'fa-solid fa-bell';
+    const background = isRead ? '#f8fafc' : '#FEFBF6';
+    const border = isRead ? '#f1f5f9' : '#FEF0DC';
+    
     const notif = `
-      <div class="notif-item">
+      <div class="notif-item" style="background: ${background}; border-color: ${border}">
         <div class="notif-icon">
           <i class="${iconClass}" style="color:#F5A64B; font-size:0.875rem;"></i>
         </div>
@@ -238,21 +254,27 @@
     `;
     container.insertAdjacentHTML('afterbegin', notif);
 
-    // Update count & dot
-    const countElm = document.getElementById('notifCountModal');
-    const dot = document.getElementById('notifDot');
-    if (countElm) {
-      const newCount = parseInt(countElm.innerText || '0') + 1;
-      countElm.innerText = newCount;
+    // Update count & dot if unread
+    if (!isRead) {
+      const countElm = document.getElementById('notifCountModal');
+      const dot = document.getElementById('notifDot');
+      if (countElm) {
+        const currentCount = parseInt(countElm.innerText || '0');
+        countElm.innerText = currentCount + 1;
+      }
+      if (dot) dot.style.display = 'block';
     }
-    if (dot) dot.style.background = '#F5A64B';
   };
 
-  // 4. Initial Notifications
-  setTimeout(function() {
-    addNotification('Système', 'Bienvenue sur votre nouveau tableau de bord DocMaster !', 'Maintenant', 'fa-solid fa-circle-info');
-    addNotification('Document retrouvé', 'Votre document "Carte ID" a été retrouvé par un utilisateur.', 'Il y a 2h', 'fa-solid fa-circle-check');
-    addNotification('Validation', 'Paiement reçu pour votre document remis.', 'Hier', 'fa-solid fa-receipt');
-  }, 500);
+  // Helper to clear list
+  window.clearNotifications = function() {
+    const container = document.getElementById('notifListModal');
+    const countElm = document.getElementById('notifCountModal');
+    const dot = document.getElementById('notifDot');
+    if (container) container.innerHTML = '';
+    if (countElm) countElm.innerText = '0';
+    if (dot) dot.style.display = 'none';
+  };
 
 })();
+

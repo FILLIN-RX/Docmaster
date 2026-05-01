@@ -16,12 +16,38 @@
     rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
-  <link href="/css/input.css" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#F5A64B', dark: '#D98A30', light: '#FEF0DC' },
+            green: { dark: '#1E3A2F', mid: '#2D5A42', light: '#E8F5EE' },
+            bgMain: '#F4EFE6',
+            surface: '#FFFFFF',
+            surface2: '#FAF7F2',
+            textMain: '#1A1A1A',
+            textMuted: '#6B7280',
+            borderMain: '#EAE3D8',
+            accent: '#F5A64B',
+            blobGreen: '#A8CBAF',
+            blobPeach: '#E8B89A',
+          },
+          fontFamily: {
+            poppins: ['Poppins', 'sans-serif'],
+            bricolage: ['"Bricolage Grotesque"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/css/rechercher.css" />
   <script type="module" src="/js/index.js"></script>
   <script type="module" src="/js/fillin.js"></script>
-  <script type="module" src="/js/sidebar.js"></script>
-  <script type="module" src="/js/notifications.js"></script>
-  <script type="module" src="/js/auth.js"></script>
+  <script type="module" src="/js/ui/sidebar.js"></script>
+  <script type="module" src="/js/ui/notifications.js"></script>
+  <script type="module" src="/js/services/auth.js"></script>
 
 
   <style>
@@ -232,7 +258,7 @@
 
       <h1 class="font-bricolage text-3xl md:text-5xl font-black text-white text-center tracking-tighter mb-3 slide-up">
         Recherchez votre document parmi
-        <span class="text-primary"> 2 847</span> déclarations
+        <span class="text-primary dynamic-doc-count"> 2 847</span> déclarations
       </h1>
       <p class="text-white/50 text-center text-[15px] mb-10 slide-up">CNI, passeport, diplôme, permis de conduire —
         cherchez par nom, type, date ou lieu.</p>
@@ -464,8 +490,6 @@
 
 
   <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
   <script>
     // ── Navbar scroll ──
     window.addEventListener('scroll', () => {
@@ -484,11 +508,7 @@
       document.getElementById('langDropdown').classList.add('hidden');
     }
 
-    // ── Flatpickr ──
-    flatpickr('#custom-date', {
-      locale: 'fr', dateFormat: 'd/m/Y', disableMobile: true, animate: true,
-      onChange: () => filterDocuments(),
-    });
+
 
     // ── Search / filter logic ──
     let activeFilter = 'all';
@@ -604,6 +624,28 @@
 
       // Give index.js time to populate then capture
       setTimeout(() => {
+        if (window.data && window.data.documents) {
+          allDocs = window.data.documents.map(d => ({
+            ...d,
+            nom: d.titre,
+            lieu: d.lieu || 'Yaoundé', // default if missing
+            date: d.date_retrouve,
+            type: d.titre.split(' ')[0], // simple heuristic
+            image: d.image_url
+          }));
+          filterDocuments();
+          
+          // Update counters in chips
+          const counts = { all: allDocs.length };
+          allDocs.forEach(d => {
+            const t = (d.type || '').toLowerCase();
+            counts[t] = (counts[t] || 0) + 1;
+          });
+          
+          document.getElementById('count-all').textContent = counts.all;
+          // You could add others here if they have IDs
+        }
+
         const injected = document.querySelectorAll('#document-container .doc-card');
         if (injected.length === 0) {
           // index.js didn't render here — show skeleton then remove it

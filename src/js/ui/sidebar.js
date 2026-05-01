@@ -13,51 +13,57 @@
 const SIDEBAR_NAV = {
   principal: [
     {
-      href: "dashboard.html",
+      href: "/dashboard.html",
       icon: "fa-house",
       label: "Tableau de bord",
     },
     {
-      href: "docDeclares.html",
+      href: "/docDeclares.html",
       icon: "fa-list-check",
       label: "Mes déclarations",
     },
     {
-      href: "Mesdocument.html",
+      href: "/Mesdocument.html",
       icon: "fa-folder-open",
-      label: "Mes Documents",
+      label: "Mes Sauvegardes",
     },
     {
-      href: "Mesappareils.html",
+      href: "/Mesappareils.html",
       icon: "fa-mobile-screen-button",
       label: "Mes appareils",
     },
     {
-      href: "recherche-auth.html",
+      href: "/recherche-auth.html",
       icon: "fa-magnifying-glass",
       label: "Rechercher",
     },
   ],
   compte: [
     {
-      href: "mesGains.html",
+      href: "/mesGains.html",
       icon: "fa-wallet",
       label: "Mes Gains",
     },
     {
-      href: "Abonnement.html",
+      href: "/Abonnement.html",
       icon: "fa-crown",
       label: "Abonnement",
     },
     {
-      href: "parrainage.html?v=20260317-2",
+      href: "/admin/dashboard.html",
+      icon: "fa-lock",
+      label: "Administration",
+      isAdmin: true,
+    },
+    {
+      href: "/parrainage.html?v=20260317-2",
       icon: "fa-users-gear",
       label: "Parrainage",
     },
     {
-      href: "infosProfil.html",
-      icon: "fa-gear",
-      label: "Paramètres",
+      href: "/infosProfil.html",
+      icon: "fa-user",
+      label: "Mon Profil",
     },
     {
       href: "#",
@@ -102,7 +108,7 @@ function _sbNavItem(item) {
   const stateClass = active
     ? "text-white"
     : item.isLogout
-      ? "text-red-400/70 hover:bg-white/5 hover:text-red-400"
+      ? "logout-btn text-red-400/70 hover:bg-white/5 hover:text-red-400"
       : "text-white/60 hover:bg-white/5 hover:text-white/90";
 
   const iconClass = active
@@ -123,8 +129,23 @@ function _sbNavItem(item) {
     </a>`;
 }
 
-// ── Rendu complet du sidebar ─────────────────────────────────────────────────
 function _sbRender() {
+  // Detect admin status
+  let isAdmin = false;
+  try {
+    const raw = localStorage.getItem("docmaster_user_session");
+    if (raw) {
+      const user = JSON.parse(raw);
+      // Case-insensitive check and logging for debug
+      isAdmin = user.role?.toUpperCase() === 'ADMIN';
+      console.log("DEBUG [Sidebar]: User role is", user.role, "| isAdmin:", isAdmin);
+    }
+  } catch (e) {
+    console.error("DEBUG [Sidebar]: Error parsing session", e);
+  }
+
+  const filterAdmin = (item) => !item.isAdmin || isAdmin;
+
   return `
     <!-- Overlay mobile -->
     <div class="sb-overlay" id="overlay" onclick="closeSb()"></div>
@@ -150,12 +171,12 @@ function _sbRender() {
       <div class="flex-1 overflow-y-auto py-2 custom-scroll">
         <div class="px-5 pt-4 pb-1 text-[9.5px] font-bold text-white/30 uppercase tracking-widest">Principal</div>
         <nav class="flex flex-col gap-0.5 px-2" aria-label="Navigation principale">
-          ${SIDEBAR_NAV.principal.map(_sbNavItem).join("")}
+          ${SIDEBAR_NAV.principal.filter(filterAdmin).map(_sbNavItem).join("")}
         </nav>
 
         <div class="px-5 pt-5 pb-1 text-[9.5px] font-bold text-white/30 uppercase tracking-widest">Compte</div>
         <nav class="flex flex-col gap-0.5 px-2" aria-label="Navigation compte">
-          ${SIDEBAR_NAV.compte.map(_sbNavItem).join("")}
+          ${SIDEBAR_NAV.compte.filter(filterAdmin).map(_sbNavItem).join("")}
         </nav>
       </div>
 
@@ -163,11 +184,13 @@ function _sbRender() {
       <div class="px-2 py-3 border-t border-white/10 flex-shrink-0">
         <div class="flex items-center gap-2.5 px-3 py-2 rounded-[10px] cursor-pointer hover:bg-white/5 transition-colors">
           <div
-            class="w-[30px] h-[30px] rounded-[8px] bg-primary flex items-center justify-center font-bricolage text-[10px] font-extrabold text-white flex-shrink-0"
-            id="userInitial"
-          >JM</div>
+            class="w-[30px] h-[30px] rounded-[8px] bg-primary flex items-center justify-center font-bricolage text-[10px] font-extrabold text-white flex-shrink-0 overflow-hidden"
+          >
+            <img id="userPhoto" src="" class="w-full h-full object-cover hidden" />
+            <span id="userInitial" data-user-initial>JM</span>
+          </div>
           <div>
-            <div class="text-[12.5px] font-semibold text-white leading-tight" id="userName">Jean-Marc D.</div>
+            <div class="text-[12.5px] font-semibold text-white leading-tight" id="userName" data-user-name>Jean-Marc D.</div>
             <div class="text-[10.5px] text-white/40">Plan Standard</div>
           </div>
           <i class="fa-solid fa-chevron-up ml-auto text-white/30 text-[10px]"></i>
@@ -493,28 +516,46 @@ document.addEventListener("DOMContentLoaded", function () {
 
   _sbSetState(window.innerWidth >= 900);
 
-  // 2. Hydratation depuis la session auth (auth.js a déjà lu le localStorage
-  //    mais les éléments n'existaient pas encore — on les remplit ici)
+  // 2. Hydratation depuis la session auth
   try {
     const AUTH_KEY = "docmaster_user_session";
     const raw = localStorage.getItem(AUTH_KEY);
     if (raw) {
       const user = JSON.parse(raw);
+      const fullName = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.name || "Utilisateur";
+      const initial = user.initial || (user.nom ? user.nom[0] : "D");
 
+      // Update Sidebar
       const initialEl = document.getElementById("userInitial");
+      const photoEl = document.getElementById("userPhoto");
       const nameEl = document.getElementById("userName");
-      if (initialEl && user.initial) initialEl.textContent = user.initial;
-      if (nameEl && user.name) nameEl.textContent = user.name;
 
-      // Aussi mettre à jour les éléments topbar présents sur certaines pages
-      ["topInitial"].forEach(function (id) {
-        const el = document.getElementById(id);
-        if (el && user.initial) el.textContent = user.initial;
-      });
-      ["topName", "helloName"].forEach(function (id) {
-        const el = document.getElementById(id);
-        if (el && user.name) el.textContent = user.name;
-      });
+      if (initialEl) initialEl.textContent = initial;
+      if (nameEl) nameEl.textContent = fullName;
+      
+      if (user.photo_url && photoEl) {
+        const fullUrl = user.photo_url.startsWith('http') ? user.photo_url : '/' + user.photo_url.replace(/^\//, '');
+        photoEl.src = fullUrl;
+        photoEl.classList.remove('hidden');
+        if (initialEl) initialEl.classList.add('hidden');
+      }
+
+      // Update Topbar/Header elements if they exist
+      const topInitial = document.getElementById("topInitial");
+      const topPhoto = document.getElementById("topPhoto");
+      const topName = document.getElementById("topName");
+      const helloName = document.getElementById("helloName");
+
+      if (topInitial) topInitial.textContent = initial;
+      if (topName) topName.textContent = user.prenom || user.name || fullName;
+      if (helloName) helloName.textContent = user.prenom || user.name || fullName;
+
+      if (user.photo_url && topPhoto) {
+        const fullUrl = user.photo_url.startsWith('http') ? user.photo_url : '/' + user.photo_url.replace(/^\//, '');
+        topPhoto.src = fullUrl;
+        topPhoto.classList.remove('hidden');
+        if (topInitial) topInitial.classList.add('hidden');
+      }
     }
   } catch (e) { /* session absente ou invalide */ }
 

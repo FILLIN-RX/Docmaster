@@ -7,18 +7,32 @@
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="./js/sidebar.js"></script>
+   <script src="./js/ui/sidebar.js"></script>
   <script src="./js/pdfGenerator.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            primary:{ DEFAULT:'#F5A64B', dark:'#D98A30', light:'#FEF0DC' },
-            green:{ dark:'#1E3A2F', mid:'#2D5A42', light:'#E8F5EE' },
-            bgMain:'#F2EBD9', textMain:'#1A1A1A', textMuted:'#6B7280', borderMain:'#E0D5C4',
+            primary: { DEFAULT: '#F5A64B', dark: '#D98A30', light: '#FEF0DC' },
+            green: { dark: '#1E3A2F', mid: '#2D5A42', light: '#E8F5EE' },
+            bgMain: '#F4EFE6',
+            surface: '#FFFFFF',
+            surface2: '#FAF7F2',
+            textMain: '#1A1A1A',
+            textMuted: '#6B7280',
+            borderMain: '#EAE3D8',
+            accent: '#F5A64B',
+            blobGreen: '#A8CBAF',
+            blobPeach: '#E8B89A',
           },
-          fontFamily:{ poppins:['Poppins','sans-serif'], bricolage:['"Bricolage Grotesque"','sans-serif'] },
+          fontFamily: {
+            poppins: ['Poppins', 'sans-serif'],
+            bricolage: ['"Bricolage Grotesque"', 'sans-serif'],
+          }
         }
       }
     }
@@ -175,7 +189,7 @@
 <body>
 
 <div id="sidebar-root"></div>
-<script src="./js/notifications.js"></script>
+<script src="./js/ui/notifications.js"></script>
 
 <div class="main-wrap">
 
@@ -373,11 +387,11 @@
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
             <div class="field-group">
               <label class="field-label"><i class="fa-solid fa-phone" style="color:#F5A64B;font-size:10px;"></i> Téléphone</label>
-              <div class="field-wrapper"><i class="fa-solid fa-phone field-icon"></i><input type="tel" class="field-input" placeholder="+237 6XX XXX XXX" value="+237 "/></div>
+              <div class="field-wrapper"><i class="fa-solid fa-phone field-icon"></i><input type="tel" id="contactPhone" class="field-input" placeholder="+237 6XX XXX XXX" value="+237 "/></div>
             </div>
             <div class="field-group">
               <label class="field-label"><i class="fa-solid fa-envelope" style="color:#F5A64B;font-size:10px;"></i> E-mail <span class="opt-badge">Optionnel</span></label>
-              <div class="field-wrapper"><i class="fa-regular fa-envelope field-icon"></i><input type="email" class="field-input" placeholder="jean@exemple.com"/></div>
+              <div class="field-wrapper"><i class="fa-regular fa-envelope field-icon"></i><input type="email" id="contactEmail" class="field-input" placeholder="jean@exemple.com"/></div>
             </div>
           </div>
           <div style="margin-top:16px;">
@@ -510,12 +524,6 @@
   </div>
 </div>
 
-<style>
-    .confirm-overlay{display:none;position:fixed;inset:0;background:rgba(30,58,47,.85);backdrop-filter:blur(8px);z-index:90;align-items:center;justify-content:center}
-    .confirm-overlay.show{display:flex;animation:fadeIn .2s ease}
-    .confirm-card{background:white;border-radius:22px;padding:32px;max-width:400px;width:90%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.3)}
-</style>
-
 <!-- SUCCESS -->
 <div class="success-overlay" id="successOverlay">
   <div class="success-card">
@@ -534,543 +542,9 @@
   </div>
 </div>
 
-
-<script>
-/* ════════════════════════════════════════
-   MÉTADONNÉES PAR TYPE DE DOCUMENT
-   Chaque type a : label, icon, champs[]
-   Chaque champ  : id, label, type, placeholder, icon, optional, options?
-════════════════════════════════════════ */
-const DOC_META = {
-  cni: {
-    label:"Carte d'identité", icon:'fa-id-card', color:'#3B82F6',
-    fields:[
-      { id:'titulaire', label:'Nom du titulaire', type:'text', placeholder:'Nom complet sur le document', icon:'fa-user', optional:false },
-      { id:'numero',    label:'Numéro du document', type:'text', placeholder:'Ex: CMR1234567', icon:'fa-barcode', optional:true },
-      { id:'expiration',label:"Date d'expiration", type:'date', placeholder:'', icon:'fa-calendar', optional:true },
-      { id:'pays',      label:'Pays émetteur', type:'select', icon:'fa-earth-africa', optional:false,
-        options:['Cameroun','Sénégal','Côte d\'Ivoire','Mali','Gabon','RD Congo','France','Autre…'] },
-      { id:'desc',      label:'Description physique', type:'textarea', placeholder:'Couleur, état, particularités…', icon:'', optional:true },
-    ]
-  },
-  passeport: {
-    label:'Passeport', icon:'fa-passport', color:'#8B5CF6',
-    fields:[
-      { id:'titulaire', label:'Nom du titulaire', type:'text', placeholder:'Nom complet', icon:'fa-user', optional:false },
-      { id:'numero',    label:'Numéro de passeport', type:'text', placeholder:'Ex: P1234567', icon:'fa-barcode', optional:true },
-      { id:'expiration',label:"Date d'expiration", type:'date', placeholder:'', icon:'fa-calendar', optional:true },
-      { id:'pays',      label:'Pays émetteur', type:'select', icon:'fa-earth-africa', optional:false,
-        options:['Cameroun','Sénégal','Côte d\'Ivoire','Mali','Gabon','RD Congo','France','Autre…'] },
-      { id:'desc',      label:'Description physique', type:'textarea', placeholder:'Couleur, état, particularités…', icon:'', optional:true },
-    ]
-  },
-  permis: {
-    label:'Permis de conduire', icon:'fa-car-side', color:'#F59E0B',
-    fields:[
-      { id:'titulaire', label:'Nom du titulaire', type:'text', placeholder:'Nom complet', icon:'fa-user', optional:false },
-      { id:'numero',    label:'Numéro du permis', type:'text', placeholder:'Ex: PC-23-0012345', icon:'fa-barcode', optional:true },
-      { id:'categorie', label:'Catégorie', type:'select', icon:'fa-layer-group', optional:true,
-        options:['A (Moto)','B (Voiture)','C (Poids lourd)','D (Bus)','BE','CE','Autre'] },
-      { id:'expiration',label:"Date d'expiration", type:'date', placeholder:'', icon:'fa-calendar', optional:true },
-      { id:'pays',      label:'Pays émetteur', type:'select', icon:'fa-earth-africa', optional:false,
-        options:['Cameroun','Sénégal','Côte d\'Ivoire','Mali','Gabon','France','Autre…'] },
-      { id:'desc',      label:'Description physique', type:'textarea', placeholder:'Couleur, état…', icon:'', optional:true },
-    ]
-  },
-  acte: {
-    label:'Acte de naissance', icon:'fa-file-lines', color:'#10B981',
-    fields:[
-      { id:'titulaire', label:'Nom de la personne concernée', type:'text', placeholder:'Nom complet', icon:'fa-user', optional:false },
-      { id:'numero',    label:'Numéro de l\'acte', type:'text', placeholder:'Ex: 2024-YDE-000123', icon:'fa-hashtag', optional:true },
-      { id:'dateEtab',  label:'Date d\'établissement', type:'date', placeholder:'', icon:'fa-calendar', optional:true },
-      { id:'commune',   label:'Commune / Mairie émettrice', type:'text', placeholder:'Ex: Mairie de Yaoundé 1er', icon:'fa-building', optional:false },
-      { id:'desc',      label:'Observations', type:'textarea', placeholder:'Annotations, état du document…', icon:'', optional:true },
-    ]
-  },
-  banque: {
-    label:'Carte bancaire', icon:'fa-credit-card', color:'#EF4444',
-    fields:[
-      { id:'titulaire', label:'Nom du titulaire', type:'text', placeholder:'Nom sur la carte', icon:'fa-user', optional:false },
-      { id:'derniers',  label:'4 derniers chiffres', type:'text', placeholder:'Ex: 4521', icon:'fa-hashtag', optional:true },
-      { id:'banque',    label:'Banque émettrice', type:'text', placeholder:'Ex: Afriland First Bank, UBA…', icon:'fa-building-columns', optional:false },
-      { id:'expiration',label:"Date d'expiration", type:'month', placeholder:'MM/AA', icon:'fa-calendar', optional:true },
-      { id:'desc',      label:'Description', type:'textarea', placeholder:'Couleur, type Visa/Mastercard…', icon:'', optional:true },
-    ]
-  },
-  titre: {
-    label:'Titre foncier', icon:'fa-house', color:'#6366F1',
-    fields:[
-      { id:'titulaire', label:'Nom du propriétaire', type:'text', placeholder:'Nom complet', icon:'fa-user', optional:false },
-      { id:'numero',    label:'Numéro de parcelle', type:'text', placeholder:'Ex: TF/2345/B', icon:'fa-hashtag', optional:true },
-      { id:'localisation', label:'Localisation du bien', type:'text', placeholder:'Ex: Bastos, Yaoundé', icon:'fa-map-pin', optional:false },
-      { id:'superficie',label:'Superficie (m²)', type:'number', placeholder:'Ex: 500', icon:'fa-ruler-combined', optional:true },
-      { id:'desc',      label:'Description', type:'textarea', placeholder:'État, particularités du document…', icon:'', optional:true },
-    ]
-  },
-  diplome: {
-    label:'Diplôme', icon:'fa-graduation-cap', color:'#EC4899',
-    fields:[
-      { id:'titulaire', label:'Nom du diplômé', type:'text', placeholder:'Nom complet', icon:'fa-user', optional:false },
-      { id:'etablissement', label:'Établissement', type:'text', placeholder:'Ex: Université de Yaoundé 1', icon:'fa-school', optional:false },
-      { id:'specialite',label:'Spécialité / Filière', type:'text', placeholder:'Ex: Droit privé, Médecine…', icon:'fa-book', optional:true },
-      { id:'annee',     label:'Année d\'obtention', type:'number', placeholder:'Ex: 2022', icon:'fa-calendar', optional:true },
-      { id:'desc',      label:'Description', type:'textarea', placeholder:'État, couleur, mentions…', icon:'', optional:true },
-    ]
-  },
-  autre: {
-    label:'Autre document', icon:'fa-folder', color:'#9CA3AF',
-    fields:[
-      { id:'typePrec',  label:'Type précis du document', type:'text', placeholder:'Ex: Carte grise, Carte d\'étudiant…', icon:'fa-file', optional:false },
-      { id:'titulaire', label:'Nom du titulaire', type:'text', placeholder:'Nom complet', icon:'fa-user', optional:false },
-      { id:'numero',    label:'Numéro ou référence', type:'text', placeholder:'Numéro si disponible', icon:'fa-barcode', optional:true },
-      { id:'desc',      label:'Description', type:'textarea', placeholder:'Couleur, état, particularités…', icon:'', optional:true },
-    ]
-  },
-};
-
-/* ════ ÉTAT ════ */
-let   isThirdParty  = false;
-const selectedDocs  = [];   // ordre d'ajout
-let   activeDocIdx  = 0;    // index dans selectedDocs (pour l'étape 3)
-let   currentStep   = 1;
-const totalSteps    = 6;
-
-function selectOwner(type){
-  isThirdParty = (type === 'other');
-  document.getElementById('ownerMe').classList.toggle('selected', type==='me');
-  document.getElementById('ownerOther').classList.toggle('selected', type==='other');
-  
-  // Mettre à jour les métadonnées pour ajouter le champ "Lien" si besoin
-  Object.keys(DOC_META).forEach(key => {
-    const fields = DOC_META[key].fields;
-    const existingLien = fields.find(f => f.id === 'lien_parente');
-    if(isThirdParty && !existingLien){
-      fields.splice(1, 0, { id:'lien_parente', label:'Lien avec le titulaire', type:'select', icon:'fa-people-arrows', optional:false, options:['Enfant','Époux/Épouse','Parent','Frère/Sœur','Employé','Ami','Autre'] });
-    } else if(!isThirdParty && existingLien){
-      const lIdx = fields.indexOf(existingLien);
-      fields.splice(lIdx, 1);
-    }
-  });
-}
-
-/* ════ MULTI-SELECT ════ */
-function toggleDocType(card, type){
-  const idx = selectedDocs.indexOf(type);
-  if(idx > -1){
-    selectedDocs.splice(idx,1);
-    card.classList.remove('selected');
-  } else {
-    selectedDocs.push(type);
-    card.classList.add('selected');
-  }
-  renderSelectionUI();
-  updateRecapSidebar();
-}
-
-function renderSelectionUI(){
-  const info  = document.getElementById('selectionInfo');
-  const tags  = document.getElementById('selectionTags');
-  const count = selectedDocs.length;
-  if(count === 0){ info.style.display='none'; tags.innerHTML=''; return; }
-  info.style.display='flex';
-  document.getElementById('selCount').textContent = count;
-  document.getElementById('selText').textContent  = count > 1 ? 'documents sélectionnés' : 'document sélectionné';
-  tags.innerHTML = selectedDocs.map(type => {
-    const m = DOC_META[type];
-    return `<span class="sel-tag" onclick="removeDoc('${type}')">
-      <i class="fa-solid ${m.icon}"></i> ${m.label} <i class="fa-solid fa-xmark"></i>
-    </span>`;
-  }).join('');
-}
-
-function removeDoc(type){
-  const idx = selectedDocs.indexOf(type);
-  if(idx > -1) selectedDocs.splice(idx,1);
-  document.querySelectorAll('.doc-type-card').forEach(c=>{
-    if(c.getAttribute('onclick').includes(`'${type}'`)) c.classList.remove('selected');
-  });
-  renderSelectionUI();
-  updateRecapSidebar();
-}
-
-/* ════ SIDEBAR RECAP ════ */
-function updateRecapSidebar(){
-  const el = document.getElementById('recapDocList');
-  if(selectedDocs.length === 0){
-    el.innerHTML='<span style="font-size:11px;color:rgba(255,255,255,.4);font-style:italic;">Aucun sélectionné</span>';
-    return;
-  }
-  el.innerHTML = selectedDocs.map(type => {
-    const m = DOC_META[type];
-    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.08);border-radius:10px;">
-      <i class="fa-solid ${m.icon}" style="color:#F5A64B;font-size:13px;width:16px;text-align:center;"></i>
-      <span style="font-size:11.5px;font-weight:600;color:white;">${m.label}</span>
-    </div>`;
-  }).join('');
-}
-
-/* ════ STEP 2 — CHAMPS DYNAMIQUES ════ */
-function buildStep2(direction){
-  if(selectedDocs.length === 0) return;
-  const type  = selectedDocs[activeDocIdx];
-  const meta  = DOC_META[type];
-  const total = selectedDocs.length;
-
-  // Header
-  document.getElementById('step2Title').textContent   = `Détails : ${meta.label}`;
-  document.getElementById('step2Sub').textContent     = total > 1
-    ? `Renseignez les infos de ce document. Vous passerez au suivant après.`
-    : `Renseignez les informations connues.`;
-  document.getElementById('currentDocIcon').innerHTML  = `<i class="fa-solid ${meta.icon}" style="color:${meta.color};font-size:16px;"></i>`;
-  document.getElementById('currentDocName').textContent = meta.label;
-  document.getElementById('currentDocCounter').textContent = total > 1 ? `Document ${activeDocIdx+1} / ${total}` : '';
-
-  // Barre sub-progression
-  const subProg = document.getElementById('docSubProgress');
-  if(total > 1){
-    subProg.style.display='block';
-    document.getElementById('docSubProgressBar').style.width = `${((activeDocIdx+1)/total)*100}%`;
-  } else {
-    subProg.style.display='none';
-  }
-
-  // Onglets (si plusieurs)
-  const tabs = document.getElementById('docTabs');
-  if(total > 1){
-    tabs.style.display='block';
-    document.getElementById('docTabsInner').innerHTML = selectedDocs.map((t,i) => {
-      const m2 = DOC_META[t];
-      const cls = i < activeDocIdx ? 'done' : (i === activeDocIdx ? 'active' : '');
-      const icon = i < activeDocIdx ? 'fa-check' : `fa-solid ${m2.icon}`;
-      return `<button type="button" class="doc-nav-tab ${cls}" onclick="jumpToDoc(${i})">
-        <span class="tab-num">${i < activeDocIdx ? '<i class="fa-solid fa-check" style="font-size:8px;"></i>' : (i+1)}</span>
-        <i class="fa-solid ${m2.icon}" style="font-size:11px;"></i>
-        ${m2.label}
-      </button>`;
-    }).join('');
-  } else {
-    tabs.style.display='none';
-  }
-
-  // Champs dynamiques
-  const container = document.getElementById('dynamicFields');
-  const animClass = direction === 'left' ? 'slide-left' : 'slide-right';
-  container.innerHTML = `<div class="${animClass}">` + buildFieldsHTML(type) + '</div>';
-}
-
-function buildFieldsHTML(type){
-  const fields = DOC_META[type].fields;
-  const grid2  = ['titulaire','numero','expiration','pays','derniers','banque','dateEtab','categorie','annee','superficie','localisation'].includes;
-  // Group fields: 2 columns when short, full width for textarea
-  let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">';
-  let inGrid = true;
-  fields.forEach(f => {
-    if(f.type === 'textarea'){
-      if(inGrid){ html += '</div>'; inGrid=false; }
-      html += buildField(f, 'margin-top:14px;');
-    } else {
-      if(!inGrid){ html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">'; inGrid=true; }
-      html += buildField(f,'');
-    }
-  });
-  if(inGrid) html += '</div>';
-  return html;
-}
-
-function buildField(f, extra){
-  const optBadge = f.optional ? `<span class="opt-badge">Optionnel</span>` : '';
-  const iconHtml = f.icon ? `<i class="fa-solid ${f.icon} field-icon"></i>` : '';
-  const noIcon   = !f.icon ? ' no-icon' : '';
-
-  if(f.type === 'select'){
-    const opts = (f.options || []).map(o => `<option value="${o}">${o}</option>`).join('');
-    return `<div class="field-group" style="${extra}">
-      <label class="field-label"><i class="fa-solid ${f.icon}" style="color:#F5A64B;font-size:10px;"></i> ${f.label} ${optBadge}</label>
-      <div class="field-wrapper">
-        ${iconHtml}
-        <select class="field-input"><option value="">Sélectionner…</option>${opts}</select>
-        <i class="fa-solid fa-chevron-down" style="position:absolute;right:14px;color:#C4BAB0;font-size:11px;pointer-events:none;"></i>
-      </div>
-    </div>`;
-  }
-  if(f.type === 'textarea'){
-    return `<div class="field-group" style="${extra}">
-      <label class="field-label">${f.icon ? `<i class="fa-solid ${f.icon}" style="color:#F5A64B;font-size:10px;"></i>` : ''} ${f.label} ${optBadge}</label>
-      <div class="field-wrapper"><textarea class="field-input no-icon" placeholder="${f.placeholder}" style="min-height:80px;"></textarea></div>
-    </div>`;
-  }
-  return `<div class="field-group" style="${extra}">
-    <label class="field-label">${f.icon ? `<i class="fa-solid ${f.icon}" style="color:#F5A64B;font-size:10px;"></i>` : ''} ${f.label} ${optBadge}</label>
-    <div class="field-wrapper">${iconHtml}<input type="${f.type}" class="field-input${noIcon}" placeholder="${f.placeholder||''}"/></div>
-  </div>`;
-}
-
-function jumpToDoc(idx){
-  const dir = idx > activeDocIdx ? 'right' : 'left';
-  activeDocIdx = idx;
-  buildStep2(dir);
-}
-
-/* ════ WIZARD ════ */
-function updateProgressUI(){
-  for(let i=1;i<=totalSteps;i++){
-    const dot=document.getElementById(`ps${i}`);
-    if(!dot) continue;
-    dot.className='progress-dot';
-    if(i<currentStep)       { dot.classList.add('done');    dot.innerHTML='<i class="fa-solid fa-check" style="font-size:9px;"></i>'; }
-    else if(i===currentStep){ dot.classList.add('current'); dot.textContent=String(i); }
-    else                    { dot.textContent=String(i); }
-    if(i<totalSteps){ const l=document.getElementById(`pl${i}`); if(l) l.className=i<currentStep?'progress-vline done':'progress-vline'; }
-  }
-  document.getElementById('progressBar').style.width=`${(currentStep/totalSteps)*100}%`;
-  document.getElementById('stepCounter').textContent=`Étape ${currentStep} / ${totalSteps}`;
-  const prev=document.getElementById('prevStepBtn'),next=document.getElementById('nextStepBtn'),actions=document.getElementById('stepActions');
-  prev.disabled=currentStep===1; prev.style.opacity=currentStep===1?'0.45':'1'; prev.style.cursor=currentStep===1?'not-allowed':'pointer';
-  next.style.display=currentStep===totalSteps?'none':'flex';
-  actions.classList.toggle('active',currentStep===totalSteps);
-}
-
-function showStep(step){
-  currentStep=Math.max(1,Math.min(totalSteps,step));
-  document.querySelectorAll('.form-step').forEach(s=>s.classList.toggle('active',Number(s.dataset.step)===currentStep));
-  updateProgressUI();
-  document.getElementById('formLeft').scrollTop=0;
-  if(currentStep===3){ activeDocIdx=0; buildStep2('right'); }
-}
-
-function goToNextStep(){
-  if(currentStep===1){
-    const me = document.getElementById('ownerMe').classList.contains('selected');
-    const other = document.getElementById('ownerOther').classList.contains('selected');
-    if(!me && !other){
-      document.getElementById('ownerMe').parentElement.style.animation='shake .4s ease';
-      setTimeout(()=>document.getElementById('ownerMe').parentElement.style.animation='',500);
-      return;
-    }
-  }
-  if(currentStep===2){
-    if(selectedDocs.length===0){ shakeStep1(); return; }
-  }
-  if(currentStep < totalSteps) showStep(currentStep+1);
-}
-function goToPrevStep(){
-  if(currentStep===3 && activeDocIdx > 0){ jumpToDoc(activeDocIdx-1); return; }
-  if(currentStep>1) showStep(currentStep-1);
-}
-
-function shakeStep1(){
-  const grid=document.getElementById('docTypeGrid');
-  grid.style.animation='shake .4s ease';
-  setTimeout(()=>grid.style.animation='',500);
-  const info=document.getElementById('selectionInfo');
-  info.style.display='flex'; info.style.background='#FEF0DC'; info.style.borderColor='#F5A64B';
-  document.getElementById('selCount').textContent='0';
-  document.getElementById('selText').innerHTML='<span style="color:#D98A30;font-weight:700;">Sélectionnez au moins un document pour continuer</span>';
-  setTimeout(()=>{ if(selectedDocs.length===0){ info.style.display='none'; info.style.background=''; info.style.borderColor=''; } },3000);
-}
-
-/* ════ LIEU ════ */
-function selectPlace(btn){ document.querySelectorAll('.place-tag').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
-
-/* ════ URGENCY ════ */
-const urgTexts={low:'Situation non urgente, quelques semaines acceptables.',medium:'Document important, situation gérable sous quelques jours.',high:'URGENT — Ce document est indispensable dès maintenant !'};
-function setUrgency(level,btn){ document.querySelectorAll('.urgency-btn').forEach(b=>b.className='urgency-btn'); btn.classList.add('sel-'+level); document.getElementById('urgencyDesc').textContent=urgTexts[level]; }
-
-/* ════ REWARD ════ */
-function toggleReward(on){ document.getElementById('rewardField').style.display=on?'block':'none'; document.getElementById('rewardSlider').style.background=on?'#F5A64B':'#E0D5C4'; document.getElementById('rewardThumb').style.transform=on?'translateX(20px)':'translateX(0)'; }
-
-/* ════ CHECKBOX ════ */
-let checked=false;
-function toggleCheckbox(){ checked=!checked; const ui=document.getElementById('checkboxUI'),icon=document.getElementById('checkIcon'); ui.style.background=checked?'#1E3A2F':'white'; ui.style.borderColor=checked?'#1E3A2F':'#E0D5C4'; icon.style.display=checked?'block':'none'; }
-
-/* ════ PHOTO ════ */
-function previewFile(input,previewId,zoneId,textId,iconId){ const file=input.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{document.getElementById(previewId).src=e.target.result;document.getElementById(previewId).style.display='block';document.getElementById(textId).style.display='none';document.getElementById(iconId).style.display='none';document.getElementById(zoneId).classList.add('has-file');};reader.readAsDataURL(file); }
-function dragOver(e,z){e.preventDefault();z.classList.add('dragover')} function dragLeave(z){z.classList.remove('dragover')}
-function dropFile(e,z,previewId){e.preventDefault();z.classList.remove('dragover');const file=e.dataTransfer.files[0];if(!file||!file.type.startsWith('image/'))return;const reader=new FileReader();reader.onload=ev=>{document.getElementById(previewId).src=ev.target.result;document.getElementById(previewId).style.display='block';z.classList.add('has-file');};reader.readAsDataURL(file);}
-
-/* ════ SUBMIT ════ */
-// Stockage global de la dernière déclaration pour le PDF
-var lastDeclarationData = null;
-
-function collectDeclarationData(ref) {
-  // ── Documents + champs remplis
-  var docs = [];
-  selectedDocs.forEach(function(key) {
-    var meta = DOC_META[key];
-    if (!meta) return;
-    var fields = [];
-    var panel = document.getElementById('docPanel_' + key);
-    if (panel) {
-      (meta.fields || []).forEach(function(f) {
-        var el = panel.querySelector('[data-field-id="' + f.id + '"]') ||
-                 panel.querySelector('input[placeholder="' + (f.placeholder || '') + '"]');
-        // Fallback : parcourir tous les inputs/selects/textareas du panel
-        var val = '';
-        var inputs = panel.querySelectorAll('input,select,textarea');
-        inputs.forEach(function(inp, idx) {
-          if (meta.fields[idx] && meta.fields[idx].id === f.id) val = inp.value.trim();
-        });
-        fields.push({ label: f.label, value: val });
-      });
-    } else {
-      // Panel pas encore construit : on retourne juste le type
-      fields.push({ label: 'Type', value: meta.label });
-    }
-    docs.push({ label: meta.label, fields: fields });
-  });
-
-  // ── Lieu : place-tag active ou champ texte
-  var lieuEl = document.querySelector('.place-tag.active');
-  var lieu = lieuEl ? lieuEl.textContent.trim() : '';
-  var lieuInput = document.getElementById('lossPlace');
-  if (!lieu && lieuInput) lieu = lieuInput.value.trim();
-
-  // ── Circonstances
-  var circEl = document.getElementById('lossDesc') || document.getElementById('lossCirc');
-  var circonstances = circEl ? circEl.value.trim() : '';
-
-  // ── Date de perte
-  var datePerte = '';
-  var lossDateEl = document.getElementById('lossDate');
-  if (lossDateEl) datePerte = lossDateEl.value;
-
-  // ── Contact
-  var phoneEl = document.querySelector('input[type="tel"]');
-  var emailEl = document.querySelector('input[type="email"]');
-  var phone = phoneEl ? phoneEl.value.trim() : '';
-  var email = emailEl ? emailEl.value.trim() : '';
-
-  // ── Urgence
-  var urgEl = document.querySelector('.urgency-btn.sel-low,.urgency-btn.sel-medium,.urgency-btn.sel-high');
-  var urgence = urgEl ? urgEl.textContent.trim() : 'Modérée';
-
-  // ── Récompense
-  var recompense = '';
-  var rewardEl = document.getElementById('rewardToggle');
-  if (rewardEl && rewardEl.checked) {
-    var rewardAmtEl = document.querySelector('#rewardField input[type="number"]');
-    if (rewardAmtEl) recompense = rewardAmtEl.value;
-  }
-
-  return {
-    ref: ref,
-    date: new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' }),
-    datePerte: datePerte,
-    documents: docs,
-    lieu: lieu || 'Non précisé',
-    circonstances: circonstances,
-    contact: { phone: phone, email: email },
-    urgence: urgence,
-    recompense: recompense,
-  };
-}
-
-function submitDeclaration() {
-  if (!checked) {
-    var ui = document.getElementById('checkboxUI');
-    ui.style.borderColor = '#ef4444';
-    setTimeout(function() { ui.style.borderColor = '#E0D5C4'; }, 2000);
-    return;
-  }
-  // Afficher la pop-up de confirmation au lieu de soumettre directement
-  document.getElementById('confirmOverlay').classList.add('show');
-  document.getElementById('confirmPassword').value = '';
-  document.getElementById('passwordError').style.display = 'none';
-  document.getElementById('confirmPassword').focus();
-}
-
-function closeConfirmModal() {
-  document.getElementById('confirmOverlay').classList.remove('show');
-}
-
-function validateAndSubmit() {
-  var passInput = document.getElementById('confirmPassword');
-  var errorSpan = document.getElementById('passwordError');
-  var btn = document.getElementById('finalSubmitBtn');
-
-  // Simulation de vérification (pour la démo, n'importe quel mot de passe de 4+ caractères passe)
-  if (passInput.value.length < 4) {
-    errorSpan.style.display = 'block';
-    passInput.style.borderColor = '#ef4444';
-    passInput.parentElement.style.animation = 'shake .4s ease';
-    setTimeout(() => passInput.parentElement.style.animation = '', 500);
-    return;
-  }
-
-  // Animation de chargement
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-
-  setTimeout(function() {
-    closeConfirmModal();
-    btn.disabled = false;
-    btn.innerHTML = 'Confirmer';
-    
-    var ref = 'DOC-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
-    lastDeclarationData = collectDeclarationData(ref);
-    document.getElementById('refNumber').textContent = ref;
-    document.getElementById('successOverlay').classList.add('show');
-  }, 800);
-}
-
-function downloadDeclarationPdf() {
-  var btn = document.getElementById('downloadPdfBtn');
-  if (!lastDeclarationData) return;
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Génération en cours…'; }
-  generateDeclarationPdf(lastDeclarationData)
-    .then(function() {
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-file-arrow-down"></i> Télécharger la déclaration PDF'; }
-    })
-    .catch(function(err) {
-      console.error('Erreur PDF :', err);
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Erreur – réessayer'; }
-      alert('Impossible de générer le PDF.\n' + err.message);
-    });
-}
-
-function resetForm(){
-  document.getElementById('successOverlay').classList.remove('show');
-  selectedDocs.length=0;
-  document.querySelectorAll('.doc-type-card').forEach(c=>c.classList.remove('selected'));
-  renderSelectionUI(); updateRecapSidebar();
-  checked=false; document.getElementById('checkboxUI').style.background='white'; document.getElementById('checkboxUI').style.borderColor='#E0D5C4'; document.getElementById('checkIcon').style.display='none';
-  showStep(1);
-}
-
-/* ════ SIDEBAR ════ */
-function setSidebarState(isOpen){ const sb=document.getElementById('sidebar'),ov=document.getElementById('overlay'),wrap=document.querySelector('.main-wrap');if(!sb)return;sb.classList.toggle('open',isOpen);sb.classList.toggle('closed',!isOpen);if(ov){if(window.innerWidth<769&&isOpen)ov.classList.add('show');else ov.classList.remove('show');}if(wrap){if(window.innerWidth<769)wrap.classList.add('expanded');else wrap.classList.toggle('expanded',!isOpen);} }
-function openSb(){setSidebarState(true)} function closeSb(){setSidebarState(false)} function toggleSb(){const sb=document.getElementById('sidebar');if(!sb)return;setSidebarState(!sb.classList.contains('open')||sb.classList.contains('closed'));}
-
-/* ════ INIT ════ */
-function checkWidth(){ const btn=document.getElementById('menuBtn');if(btn)btn.style.display='flex';if(window.innerWidth<769)closeSb();else openSb(); }
-window.addEventListener('resize',checkWidth);
-document.addEventListener('DOMContentLoaded',function(){
-  checkWidth();
-  const today=new Date().toISOString().split('T')[0];
-  document.getElementById('lossDate').value=today;
-  showStep(1);
-
-  // Gestion du paramètre 'doc' dans l'URL pour la pré-sélection
-  const urlParams = new URLSearchParams(window.location.search);
-  const preSelectedDoc = urlParams.get('doc');
-  if (preSelectedDoc && DOC_META[preSelectedDoc]) {
-    // 1. Sélectionner 'Pour moi-même' par défaut
-    selectOwner('me');
-    
-    // 2. Trouver la carte correspondante dans l'étape 2 et la cliquer
-    // On attend un peu que le DOM soit bien stable si besoin, mais ici DOMContentLoaded suffit
-    const cards = document.querySelectorAll('.doc-type-card');
-    cards.forEach(card => {
-      // Le onclick contient typiquement toggleDocType(this, 'type')
-      if (card.getAttribute('onclick') && card.getAttribute('onclick').includes(`'${preSelectedDoc}'`)) {
-        toggleDocType(card, preSelectedDoc);
-      }
-    });
-
-    // 3. Passer directement à l'étape 3 (Détails) pour gagner du temps
-    showStep(3);
-  }
-});
-</script>
+  <script type="module">
+    import { initLostDeclaration } from './js/declarations/perte.js';
+    document.addEventListener('DOMContentLoaded', initLostDeclaration);
+  </script>
 </body>
 </html>

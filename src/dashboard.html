@@ -9,9 +9,36 @@
     href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800;900&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link href="/css/input.css" rel="stylesheet" />
-  <script type="module" src="/js/auth.js"></script>
-  <script type="module" src="/js/sidebar.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#F5A64B', dark: '#D98A30', light: '#FEF0DC' },
+            green: { dark: '#1E3A2F', mid: '#2D5A42', light: '#E8F5EE' },
+            bgMain: '#F4EFE6',
+            surface: '#FFFFFF',
+            surface2: '#FAF7F2',
+            textMain: '#1A1A1A',
+            textMuted: '#6B7280',
+            borderMain: '#EAE3D8',
+            accent: '#F5A64B',
+            blobGreen: '#A8CBAF',
+            blobPeach: '#E8B89A',
+          },
+          fontFamily: {
+            poppins: ['Poppins', 'sans-serif'],
+            bricolage: ['"Bricolage Grotesque"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/css/main.css" />
+  <script type="module" src="/js/services/auth.js"></script>
+  <script type="module" src="/js/services/document.js"></script>
+  <script type="module" src="/js/ui/sidebar.js"></script>
 
   <link rel="shortcut icon" href="/assets/images/favicon.png" type="image/x-icon" />
 
@@ -196,6 +223,7 @@
 <body>
 
   <div id="sidebar-root"></div>
+
   <script src="js/notifications.js"></script>
   <!-- ══ MAIN WRAPPER ══ -->
   <div class="main-wrapper" id="mainWrapper">
@@ -227,8 +255,10 @@
         <div
           class="flex items-center gap-2 pl-1.5 pr-3 py-1 bg-surface2 border border-borderMain rounded-[10px] cursor-pointer hover:border-primary transition-colors">
           <div
-            class="w-[26px] h-[26px] rounded-[6px] bg-green-dark flex items-center justify-center font-bricolage text-[11px] font-extrabold text-primary"
-            id="topInitial">JM</div>
+            class="w-[26px] h-[26px] rounded-[6px] bg-green-dark flex items-center justify-center font-bricolage text-[11px] font-extrabold text-primary overflow-hidden" id="topInitialWrap">
+            <img id="topPhoto" src="" class="w-full h-full object-cover hidden" />
+            <span id="topInitial">JM</span>
+          </div>
           <span class="text-[12.5px] font-semibold text-textMain hidden xs:block" id="topName">Jean-Marc</span>
           <i class="fa-solid fa-chevron-down text-[8px] text-textMuted ml-0.5 hidden xs:block"></i>
         </div>
@@ -328,8 +358,8 @@
         <!-- Left column -->
         <div class="flex flex-col gap-4 sm:gap-5">
 
-          <!-- Suivi de progression (MIS À JOUR AVEC COULEURS) -->
-          <div class="flex flex-col gap-4">
+          <!-- Suivi de progression -->
+          <div class="flex flex-col gap-4" id="trackingContainer">
 
             <!-- DOSSIER PERDU (ROUGE) -->
             <div class="bg-white border-2 border-red-500 rounded-[18px] overflow-hidden shadow-md shadow-red-500/5">
@@ -498,7 +528,7 @@
                 Tout voir <i class="fa-solid fa-arrow-right text-[9px]"></i>
               </a>
             </div>
-            <div class="flex flex-col divide-y divide-borderMain">
+            <div class="flex flex-col divide-y divide-borderMain" id="recentActivitiesList">
 
               <div
                 class="flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-surface2 transition-colors cursor-pointer">
@@ -617,7 +647,7 @@
                     stroke-dasharray="62.8 251.3" stroke-dashoffset="-251.3" />
                 </svg>
                 <div class="absolute inset-0 flex flex-col items-center justify-center">
-                  <div class="font-bricolage text-[26px] font-extrabold text-textMain leading-none">5</div>
+                  <div class="font-bricolage text-[26px] font-extrabold text-textMain leading-none" id="dashboardTotalDocs">0</div>
                   <div class="text-[10.5px] text-textMuted mt-0.5">Total</div>
                 </div>
               </div>
@@ -626,19 +656,19 @@
                   <div class="flex items-center gap-2 text-textMain font-medium">
                     <div class="w-2.5 h-2.5 rounded-[3px] bg-[#10B981] flex-shrink-0"></div>Retrouvés
                   </div>
-                  <span class="font-bricolage font-bold text-textMain">2</span>
+                  <span class="font-bricolage font-bold text-textMain" id="dashboardVerifiedDocs">0</span>
                 </div>
                 <div class="flex items-center justify-between text-[13px]">
                   <div class="flex items-center gap-2 text-textMain font-medium">
                     <div class="w-2.5 h-2.5 rounded-[3px] bg-primary flex-shrink-0"></div>En cours
                   </div>
-                  <span class="font-bricolage font-bold text-textMain">2</span>
+                  <span class="font-bricolage font-bold text-textMain" id="dashboardPendingDocs">0</span>
                 </div>
                 <div class="flex items-center justify-between text-[13px]">
                   <div class="flex items-center gap-2 text-textMain font-medium">
                     <div class="w-2.5 h-2.5 rounded-[3px] bg-[#7C3AED] flex-shrink-0"></div>Nouveaux
                   </div>
-                  <span class="font-bricolage font-bold text-textMain">1</span>
+                  <span class="font-bricolage font-bold text-textMain" id="dashboardNewDocs">0</span>
                 </div>
               </div>
             </div>
@@ -760,52 +790,21 @@
           }
         }
 
-        // notification modal functions
-        function openNotifModal() {
-          document.getElementById('notifModal').classList.remove('hidden');
-        }
-        function closeNotifModal() {
-          document.getElementById('notifModal').classList.add('hidden');
-        }
-        function toggleNotifSettings() {
-          document.getElementById('notifSettingsModal').classList.toggle('hidden');
+        // Helper to update statistics on the dashboard
+        async function updateDashboardTopStats() {
+          // This will be handled in dashboard.js
         }
 
-        // helper to add a notification to modal (and count)
-        function addNotification(title, message, time) {
-          const container = document.getElementById('notifListModal');
-          const notif = `
-        <div class="flex gap-4 items-start group">
-          <div class="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center shadow-sm text-primary flex-shrink-0 group-hover:scale-110 transition-transform">
-            <i class="fa-solid fa-bell text-base"></i>
-          </div>
-          <div class="flex-1">
-            <div class="flex items-center justify-between mb-0.5">
-              <h4 class="text-[14px] font-bold text-slate-800">${title}</h4>
-              <span class="text-[10px] text-slate-400 font-bold uppercase">${time}</span>
-            </div>
-            <p class="text-[13px] text-slate-500 leading-relaxed">${message}</p>
-          </div>
-        </div>
-      `;
-          container.insertAdjacentHTML('afterbegin', notif);
+        updateDashboardTopStats();
 
-          const countElm = document.getElementById('notifCountModal');
-          const dashboardDot = document.getElementById('notifDot');
-          const newCount = parseInt(countElm.innerText || '0') + 1;
-          countElm.innerText = newCount;
-          if (dashboardDot) dashboardDot.classList.add('bg-primary');
-        }
-
-        // initialize with some example notifications
-        addNotification('Document retrouvé', 'Votre document "Carte ID" a été retrouvé.', 'Il y a 2 heures');
-        addNotification('Validation', 'Vous avez confirmé la récupération d’un document.', 'Il y a 1 jour');
-        addNotification('Paiement reçu', 'Vous avez perçu 30€ pour un document remis.', 'Il y a 3 jours');
 
         updateDashboardTopStats();
 
 
       </script>
+      <script type="module" src="js/pages/dashboard.js"></script>
+    </div>
+  </div>
 </body>
 
 </html>

@@ -8,26 +8,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="shortcut icon" href="./assets/images/favicon.png" type="image/x-icon"/>
-    <link href="css/output.css" rel="stylesheet"/>
+    <link href="/css/main.css" rel="stylesheet"/>
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-              primary: { DEFAULT: "#F5A64B", dark: "#D98A30", light: "#FEF0DC" },
-              "green-dark": "#1E3A2F",
-              "green-mid": "#2D5A42",
-              "green-light": "#E8F5EE",
-              bgMain: "#F4EFE6",
-              surface: "#FFFFFF",
-              surface2: "#FAF7F2",
-              textMain: "#1A1A1A",
-              textMuted: "#9CA3AF",
-              borderMain: "#EAE3D8",
+              primary: { DEFAULT: '#F5A64B', dark: '#D98A30', light: '#FEF0DC' },
+              green: { dark: '#1E3A2F', mid: '#2D5A42', light: '#E8F5EE' },
+              bgMain: '#F4EFE6',
+              surface: '#FFFFFF',
+              surface2: '#FAF7F2',
+              textMain: '#1A1A1A',
+              textMuted: '#6B7280',
+              borderMain: '#EAE3D8',
+              accent: '#F5A64B',
+              blobGreen: '#A8CBAF',
+              blobPeach: '#E8B89A',
             },
             fontFamily: {
-              poppins: ["Poppins", "sans-serif"],
-              bricolage: ['"Bricolage Grotesque"', "sans-serif"],
+              poppins: ['Poppins', 'sans-serif'],
+              bricolage: ['"Bricolage Grotesque"', 'sans-serif'],
             },
           },
         },
@@ -213,8 +214,8 @@
       }
       .tag button { background: none; border: none; cursor: pointer; color: #d98a30; font-size: 10px; padding: 0; }
     </style>
-    <script src="./js/auth.js"></script>
-    <script src="./js/sidebar.js"></script>
+    <script type="module" src="/js/services/auth.js"></script>
+    <script src="./js/ui/sidebar.js"></script>
   </head>
   <body>
     <!-- Sidebar composant (généré par sidebar.js) -->
@@ -287,15 +288,15 @@
             </div>
 
             <div class="mb-4">
-              <p class="text-[11px] font-bold text-textMain mb-2">Avec date d'expiration</p>
+              <p class="text-[11px] font-bold text-textMain mb-2 uppercase tracking-wider opacity-60">Avec date d'expiration</p>
               <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3" id="type-grid-expiring"></div>
-              <p class="text-[11px] font-bold text-textMain mb-2">Sans date d'expiration</p>
+              <p class="text-[11px] font-bold text-textMain mb-2 uppercase tracking-wider opacity-60">Sans date d'expiration</p>
               <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="type-grid-non-expiring"></div>
             </div>
 
             <div id="autre-input" class="hidden mb-4">
               <label class="form-label">Précisez le type</label>
-              <input type="text" class="form-input" placeholder="Ex: Carte grise, Attestation…"/>
+              <input type="text" id="autre-type-input" class="form-input" placeholder="Ex: Carte grise, Attestation…"/>
             </div>
 
             <button onclick="goToStep(2)" id="btn-s1" disabled
@@ -332,7 +333,7 @@
               <div>
                 <label class="form-label">État du document</label>
                 <div class="grid grid-cols-3 gap-2">
-                  <div class="radio-pill"><input type="radio" name="etat" id="e-bon" value="bon"/><label for="e-bon"><i class="fa-solid fa-circle-check text-green-500 text-xs"></i>Bon état</label></div>
+                  <div class="radio-pill"><input type="radio" name="etat" id="e-bon" value="bon" checked/><label for="e-bon"><i class="fa-solid fa-circle-check text-green-500 text-xs"></i>Bon état</label></div>
                   <div class="radio-pill"><input type="radio" name="etat" id="e-moyen" value="moyen"/><label for="e-moyen"><i class="fa-solid fa-triangle-exclamation text-amber-500 text-xs"></i>Moyen</label></div>
                   <div class="radio-pill"><input type="radio" name="etat" id="e-abime" value="abime"/><label for="e-abime"><i class="fa-solid fa-circle-xmark text-red-400 text-xs"></i>Abîmé</label></div>
                 </div>
@@ -380,20 +381,14 @@
                 </div>
               </div>
 
-             
-
-              
-
-            
-
-
-             
+              <input type="text" id="lieu-adresse" class="form-input" placeholder="Adresse ou ville..."/>
+              <input type="date" id="lieu-date" class="form-input"/>
+            </div>
 
             <div class="flex gap-2">
               <button onclick="goToStep(2)" class="px-4 py-2.5 rounded-[12px] bg-bgMain border border-borderMain text-textMain text-[13px] font-bold hover:border-textMain transition-colors flex items-center gap-1.5"><i class="fa-solid fa-arrow-left text-[11px]"></i> Retour</button>
               <button onclick="goToStep(4)" class="flex-1 py-2.5 rounded-[12px] bg-primary text-white font-bricolage text-[14px] font-bold hover:bg-primary-dark transition-all active:scale-[.98]">Continuer <i class="fa-solid fa-arrow-right ml-1 text-[11px]"></i></button>
             </div>
-          </div>
           </div>
 
           <!-- ══ STEP 4 ══ -->
@@ -404,10 +399,6 @@
               </div>
               <h2 class="font-bricolage text-[15px] font-bold text-textMain">Photos du document</h2>
             </div>
-            <div class="flex items-start gap-2 p-3 bg-amber-50 border border-amber-100 rounded-[10px] mb-3">
-              <i class="fa-solid fa-triangle-exclamation text-amber-500 text-xs mt-0.5 flex-shrink-0"></i>
-              <p class="text-[11.5px] text-amber-800 leading-snug"><strong>Important :</strong> Photo permettant d'identifier le document <strong>sans révéler les données complètes</strong>. Couvrez le numéro si nécessaire.</p>
-            </div>
 
             <div class="flex flex-col gap-3 mb-4">
               <div>
@@ -416,41 +407,14 @@
                   <input type="file" id="file-main" class="hidden" accept="image/*" onchange="fileChg(this,'prev-main','img-main','drop-main')"/>
                   <div id="prev-main" class="hidden">
                     <img id="img-main" class="w-full max-h-28 object-contain rounded-[8px] mb-1.5 mx-auto" src="" alt=""/>
-                    <p class="text-[11px] text-green-mid font-semibold flex items-center justify-center gap-1"><i class="fa-solid fa-check-circle"></i>Photo ajoutée — cliquez pour changer</p>
                   </div>
                   <div id="phold-main">
                     <i class="fa-solid fa-cloud-arrow-up text-2xl text-textMuted mb-1 block"></i>
                     <p class="text-[13px] font-bold text-textMain">Glissez ou cliquez pour uploader</p>
-                    <p class="text-[11px] text-textMuted">JPG, PNG · Max 10 Mo</p>
                   </div>
                 </div>
               </div>
-
-              <div>
-                <label class="form-label">Photos supplémentaires <span class="text-textMuted font-normal">(max 3)</span></label>
-                <div class="grid grid-cols-3 gap-2">
-                  <div class="drop-zone p-2 text-center min-h-[65px] flex items-center justify-center" id="drop-e1" onclick="document.getElementById('file-extra1').click()" ondragover="drgOver(event,'drop-e1')" ondragleave="drgLeave('drop-e1')" ondrop="drgDrop(event,'drop-e1','prev-e1','img-e1')">
-                    <input type="file" id="file-extra1" class="hidden" accept="image/*" onchange="fileChg(this,'prev-e1','img-e1','drop-e1')"/>
-                    <div id="prev-e1" class="hidden w-full"><img id="img-e1" class="w-full h-[58px] object-cover rounded-[7px]" src="" alt=""/></div>
-                    <div id="phold-e1"><i class="fa-solid fa-plus text-textMuted text-base block mb-0.5"></i><span class="text-[10px] text-textMuted">Photo 2</span></div>
-                  </div>
-                  <div class="drop-zone p-2 text-center min-h-[65px] flex items-center justify-center" id="drop-e2" onclick="document.getElementById('file-extra2').click()" ondragover="drgOver(event,'drop-e2')" ondragleave="drgLeave('drop-e2')" ondrop="drgDrop(event,'drop-e2','prev-e2','img-e2')">
-                    <input type="file" id="file-extra2" class="hidden" accept="image/*" onchange="fileChg(this,'prev-e2','img-e2','drop-e2')"/>
-                    <div id="prev-e2" class="hidden w-full"><img id="img-e2" class="w-full h-[58px] object-cover rounded-[7px]" src="" alt=""/></div>
-                    <div id="phold-e2"><i class="fa-solid fa-plus text-textMuted text-base block mb-0.5"></i><span class="text-[10px] text-textMuted">Photo 3</span></div>
-                  </div>
-                  <div class="drop-zone p-2 text-center min-h-[65px] flex items-center justify-center" id="drop-e3" onclick="document.getElementById('file-extra3').click()" ondragover="drgOver(event,'drop-e3')" ondragleave="drgLeave('drop-e3')" ondrop="drgDrop(event,'drop-e3','prev-e3','img-e3')">
-                    <input type="file" id="file-extra3" class="hidden" accept="image/*" onchange="fileChg(this,'prev-e3','img-e3','drop-e3')"/>
-                    <div id="prev-e3" class="hidden w-full"><img id="img-e3" class="w-full h-[58px] object-cover rounded-[7px]" src="" alt=""/></div>
-                    <div id="phold-e3"><i class="fa-solid fa-plus text-textMuted text-base block mb-0.5"></i><span class="text-[10px] text-textMuted">Photo 4</span></div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-2.5 p-3 bg-green-light border border-green-dark/10 rounded-[10px]">
-                <input type="checkbox" id="floutage" class="mt-0.5 accent-primary w-3.5 h-3.5 flex-shrink-0 cursor-pointer" checked/>
-                <label for="floutage" class="text-[11.5px] text-textMain cursor-pointer leading-snug"><strong>Floutage automatique</strong> des zones sensibles avant publication. <span class="text-green-mid font-semibold">Recommandé.</span></label>
-              </div>
+              <input type="file" id="file-extra1" class="hidden" accept="image/*"/>
             </div>
 
             <div class="flex gap-2">
@@ -465,117 +429,62 @@
               <div class="w-7 h-7 rounded-[8px] bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <i class="fa-solid fa-handshake text-primary text-xs"></i>
               </div>
-              <div>
-                <h2 class="font-bricolage text-[15px] font-bold text-textMain">Vos coordonnées & récompense</h2>
-                <p class="text-[11px] text-textMuted">Le propriétaire vous contacte via DocMaster uniquement.</p>
-              </div>
+              <h2 class="font-bricolage text-[15px] font-bold text-textMain">Vos coordonnées & récompense</h2>
             </div>
 
             <div class="flex flex-col gap-3 mb-4">
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="form-label">Votre prénom *</label>
-                  <input type="text" id="contact-prenom" class="form-input" placeholder="Jean-Marc" value="Jean-Marc"/>
-                </div>
-                <div>
-                  <label class="form-label">Téléphone *</label>
-                  <input type="tel" id="contact-tel" class="form-input" placeholder="+237 6XX XXX XXX"/>
-                </div>
-              </div>
+              <input type="tel" id="contact-tel" class="form-input" placeholder="Votre téléphone..."/>
 
               <div>
                 <label class="form-label">Mode de contact</label>
-                <div class="grid grid-cols-3 gap-2">
-                  <div class="radio-pill"><input type="radio" name="contact-mode" id="cm-app" value="app" checked/><label for="cm-app"><i class="fa-solid fa-comment-dots text-primary text-xs"></i>Via l'app</label></div>
-                  <div class="radio-pill"><input type="radio" name="contact-mode" id="cm-wa" value="whatsapp"/><label for="cm-wa"><i class="fa-brands fa-whatsapp text-[#25D366] text-xs"></i>WhatsApp</label></div>
-                  <div class="radio-pill"><input type="radio" name="contact-mode" id="cm-tel" value="tel"/><label for="cm-tel"><i class="fa-solid fa-phone text-blue-500 text-xs"></i>Appel</label></div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="radio-pill"><input type="radio" name="contact-mode" id="cm-app" value="APP_CHAT" checked/><label for="cm-app">Via l'app</label></div>
+                  <div class="radio-pill"><input type="radio" name="contact-mode" id="cm-tel" value="PHONE"/><label for="cm-tel">Appel</label></div>
                 </div>
               </div>
 
-              <div>
-                <label class="form-label">Souhaitez-vous une récompense ?</label>
-                <div class="grid grid-cols-3 gap-2">
-                  <div class="reward-card" id="rw-non" onclick="selectReward(this,'non')">
-                    <div class="flex items-center justify-between mb-1.5">
-                      <div class="w-8 h-8 rounded-[9px] bg-green-light flex items-center justify-center"><i class="fa-solid fa-heart text-green-mid text-xs"></i></div>
-                      <i class="fa-solid fa-circle-check text-primary reward-check text-sm"></i>
-                    </div>
-                    <div class="text-[12px] font-bold text-textMain">Non merci</div>
-                    <div class="text-[10px] text-textMuted mt-0.5">Geste gratuit</div>
-                  </div>
-                  <div class="reward-card" id="rw-points" onclick="selectReward(this,'points')">
-                    <div class="flex items-center justify-between mb-1.5">
-                      <div class="w-8 h-8 rounded-[9px] bg-primary/10 flex items-center justify-center"><i class="fa-solid fa-star text-primary text-xs"></i></div>
-                      <i class="fa-solid fa-circle-check text-primary reward-check text-sm"></i>
-                    </div>
-                    <div class="text-[12px] font-bold text-textMain">Points DocMaster</div>
-                    <div class="text-[10px] text-textMuted mt-0.5">+50 pts bonus</div>
-                  </div>
-                  <div class="reward-card" id="rw-proprio" onclick="selectReward(this,'proprio')">
-                    <div class="flex items-center justify-between mb-1.5">
-                      <div class="w-8 h-8 rounded-[9px] bg-amber-50 flex items-center justify-center"><i class="fa-solid fa-coins text-amber-500 text-xs"></i></div>
-                      <i class="fa-solid fa-circle-check text-primary reward-check text-sm"></i>
-                    </div>
-                    <div class="text-[12px] font-bold text-textMain">Gré du propriétaire</div>
-                    <div class="text-[10px] text-textMuted mt-0.5">À sa discrétion</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Récap compact -->
               <div class="p-3 bg-bgMain border border-borderMain rounded-[12px]">
-                <p class="text-[10px] font-bold text-textMuted uppercase tracking-wide mb-2">Récapitulatif</p>
-                <div class="grid grid-cols-2 gap-x-4 gap-y-1">
-                  <div class="flex justify-between text-[12px]"><span class="text-textMuted">Type</span><span class="font-bold text-textMain" id="recap-doc-type">—</span></div>
-                  <div class="flex justify-between text-[12px]"><span class="text-textMuted">Date</span><span class="font-bold text-textMain" id="recap-date">—</span></div>
-                  <div class="flex justify-between text-[12px] col-span-2"><span class="text-textMuted">Lieu</span><span class="font-bold text-textMain truncate ml-2" id="recap-lieu">—</span></div>
-                  <div class="flex justify-between text-[12px]"><span class="text-textMuted">Photos</span><span class="font-bold text-green-mid" id="recap-photos">0 photo(s)</span></div>
+                <p class="text-[10px] font-bold text-textMuted uppercase mb-2">Récapitulatif</p>
+                <div class="text-[12px] flex flex-col gap-1">
+                  <div class="flex justify-between"><span class="text-textMuted">Type</span><span class="font-bold" id="recap-doc-type">—</span></div>
+                  <div class="flex justify-between"><span class="text-textMuted">Lieu</span><span class="font-bold" id="recap-lieu">—</span></div>
+                  <div class="flex justify-between"><span class="text-textMuted">Date</span><span class="font-bold" id="recap-date">—</span></div>
+                  <div class="flex justify-between"><span class="text-textMuted">Photos</span><span class="font-bold text-green-mid" id="recap-photos">0</span></div>
                 </div>
               </div>
 
-              <!-- Consentement -->
               <div class="flex items-start gap-2.5 p-3 bg-amber-50 border border-amber-100 rounded-[10px]">
-                <input type="checkbox" id="consent-found" class="mt-0.5 accent-primary flex-shrink-0 w-3.5 h-3.5 cursor-pointer"/>
-                <label for="consent-found" class="text-[11.5px] text-textMain cursor-pointer leading-snug">Je certifie avoir trouvé ce document en bonne foi et m'engage à le remettre à son propriétaire. J'accepte les <strong class="underline cursor-pointer">conditions d'utilisation</strong>.</label>
+                <input type="checkbox" id="consent-found" class="mt-0.5 accent-primary cursor-pointer"/>
+                <label for="consent-found" class="text-[11.5px] text-textMain cursor-pointer">Je certifie avoir trouvé ce document.</label>
               </div>
             </div>
 
             <div id="prog-wrap" class="hidden mb-3">
-              <div class="flex justify-between text-[12px] font-semibold text-textMain mb-1.5">
-                <span id="prog-label">Publication en cours…</span><span id="prog-pct">0%</span>
-              </div>
               <div class="upload-progress"><div class="upload-bar" id="upload-bar"></div></div>
             </div>
 
             <div class="flex gap-2">
               <button onclick="goToStep(4)" class="px-4 py-2.5 rounded-[12px] bg-bgMain border border-borderMain text-textMain text-[13px] font-bold hover:border-textMain transition-colors flex items-center gap-1.5"><i class="fa-solid fa-arrow-left text-[11px]"></i> Retour</button>
-              <button onclick="submitDeclaration()" id="btn-submit" data-loading-text="Publication..." class="flex-1 py-2.5 rounded-[12px] bg-green-dark text-white font-bricolage text-[14px] font-bold hover:bg-green-mid transition-all active:scale-[.98] flex items-center justify-center gap-2">
-                <i class="fa-solid fa-paper-plane text-[12px]"></i> Publier la déclaration
-              </button>
+              <button onclick="submitDeclaration()" id="btn-submit" class="flex-1 py-2.5 rounded-[12px] bg-green-dark text-white font-bricolage text-[14px] font-bold">Publier</button>
             </div>
           </div>
 
-          <!-- ══ SUCCESS ══ -->
+          <!-- SUCCESS -->
           <div class="bg-white border border-borderMain rounded-[16px] p-5 panel-content hidden text-center" id="panel-success">
             <div class="w-14 h-14 rounded-[18px] bg-green-light flex items-center justify-center mx-auto mb-3">
               <i class="fa-solid fa-circle-check text-green-mid text-3xl"></i>
             </div>
             <h2 class="font-bricolage text-xl font-extrabold text-textMain mb-1">Déclaration publiée !</h2>
-            <p class="text-[13px] text-textMuted mb-3 leading-relaxed">Votre déclaration a été soumise. DocMaster recherche une correspondance parmi les documents perdus.</p>
-            <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-green-light border border-green-dark/15 rounded-full text-[12px] font-bold text-green-mid mb-4">
-              <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span></span>
-              Recherche de correspondance…
-            </div>
             <div class="p-3 bg-bgMain border border-borderMain rounded-[12px] mb-4 text-left">
-              <p class="text-[10px] font-bold text-textMuted uppercase tracking-wide mb-1.5">Numéro de déclaration</p>
+              <p class="text-[10px] font-bold text-textMuted uppercase mb-1.5">Numéro de déclaration</p>
               <div class="flex items-center gap-2">
-                <span class="font-bricolage text-lg font-extrabold text-textMain tracking-widest flex-1" id="decl-ref">DOC-FND-2024-0041</span>
-                <button onclick="copyRef()" data-loading-text="Copie..." class="px-2.5 py-1.5 bg-primary text-white text-[11px] font-bold rounded-[7px] hover:bg-primary-dark transition-all active:scale-95 flex items-center gap-1"><i class="fa-regular fa-copy text-[10px]"></i> Copier</button>
+                <span class="font-bricolage text-lg font-extrabold text-textMain tracking-widest flex-1" id="decl-ref">DOC-FND-SUCCESS</span>
+                <button onclick="copyRef()" class="px-2.5 py-1.5 bg-primary text-white text-[11px] font-bold rounded-[7px]">Copier</button>
               </div>
             </div>
             <div class="grid grid-cols-2 gap-2">
-              <button onclick="window.location.reload()" data-loading-text="Rechargement..." class="py-2.5 rounded-[12px] bg-bgMain border border-borderMain text-textMain font-bold hover:border-textMain transition-colors text-[13px]">Nouvelle déclaration</button>
-              <button onclick="window.location.href='docDeclares.html'" class="py-2.5 rounded-[12px] bg-primary text-white font-bricolage text-[13px] font-bold hover:bg-primary-dark transition-all">Voir mes déclarations</button>
+              <button onclick="window.location.reload()" class="py-2.5 rounded-[12px] bg-bgMain border border-borderMain text-textMain font-bold">Nouvelle</button>
+              <button onclick="window.location.href='docDeclares.html'" class="py-2.5 rounded-[12px] bg-primary text-white font-bold">Mes déclarations</button>
             </div>
           </div>
 
@@ -583,154 +492,9 @@
       </div><!-- /app-body -->
     </div><!-- /main-wrapper -->
 
-    <script>
-      let currentStep = 1;
-      let selectedDocType = null;
-
-      const DOC_TYPES = [
-        { key:"cni",       title:"CNI",           subtitle:"Carte d'identité",  icon:"fa-id-card",         iconWrap:"bg-green-light", iconCls:"text-green-mid", hasExpiration:true  },
-        { key:"passport",  title:"Passeport",      subtitle:"International",      icon:"fa-passport",        iconWrap:"bg-blue-50",     iconCls:"text-blue-500",  hasExpiration:true  },
-        { key:"permis",    title:"Permis",          subtitle:"Conduire",           icon:"fa-car",             iconWrap:"bg-amber-50",    iconCls:"text-amber-500", hasExpiration:true  },
-        { key:"carte-pro", title:"Carte pro",       subtitle:"Pro, étudiant…",     icon:"fa-id-badge",        iconWrap:"bg-teal-50",     iconCls:"text-teal-500",  hasExpiration:true  },
-        { key:"autre",     title:"Autre",           subtitle:"Attestation, etc.",  icon:"fa-ellipsis",        iconWrap:"bg-gray-100",    iconCls:"text-gray-500",  hasExpiration:true },
-        { key:"diplome",   title:"Diplôme",         subtitle:"BAC, Licence…",      icon:"fa-graduation-cap",  iconWrap:"bg-purple-50",   iconCls:"text-purple-500",hasExpiration:false },
-        { key:"acte",      title:"Acte civil",      subtitle:"Naissance, mariage", icon:"fa-file-lines",      iconWrap:"bg-pink-50",     iconCls:"text-pink-500",  hasExpiration:false },
-        { key:"autre",     title:"Autre",           subtitle:"Attestation, etc.",  icon:"fa-ellipsis",        iconWrap:"bg-gray-100",    iconCls:"text-gray-500",  hasExpiration:false },
-      ];
-
-      const typeLabels = DOC_TYPES.reduce((a,d)=>{a[d.key]=d.title;return a;},{});
-
-      function renderDocTypeGroups() {
-        const exp = document.getElementById("type-grid-expiring");
-        const nex = document.getElementById("type-grid-non-expiring");
-        DOC_TYPES.filter(d=> d.hasExpiration).forEach(d => exp.insertAdjacentHTML("beforeend", cardHTML(d)));
-        DOC_TYPES.filter(d=>!d.hasExpiration).forEach(d => nex.insertAdjacentHTML("beforeend", cardHTML(d)));
-      }
-      function cardHTML(d) {
-        return `<button class="doc-type-card" onclick="selectDocType(this,'${d.key}')">
-          <div class="w-9 h-9 rounded-[10px] ${d.iconWrap} flex items-center justify-center mx-auto mb-2">
-            <i class="fa-solid ${d.icon} ${d.iconCls} text-lg"></i></div>
-          <div class="text-[12px] font-bold text-textMain">${d.title}</div>
-          <div class="text-[10px] text-textMuted mt-0.5">${d.subtitle}</div>
-        </button>`;
-      }
-      renderDocTypeGroups();
-
-      function goToStep(n) {
-        for (let i=1;i<=5;i++) {
-          document.getElementById("panel-"+i).classList.add("hidden");
-          const si=document.getElementById("si-"+i), sc=document.getElementById("sc-"+i);
-          if (i<n)       { si.className="step-item done";    sc.className="step-circle done";    sc.innerHTML='<i class="fa-solid fa-check text-[9px]"></i>'; }
-          else if(i===n) { si.className="step-item active";  sc.className="step-circle active";  sc.textContent=i; }
-          else           { si.className="step-item pending"; sc.className="step-circle pending"; sc.textContent=i; }
-        }
-        const panel = document.getElementById("panel-"+n);
-        panel.classList.remove("hidden");
-        panel.classList.add("panel-content");
-        currentStep=n;
-        if(n===5) fillRecap();
-        document.getElementById("panel-area").scrollTo({top:0, behavior:"smooth"});
-      }
-
-      function selectDocType(btn, type) {
-        document.querySelectorAll(".doc-type-card").forEach(b=>b.classList.remove("selected"));
-        btn.classList.add("selected");
-        selectedDocType=type;
-        document.getElementById("btn-s1").disabled=false;
-        document.getElementById("autre-input").classList.toggle("hidden", type!=="autre");
-      }
-
-      const tags=[];
-      function handleTag(e) {
-        if((e.key==="Enter"||e.key===",")&&e.target.value.trim()) {
-          e.preventDefault();
-          const v=e.target.value.trim().replace(",","");
-          if(v&&!tags.includes(v)) {
-            tags.push(v);
-            const t=document.createElement("span"); t.className="tag";
-            t.innerHTML=v+`<button onclick="removeTag(this,'${v}')">✕</button>`;
-            document.getElementById("tags-list").appendChild(t);
-          }
-          e.target.value="";
-        }
-      }
-      function removeTag(btn,v) { const i=tags.indexOf(v); if(i>-1) tags.splice(i,1); btn.parentElement.remove(); }
-
-      function simulateMapClick() {
-        document.getElementById("map-btn").innerHTML=`<i class="fa-solid fa-location-dot text-green-mid text-3xl"></i><div class="text-center"><p class="text-[13px] font-bold text-green-mid">📍 Marché Central, Yaoundé</p><p class="text-[11px] text-textMuted">Cliquez pour repositionner</p></div>`;
-        document.getElementById("lieu-adresse").value="Marché Central de Yaoundé, entrée principale";
-      }
-
-      function selectReward(card,type) {
-        document.querySelectorAll(".reward-card").forEach(c=>c.classList.remove("selected"));
-        card.classList.add("selected");
-      }
-
-      function fillRecap() {
-        document.getElementById("recap-doc-type").textContent = typeLabels[selectedDocType]||"—";
-        document.getElementById("recap-lieu").textContent  = document.getElementById("lieu-adresse").value||"—";
-        const d = document.getElementById("lieu-date").value;
-        document.getElementById("recap-date").textContent  = d ? new Date(d).toLocaleDateString("fr-FR") : "—";
-        let photos=0;
-        ["file-main","file-extra1","file-extra2","file-extra3"].forEach(id=>{if(document.getElementById(id).files.length) photos++;});
-        document.getElementById("recap-photos").textContent = photos+" photo(s)";
-      }
-
-      function submitDeclaration() {
-        if(!document.getElementById("consent-found").checked) { alert("Veuillez accepter les conditions."); return; }
-        const btn=document.getElementById("btn-submit"), wrap=document.getElementById("prog-wrap");
-        const bar=document.getElementById("upload-bar"), pct=document.getElementById("prog-pct"), lbl=document.getElementById("prog-label");
-        wrap.classList.remove("hidden"); btn.disabled=true;
-        btn.innerHTML='<i class="fa-solid fa-spinner fa-spin text-[12px]"></i> Publication…';
-        const steps=["Vérification…","Traitement photos…","Publication…","Notifications…"];
-        let p=0, si=0;
-        const iv=setInterval(()=>{
-          p+=Math.random()*10+5;
-          if(p>=100){p=100;clearInterval(iv);setTimeout(()=>{
-            document.getElementById("panel-5").classList.add("hidden");
-            const s=document.getElementById("panel-success"); s.classList.remove("hidden"); s.classList.add("panel-content");
-            for(let i=1;i<=5;i++){const sc=document.getElementById("sc-"+i);sc.className="step-circle done";sc.innerHTML='<i class="fa-solid fa-check text-[9px]"></i>';document.getElementById("si-"+i).className="step-item done";}
-          },500);}
-          bar.style.width=p+"%"; pct.textContent=Math.round(p)+"%";
-          if(Math.round(p)%25===0&&si<steps.length) lbl.textContent=steps[si++]||lbl.textContent;
-        },200);
-      }
-
-      function copyRef() { navigator.clipboard.writeText("DOC-FND-2024-0041").then(()=>alert("Référence copiée !")); }
-
-      function drgOver(e,id){
-        e.preventDefault();
-        const zone = document.getElementById(id);
-        if (zone) zone.classList.add("drag-over");
-      }
-      function drgLeave(id){
-        const zone = document.getElementById(id);
-        if (zone) zone.classList.remove("drag-over");
-      }
-      function drgDrop(e,zoneId,prevId,imgId){
-        e.preventDefault();
-        drgLeave(zoneId);
-        const f=e.dataTransfer && e.dataTransfer.files ? e.dataTransfer.files[0] : null;
-        if (f && f.type && f.type.startsWith("image/")) showPreview(f,prevId,imgId,zoneId);
-      }
-      function fileChg(input,prevId,imgId,zoneId){
-        if(!input || !input.files || !input.files[0]) return;
-        const f = input.files[0];
-        if (!f.type || !f.type.startsWith("image/")) return;
-        showPreview(f,prevId,imgId,zoneId||"");
-      }
-      function showPreview(file,prevId,imgId,zoneId){
-        const reader=new FileReader();
-        reader.onload=e=>{
-          const img=document.getElementById(imgId); if(img) img.src=e.target.result;
-          const prev = document.getElementById(prevId);
-          if (prev) prev.classList.remove("hidden");
-          const ph=prevId.replace("prev","phold"); const phEl=document.getElementById(ph); if(phEl) phEl.classList.add("hidden");
-        };
-        reader.readAsDataURL(file);
-      }
-
-      document.getElementById("lieu-date").valueAsDate=new Date();
+    <script type="module">
+      import { initFoundDeclaration } from './js/declarations/found.js';
+      document.addEventListener('DOMContentLoaded', initFoundDeclaration);
     </script>
   </body>
 </html>

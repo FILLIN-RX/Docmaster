@@ -68,7 +68,7 @@ export const getMyDevices = async (req: Request, res: Response) => {
 
 export const reportDeviceLost = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const userId = (req as any).user?.id;
 
     if (!userId) {
@@ -78,7 +78,8 @@ export const reportDeviceLost = async (req: Request, res: Response) => {
       });
     }
 
-    const result = await deviceService.reportLost(id, userId);
+    const { password, status } = req.body;
+    const result = await deviceService.reportLost(id, userId, password, status);
 
     res.json({
       success: true,
@@ -95,7 +96,7 @@ export const reportDeviceLost = async (req: Request, res: Response) => {
 
 export const reportDeviceFound = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const userId = (req as any).user?.id;
 
     if (!userId) {
@@ -105,7 +106,8 @@ export const reportDeviceFound = async (req: Request, res: Response) => {
       });
     }
 
-    const result = await deviceService.reportFound(id, userId);
+    const { password } = req.body;
+    const result = await deviceService.reportFound(id, userId, password);
 
     res.json({
       success: true,
@@ -122,7 +124,7 @@ export const reportDeviceFound = async (req: Request, res: Response) => {
 
 export const deleteDevice = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const userId = (req as any).user?.id;
 
     if (!userId) {
@@ -155,7 +157,7 @@ export const deleteDevice = async (req: Request, res: Response) => {
 
 export const verifyDevice = async (req: Request, res: Response) => {
   try {
-    const { identifier } = req.params;
+    const identifier = req.params.identifier as string;
 
     if (!identifier) {
       return res.status(400).json({

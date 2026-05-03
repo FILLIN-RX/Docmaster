@@ -57,6 +57,8 @@ export interface DocumentDeclaration {
     urgence_niveau?: string;
     recompense_montant?: number;
     date_perte?: string;
+    telephone_contact?: string;
+    email_contact?: string;
     created_at: Date;
 }
 
@@ -106,4 +108,21 @@ export interface PasswordResetToken {
     used: boolean;
     used_at?: Date;
     created_at: Date;
+}
+
+export type DeletionReasonType = 'DUPLICATE' | 'INCORRECT_DATA' | 'NO_LONGER_NEEDED' | 'PRIVACY' | 'OTHER';
+export type DeletionRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXECUTED';
+
+export interface DeletionRequest {
+    id: string;
+    declaration_id: string;
+    user_id: string;
+    reason: string;
+    reason_type: DeletionReasonType;
+    status: DeletionRequestStatus;
+    admin_id?: string;
+    admin_comment?: string;
+    created_at: Date;
+    reviewed_at?: Date;
+    executed_at?: Date;
 }

@@ -12,7 +12,7 @@ export const getAllPlans = async (req: Request, res: Response) => {
 
 export const getPlanById = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const plan = await planService.getPlanById(id);
     if (!plan) {
       return res.status(404).json({ success: false, message: 'Plan not found' });
@@ -25,7 +25,7 @@ export const getPlanById = async (req: Request, res: Response) => {
 
 export const updatePlan = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const data = req.body;
     const updated = await planService.updatePlan(id, data);
     res.status(200).json({ success: true, data: updated });

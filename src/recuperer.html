@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DocMaster — Récupérer mon document</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module" src="/js/services/auth.js"></script>
+  <script type="module" src="/js/services/recovery.js"></script>
+  <script src="./js/ui/sidebar.js"></script>
+  <link rel="shortcut icon" href="./assets/images/favicon.png" type="image/x-icon" />
+  <link href="/css/main.css" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#F5A64B', dark: '#D98A30', light: '#FEF0DC' },
+            green: { dark: '#1E3A2F', mid: '#2D5A42', light: '#E8F5EE' },
+            bgMain: '#F4EFE6',
+            surface: '#FFFFFF',
+            surface2: '#FAF7F2',
+            textMain: '#1A1A1A',
+            textMuted: '#6B7280',
+            borderMain: '#EAE3D8',
+            accent: '#F5A64B',
+            blobGreen: '#A8CBAF',
+            blobPeach: '#E8B89A',
+          },
+          fontFamily: {
+            poppins: ['Poppins', 'sans-serif'],
+            bricolage: ['"Bricolage Grotesque"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --sidebar: 260px;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #F4EFE6;
+    }
+
+    /* Desktop: sidebar always visible */
+    @media (min-width: 1024px) {
+      body {
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .main-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-width: 0;
+      }
+
+      main {
+        flex: 1;
+        overflow-y: auto;
+      }
+    }
+
+    /* Mobile handling */
+    @media (max-width: 1023px) {
+        .main-wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+    }
+
+    /* Timeline */
+    .timeline-item { position: relative; padding-left: 44px; padding-bottom: 28px; }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-dot { position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; z-index: 2; }
+    .timeline-line { position: absolute; left: 11px; top: 24px; bottom: 0; width: 2px; background: #EAE3D8; z-index: 1; }
+    .timeline-line.done { background: #22c55e; }
+    .timeline-line.active { background: linear-gradient(to bottom, #22c55e, #F5A64B); }
+    .timeline-item:last-child .timeline-line { display: none; }
+
+    /* Blur effects */
+    .blur-doc { filter: blur(12px); user-select: none; pointer-events: none; transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+    .blur-doc.revealed { filter: blur(0); pointer-events: auto; }
+    
+    .blur-info { filter: blur(4.5px); user-select: none; pointer-events: none; transition: filter 0.6s; }
+    .blur-info.revealed { filter: blur(0); pointer-events: auto; }
+
+    /* Sticky sidebar on desktop */
+    @media (min-width: 1024px) {
+      .sticky-col {
+        position: sticky;
+        top: 80px;
+        height: min-content;
+      }
+    }
+
+    /* Animations */
+    @keyframes pulse-ring { 0%,100% { box-shadow: 0 0 0 0 rgba(245,166,75,0.4); } 50% { box-shadow: 0 0 0 8px rgba(245,166,75,0); } }
+    .pulse-ring { animation: pulse-ring 2s infinite; }
+    @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .spin-slow { animation: spin-slow 4s linear infinite; }
+    @keyframes slide-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    .slide-in { animation: slide-in 0.4s ease forwards; }
+  </style>
+</head>
+
+<body>
+
+  <div id="sidebar-root"></div>
+
+  <div class="main-wrapper" id="mainWrapper">
+
+    <!-- Topbar -->
+    <header class="sticky top-0 z-30 h-[58px] bg-white border-b border-borderMain flex items-center px-4 gap-3 flex-shrink-0">
+      <button class="lg:hidden w-9 h-9 flex items-center justify-center rounded-[9px] bg-surface2 border border-borderMain text-textMain cursor-pointer hover:border-primary transition-all" onclick="openSb()">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+      <span class="font-bricolage text-base font-bold text-textMain tracking-tight">Récupérer mon document</span>
+      <span class="hidden sm:inline text-[11px] text-textMuted ml-2 font-medium bg-surface2 px-2.5 py-1 rounded-full border border-borderMain">Ref. DM-MATCH-7701</span>
+
+      <div class="ml-auto flex items-center gap-2">
+        <div class="flex items-center gap-2 pl-1.5 pr-3 py-1 bg-surface2 border border-borderMain rounded-[10px]">
+          <div class="w-[26px] h-[26px] rounded-[6px] bg-green-dark flex items-center justify-center font-bricolage text-[11px] font-extrabold text-primary" id="topInitial">JM</div>
+          <span class="text-[12.5px] font-semibold text-textMain hidden sm:block" id="topName">Utilisateur</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 w-full pb-24">
+      
+      <div id="viewOwner" class="slide-in space-y-6">
+
+        <!-- Global progress banner -->
+        <div class="bg-green-dark rounded-[24px] p-6 text-white flex flex-col sm:flex-row items-center gap-5 shadow-xl shadow-green-950/20 relative overflow-hidden">
+          <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
+          <div class="w-14 h-14 rounded-[18px] bg-white/10 flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-rotate text-primary text-2xl spin-slow"></i>
+          </div>
+          <div class="flex-1 w-full">
+            <p class="text-[11px] text-white/50 uppercase font-black tracking-widest mb-1.5">Progression du dossier</p>
+            <div class="flex items-center justify-between mb-2">
+                <p class="font-bricolage text-[16px] font-bold text-white" id="ownerProgressionText">Étape 3 sur 4 — Confirmation requise</p>
+                <p class="font-bricolage text-2xl font-extrabold text-primary" id="ownerProgressionPercent">60%</p>
+            </div>
+            <div class="progress-track bg-white/10 h-1.5 rounded-full overflow-hidden">
+                <div class="progress-fill bg-primary h-full transition-all duration-1000" id="ownerProgressBar" style="width: 60%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <!-- Left col: Document & Details -->
+          <div class="lg:col-span-12 xl:col-span-8 space-y-8">
+            
+            <!-- Process Status -->
+            <div class="bg-white rounded-[28px] border border-borderMain p-6 shadow-sm overflow-x-auto">
+              <div class="flex items-center min-w-[600px] justify-between px-4">
+                 <div class="flex flex-col items-center gap-2 group">
+                    <div class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-xs shadow-lg shadow-green-100"><i class="fa-solid fa-check"></i></div>
+                    <span class="text-[11px] font-bold text-textMain uppercase tracking-tighter">Déclaré</span>
+                 </div>
+                 <div class="flex-1 h-[2px] bg-green-500 mx-2 mb-6 opacity-30"></div>
+                 <div class="flex flex-col items-center gap-2 group">
+                    <div class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-xs shadow-lg shadow-green-100"><i class="fa-solid fa-check"></i></div>
+                    <span class="text-[11px] font-bold text-textMain uppercase tracking-tighter">Trouvé</span>
+                 </div>
+                 <div class="flex-1 h-[2px] bg-primary mx-2 mb-6"></div>
+                 <div class="flex flex-col items-center gap-2 group">
+                    <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-base shadow-xl shadow-primary/30 pulse-ring border-4 border-white" id="ownerStep3Dot"><i class="fa-solid fa-hand-pointer"></i></div>
+                    <span class="text-[12px] font-black text-primary uppercase tracking-tighter" id="ownerStep3Title">Paiement</span>
+                 </div>
+                 <div class="flex-1 h-[2px] bg-borderMain mx-2 mb-6"></div>
+                 <div class="flex flex-col items-center gap-2 group">
+                    <div class="w-10 h-10 rounded-full bg-surface2 border-2 border-borderMain text-textMuted flex items-center justify-center font-bold text-xs" id="ownerStep4Dot">4</div>
+                    <span class="text-[11px] font-bold text-textMuted uppercase tracking-tighter" id="ownerStep4Title">Retrait</span>
+                 </div>
+              </div>
+            </div>
+
+            <!-- Document Card -->
+            <div class="bg-white rounded-[32px] border border-borderMain overflow-hidden shadow-sm">
+              <div class="p-8 bg-surface2/40 border-b border-borderMain flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <h3 class="font-bricolage text-2xl font-black text-textMain tracking-tighter flex items-center gap-3">
+                    <i class="fa-solid fa-id-card text-primary text-xl"></i> CNI Camerounaise
+                  </h3>
+                  <p class="text-[13px] text-textMuted mt-1" id="docMatchDate">Trouvée récemment</p>
+                </div>
+                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 text-green-700 font-bold text-[11px] uppercase border border-green-200">
+                  <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Matching Certifié
+                </span>
+              </div>
+              
+              <div class="p-8 md:p-12 bg-surface2/20 flex items-center justify-center relative min-h-[300px]">
+                <div class="relative group" id="docPreviewOwner">
+                   <img id="docImage" src="./assets/images/carte.jpeg" class="w-[480px] h-auto shadow-2xl rounded-2xl border-4 border-white transition-transform duration-500 group-hover:scale-[1.02]" alt="Document trouvé">
+                   <div class="absolute -top-4 -right-4 bg-white p-3 rounded-2xl shadow-xl border border-borderMain flex items-center gap-3 animate-bounce">
+                      <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white"><i class="fa-solid fa-check text-[10px]"></i></div>
+                      <span class="text-[12px] font-bold text-textMain pr-2">Identifiants corrects</span>
+                   </div>
+                </div>
+              </div>
+
+              <div class="px-8 py-6 bg-white border-t border-borderMain flex flex-col md:flex-row md:items-center justify-between gap-4">
+                 <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-surface2 flex items-center justify-center text-textMuted border border-borderMain"><i class="fa-solid fa-location-dot"></i></div>
+                    <div>
+                      <p class="text-[11px] font-bold text-textMuted uppercase">Position actuelle</p>
+                      <p class="text-[14px] font-bold text-textMain" id="docLocation">En attente de paiement</p>
+                    </div>
+                 </div>
+              </div>
+            </div>
+
+            <!-- Security info -->
+            <div class="bg-primary/5 border border-primary/20 rounded-[28px] p-6">
+                <div class="w-10 h-10 rounded-xl bg-white border border-primary/20 flex items-center justify-center text-primary mb-4 shadow-sm">
+                  <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h4 class="text-[14px] font-bold text-textMain mb-2">Sécurité DocMaster</h4>
+                <p class="text-[12px] text-textMuted leading-relaxed">
+                  Le bienfaiteur ne recevra ses gains qu'une fois que vous aurez récupéré physiquement le document et fourni le code de retrait en agence.
+                </p>
+            </div>
+          </div>
+
+          <!-- Right col: Action Column -->
+          <div class="lg:col-span-12 xl:col-span-4 lg:px-4">
+             <div class="sticky-col space-y-6">
+                <!-- Main Action Card -->
+                <div id="ownerActionPanel" class="bg-white rounded-[32px] border-2 border-primary/30 p-8 shadow-2xl shadow-primary/10 space-y-6 relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full blur-xl"></div>
+                    
+                    <div class="text-center">
+                        <p class="text-[11px] font-black text-primary uppercase tracking-widest mb-2">Montant de la procédure</p>
+                        <div class="flex items-baseline justify-center gap-1.5 mb-2">
+                           <span class="font-bricolage text-5xl font-black text-textMain tracking-tighter">5 000</span>
+                           <span class="text-lg font-bold text-textMuted">FCFA</span>
+                        </div>
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-full text-[10px] font-bold">
+                           <i class="fa-solid fa-info-circle"></i> Service + Récompense inclus
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 pt-2">
+                        <button onclick="ownerConfirm()" id="btnOwnerPrimary" class="w-full py-5 bg-primary text-white rounded-[24px] font-bricolage font-extrabold text-[18px] shadow-xl shadow-primary/40 hover:bg-primary-dark transition-all transform active:scale-[0.98] flex items-center justify-center gap-3">
+                           Payer & Récupérer
+                           <i class="fa-solid fa-arrow-right text-sm"></i>
+                        </button>
+                    </div>
+
+                    <div class="pt-6 border-t border-borderMain">
+                        <div class="flex items-center justify-center gap-4 grayscale opacity-60">
+                           <img src="./assets/images/orange_money.jpg" class="h-6 rounded shadow-sm" alt="OM">
+                           <img src="./assets/images/paypoint (2).png" class="h-6 rounded shadow-sm" alt="PayPoint">
+                        </div>
+                        <p class="text-[10px] text-center text-textMuted font-bold mt-3 uppercase tracking-tighter">Transaction sécurisée SSL</p>
+                    </div>
+                </div>
+
+                <!-- Success Box -->
+                <div id="ownerSuccessPanel" class="hidden slide-in bg-green-dark rounded-[32px] p-8 shadow-2xl text-center space-y-7 border-2 border-white/10">
+                    <div class="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center mx-auto shadow-xl animate-bounce">
+                        <i class="fa-solid fa-key text-2xl"></i>
+                    </div>
+                    <div>
+                        <h5 class="font-bricolage text-2xl font-black text-white mb-2">Code de Retrait</h5>
+                        <p class="text-[13px] text-white/50">Montrez ce code au récupérateur</p>
+                    </div>
+                    <div class="bg-white/10 border-2 border-dashed border-white/20 rounded-3xl p-6 relative group cursor-pointer hover:bg-white/15 transition-all" onclick="copyCode()">
+                        <p class="font-bricolage text-5xl font-black text-primary tracking-tighter" id="pickupCode">DM-7X49</p>
+                        <div class="inline-flex items-center gap-2 mt-4 text-[10px] text-white font-bold uppercase tracking-widest">
+                           <i class="fa-solid fa-copy"></i> Cliquez pour copier
+                        </div>
+                    </div>
+                    <button onclick="window.location.href='dashboard.html'" class="w-full py-4.5 bg-white text-green-dark rounded-[24px] font-bold hover:bg-surface2 transition-all">Retourner au dashboard</button>
+                </div>
+             </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Payment Modal -->
+    <div id="recoveryModalWrapper" class="fixed inset-0 z-[10000] hidden items-end md:items-center justify-center p-4">
+      <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300" onclick="closeRecoveryModal()"></div>
+      <div id="recoveryModalBox" class="relative bg-white w-full max-w-md rounded-t-[2rem] md:rounded-[2rem] p-8 shadow-2xl transform translate-y-full transition-transform duration-300 border border-white/20">
+        <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 cursor-pointer md:hidden" onclick="closeRecoveryModal()"></div>
+        
+        <div class="text-center mb-6">
+          <h2 class="text-primary font-black text-xl uppercase tracking-tighter">Paiement de Récupération</h2>
+          <div class="mt-4 p-6 bg-slate-50 rounded-2xl border border-slate-100 text-center relative overflow-hidden">
+            <p class="text-slate-500 text-[13px] font-bold uppercase tracking-widest mb-1">Total à régler</p>
+            <div class="font-bricolage text-4xl font-black text-primary">5 000 FCFA</div>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div id="recoveryStep1" class="grid grid-cols-2 gap-4">
+            <button onclick="goToRecoveryStep2()" class="flex flex-col items-center gap-3 border-2 border-slate-100 bg-white rounded-2xl p-4 hover:border-primary transition-all">
+              <img src="./assets/images/orange_money.jpg" class="w-10 h-10 rounded shadow-sm"/>
+              <span class="font-bold text-slate-700 text-[11px]">Mobile Money</span>
+            </button>
+            <button onclick="goToRecoveryStep2()" class="flex flex-col items-center gap-3 border-2 border-slate-100 bg-white rounded-2xl p-4 hover:border-primary transition-all">
+              <img src="./assets/images/paypoint (2).png" class="w-10 h-10 rounded shadow-sm"/>
+              <span class="font-bold text-slate-700 text-[11px]">PayPoint</span>
+            </button>
+          </div>
+
+          <div id="recoveryStep2" class="hidden space-y-3">
+            <input type="tel" id="recupPhone" placeholder="6xx xxx xxx" class="w-full border-2 border-slate-100 rounded-xl p-3.5 outline-none focus:border-primary font-bold bg-slate-50">
+            <input type="password" maxlength="4" placeholder="Code PIN (1234)" class="w-full border-2 border-slate-100 rounded-xl p-3.5 outline-none focus:border-primary font-bold bg-slate-50">
+          </div>
+
+          <button id="recoverySubmitBtn" onclick="processRecoveryPayment()" class="w-full mt-2 bg-primary text-white py-4 rounded-2xl font-black text-lg">
+            Suivant
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function closeRecoveryModal() {
+        const box = document.getElementById("recoveryModalBox");
+        const wrapper = document.getElementById("recoveryModalWrapper");
+        box.classList.add("translate-y-full");
+        setTimeout(() => { wrapper.classList.add("hidden"); }, 300);
+    }
+
+    function goToRecoveryStep2() {
+        document.getElementById("recoveryStep1").classList.add("hidden");
+        document.getElementById("recoveryStep2").classList.remove("hidden");
+        document.getElementById("recoverySubmitBtn").innerText = "Confirmer le paiement";
+    }
+
+    function ownerConfirm() {
+        const wrapper = document.getElementById("recoveryModalWrapper");
+        const box = document.getElementById("recoveryModalBox");
+        document.getElementById("recoveryStep1").classList.remove("hidden");
+        document.getElementById("recoveryStep2").classList.add("hidden");
+        document.getElementById("recoverySubmitBtn").innerText = "Suivant";
+        wrapper.classList.remove("hidden");
+        setTimeout(() => box.classList.remove("translate-y-full"), 10);
+    }
+
+    function processRecoveryPayment() {
+        const step2 = document.getElementById("recoveryStep2");
+        if (step2.classList.contains("hidden")) {
+            goToRecoveryStep2();
+            return;
+        }
+        const btn = document.getElementById("recoverySubmitBtn");
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Traitement...';
+        setTimeout(() => {
+            closeRecoveryModal();
+            finishOwnerProcess();
+        }, 2000);
+    }
+
+    function finishOwnerProcess() {
+        document.getElementById('ownerActionPanel').classList.add('hidden');
+        document.getElementById('ownerSuccessPanel').classList.remove('hidden');
+        document.getElementById('ownerProgressionText').textContent = 'Paiement Validé — Récupération prête';
+        document.getElementById('ownerProgressBar').style.width = '100%';
+        document.getElementById('ownerProgressionPercent').textContent = '100%';
+        
+        document.getElementById('ownerStep3Dot').className = "w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-xs shadow-lg shadow-green-100";
+        document.getElementById('ownerStep3Dot').innerHTML = '<i class="fa-solid fa-check"></i>';
+        document.getElementById('ownerStep4Dot').className = "w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-base shadow-xl shadow-primary/30 pulse-ring border-4 border-white";
+        document.getElementById('ownerStep4Dot').innerHTML = '<i class="fa-solid fa-key text-sm"></i>';
+    }
+
+    function copyCode() {
+        const code = document.getElementById('pickupCode').innerText;
+        navigator.clipboard.writeText(code).then(() => { alert("Code copié !"); });
+    }
+  </script>
+</body>
+</html>

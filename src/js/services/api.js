@@ -343,9 +343,9 @@ export async function getMyDevices() {
 /**
  * Declare a device as lost
  */
-export async function reportDeviceLost(id) {
+export async function reportDeviceLost(id, password, status = 'LOST') {
   try {
-    const response = await apiClient.patch(`devices/${id}/lost`);
+    const response = await apiClient.patch(`devices/${id}/lost`, { password, status });
     return { success: true, data: response.data };
   } catch (error) {
     const message = error.response?.data?.message || 'Erreur lors de la déclaration de perte.';
@@ -356,9 +356,9 @@ export async function reportDeviceLost(id) {
 /**
  * Declare a device as found
  */
-export async function reportDeviceFound(id) {
+export async function reportDeviceFound(id, password) {
   try {
-    const response = await apiClient.patch(`devices/${id}/found`);
+    const response = await apiClient.patch(`devices/${id}/found`, { password });
     return { success: true, data: response.data };
   } catch (error) {
     const message = error.response?.data?.message || 'Erreur lors de la mise à jour du statut.';
@@ -410,7 +410,8 @@ export async function createLostDeclaration(formData) {
     return { success: true, data: response.data };
   } catch (error) {
     const message = error.response?.data?.message || 'Erreur lors de la déclaration de perte.';
-    return { success: false, message };
+    const errors = error.response?.data?.errors || {};
+    return { success: false, message, errors };
   }
 }
 
@@ -426,7 +427,8 @@ export async function createFoundDeclaration(formData) {
     return { success: true, data: response.data };
   } catch (error) {
     const message = error.response?.data?.message || 'Erreur lors de la déclaration de trouvaille.';
-    return { success: false, message };
+    const errors = error.response?.data?.errors || {};
+    return { success: false, message, errors };
   }
 }
 
@@ -440,6 +442,43 @@ export async function getMyDeclarations() {
   } catch (error) {
     const message = error.response?.data?.message || 'Erreur lors de la récupération des déclarations.';
     return { success: false, message };
+  }
+}
+
+/**
+ * Get a specific declaration by ID
+ */
+export async function getDeclarationById(id) {
+  try {
+    const response = await apiClient.get(`declarations/${id}`);
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    const message = error.response?.data?.message || 'Erreur lors de la récupération du détail.';
+    return { success: false, message };
+  }
+}
+
+/**
+ * Get global DocMaster statistics
+ */
+export async function getGlobalStats() {
+  try {
+    const response = await apiClient.get('declarations/stats');
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    return { success: false, message: 'Erreur lors de la récupération des statistiques.' };
+  }
+}
+
+/**
+ * Public fuzzy search for found documents
+ */
+export async function searchPublicFound(query) {
+  try {
+    const response = await apiClient.get(`declarations/search-public?q=${encodeURIComponent(query)}`);
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    return { success: false, message: 'Erreur lors de la recherche.' };
   }
 }
 
@@ -508,5 +547,17 @@ export async function subscribeToPlan(planId, months = 1) {
   } catch (error) {
     const message = error.response?.data?.message || 'Erreur lors de la souscription.';
     return { success: false, message };
+  }
+}
+
+/**
+ * Get current user's active subscription
+ */
+export async function getMySubscription() {
+  try {
+    const response = await apiClient.get('subscriptions/my-subscription');
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    return { success: false, message: 'Erreur lors de la récupération de l\'abonnement.' };
   }
 }

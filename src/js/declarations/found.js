@@ -271,8 +271,22 @@ async function submitDeclaration() {
   
   formData.append('ville', document.getElementById('lieu-adresse').value);
   
+  // Add region and pays
+  formData.append('region', document.getElementById('userRegion')?.value || 'Non spécifiée');
+  formData.append('pays', document.getElementById('userCountry')?.value || 'Cameroun');
+  
+  // Add date found
+  const dateFound = document.getElementById('lieu-date')?.value;
+  if(dateFound) formData.append('date_perte', dateFound); // Use date_perte for found date too
+  
   const contactMode = document.querySelector('input[name="contact-mode"]:checked');
   formData.append('mode_contact', contactMode ? contactMode.value : 'APP_CHAT');
+  
+  // Add contact info if available
+  const phoneEl = document.getElementById('contactPhone') || document.querySelector('input[type="tel"]');
+  const emailEl = document.getElementById('contactEmail') || document.querySelector('input[type="email"]');
+  if(phoneEl?.value) formData.append('telephone_contact', phoneEl.value);
+  if(emailEl?.value) formData.append('email_contact', emailEl.value);
 
   // Files
   const fileMain = document.getElementById('file-main').files[0];

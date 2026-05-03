@@ -1,7 +1,16 @@
 import { deviceRepository, Device } from '../repositories/device.repository.ts';
+import { UserService } from '../services/auth.service.ts';
+
+const userService = new UserService();
 
 class DeviceService {
   async registerDevice(deviceData: Device) {
+    if (deviceData.serial_number_imei && deviceData.serial_number_imei.trim() !== '') {
+      const existing = await deviceRepository.findAnyByIdentifier(deviceData.serial_number_imei);
+      if (existing) {
+        throw new Error('Un appareil avec ce numéro IMEI/Série est déjà enregistré sur la plateforme.');
+      }
+    }
     return await deviceRepository.create(deviceData);
   }
 
@@ -13,19 +22,41 @@ class DeviceService {
     return await deviceRepository.findById(id);
   }
 
-  async reportLost(id: string, userId: string) {
+  async reportLost(id: string, userId: string, password?: string, status: string = 'LOST') {
     const device = await deviceRepository.findById(id);
     if (!device || device.user_id !== userId) {
       throw new Error('Appareil non trouvé ou accès refusé');
     }
-    return await deviceRepository.updateStatus(id, 'LOST');
+
+    // Verify password if provided (for extra security)
+    if (password) {
+      const user = await userService.getUserById(userId);
+      if (!user) throw new Error('Utilisateur non trouvé');
+      
+      const isPasswordValid = await userService.verifyPassword(user.mot_de_passe, password);
+      if (!isPasswordValid) {
+        throw new Error('Mot de passe incorrect');
+      }
+    }
+
+    // 1. Update status in my_devices
+    return await deviceRepository.updateStatus(id, status);
   }
 
-  async reportFound(id: string, userId: string) {
+  async reportFound(id: string, userId: string, password?: string) {
     const device = await deviceRepository.findById(id);
     if (!device || device.user_id !== userId) {
       throw new Error('Appareil non trouvé ou accès refusé');
     }
+
+    if (password) {
+      const user = await userService.getUserById(userId);
+      if (!user) throw new Error('Utilisateur non trouvé');
+      const isPasswordValid = await userService.verifyPassword(user.mot_de_passe, password);
+      if (!isPasswordValid) throw new Error('Mot de passe incorrect');
+    }
+
+    // 1. Update status in my_devices
     return await deviceRepository.updateStatus(id, 'SAFE');
   }
 
@@ -45,7 +76,7 @@ class DeviceService {
       category: device.category,
       status: device.status,
       owner: `${device.owner_first_name} ${device.owner_last_name.substring(0, 1)}.`,
-      is_reported: device.status === 'LOST' || device.status === 'STOLEN'
+      is_reported: ['LOST', 'STOLEN', 'PERDU', 'VOLE'].includes(device.status?.toUpperCase())
     };
   }
 }

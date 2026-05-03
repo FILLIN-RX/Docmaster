@@ -148,11 +148,11 @@ function _sbRender() {
 
   return `
     <!-- Overlay mobile -->
-    <div class="sb-overlay" id="overlay" onclick="closeSb()"></div>
+    <div class="sb-overlay page-fade-in" id="overlay" onclick="closeSb()"></div>
 
     <!-- Sidebar -->
     <aside
-      class="sidebar w-[var(--sidebar,260px)] bg-green-dark flex flex-col"
+      class="sidebar w-[var(--sidebar,260px)] bg-green-dark flex flex-col page-fade-in"
       id="sidebar"
     >
       <!-- Logo -->
@@ -214,6 +214,11 @@ function toggleSb() {
   const isOpen = sb.classList.contains("open") && !sb.classList.contains("closed");
   _sbSetState(!isOpen);
 }
+
+// Expose globalement pour les onclick du HTML
+window.openSb = openSb;
+window.closeSb = closeSb;
+window.toggleSb = toggleSb;
 
 function _sbSetState(isOpen) {
   const sb = document.getElementById("sidebar");
@@ -488,6 +493,23 @@ document.addEventListener("DOMContentLoaded", function () {
   const style = document.createElement("style");
   style.id = "sb-desktop-slide-style";
   style.textContent = `
+        .sb-overlay {
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,.45);
+          z-index: 40;
+          backdrop-filter: blur(3px);
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity .28s;
+        }
+        .sb-overlay.show {
+          display: block;
+          opacity: 1;
+          pointer-events: all;
+        }
+
         @media (min-width: 900px) {
           .sidebar {
             transition: transform .28s cubic-bezier(.4,0,.2,1), width .28s cubic-bezier(.4,0,.2,1) !important;

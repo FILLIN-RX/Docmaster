@@ -24,7 +24,7 @@ export const getAdminStats = async (req: Request, res: Response) => {
 
 export const updateSubscriptionStatus = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { status } = req.body;
     const updated = await subscriptionService.updateSubscriptionStatus(id, status);
     res.status(200).json({ success: true, data: updated });

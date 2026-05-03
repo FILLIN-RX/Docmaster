@@ -6,6 +6,8 @@
  */
 
 import { createApp } from './index.js';
+import { initCronJobs } from './src/utils/cron.utils.ts';
+import { matchingService } from './src/services/matching.service.ts';
 
 // Get configuration from environment
 const PORT = process.env.PORT || 5000;
@@ -19,6 +21,15 @@ const server = app.listen(PORT, () => {
   console.log(`📚 API Base: http://localhost:${PORT}/api`);
   console.log(`💚 Health Check: http://localhost:${PORT}/health`);
   console.log(`🗄️  DB Test: http://localhost:${PORT}/api/db-test\n`);
+
+  // Start Background Workers via Cron
+  initCronJobs();
+
+  // Run a first cycle after 30 seconds to catch up on startup
+  setTimeout(() => {
+    console.log('🚀 [STARTUP] Running initial matching cycle...');
+    matchingService.runFullMatchingCycle();
+  }, 30 * 1000);
 });
 
 // Handle server errors

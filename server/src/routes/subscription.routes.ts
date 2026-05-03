@@ -5,6 +5,7 @@ import {
   updateSubscriptionStatus 
 } from '../controllers/subscription.controller.ts';
 import { subscriptionRepository } from '../repositories/subscription.repository.ts';
+import { DeclarationRepository } from '../repositories/declaration.repository.ts';
 import { authMiddleware } from '../middleware/auth.middleware.ts';
 
 const router = Router();
@@ -22,7 +23,36 @@ router.get('/admin/stats', authMiddleware, adminMiddleware, getAdminStats);
 router.get('/admin/all', authMiddleware, adminMiddleware, getAllSubscriptions);
 router.patch('/admin/:id/status', authMiddleware, adminMiddleware, updateSubscriptionStatus);
 
+const declarationRepository = new DeclarationRepository();
+
 // User routes
+/**
+ * @route GET /api/subscriptions/my-subscription
+ * @desc Get current user's active subscription and usage
+ */
+router.get('/my-subscription', authMiddleware, async (req: any, res: any) => {
+    try {
+        const userId = req.user.id;
+        const sub = await subscriptionRepository.findActiveByUserId(userId);
+        
+        if (!sub) {
+            return res.json({ success: true, data: null });
+        }
+
+        const docCount = await declarationRepository.countByReporterId(userId);
+        
+        res.json({ 
+            success: true, 
+            data: {
+                ...sub,
+                doc_count: docCount,
+                doc_limit: sub.features?.docs_per_type || 1
+            } 
+        });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
 router.post('/subscribe', authMiddleware, async (req: any, res: any) => {
     try {
         const { planId, months } = req.body;

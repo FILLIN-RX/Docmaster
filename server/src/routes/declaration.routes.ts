@@ -3,12 +3,29 @@ import {
   createLostDeclaration,
   createFoundDeclaration,
   getMyDeclarations, 
-  searchDeclarations 
+  searchDeclarations,
+  getGlobalStats,
+  searchPublicFound,
+  getDeclarationById
 } from '../controllers/declaration.controller.ts';
 import { authMiddleware } from '../middleware/auth.middleware.ts';
 import { upload } from '../utils/upload.utils.ts';
 
 const router = Router();
+
+/**
+ * @route GET /api/declarations/stats
+ * @desc Get global lost/found stats
+ * @access Public
+ */
+router.get('/stats', getGlobalStats);
+
+/**
+ * @route GET /api/declarations/search-public
+ * @desc Public fuzzy search for found documents (masked data)
+ * @access Public
+ */
+router.get('/search-public', searchPublicFound);
 
 /**
  * @route POST /api/declarations/lost
@@ -43,5 +60,12 @@ router.get('/me', authMiddleware, getMyDeclarations);
  * @access Public
  */
 router.get('/', searchDeclarations);
+
+/**
+ * @route GET /api/declarations/:id
+ * @desc Get a specific declaration by ID
+ * @access Private
+ */
+router.get('/:id', authMiddleware, getDeclarationById);
 
 export default router;

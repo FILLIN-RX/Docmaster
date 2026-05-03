@@ -1,4 +1,4 @@
-import { getMyDeclarations, getMyDevices, getMyNotifications, markAllNotificationsAsRead } from '../services/api.js';
+import { getMyDeclarations, getMyDevices, getMyNotifications, markAllNotificationsAsRead, getGlobalStats, getMySubscription } from '../services/api.js';
 import { getSession } from '../services/auth.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2. Load Dashboard Data
     await loadDashboardContent();
     await loadNotifications();
+    await loadUserPlan();
 
     // 3. Setup global handlers
     window.customMarkAllReadHandler = async () => {
@@ -55,15 +56,22 @@ function setupBasicUI() {
  */
 async function loadDashboardContent() {
     try {
-        const [declRes, deviceRes] = await Promise.all([
+        const [declRes, deviceRes, globalStatsRes] = await Promise.all([
             getMyDeclarations(),
-            getMyDevices()
+            getMyDevices(),
+            getGlobalStats()
         ]);
 
         if (declRes.success) {
             renderDeclarationsFlow(declRes.data);
             renderRecentActivities(declRes.data);
-            updateStats(declRes.data, deviceRes.success ? deviceRes.data.length : 0);
+            
+            const statsData = {
+                totalLost: globalStatsRes.success ? globalStatsRes.data.total_lost : 0,
+                totalRecovered: globalStatsRes.success ? globalStatsRes.data.total_recovered : 0
+            };
+
+            updateStats(declRes.data, deviceRes.success ? deviceRes.data.length : 0, statsData);
         }
 
     } catch (error) {
@@ -109,12 +117,17 @@ function renderDeclarationsFlow(declarations) {
     });
 }
 
+
+
 /**
  * Helper to create a Lost block (Red)
  */
 function createLostBlock(decl) {
-    const isMatched = decl.status === 'MATCHED';
-    const color = isMatched ? 'green' : 'red';
+    const hasMatch = decl.status === 'MATCHED' || decl.status === 'RETURNED';
+    const hasPotential = !hasMatch && decl.matches.some(m => m.status === 'PENDING');
+    
+    // If matched, use green. If potential, maybe orange border. Else red.
+    let color = hasMatch ? 'green' : (hasPotential ? 'orange' : 'red');
     const div = document.createElement('div');
     div.className = `bg-white border-2 border-${color}-500 rounded-[18px] overflow-hidden shadow-md shadow-${color}-500/5 transition-colors duration-500`;
     
@@ -122,17 +135,17 @@ function createLostBlock(decl) {
     let step = 1;
     let progressWidth = '33%';
     if (decl.status === 'SEARCHING') { step = 2; progressWidth = '50%'; }
-    if (isMatched) { step = 3; progressWidth = '75%'; }
+    if (decl.status === 'MATCHED') { step = 3; progressWidth = '75%'; }
     if (decl.status === 'RETURNED') { step = 4; progressWidth = '100%'; }
 
     div.innerHTML = `
       <div class="px-4 sm:px-5 py-3 border-b border-${color}-100 flex items-center justify-between bg-${color}-50/50">
         <div class="font-bricolage text-[13px] font-bold text-${color}-600 flex items-center gap-2">
-          <i class="fa-solid ${isMatched ? 'fa-check-double animate-bounce' : 'fa-triangle-exclamation animate-pulse'}"></i> 
-          ${isMatched ? 'Document trouvé !' : 'Ma perte signalée'}
+          <i class="fa-solid ${hasMatch ? 'fa-check-double animate-bounce' : (hasPotential ? 'fa-magnifying-glass-chart' : 'fa-triangle-exclamation animate-pulse')}"></i> 
+          ${hasMatch ? 'Document trouvé !' : (hasPotential ? 'Correspondance possible' : 'Ma perte signalée')}
         </div>
         <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-${color}-500 text-white uppercase tracking-wider">
-          ${isMatched ? 'Match trouvé' : (decl.status === 'RETURNED' ? 'Récupéré' : 'Perdu')}
+          ${decl.status === 'MATCHED' ? 'Match trouvé' : (decl.status === 'RETURNED' ? 'Récupéré' : (hasPotential ? 'Potentiel' : 'Perdu'))}
         </span>
       </div>
       <div class="p-4 sm:p-5">
@@ -152,12 +165,17 @@ function createLostBlock(decl) {
           <!-- Steps -->
           ${renderSteps(['Soumission', 'Recherche', 'Matching', 'Récupéré'], step, color)}
         </div>
-        ${isMatched ? `
+        ${decl.status === 'MATCHED' ? `
         <div class="mt-6 flex justify-end">
-          <button class="px-4 py-2 bg-green-600 text-white rounded-[10px] text-[11px] font-bold hover:bg-green-700 transition-all flex items-center gap-2 shadow-lg shadow-green-500/20">
-            <i class="fa-solid fa-file-pdf"></i> Générer le bon de retrait
+          <button onclick="window.location.href='recuperer.html?id=${decl.id}'" class="px-4 py-2 bg-green-600 text-white rounded-[10px] text-[11px] font-bold hover:bg-green-700 transition-all flex items-center gap-2 shadow-lg shadow-green-500/20">
+            <i class="fa-solid fa-handshake"></i> Récupérer votre document
           </button>
-        </div>` : ''}
+        </div>` : (hasPotential ? `
+        <div class="mt-6 flex justify-end">
+          <button onclick="window.location.href='rechercher.html?query=${encodeURIComponent(decl.doc_type)}'" class="px-4 py-2 bg-orange-500 text-white rounded-[10px] text-[11px] font-bold hover:bg-orange-600 transition-all flex items-center gap-2">
+            <i class="fa-solid fa-eye"></i> Voir les correspondances
+          </button>
+        </div>` : '')}
       </div>
     `;
     return div;
@@ -167,25 +185,28 @@ function createLostBlock(decl) {
  * Helper to create a Found block (Blue)
  */
 function createFoundBlock(decl) {
-    const isMatched = decl.status === 'MATCHED';
-    const color = isMatched ? 'green' : 'blue';
+    const hasMatch = decl.status === 'MATCHED' || decl.status === 'RETURNED';
+    const hasPotential = !hasMatch && decl.matches.some(m => m.status === 'PENDING');
+
+    // For found items, the user wants to stay blue even if matched
+    const color = decl.status === 'RETURNED' ? 'green' : (hasPotential ? 'orange' : 'blue');
     const div = document.createElement('div');
     div.className = `bg-white border-2 border-${color}-500 rounded-[18px] overflow-hidden shadow-md shadow-${color}-500/5 transition-colors duration-500`;
     
     let step = 1;
     let progressWidth = '33%';
-    if (decl.status === 'SEARCHING') { step = 2; progressWidth = '50%'; }
-    if (isMatched) { step = 3; progressWidth = '75%'; }
+    if (decl.status === 'AVAILABLE') { step = 2; progressWidth = '50%'; }
+    if (decl.status === 'MATCHED') { step = 3; progressWidth = '75%'; }
     if (decl.status === 'RETURNED') { step = 4; progressWidth = '100%'; }
 
     div.innerHTML = `
       <div class="px-4 sm:px-5 py-3 border-b border-${color}-100 flex items-center justify-between bg-${color}-50/50">
         <div class="font-bricolage text-[13px] font-bold text-${color}-600 flex items-center gap-2">
-          <i class="fa-solid ${isMatched ? 'fa-handshake animate-bounce' : 'fa-hand-holding-heart'}"></i> 
-          ${isMatched ? 'Propriétaire identifié !' : 'Document que j\'ai trouvé'}
+          <i class="fa-solid ${decl.status === 'MATCHED' ? 'fa-handshake animate-bounce' : 'fa-hand-holding-heart'}"></i> 
+          ${decl.status === 'MATCHED' ? 'Propriétaire identifié !' : (hasPotential ? 'Correspondance possible' : 'Document que j\'ai trouvé')}
         </div>
         <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-${color}-500 text-white uppercase tracking-wider">
-          ${isMatched ? 'Match trouvé' : (decl.status === 'RETURNED' ? 'Remis' : 'Trouvé')}
+          ${decl.status === 'MATCHED' ? 'Match trouvé' : (decl.status === 'RETURNED' ? 'Remis' : (hasPotential ? 'Potentiel' : 'Trouvé'))}
         </span>
       </div>
       <div class="p-4 sm:p-5">
@@ -204,12 +225,17 @@ function createFoundBlock(decl) {
           
           ${renderSteps(['Trouvé', 'Signalé', 'Matching', 'Rendre'], step, color)}
         </div>
-        ${isMatched ? `
+        ${decl.status === 'MATCHED' ? `
         <div class="mt-6 flex justify-end">
-          <button class="px-4 py-2 bg-green-600 text-white rounded-[10px] text-[11px] font-bold hover:bg-green-700 transition-all flex items-center gap-2 shadow-lg shadow-green-500/20">
-            <i class="fa-solid fa-handshake"></i> Contacter le propriétaire
+          <button onclick="window.location.href='rendre.html?id=${decl.id}'" class="px-4 py-2 bg-blue-600 text-white rounded-[10px] text-[11px] font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20">
+            <i class="fa-solid fa-hand-holding-heart"></i> Rendre le document
           </button>
-        </div>` : ''}
+        </div>` : (hasPotential ? `
+        <div class="mt-6 flex justify-end">
+          <button onclick="window.location.href='rechercher.html?query=${encodeURIComponent(decl.doc_type)}'" class="px-4 py-2 bg-orange-500 text-white rounded-[10px] text-[11px] font-bold hover:bg-orange-600 transition-all flex items-center gap-2">
+            <i class="fa-solid fa-eye"></i> Voir les correspondances
+          </button>
+        </div>` : '')}
       </div>
     `;
     return div;
@@ -221,7 +247,9 @@ function createFoundBlock(decl) {
 function renderSteps(labels, currentStep, color) {
     const icons = {
         red: ['fa-check', 'fa-search', 'fa-handshake', 'fa-check-double'],
-        blue: ['fa-check', 'fa-bullhorn', 'fa-handshake', 'fa-hand-holding-heart']
+        blue: ['fa-check', 'fa-bullhorn', 'fa-handshake', 'fa-hand-holding-heart'],
+        green: ['fa-check', 'fa-check', 'fa-handshake', 'fa-check-double'],
+        orange: ['fa-check', 'fa-search', 'fa-handshake', 'fa-check-double']
     };
 
     return labels.map((label, idx) => {
@@ -302,7 +330,7 @@ function renderRecentActivities(declarations) {
 /**
  * Updates stats and donut chart
  */
-function updateStats(declarations, deviceCount) {
+function updateStats(declarations, deviceCount, statsData) {
     const now = new Date();
     const oneWeekAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
 
@@ -315,7 +343,13 @@ function updateStats(declarations, deviceCount) {
     const isNew = (dateStr) => new Date(dateStr) >= oneWeekAgo;
     const newDocs = declarations.filter(d => isNew(d.created_at)).length;
 
-    // Numbers
+    // Global Numbers (Top Cards)
+    const totalLostEl = document.getElementById('totalLostDocs');
+    const totalRecoveredEl = document.getElementById('totalRecoveredDocs');
+    if (totalLostEl) totalLostEl.textContent = `${statsData.totalLost}+`;
+    if (totalRecoveredEl) totalRecoveredEl.textContent = `${statsData.totalRecovered}+`;
+
+    // Local user stats
     setText('dashboardTotalDocs', total);
     setText('dashboardVerifiedDocs', verified);
     setText('dashboardPendingDocs', pending);
@@ -389,27 +423,97 @@ async function loadNotifications() {
     if (result.success && result.data.data) {
         const notifications = result.data.data;
         
+        const dashboardNotifList = document.getElementById('dashboardNotificationList');
+        if (dashboardNotifList) dashboardNotifList.innerHTML = '';
+
         notifications.forEach(notif => {
             let icon = 'fa-solid fa-bell';
+            let iconColorClass = 'text-primary';
+            let iconBgClass = 'bg-primary-light';
             
             // Map types to icons
             switch(notif.type) {
-                case 'LOST_SUBMITTED': icon = 'fa-solid fa-file-circle-exclamation'; break;
-                case 'FOUND_SUBMITTED': icon = 'fa-solid fa-hand-holding-heart'; break;
-                case 'DOC_ADDED': icon = 'fa-solid fa-shield-halved'; break;
-                case 'MATCH_FOUND': icon = 'fa-solid fa-bullseye'; break;
-                case 'DOC_UPDATED': icon = 'fa-solid fa-pen-to-square'; break;
-                case 'DOC_DELETED': icon = 'fa-solid fa-trash-can'; break;
+                case 'LOST_SUBMITTED': 
+                    icon = 'fa-solid fa-file-circle-exclamation'; 
+                    iconColorClass = 'text-amber-600'; 
+                    iconBgClass = 'bg-amber-50';
+                    break;
+                case 'FOUND_SUBMITTED': 
+                    icon = 'fa-solid fa-hand-holding-heart'; 
+                    iconColorClass = 'text-blue-600'; 
+                    iconBgClass = 'bg-blue-50';
+                    break;
+                case 'MATCH_FOUND': 
+                    icon = 'fa-solid fa-circle-check'; 
+                    iconColorClass = 'text-green-700'; 
+                    iconBgClass = 'bg-green-100';
+                    break;
+                case 'DOC_ADDED': 
+                    icon = 'fa-solid fa-shield-halved'; 
+                    iconColorClass = 'text-purple-600'; 
+                    iconBgClass = 'bg-purple-50';
+                    break;
             }
             
-            window.addNotification(
-                notif.title, 
-                notif.message, 
-                formatTimeAgo(notif.created_at), 
-                icon,
-                notif.is_read
-            );
+            // 1. Add to global sidebar (if exists)
+            if (typeof window.addNotification === 'function') {
+                window.addNotification(
+                    notif.title, 
+                    notif.message, 
+                    formatTimeAgo(notif.created_at), 
+                    icon,
+                    notif.is_read
+                );
+            }
+
+            // 2. Add to Dashboard Sidebar List
+            if (dashboardNotifList) {
+                const div = document.createElement('div');
+                div.className = 'flex gap-3 px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-surface2 transition-colors cursor-pointer relative';
+                if (!notif.is_read) {
+                    div.innerHTML += '<div class="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary"></div>';
+                }
+                div.innerHTML += `
+                    <div class="w-9 h-9 rounded-[9px] ${iconBgClass} flex items-center justify-center text-sm flex-shrink-0">
+                        <i class="${icon} ${iconColorClass}"></i>
+                    </div>
+                    <div>
+                        <div class="text-[12px] sm:text-[12.5px] text-textMain leading-snug italic">
+                            <strong>${notif.title}</strong> ${notif.message}
+                        </div>
+                        <div class="text-[10px] sm:text-[10.5px] text-textMuted font-medium italic mt-0.5">${formatTimeAgo(notif.created_at)}</div>
+                    </div>
+                `;
+                dashboardNotifList.appendChild(div);
+            }
         });
+
+        if (dashboardNotifList && notifications.length === 0) {
+            dashboardNotifList.innerHTML = '<div class="p-5 text-center text-textMuted text-xs italic">Aucune notification.</div>';
+        }
+    }
+}
+
+/**
+ * Load user's plan and update the card
+ */
+async function loadUserPlan() {
+    const res = await getMySubscription();
+    if (res.success && res.data) {
+        const sub = res.data;
+        setText('userPlanName', sub.plan_name || 'Standard');
+        
+        const limitsEl = document.getElementById('userPlanLimits');
+        if (limitsEl) limitsEl.textContent = `${sub.doc_limit} documents · SMS & Email`;
+
+        const quotaTextEl = document.getElementById('userPlanQuotaText');
+        if (quotaTextEl) quotaTextEl.textContent = `${sub.doc_count} / ${sub.doc_limit}`;
+
+        const progressEl = document.getElementById('userPlanQuotaProgress');
+        if (progressEl) {
+            const percent = Math.min((sub.doc_count / sub.doc_limit) * 100, 100);
+            progressEl.style.width = `${percent}%`;
+        }
     }
 }
 

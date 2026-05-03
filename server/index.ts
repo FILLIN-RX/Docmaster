@@ -17,6 +17,7 @@ import documentRoutes from './src/routes/document.routes.ts';
 import shareRoutes from './src/routes/share.routes.ts';
 import deviceRoutes from './src/routes/device.routes.ts';
 import declarationRoutes from './src/routes/declaration.routes.ts';
+import deletionRequestRoutes from './src/routes/deletion-request.routes.ts';
 import notificationRoutes from './src/routes/notification.routes.ts';
 import subscriptionRoutes from './src/routes/subscription.routes.ts';
 import planRoutes from './src/routes/plan.routes.ts';
@@ -153,6 +154,7 @@ export function createApp(): Application {
   app.use('/api/shares', shareRoutes);
   app.use('/api/devices', deviceRoutes);
   app.use('/api/declarations', declarationRoutes);
+  app.use('/api/deletion-requests', deletionRequestRoutes);
   app.use('/api/notifications', notificationRoutes);
   app.use('/api/subscriptions', subscriptionRoutes);
   app.use('/api/plans', planRoutes);

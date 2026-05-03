@@ -6,6 +6,93 @@ import { createLostDeclaration } from '../services/api.js';
  */
 
 /* ════════════════════════════════════════
+   PERSISTANCE DES DONNÉES (localStorage)
+════════════════════════════════════════ */
+const STORAGE_KEY = 'docmaster_declaration_draft';
+
+/**
+ * Sauvegarde toutes les données du formulaire
+ */
+function saveDeclarationDraft() {
+  const container = document.getElementById('dynamicFields');
+  if (!container) return;
+
+  const draft = {
+    docType: selectedDocs[0] || null,
+    timestamp: Date.now(),
+    fields: {}
+  };
+
+  // Sauvegarder les champs dynamilques
+  const inputs = container.querySelectorAll('input[type="text"], input[type="date"], input[type="tel"], input[type="email"], select, textarea');
+  inputs.forEach(input => {
+    if (input.value) {
+      draft.fields[input.id || input.name || input.placeholder] = input.value;
+    }
+  });
+
+  // Sauvegarder les autres champs spéciaux
+  const lossDate = document.getElementById('lossDate');
+  if (lossDate?.value) draft.fields['lossDate'] = lossDate.value;
+
+  const userRegion = document.getElementById('userRegion');
+  if (userRegion?.value) draft.fields['userRegion'] = userRegion.value;
+
+  const userCountry = document.getElementById('userCountry');
+  if (userCountry?.value) draft.fields['userCountry'] = userCountry.value;
+
+  // Sauvegarder les boutons de sélection
+  const etatEl = document.querySelector('input[name="etat"]:checked');
+  if (etatEl) draft.fields['etat'] = etatEl.value;
+
+  const contactModeEl = document.querySelector('input[name="contact-mode"]:checked');
+  if (contactModeEl) draft.fields['contact-mode'] = contactModeEl.value;
+
+  const urgEl = document.querySelector('.urgency-btn.sel-low, .urgency-btn.sel-medium, .urgency-btn.sel-high');
+  if (urgEl) draft.fields['urgency'] = urgEl.textContent.trim();
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+  console.log('💾 Brouillon sauvegardé');
+}
+
+/**
+ * Restaure les données du formulaire depuis localStorage
+ */
+function restoreDeclarationDraft() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return;
+
+  try {
+    const draft = JSON.parse(saved);
+    
+    // Restaurer les champs
+    for (const [key, value] of Object.entries(draft.fields)) {
+      const input = document.getElementById(key) || document.querySelector(`[name="${key}"]`) || document.querySelector(`[placeholder*="${key}"]`);
+      
+      if (input) {
+        if (input.type === 'checkbox' || input.type === 'radio') {
+          input.checked = (input.value === value);
+        } else {
+          input.value = value;
+        }
+      }
+    }
+
+    console.log('🔄 Brouillon restauré');
+  } catch (e) {
+    console.error('Erreur lors de la restauration:', e);
+  }
+}
+
+/**
+ * Efface le brouillon sauvegardé
+ */
+function clearDeclarationDraft() {
+  localStorage.removeItem(STORAGE_KEY);
+  console.log('🗑️ Brouillon supprimé');
+}
+
+/* ════════════════════════════════════════
    MÉTADONNÉES PAR TYPE DE DOCUMENT
 ════════════════════════════════════════ */
 export const DOC_META = {
@@ -159,6 +246,26 @@ export function initLostDeclaration() {
     const card = document.querySelector(`.doc-card[onclick*="'${docType}'"]`);
     if (card) toggleDocType(card, docType);
   }
+
+  // ═══════════════════════════════════════
+  // AUTO-SAVE DES DONNÉES
+  // ═══════════════════════════════════════
+  
+  // Restaurer les données sauvegardées au démarrage
+  restoreDeclarationDraft();
+
+  // Écouter les changements et auto-sauvegarder
+  document.addEventListener('input', (e) => {
+    if (e.target.matches('input, select, textarea')) {
+      saveDeclarationDraft();
+    }
+  });
+  
+  document.addEventListener('change', (e) => {
+    if (e.target.matches('input[type="checkbox"], input[type="radio"], select')) {
+      saveDeclarationDraft();
+    }
+  });
 }
 
 function selectOwner(type){
@@ -323,7 +430,7 @@ function buildField(f, extra, defaultValue = ''){
       <label class="field-label"><i class="fa-solid ${f.icon}" style="color:#F5A64B;font-size:10px;"></i> ${f.label} ${optBadge}</label>
       <div class="field-wrapper">
         ${iconHtml}
-        <select class="field-input"><option value="">Sélectionner…</option>${opts}</select>
+        <select class="field-input" id="${f.id}" name="${f.id}"><option value="">Sélectionner…</option>${opts}</select>
         <i class="fa-solid fa-chevron-down" style="position:absolute;right:14px;color:#C4BAB0;font-size:11px;pointer-events:none;"></i>
       </div>
     </div>`;
@@ -331,12 +438,12 @@ function buildField(f, extra, defaultValue = ''){
   if(f.type === 'textarea'){
     return `<div class="field-group" style="${extra}">
       <label class="field-label">${f.icon ? `<i class="fa-solid ${f.icon}" style="color:#F5A64B;font-size:10px;"></i>` : ''} ${f.label} ${optBadge}</label>
-      <div class="field-wrapper"><textarea class="field-input no-icon" placeholder="${f.placeholder}">${defaultValue}</textarea></div>
+      <div class="field-wrapper"><textarea class="field-input no-icon" id="${f.id}" name="${f.id}" placeholder="${f.placeholder}">${defaultValue}</textarea></div>
     </div>`;
   }
   return `<div class="field-group" style="${extra}">
     <label class="field-label">${f.icon ? `<i class="fa-solid ${f.icon}" style="color:#F5A64B;font-size:10px;"></i>` : ''} ${f.label} ${optBadge}</label>
-    <div class="field-wrapper">${iconHtml}<input type="${f.type}" class="field-input${noIcon}" placeholder="${f.placeholder||''}" ${valAttr}/></div>
+    <div class="field-wrapper">${iconHtml}<input type="${f.type}" class="field-input${noIcon}" id="${f.id}" name="${f.id}" placeholder="${f.placeholder||''}" ${valAttr}/></div>
   </div>`;
 }
 
@@ -353,6 +460,9 @@ function showStep(step){
   document.getElementById('formLeft').scrollTop=0;
   if(currentStep===3){ activeDocIdx=0; buildStep2('right'); }
   if(currentStep===6) fillSummary();
+  
+  // Restaurer les données sauvegardées après un délai (pour laisser le DOM se construire)
+  setTimeout(() => restoreDeclarationDraft(), 100);
 }
 
 function updateProgressUI(){
@@ -386,10 +496,14 @@ function goToNextStep(){
     return;
   }
 
+  // Sauvegarder avant de passer à l'étape suivante
+  saveDeclarationDraft();
   if(currentStep < totalSteps) showStep(currentStep+1);
 }
 
 function goToPrevStep(){
+  // Sauvegarder avant de revenir à l'étape précédente
+  saveDeclarationDraft();
   if(currentStep===3 && activeDocIdx > 0){ jumpToDoc(activeDocIdx-1); return; }
   if(currentStep>1) showStep(currentStep-1);
 }
@@ -449,17 +563,32 @@ function dropFile(e,z,previewId){
 
 function fillSummary(){
   const data = collectDeclarationData('DRAFT');
-  document.getElementById('summary-type').textContent = data.documents;
-  document.getElementById('summary-date').textContent = data.datePerte;
-  document.getElementById('summary-lieu').textContent = data.lieu;
+  
+  // Vérifier que les éléments existent avant de les modifier
+  const summaryType = document.getElementById('summary-type');
+  const summaryDate = document.getElementById('summary-date');
+  const summaryLieu = document.getElementById('summary-lieu');
+  
+  if (summaryType && data.documents) summaryType.textContent = data.documents;
+  if (summaryDate && data.datePerte) summaryDate.textContent = data.datePerte;
+  if (summaryLieu && data.lieu) summaryLieu.textContent = data.lieu;
+  
+  // Mettre à jour le récapitulatif des documents
+  const recapDocList = document.getElementById('recapDocList');
+  if (recapDocList && selectedDocs.length > 0) {
+    recapDocList.innerHTML = selectedDocs
+      .map(doc => `<span style="font-size:11px;color:rgba(255,255,255,.8);">✓ ${DOC_META[doc]?.label || doc}</span>`)
+      .join('');
+  }
 }
 
 function collectDeclarationData(ref) {
   const docs = selectedDocs.map(key => DOC_META[key].label).join(', ');
   const datePerte = document.getElementById('lossDate')?.value || '';
-  let lieu = document.getElementById('lossPlace')?.value || '';
+  let lieu = document.getElementById('ville')?.value || '';
   const lieuEl = document.querySelector('.place-tag.active');
-  if(!lieu && lieuEl) lieu = lieuEl.textContent.trim();
+  if(lieu && lieuEl) lieu += ` (${lieuEl.textContent.trim()})`;
+  else if(!lieu && lieuEl) lieu = lieuEl.textContent.trim();
 
   return {
     ref: ref,
@@ -497,63 +626,214 @@ async function validateAndSubmit() {
 
   try {
     const formData = new FormData();
-    const type = selectedDocs[0];
-    formData.append('doc_type', type);
     
-    // Collect from all fields (one doc for now as backend supports single)
+    // ① Récupérer le type de document sélectionné
+    const docKey = selectedDocs[0];
+    if (!docKey) {
+      throw new Error('Aucun document sélectionné');
+    }
+    const docType = docKey.toUpperCase(); // "CNI" au lieu de "cni"
+    formData.append('doc_type', docType);
+    
+    // ② Collecter les données du formulaire dynamique
     const container = document.getElementById('dynamicFields');
+    if (!container) {
+      throw new Error('Formulaire introuvable');
+    }
+    
     const inputs = container.querySelectorAll('input, select, textarea');
-    DOC_META[type].fields.forEach((f, idx) => {
-      if(inputs[idx]) {
-        let key = f.id;
-        if(key === 'titulaire') key = 'owner_name';
-        if(key === 'numero') key = 'document_number';
-        formData.append(key, inputs[idx].value);
+    const docMeta = DOC_META[docKey];
+    
+    // Créer une map des inputs par ID
+    const inputsMap = {};
+    inputs.forEach(input => {
+      const id = input.id || input.name;
+      if (id) inputsMap[id] = input;
+    });
+    
+    console.group('🔎 INPUTS TROUVÉS:');
+    console.log(inputsMap);
+    console.groupEnd();
+    
+    // Mapper chaque champ en cherchant par ID (pas par ordre)
+    docMeta.fields.forEach((fieldMeta) => {
+      const input = inputsMap[fieldMeta.id];
+      if (!input) {
+        console.warn(`❌ Champ "${fieldMeta.id}" NON TROUVÉ dans le DOM`);
+        return;
       }
+      
+      let value = input.value?.trim() || '';
+      if (!value) {
+        console.log(`⊘ ${fieldMeta.id}: vide (input.id=${input.id}, input.name=${input.name})`);
+        return; // Ignore les champs vides
+      }
+      
+      let fieldName = fieldMeta.id;
+      
+      // Mapper les noms des champs
+      if (fieldName === 'titulaire') fieldName = 'owner_name';
+      if (fieldName === 'numero') fieldName = 'document_number';
+      if (fieldName === 'expiration') fieldName = 'date_expiration';
+      if (fieldName === 'date_naissance') fieldName = 'date_naissance';
+      if (fieldName === 'desc') fieldName = 'description';
+      
+      console.log(`✓ ${fieldMeta.id} (type=${input.type}) → ${fieldName}: "${value}"`);
+      formData.append(fieldName, value);
     });
 
-    formData.append('date_perte', document.getElementById('lossDate').value);
+    // ③ Date de perte (champ requis par le formulaire)
+    const datePerte = document.getElementById('lossDate')?.value?.trim();
+    if (datePerte) {
+      console.log('✓ date_perte:', datePerte);
+      formData.append('date_perte', datePerte);
+    }
     
-    let lieu = document.getElementById('lossPlace')?.value || '';
-    const lieuEl = document.querySelector('.place-tag.active');
-    if(!lieu && lieuEl) lieu = lieuEl.textContent.trim();
-    formData.append('ville', lieu);
+    // ④ Ville
+    const cityInput = document.getElementById('ville');
+    const ville = cityInput?.value?.trim() || '';
+    if (ville && ville.length >= 2) {
+      console.log('✓ ville:', ville);
+      formData.append('ville', ville);
+    } else {
+      console.warn('❌ Ville manquante ou invalide:', { id: 'ville', value: ville });
+    }
 
-    const circ = document.getElementById('lossDesc')?.value || '';
-    formData.append('description', circ);
+    // ⑤ Région et Pays (optionnel)
+    const region = document.getElementById('userRegion')?.value?.trim() || '';
+    const pays = document.getElementById('userCountry')?.value?.trim() || '';
+    if (region) {
+      console.log('✓ region:', region);
+      formData.append('region', region);
+    }
+    if (pays) {
+      console.log('✓ pays:', pays);
+      formData.append('pays', pays);
+    }
 
-    const phoneEl = document.querySelector('input[type="tel"]');
-    const emailEl = document.querySelector('input[type="email"]');
-    if(phoneEl) formData.append('telephone_contact', phoneEl.value);
-    if(emailEl) formData.append('email_contact', emailEl.value);
+    // ⑥ Description (combiner lieu précis et circonstances)
+    let extraDesc = '';
+    const lieuPrecis = document.getElementById('lieu_precis')?.value?.trim();
+    const descLieu = document.getElementById('description_lieu')?.value?.trim();
+    if (lieuPrecis) extraDesc += `Lieu: ${lieuPrecis}. `;
+    if (descLieu) extraDesc += `Circonstances: ${descLieu}. `;
+
+    if (extraDesc) {
+      console.log('✓ description (extra):', extraDesc);
+      // On l'ajoute à la description existante ou on la crée
+      const existingDesc = formData.get('description');
+      if (existingDesc) {
+        formData.set('description', existingDesc + ' | ' + extraDesc);
+      } else {
+        formData.append('description', extraDesc);
+      }
+    }
+
+    // ⑦ Contact - téléphone
+    const phoneInput = document.querySelector('input[type="tel"]');
+    if (phoneInput?.value?.trim()) {
+      console.log('✓ telephone_contact:', phoneInput.value.trim());
+      formData.append('telephone_contact', phoneInput.value.trim());
+    }
     
+    // ⑧ Contact - email
+    const emailInput = document.querySelector('input[type="email"]');
+    if (emailInput?.value?.trim()) {
+      console.log('✓ email_contact:', emailInput.value.trim());
+      formData.append('email_contact', emailInput.value.trim());
+    }
+    
+    // ⑨ Mode de contact (optionnel)
+    const contactModeEl = document.querySelector('input[name="contact-mode"]:checked');
+    if (contactModeEl?.value) {
+      formData.append('mode_contact', contactModeEl.value);
+    }
+    
+    // ⑩ État physique (optionnel)
+    const etatEl = document.querySelector('input[name="etat"]:checked');
+    if (etatEl?.value) {
+      formData.append('etat_physique', etatEl.value);
+    }
+
+    // ⑪ Niveau urgence (optionnel)
     const urgEl = document.querySelector('.urgency-btn.sel-low, .urgency-btn.sel-medium, .urgency-btn.sel-high');
-    formData.append('urgence_niveau', urgEl ? urgEl.textContent.trim() : 'Modérée');
+    if (urgEl?.textContent) {
+      formData.append('urgence_niveau', urgEl.textContent.trim());
+    }
 
+    // ⑫ Montant récompense (optionnel)
     const rewardAmtEl = document.querySelector('#rewardField input[type="number"]');
-    if(rewardAmtEl && rewardAmtEl.parentElement.style.display !== 'none') {
+    if (rewardAmtEl?.value && rewardAmtEl.parentElement?.style.display !== 'none') {
       formData.append('recompense_montant', rewardAmtEl.value);
     }
 
-    const fileRecto = document.getElementById('fileRecto')?.files[0];
-    const fileVerso = document.getElementById('fileVerso')?.files[0];
-    if(fileRecto) formData.append('photo_recto', fileRecto);
-    if(fileVerso) formData.append('photo_verso', fileVerso);
+    // ⑬ Fichiers photos (optionnel)
+    const fileRecto = document.getElementById('fileRecto')?.files?.[0];
+    const fileVerso = document.getElementById('fileVerso')?.files?.[0];
+    if (fileRecto) formData.append('photo_recto', fileRecto);
+    if (fileVerso) formData.append('photo_verso', fileVerso);
 
+    // 🔍 AFFICHE LES DONNÉES ENVOYÉES
+    console.group('📤 DONNÉES ENVOYÉES AU BACKEND');
+    for (let [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(`  ${key}:`, `File(${value.name}, ${value.size} bytes)`);
+      } else {
+        console.log(`  ${key}:`, value);
+      }
+    }
+    console.groupEnd();
+
+    // ✅ Envoyer
     const result = await createLostDeclaration(formData);
+
+    // 🔍 AFFICHE LES DONNÉES REÇUES
+    console.group('🔄 RÉPONSE DU BACKEND');
+    console.log('Success:', result.success);
+    console.log('Message:', result.message);
+    if (result.errors) {
+      console.log('Erreurs:', result.errors);
+    }
+    if (result.data) {
+      console.log('Données reçues:', result.data);
+    }
+    console.groupEnd();
 
     if (result.success) {
       closeConfirmModal();
-      document.getElementById('refNumber').textContent = result.data.data.identifiant_doc_dm || 'DOC-SUCCESS';
+      const refNum = result.data?.data?.identifiant_doc_dm || result.data?.id || 'DOC-SUCCESS';
+      document.getElementById('refNumber').textContent = refNum;
       document.getElementById('successOverlay').classList.add('show');
+      alert('✅ Déclaration envoyée avec succès!');
+      
+      // Effacer le brouillon après succès
+      clearDeclarationDraft();
     } else {
-      throw new Error(result.message || "Erreur lors de l'enregistrement");
+      // Afficher les erreurs de validation du backend
+      if (result.errors && Object.keys(result.errors).length > 0) {
+        console.error('❌ Erreurs de validation:', result.errors);
+        let errorMsg = '❌ Validation échouée:\n\n';
+        for (const [field, messages] of Object.entries(result.errors)) {
+          errorMsg += `▸ ${field}:\n`;
+          if (Array.isArray(messages)) {
+            messages.forEach(msg => {
+              errorMsg += `   ${msg}\n`;
+            });
+          } else {
+            errorMsg += `   ${messages}\n`;
+          }
+        }
+        alert(errorMsg);
+      } else {
+        alert("❌ " + (result.message || "Erreur lors de l'enregistrement"));
+      }
     }
   } catch (error) {
-    alert("Erreur: " + error.message);
+    console.error('❌ Erreur:', error);
+    alert("❌ " + error.message);
   } finally {
     btn.disabled = false;
-    btn.innerHTML = 'Confirmer';
+    btn.innerHTML = 'Envoyer la déclaration';
   }
 }
 

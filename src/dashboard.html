@@ -222,11 +222,11 @@
 
 <body>
 
-  <div id="sidebar-root"></div>
+  <div id="sidebar-root" class="sidebar-skeleton"></div>
 
-  <script src="js/notifications.js"></script>
+  <script src="js/ui/notifications.js"></script>
   <!-- ══ MAIN WRAPPER ══ -->
-  <div class="main-wrapper" id="mainWrapper">
+  <div class="main-wrapper page-fade-in" id="mainWrapper">
 
     <!-- ── Topbar ── -->
     <header
@@ -303,7 +303,7 @@
             </div>
             <span class="text-[10px] font-bold py-0.5 px-2 rounded-[7px] bg-green-100 text-green-700">Ce mois</span>
           </div>
-          <div class="font-bricolage text-[24px] sm:text-[28px] font-extrabold text-textMain leading-none">2,150+</div>
+          <div id="totalRecoveredDocs" class="font-bricolage text-[24px] sm:text-[28px] font-extrabold text-textMain leading-none">0</div>
           <div class="text-[11px] sm:text-[12.5px] text-textMuted font-medium leading-tight">Docs retrouvés sur
             DocMaster</div>
         </div>
@@ -317,7 +317,7 @@
             </div>
             <span class="text-[10px] font-bold py-0.5 px-2 rounded-[7px] bg-amber-100 text-amber-700">Total</span>
           </div>
-          <div class="font-bricolage text-[24px] sm:text-[28px] font-extrabold text-textMain leading-none">3,840+</div>
+          <div id="totalLostDocs" class="font-bricolage text-[24px] sm:text-[28px] font-extrabold text-textMain leading-none">0</div>
           <div class="text-[11px] sm:text-[12.5px] text-textMuted font-medium leading-tight">Docs déclarés sur DocMaster
           </div>
         </div>
@@ -685,7 +685,7 @@
                 Tout voir <i class="fa-solid fa-arrow-right text-[9px]"></i>
               </a>
             </div>
-            <div class="flex flex-col divide-y divide-borderMain">
+            <div class="flex flex-col divide-y divide-borderMain" id="dashboardNotificationList">
               <div
                 class="flex gap-3 px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-surface2 transition-colors cursor-pointer relative">
                 <div class="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary"></div>
@@ -734,18 +734,18 @@
               <i class="fa-solid fa-star text-primary text-[9px]"></i>
               <span class="text-[10.5px] font-bold text-primary uppercase tracking-wide">Plan actuel</span>
             </div>
-            <div class="font-bricolage text-[18px] font-extrabold text-white mb-0.5">Standard</div>
-            <div class="text-[12px] text-white/50 mb-3.5">5 documents / type · SMS & Email</div>
+            <div id="userPlanName" class="font-bricolage text-[18px] font-extrabold text-white mb-0.5">Standard</div>
+            <div id="userPlanLimits" class="text-[12px] text-white/50 mb-3.5">5 documents / type · SMS & Email</div>
             <div class="mb-3.5">
               <div class="flex justify-between text-[11.5px] mb-1.5">
                 <span class="text-white/60">Quotas utilisés</span>
-                <span class="text-primary font-bold">3 / 5</span>
+                <span id="userPlanQuotaText" class="text-primary font-bold">3 / 5</span>
               </div>
               <div class="h-[5px] bg-white/10 rounded-full overflow-hidden">
-                <div class="h-full bg-primary rounded-full w-[60%] shadow-[0_0_8px_rgba(245,166,75,0.4)]"></div>
+                <div id="userPlanQuotaProgress" class="h-full bg-primary rounded-full w-[60%] shadow-[0_0_8px_rgba(245,166,75,0.4)]"></div>
               </div>
             </div>
-            <div class="flex flex-col gap-1.5 mb-4 relative z-10">
+            <div id="userPlanFeatures" class="flex flex-col gap-1.5 mb-4 relative z-10">
               <div class="flex items-center gap-2 text-[12.5px] text-white/70"><i
                   class="fa-solid fa-check text-primary text-[11px]"></i>Alertes SMS + Email</div>
               <div class="flex items-center gap-2 text-[12.5px] text-white/70"><i
@@ -756,7 +756,7 @@
             <button
               class="w-full py-2.5 rounded-[11px] bg-primary text-white font-bricolage text-[13.5px] font-bold cursor-pointer flex items-center justify-center gap-2 transition-all hover:bg-primary-dark active:scale-[.98] shadow-lg shadow-primary/20 relative z-10">
               <i class="fa-solid fa-rocket"></i> Passer au plan Pro
-              </but class="text-xs font-bold text-primary hover:underline">Marquer tout comme lu</button>
+            </button>
           </div>
         </div>
       </div>

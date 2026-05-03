@@ -2,14 +2,18 @@ import { DeclarationRepository } from '../repositories/declaration.repository.ts
 import { DocumentDeclaration } from '../types/database.ts';
 import { calculateDocumentFingerprint } from '../utils/crypto.utils.ts';
 import { NotificationService } from './notification.service.ts';
+import { matchingService } from './matching.service.ts';
+import { MatchRepository } from '../repositories/match.repository.ts';
 
 export class DeclarationService {
   private declarationRepository: DeclarationRepository;
   private notificationService: NotificationService;
+  private matchRepository: MatchRepository;
 
   constructor() {
     this.declarationRepository = new DeclarationRepository();
     this.notificationService = new NotificationService();
+    this.matchRepository = new MatchRepository();
   }
 
   /**
@@ -31,9 +35,15 @@ export class DeclarationService {
     const prefix = data.declaration_type === 'LOST' ? 'DOC' : 'DM';
     data.identifiant_doc_dm = `${prefix}_${yy}${mm}_${n}`;
 
-    // 2. Generate fingerprint for matching
+    // 2. Generate fingerprint and check for duplicates
     if (data.doc_type && data.document_number) {
       data.fingerprint = calculateDocumentFingerprint(data.doc_type, data.document_number);
+      
+      // Prevent duplicates of the SAME type (duplicate prevention)
+      const existing = await this.declarationRepository.checkDuplicate(data.fingerprint, data.declaration_type!);
+      if (existing) {
+        throw new Error(`Une déclaration de type ${data.declaration_type === 'LOST' ? 'PERTE' : 'TROUVAILLE'} existe déjà pour ce numéro.`);
+      }
     }
 
     // 3. Set default status based on type
@@ -55,10 +65,8 @@ export class DeclarationService {
         );
     }
 
-    // 6. Check for matches (Async - don't block the response)
-    if (declaration.fingerprint) {
-      this.checkMatches(declaration).catch(err => console.error('Error checking matches:', err));
-    }
+    // 6. Check for matches using the new scoring algorithm
+    matchingService.findAndNotifyMatches(declaration).catch(err => console.error('Error checking matches:', err));
 
     return declaration;
   }
@@ -66,34 +74,6 @@ export class DeclarationService {
   /**
    * Internal method to check for matches and notify users
    */
-  private async checkMatches(declaration: DocumentDeclaration) {
-    const matches = await this.declarationRepository.findByFingerprint(declaration.fingerprint);
-    
-    // Find declarations of the OPPOSITE type
-    const oppositeMatches = matches.filter(m => 
-      m.id !== declaration.id && 
-      m.declaration_type !== declaration.declaration_type
-    );
-
-    if (oppositeMatches.length > 0) {
-      console.log(`🔍 [MATCH FOUND] ${oppositeMatches.length} potential matches for ${declaration.identifiant_doc_dm}`);
-      
-      // Notify the current reporter and the previous reporters
-      for (const match of oppositeMatches) {
-        if (match.reporter_id && declaration.reporter_id) {
-          const lostUserId = declaration.declaration_type === 'LOST' ? declaration.reporter_id : match.reporter_id;
-          const foundUserId = declaration.declaration_type === 'FOUND' ? declaration.reporter_id : match.reporter_id;
-          
-          await this.notificationService.notifyMatchFound(
-            lostUserId, 
-            foundUserId, 
-            declaration.id, 
-            declaration.doc_type
-          );
-        }
-      }
-    }
-  }
 
   /**
    * Search declarations
@@ -103,10 +83,21 @@ export class DeclarationService {
   }
 
   /**
-   * Get declarations for a user
+   * Get declarations for a user with their match status
    */
-  async getUserDeclarations(userId: string): Promise<DocumentDeclaration[]> {
-    return await this.declarationRepository.findByReporterId(userId);
+  async getUserDeclarations(userId: string): Promise<any[]> {
+    const declarations = await this.declarationRepository.findByReporterId(userId);
+    
+    // Attach match info to each declaration
+    const results = await Promise.all(declarations.map(async (decl) => {
+      const matches = await this.matchRepository.findByDeclarationId(decl.id);
+      return {
+        ...decl,
+        matches: matches || []
+      };
+    }));
+
+    return results;
   }
 
   /**
@@ -134,5 +125,35 @@ export class DeclarationService {
     }
 
     return declaration;
+  }
+
+  async getGlobalStats() {
+    return await this.declarationRepository.getGlobalStats();
+  }
+
+  /**
+   * Search for FOUND documents with public data masking
+   */
+  async searchPublicFound(query: string) {
+    const results = await this.declarationRepository.searchPublicFound(query);
+    
+    return results.map(doc => ({
+      ...doc,
+      owner_name: this.maskName(doc.owner_name),
+      document_number: this.maskNumber(doc.document_number),
+      // Mask reporter if present
+      reporter_id: 'HIDDEN'
+    }));
+  }
+
+  private maskName(name: string): string {
+    if (!name) return '***';
+    return name.split(' ').map(p => p.length > 1 ? p[0] + '*'.repeat(p.length - 1) : p + '*').join(' ');
+  }
+
+  private maskNumber(num: string): string {
+    if (!num) return '***';
+    if (num.length < 4) return '**' + '*'.repeat(num.length - 2);
+    return num.substring(0, 2) + '*'.repeat(num.length - 4) + num.substring(num.length - 2);
   }
 }

@@ -5,7 +5,7 @@ const shareService = new ShareService();
 
 export const createShare = async (req: Request, res: Response) => {
   try {
-    const { documentId } = req.params;
+    const documentId = req.params.documentId as string;
     const { daysValid } = req.body;
     const userId = (req as any).user?.id;
 
@@ -33,7 +33,7 @@ export const createShare = async (req: Request, res: Response) => {
 
 export const getSharedDocument = async (req: Request, res: Response) => {
   try {
-    const { token } = req.params;
+    const token = req.params.token as string;
     const share = await shareService.getSharedDocument(token);
 
     if (!share) {
@@ -51,7 +51,7 @@ export const getSharedDocument = async (req: Request, res: Response) => {
 
 export const getDocumentShares = async (req: Request, res: Response) => {
   try {
-    const { documentId } = req.params;
+    const documentId = req.params.documentId as string;
     const userId = (req as any).user?.id;
 
     const shares = await shareService.getDocumentShares(documentId, userId);
@@ -63,7 +63,7 @@ export const getDocumentShares = async (req: Request, res: Response) => {
 
 export const revokeShare = async (req: Request, res: Response) => {
   try {
-    const { shareId } = req.params;
+    const shareId = req.params.shareId as string;
     const userId = (req as any).user?.id;
 
     const success = await shareService.revokeShare(shareId, userId);

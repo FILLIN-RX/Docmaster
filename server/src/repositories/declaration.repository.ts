@@ -12,8 +12,9 @@ export class DeclarationRepository {
         declaration_type, status, reporter_id, ville, region, pays, 
         fingerprint, found_location, etat_physique, photo_recto, 
         photo_verso, description, date_expiration, mode_contact, 
-        payment_status, date_naissance, urgence_niveau, recompense_montant, date_perte
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+        payment_status, transactions_id, date_naissance, urgence_niveau, recompense_montant, date_perte,
+        telephone_contact, email_contact
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
       RETURNING *
     `;
 
@@ -37,10 +38,13 @@ export class DeclarationRepository {
       data.date_expiration || null,
       data.mode_contact || 'APP_CHAT',
       data.payment_status || 'PENDING',
+      data.transactions_id || null,
       data.date_naissance || null,
       data.urgence_niveau || 'Modérée',
       data.recompense_montant || 0,
-      data.date_perte || null
+      data.date_perte || null,
+      data.telephone_contact || null,
+      data.email_contact || null
     ];
 
     const { rows } = await pool.query(query, values);
@@ -54,6 +58,15 @@ export class DeclarationRepository {
     const query = 'SELECT * FROM declarations WHERE reporter_id = $1 ORDER BY created_at DESC';
     const { rows } = await pool.query(query, [reporterId]);
     return rows;
+  }
+
+  /**
+   * Count declarations by reporter ID
+   */
+  async countByReporterId(reporterId: string): Promise<number> {
+    const query = 'SELECT COUNT(*) FROM declarations WHERE reporter_id = $1';
+    const { rows } = await pool.query(query, [reporterId]);
+    return parseInt(rows[0].count);
   }
 
   /**
@@ -110,9 +123,16 @@ export class DeclarationRepository {
    * Search declarations with filters
    */
   async search(filters: any): Promise<DocumentDeclaration[]> {
-    let query = 'SELECT * FROM declarations WHERE status = \'AVAILABLE\'';
+    let query = 'SELECT * FROM declarations WHERE 1=1';
     const values: any[] = [];
     let paramIndex = 1;
+
+    if (filters.status) {
+      query += ` AND status = $${paramIndex++}`;
+      values.push(filters.status);
+    } else if (!filters.include_all) {
+      query += " AND status = 'AVAILABLE'";
+    }
 
     if (filters.doc_type) {
       query += ` AND doc_type = $${paramIndex++}`;
@@ -135,6 +155,53 @@ export class DeclarationRepository {
   }
 
   /**
+   * Public fuzzy search for FOUND documents
+   */
+  async searchPublicFound(searchText: string): Promise<DocumentDeclaration[]> {
+    const query = `
+      SELECT *, 
+             similarity(owner_name, $1) as score
+      FROM declarations 
+      WHERE declaration_type = 'FOUND' 
+      AND status = 'AVAILABLE'
+      AND (owner_name % $1 OR document_number % $1 OR identifiant_doc_dm % $1)
+      ORDER BY score DESC
+      LIMIT 20
+    `;
+    const { rows } = await pool.query(query, [searchText]);
+    return rows;
+  }
+
+  /**
+   * Find potential candidates for matching (opposite type, same doc_type)
+   */
+  async findCandidatesForMatch(docType: string, oppositeType: string): Promise<DocumentDeclaration[]> {
+    const query = `
+      SELECT * FROM declarations 
+      WHERE (doc_type ILIKE $1 OR (doc_type ILIKE 'passport' AND $1 ILIKE 'passeport') OR (doc_type ILIKE 'passeport' AND $1 ILIKE 'passport'))
+      AND declaration_type = $2 
+      AND status NOT IN ('RETURNED', 'CLAIMED', 'CANCELLED')
+    `;
+    const { rows } = await pool.query(query, [docType, oppositeType]);
+    return rows;
+  }
+
+  /**
+   * Check for duplicate declarations (same type, same fingerprint)
+   */
+  async checkDuplicate(fingerprint: string, declarationType: string): Promise<DocumentDeclaration | null> {
+    const query = `
+      SELECT * FROM declarations 
+      WHERE fingerprint = $1 
+      AND declaration_type = $2 
+      AND status NOT IN ('RETURNED', 'CANCELLED')
+      LIMIT 1
+    `;
+    const { rows } = await pool.query(query, [fingerprint, declarationType]);
+    return rows[0] || null;
+  }
+
+  /**
    * Update a declaration
    */
   async update(id: string, reporterId: string, data: Partial<DocumentDeclaration>): Promise<DocumentDeclaration | null> {
@@ -151,8 +218,15 @@ export class DeclarationRepository {
         description = COALESCE($8, description),
         etat_physique = COALESCE($9, etat_physique),
         recompense_montant = COALESCE($10, recompense_montant),
-        urgence_niveau = COALESCE($11, urgence_niveau)
-      WHERE id = $12 AND reporter_id = $13
+        urgence_niveau = COALESCE($11, urgence_niveau),
+        date_naissance = COALESCE($12, date_naissance),
+        date_perte = COALESCE($13, date_perte),
+        transactions_id = COALESCE($14, transactions_id),
+        date_expiration = COALESCE($15, date_expiration),
+        telephone_contact = COALESCE($16, telephone_contact),
+        email_contact = COALESCE($17, email_contact),
+        mode_contact = COALESCE($18, mode_contact)
+      WHERE id = $19 AND reporter_id = $20
       RETURNING *`;
 
     const { rows } = await pool.query(query, [
@@ -167,10 +241,31 @@ export class DeclarationRepository {
       data.etat_physique,
       data.recompense_montant,
       data.urgence_niveau,
+      data.date_naissance,
+      data.date_perte,
+      data.transactions_id,
+      data.date_expiration,
+      data.telephone_contact,
+      data.email_contact,
+      data.mode_contact,
       id,
       reporterId
     ]);
 
     return rows[0] || null;
+  }
+
+  async getGlobalStats() {
+    const query = `
+      SELECT 
+        COUNT(*) FILTER (WHERE declaration_type = 'LOST') as total_lost,
+        COUNT(*) FILTER (WHERE status = 'RETURNED') as total_recovered
+      FROM declarations
+    `;
+    const { rows } = await pool.query(query);
+    return {
+      total_lost: parseInt(rows[0].total_lost),
+      total_recovered: parseInt(rows[0].total_recovered)
+    };
   }
 }

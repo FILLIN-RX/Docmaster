@@ -32,7 +32,7 @@ export class NotificationController {
    */
   markAsRead = async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       await this.notificationService.markAsRead(id);
       res.json({ success: true, message: 'Notification marquée comme lue.' });
     } catch (error: any) {

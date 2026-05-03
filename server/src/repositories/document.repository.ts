@@ -89,4 +89,14 @@ export class DocumentRepository {
 
     return rows[0] || null;
   }
+
+  /**
+   * Find personal documents matching a specific fingerprint
+   * Used for matching found items against private vaults
+   */
+  async findCandidatesByFingerprint(fingerprint: string): Promise<UserDocument[]> {
+    const query = 'SELECT * FROM my_documents WHERE fingerprint = $1';
+    const { rows } = await pool.query(query, [fingerprint]);
+    return rows;
+  }
 }

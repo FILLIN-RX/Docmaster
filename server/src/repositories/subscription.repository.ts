@@ -108,6 +108,22 @@ class SubscriptionRepository {
       estimatedMonthlyRevenue: parseFloat(totalRevenue.rows[0].sum || 0)
     };
   }
+
+  /**
+   * Find active subscription for a user
+   */
+  async findActiveByUserId(userId: string) {
+    const sql = `
+      SELECT us.*, p.name as plan_name, p.features
+      FROM user_subscriptions us
+      JOIN plans p ON us.plan_id = p.id
+      WHERE us.user_id = $1 AND us.status = 'ACTIVE'
+      ORDER BY us.date_debut DESC
+      LIMIT 1
+    `;
+    const result = await query(sql, [userId]);
+    return result.rows[0];
+  }
 }
 
 export const subscriptionRepository = new SubscriptionRepository();

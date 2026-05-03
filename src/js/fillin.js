@@ -51,14 +51,12 @@ const testimonials = [
 let currentIndex = 0;
 
 function updateCarousel() {
-  const container = document.getElementById("testimonial-container");
-  const quoteEl = document.getElementById("quote");
-  const authorEl = document.getElementById("author");
-  const roleEl = document.getElementById("role");
   const dotsContainer = document.getElementById("dots-container");
 
+  if (!container || !quoteEl || !authorEl || !roleEl) return;
+
   // Animation de sortie
-  container.style.opacity = 0;
+  if (container) container.style.opacity = 0;
 
   setTimeout(() => {
     const item = testimonials[currentIndex];
@@ -75,7 +73,7 @@ function updateCarousel() {
     });
 
     // Animation d'entrée
-    container.style.opacity = 1;
+    if (container) container.style.opacity = 1;
   }, 300);
 }
 

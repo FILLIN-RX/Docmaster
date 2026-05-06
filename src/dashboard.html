@@ -221,6 +221,7 @@
 </head>
 
 <body>
+  <script type="module" src="/js/utils/ui-helpers.js"></script>
 
   <div id="sidebar-root" class="sidebar-skeleton"></div>
 
@@ -622,7 +623,25 @@
             </div>
           </div>
 
+          <!-- ── SECTION: CATALOGUE DES DOCUMENTS (Moved inside grid) ── -->
+          <div class="mt-2">
+            <div class="flex items-center justify-between mb-4 px-1">
+              <div>
+                <h2 class="font-bricolage text-base sm:text-lg font-extrabold text-textMain tracking-tight">Performances DocMaster</h2>
+                <p class="text-[11px] sm:text-[12px] text-textMuted font-medium italic">Retrouvés par la communauté ce mois-ci</p>
+              </div>
+              <button class="text-primary text-[11px] font-bold hover:underline flex items-center gap-1">
+                Catalogue complet <i class="fa-solid fa-chevron-right text-[9px]"></i>
+              </button>
+            </div>
 
+            <div id="globalDocStatsGrid" class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              <!-- Skeleton Loader Placeholder -->
+              <div class="animate-pulse bg-white border border-borderMain rounded-2xl p-4 h-32"></div>
+              <div class="animate-pulse bg-white border border-borderMain rounded-2xl p-4 h-32"></div>
+              <div class="animate-pulse bg-white border border-borderMain rounded-2xl p-4 h-32 hidden lg:block"></div>
+            </div>
+          </div>
 
         </div>
 
@@ -760,7 +779,6 @@
           </div>
         </div>
       </div>
-
 
       <script>
 

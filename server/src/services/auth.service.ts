@@ -3,6 +3,7 @@ import argon2 from 'argon2';
 import crypto from 'crypto';
 import { User } from '../types/database.ts';
 import { generateToken } from '../config/jwt.ts';
+import { ReferralService } from './referral.service.ts';
 
 export class UserService {
   private userRepository = new UserRepository();
@@ -41,11 +42,19 @@ export class UserService {
     const codeInvitation = await this.generateUniqueReferralCode();
 
     // Create user with hashed password and referral code
-    return await this.userRepository.createUser({
+    const user = await this.userRepository.createUser({
       ...data,
       mot_de_passe: hashedPassword,
       code_invitation: codeInvitation,
     });
+
+    // If there is a parrain_id, create a referral
+    if (data.parrain_id) {
+      const referralService = new ReferralService();
+      await referralService.createReferral(data.parrain_id, user.id);
+    }
+
+    return user;
   }
 
   /**
@@ -142,5 +151,12 @@ export class UserService {
    */
   async getUserById(userId: string): Promise<User | null> {
     return await this.userRepository.findById(userId);
+  }
+
+  /**
+   * Get user by Referral Code
+   */
+  async getUserByReferralCode(code: string): Promise<User | null> {
+    return await this.userRepository.findByReferralCode(code);
   }
 }

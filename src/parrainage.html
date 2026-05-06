@@ -170,6 +170,7 @@ html, body { font-family: 'Poppins', sans-serif; background: #F4EFE6 }
 </style>
 </head>
 <body>
+  <script type="module" src="/js/utils/ui-helpers.js"></script>
 
 <div id="sidebar-root"></div>
 
@@ -558,14 +559,7 @@ function shareCode(method){
 }
 
 /* ── Données filleuls ── */
-const referredFriends = [
-  { name:'Alice Mbang',   joined:'2024-01-12', active:true,  initials:'AM', color:'bg-blue-100 text-blue-700',    reward:500, slots:2 },
-  { name:'Paul Nkeng',    joined:'2024-01-28', active:true,  initials:'PN', color:'bg-purple-100 text-purple-700', reward:500, slots:2 },
-  { name:'Fatima Bello',  joined:'2024-02-03', active:false, initials:'FB', color:'bg-amber-100 text-amber-700',   reward:0,   slots:0 },
-  { name:'Kevin Essomba', joined:'2024-02-15', active:true,  initials:'KE', color:'bg-green-100 text-green-700',   reward:500, slots:2 },
-  { name:'Sonia Etame',   joined:'2024-02-19', active:false, initials:'SE', color:'bg-rose-100 text-rose-700',     reward:0,   slots:0 },
-  { name:'Roland Ateba',  joined:'2024-03-01', active:true,  initials:'RA', color:'bg-teal-100 text-teal-700',     reward:500, slots:2 }
-];
+let referredFriends = [];
 let currentFilter='all', currentSearch='';
 
 function formatDate(d){ return new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}); }
@@ -600,6 +594,7 @@ function setFilter(val,btn){
 
 function renderAvatarPreview(){
   const preview       = document.getElementById('avatar-preview');
+  if(!preview) return;
   const activeFriends = referredFriends.filter(f=>f.active);
   const totalCash     = referredFriends.reduce((s,f)=>s+f.reward,0);
   const totalSlots    = referredFriends.reduce((s,f)=>s+f.slots,0);
@@ -623,18 +618,23 @@ function renderAvatarPreview(){
   `).join('');
   if(referredFriends.length>5) preview.innerHTML+=`<div class="w-8 h-8 rounded-full border-2 border-white bg-bgMain flex items-center justify-center text-[10px] font-bold text-textMuted">+${referredFriends.length-5}</div>`;
 
-  const latest=[...referredFriends].sort((a,b)=>new Date(b.joined)-new Date(a.joined))[0];
-  document.getElementById('last-activity').innerHTML=`
-    <div class="w-6 h-6 rounded-full ${latest.color} flex items-center justify-center text-[9px] font-bold flex-shrink-0">${latest.initials}</div>
-    <span class="text-[12px] text-textMuted flex-1"><span class="font-semibold text-textMain">${latest.name}</span> a rejoint ${relativeDate(latest.joined).toLowerCase()}</span>
-    <i class="fa-solid fa-clock text-textMuted text-[10px]"></i>
-  `;
+  if(referredFriends.length === 0) {
+    document.getElementById('last-activity').innerHTML = `<span class="text-[12px] text-textMuted">Aucun filleul pour le moment.</span>`;
+  } else {
+    const latest=[...referredFriends].sort((a,b)=>new Date(b.joined)-new Date(a.joined))[0];
+    document.getElementById('last-activity').innerHTML=`
+      <div class="w-6 h-6 rounded-full ${latest.color} flex items-center justify-center text-[9px] font-bold flex-shrink-0">${latest.initials}</div>
+      <span class="text-[12px] text-textMuted flex-1"><span class="font-semibold text-textMain">${latest.name}</span> a rejoint ${relativeDate(latest.joined).toLowerCase()}</span>
+      <i class="fa-solid fa-clock text-textMuted text-[10px]"></i>
+    `;
+  }
 }
 
 function renderList(){
   const list=getFiltered();
   const root=document.getElementById('friends-list-sheet');
   const empty=document.getElementById('empty-state');
+  if(!root) return;
   if(!list.length){ root.innerHTML=''; empty.classList.remove('hidden'); empty.classList.add('flex'); return; }
   empty.classList.add('hidden'); empty.classList.remove('flex');
   root.innerHTML=list.map((f,i)=>`
@@ -774,6 +774,60 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initParrainageCircle);
 } else {
   initParrainageCircle();
+}
+</script>
+
+<script type="module">
+import { getMyReferrals } from './js/services/api.js';
+
+const colors = [
+  'bg-blue-100 text-blue-700',
+  'bg-purple-100 text-purple-700',
+  'bg-amber-100 text-amber-700',
+  'bg-green-100 text-green-700',
+  'bg-rose-100 text-rose-700',
+  'bg-teal-100 text-teal-700'
+];
+
+function getInitials(nom, prenom) {
+  const fullName = `${prenom || ''} ${nom || ''}`.trim();
+  if (!fullName) return "??";
+  return fullName.split(" ").filter(Boolean).map(p => p[0]).join("").toUpperCase().substring(0, 2);
+}
+
+async function loadReferrals() {
+  const session = JSON.parse(localStorage.getItem('docmaster_user_session') || '{}');
+  if (session && session.code_invitation) {
+    document.getElementById('ref-code').textContent = session.code_invitation;
+  }
+
+  const res = await getMyReferrals();
+  if (res.success && res.data && res.data.referrals) {
+    referredFriends = res.data.referrals.map((r, i) => ({
+      name: `${r.prenom || ''} ${r.nom || ''}`.trim() || 'Utilisateur',
+      joined: r.filleul_created_at,
+      active: true, // we assume all are active for now
+      initials: getInitials(r.nom, r.prenom),
+      color: colors[i % colors.length],
+      reward: r.points_gagnes || 500,
+      slots: 2
+    }));
+
+    renderAvatarPreview();
+    renderList();
+
+    // Update global stat displays
+    document.getElementById('stat-total').textContent = referredFriends.length;
+    document.getElementById('active-count').textContent = `${referredFriends.filter(f=>f.active).length} actifs`;
+    document.getElementById('stat-cash').textContent = referredFriends.reduce((s,f)=>s+f.reward,0).toLocaleString('fr-FR');
+    document.getElementById('stat-slots').textContent = `+${referredFriends.reduce((s,f)=>s+f.slots,0)}`;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadReferrals);
+// In case DOM is already loaded
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  loadReferrals();
 }
 </script>
 </body>

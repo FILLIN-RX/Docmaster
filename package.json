@@ -9,6 +9,7 @@
     "@tailwindcss/cli": "^4.1.18",
     "axios": "^1.15.2",
     "concurrently": "^9.2.1",
+    "daisyui": "^5.5.1-beta.2",
     "firebase": "^12.12.1",
     "flatpickr": "^4.6.13",
     "http-server": "^14.1.1",

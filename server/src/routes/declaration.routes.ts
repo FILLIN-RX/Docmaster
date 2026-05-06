@@ -5,8 +5,11 @@ import {
   getMyDeclarations, 
   searchDeclarations,
   getGlobalStats,
+  getPerformanceStats,
   searchPublicFound,
-  getDeclarationById
+  getDeclarationById,
+  initiateRecovery,
+  generatePdf
 } from '../controllers/declaration.controller.ts';
 import { authMiddleware } from '../middleware/auth.middleware.ts';
 import { upload } from '../utils/upload.utils.ts';
@@ -19,6 +22,13 @@ const router = Router();
  * @access Public
  */
 router.get('/stats', getGlobalStats);
+
+/**
+ * @route GET /api/declarations/performance
+ * @desc Get performance stats by type with trends
+ * @access Public
+ */
+router.get('/performance', getPerformanceStats);
 
 /**
  * @route GET /api/declarations/search-public
@@ -67,5 +77,13 @@ router.get('/', searchDeclarations);
  * @access Private
  */
 router.get('/:id', authMiddleware, getDeclarationById);
+router.post('/:id/initiate-recovery', authMiddleware, initiateRecovery);
+
+/**
+ * @route GET /api/declarations/:id/pdf
+ * @desc Generate a PDF certificate for the declaration
+ * @access Private
+ */
+router.get('/:id/pdf', authMiddleware, generatePdf);
 
 export default router;

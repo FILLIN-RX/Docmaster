@@ -1,4 +1,4 @@
-import { createLostDeclaration } from '../services/api.js';
+import { createLostDeclaration, getActiveDocumentTypes } from '../services/api.js';
 
 /**
  * Lost Declaration Module
@@ -239,12 +239,34 @@ export function initLostDeclaration() {
 
   showStep(1);
 
+  // Global storage for dynamic types
+  window.allDocumentTypes = [];
+
+  // Render types (async)
+  getActiveDocumentTypes().then(res => {
+    if (res.success) {
+      window.allDocumentTypes = res.data;
+      renderDocTypeCards(res.data);
+    }
+  });
+
   // URL params
   const urlParams = new URLSearchParams(window.location.search);
-  const docType = urlParams.get('doc');
-  if (docType && DOC_META[docType]) {
-    const card = document.querySelector(`.doc-card[onclick*="'${docType}'"]`);
-    if (card) toggleDocType(card, docType);
+  const docCode = urlParams.get('doc');
+  if (docCode) {
+    // Wait for types to be loaded
+    const checkInterval = setInterval(() => {
+      if (window.allDocumentTypes.length > 0) {
+        clearInterval(checkInterval);
+        const type = window.allDocumentTypes.find(t => t.code.toLowerCase() === docCode.toLowerCase());
+        if (type) {
+          const card = document.querySelector(`.doc-card[onclick*="'${type.id}'"]`);
+          if (card) toggleDocType(card, type.id);
+        }
+      }
+    }, 100);
+    // Safety timeout after 3 seconds
+    setTimeout(() => clearInterval(checkInterval), 3000);
   }
 
   // ═══════════════════════════════════════
@@ -266,6 +288,24 @@ export function initLostDeclaration() {
       saveDeclarationDraft();
     }
   });
+}
+
+function renderDocTypeCards(types) {
+  const container = document.querySelector('.grid.grid-cols-2.sm\\:grid-cols-4.gap-3');
+  if (!container) return;
+
+  container.innerHTML = types.map(t => {
+    const isSelected = selectedDocs.includes(t.id);
+    return `
+      <div class="doc-card ${isSelected ? 'selected' : ''}" onclick="toggleDocType(this, '${t.id}')">
+        <div class="card-icon">
+          <i class="fa-solid fa-${t.icone || 'file-lines'}"></i>
+        </div>
+        <span class="card-label">${t.nom}</span>
+        <div class="card-check"><i class="fa-solid fa-check"></i></div>
+      </div>
+    `;
+  }).join('');
 }
 
 function selectOwner(type){
@@ -308,9 +348,13 @@ function renderSelectionUI(){
   info.style.display='flex';
   document.getElementById('selCount').textContent = count;
   document.getElementById('selText').textContent = count > 1 ? 'documents sélectionnés' : 'document sélectionné';
-  tags.innerHTML = selectedDocs.map(type => {
-    const m = DOC_META[type];
-    return `<span class="sel-tag" onclick="removeDoc('${type}')">
+  
+  tags.innerHTML = selectedDocs.map(id => {
+    const t = window.allDocumentTypes.find(type => type.id === id);
+    const code = t ? t.code.toLowerCase() : null;
+    const m = DOC_META[code] || { label: t ? t.nom : 'Document', icon: t ? `fa-${t.icone}` : 'fa-file-lines' };
+    
+    return `<span class="sel-tag" onclick="removeDoc('${id}')">
       <i class="fa-solid ${m.icon}"></i> ${m.label} <i class="fa-solid fa-xmark"></i>
     </span>`;
   }).join('');
@@ -627,13 +671,16 @@ async function validateAndSubmit() {
   try {
     const formData = new FormData();
     
-    // ① Récupérer le type de document sélectionné
-    const docKey = selectedDocs[0];
-    if (!docKey) {
+    // ① Récupérer l'ID du type de document sélectionné
+    const docId = selectedDocs[0];
+    if (!docId) {
       throw new Error('Aucun document sélectionné');
     }
-    const docType = docKey.toUpperCase(); // "CNI" au lieu de "cni"
-    formData.append('doc_type', docType);
+    formData.append('doc_type', docId);
+    
+    // Trouver le code pour DOC_META
+    const selectedType = window.allDocumentTypes.find(t => t.id === docId);
+    const docKey = selectedType ? selectedType.code.toLowerCase() : null;
     
     // ② Collecter les données du formulaire dynamique
     const container = document.getElementById('dynamicFields');

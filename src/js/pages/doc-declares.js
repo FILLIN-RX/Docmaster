@@ -245,13 +245,23 @@ export function openDetail(id) {
       </div>
 
       <!-- Action Buttons -->
-      <div class="pt-6 flex gap-3">
-        <button onclick="window.location.href='partage.html?id=${item.id}'" class="flex-1 py-3 bg-textMain text-white rounded-xl font-bold text-sm hover:bg-black transition-colors flex items-center justify-center gap-2 shadow-lg shadow-black/10">
-          <i class="fa-solid fa-share-nodes"></i> Partager
-        </button>
-        <button class="flex-1 py-3 border border-borderMain text-textMain rounded-xl font-bold text-sm hover:bg-bgMain transition-colors">
-          <i class="fa-solid fa-flag mr-1"></i> Signaler
-        </button>
+      <div class="pt-6 flex flex-col gap-3">
+        ${item.status === 'MATCHED' ? `
+          <button onclick="window.location.href='${isPerdu ? 'recuperer.html' : 'rendre.html'}?id=${item.id}'" 
+                  class="w-full py-4 ${isPerdu ? 'bg-green-600' : 'bg-blue-600'} text-white rounded-xl font-black text-base shadow-xl transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3">
+            <i class="fa-solid ${isPerdu ? 'fa-handshake' : 'fa-hand-holding-heart'}"></i>
+            ${isPerdu ? 'Récupérer mon document' : 'Rendre le document'}
+          </button>
+        ` : ''}
+        
+        <div class="flex gap-3">
+          <button onclick="window.location.href='partage.html?id=${item.id}'" class="flex-1 py-3 bg-textMain text-white rounded-xl font-bold text-sm hover:bg-black transition-colors flex items-center justify-center gap-2 shadow-lg shadow-black/10">
+            <i class="fa-solid fa-share-nodes"></i> Partager
+          </button>
+          <button class="flex-1 py-3 border border-borderMain text-textMain rounded-xl font-bold text-sm hover:bg-bgMain transition-colors">
+            <i class="fa-solid fa-flag mr-1"></i> Signaler
+          </button>
+        </div>
       </div>
     </div>
   `;
@@ -282,9 +292,13 @@ export function closeDetail() {
 }
 
 function getStatusMeta(status) {
-  if (status === 'RESOLVED') return { label: 'Résolu', cls: 'bg-green-50 text-green-700 border-green-100' };
-  if (status === 'NEW') return { label: 'Nouveau', cls: 'bg-blue-50 text-blue-700 border-blue-100' };
-  return { label: 'En cours', cls: 'bg-amber-50 text-amber-700 border-amber-100' };
+  switch (status) {
+    case 'MATCHED': return { label: 'Match trouvé !', cls: 'bg-green-100 text-green-700 border-green-200 animate-pulse' };
+    case 'RETURNED': return { label: 'Clôturé / Remis', cls: 'bg-gray-100 text-gray-700 border-gray-200' };
+    case 'RESOLVED': return { label: 'Résolu', cls: 'bg-green-50 text-green-700 border-green-100' };
+    case 'NEW': return { label: 'Nouveau', cls: 'bg-blue-50 text-blue-700 border-blue-100' };
+    default: return { label: 'En cours', cls: 'bg-amber-50 text-amber-700 border-amber-100' };
+  }
 }
 
 function formatDate(value) {

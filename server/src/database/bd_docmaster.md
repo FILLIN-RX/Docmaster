@@ -34,12 +34,15 @@
   "owner_name": "NOM SUR LE DOC",
   "document_number": "2024123456",
   "declaration_type": "LOST", // ou FOUND
-  "status": "AVAILABLE", // AVAILABLE, SEARCHING, RETURNED
+  "status": "AVAILABLE", // AVAILABLE, SEARCHING, MATCHED, RETURNED
   "reporter_id": "user_id_qui_declare",
   "ville": "Yaoundé",
   "region": "Centre",
   "pays": "Cameroun",
   "fingerprint": "a5f6e8d9c2b1a0f9e8d7c6b5a4f3e2d1",
+  "telephone_contact": "+2376xxxxxxxx",
+  "email_contact": "contact@example.com",
+  "mode_contact": "APP_CHAT", // APP_CHAT, PHONE, EMAIL
   "found_location": {
     "city": "Bastos",
     "lat": 3.848,
@@ -54,9 +57,10 @@
   "date_perte": "2026-04-28", // Spécifique Perte
   "urgence_niveau": "Urgente", // Faible, Modérée, Urgente
   "recompense_montant": 5000,
-  "mode_contact": "APP_CHAT",
   "payment_status": "PENDING",
-  "transactions_id": "trans_abc_123"
+  "transactions_id": "trans_abc_123",
+  "deleted_at": null,
+  "deleted_reason": null
 }
 ```
 # document
@@ -120,6 +124,56 @@
   "created_at": "2026-04-27T15:00:00Z"
 }
 ```
+
+# Match (Mise en relation automatique)
+
+```json
+{
+  "id": "match_uuid_123",
+  "lost_declaration_id": "decl_lost_001",
+  "found_declaration_id": "decl_found_002",
+  "score": 85, // 0-100
+  "status": "PENDING", // PENDING, CONFIRMED, REJECTED
+  "created_at": "2026-05-02T10:00:00Z"
+}
+```
+
+# Deletion Request (Demande de suppression)
+
+```json
+{
+  "id": "del_req_uuid_999",
+  "declaration_id": "decl_001",
+  "user_id": "user_ruxel_01",
+  "reason_type": "DUPLICATE", // DUPLICATE, INCORRECT_DATA, NO_LONGER_NEEDED, PRIVACY, OTHER
+  "reason": "J'ai fait deux fois la même déclaration par erreur.",
+  "status": "PENDING", // PENDING, APPROVED, REJECTED, EXECUTED
+  "admin_id": null,
+  "admin_comment": null,
+  "created_at": "2026-05-02T14:30:00Z",
+  "reviewed_at": null
+}
+```
+
+# Document Types (Configuration des types de documents)
+
+```json
+{
+  "id": "doc_type_001",
+  "nom": "Carte Nationale d'Identité",
+  "code": "CNI",
+  "description": "Carte d'identité officielle",
+  "prix_retrouvaille": 5000,
+  "finder_percent": 80, // % pour le trouveur
+  "app_percent": 20,    // % pour l'app
+  "delai_expiration_mois": 6,
+  "icone": "id-card",
+  "categorie": "IDENTITE",
+  "is_active": true,
+  "created_at": "2026-05-06T12:00:00Z"
+}
+```
+
 
 # transaction
 

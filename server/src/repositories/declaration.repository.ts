@@ -1,11 +1,13 @@
-import pool from '../database/db.js';
-import { DocumentDeclaration } from '../types/database.ts';
+import pool from "../database/db.js";
+import { DocumentDeclaration } from "../types/database.ts";
 
 export class DeclarationRepository {
   /**
    * Create a new declaration
    */
-  async create(data: Partial<DocumentDeclaration>): Promise<DocumentDeclaration> {
+  async create(
+    data: Partial<DocumentDeclaration>,
+  ): Promise<DocumentDeclaration> {
     const query = `
       INSERT INTO declarations (
         identifiant_doc_dm, doc_type, owner_name, document_number, 
@@ -24,7 +26,7 @@ export class DeclarationRepository {
       data.owner_name,
       data.document_number,
       data.declaration_type,
-      data.status || 'AVAILABLE',
+      data.status || "AVAILABLE",
       data.reporter_id,
       data.ville,
       data.region,
@@ -36,15 +38,15 @@ export class DeclarationRepository {
       data.photo_verso,
       data.description,
       data.date_expiration || null,
-      data.mode_contact || 'APP_CHAT',
-      data.payment_status || 'PENDING',
+      data.mode_contact || "APP_CHAT",
+      data.payment_status || "PENDING",
       data.transactions_id || null,
       data.date_naissance || null,
-      data.urgence_niveau || 'Modérée',
+      data.urgence_niveau || "Modérée",
       data.recompense_montant || 0,
       data.date_perte || null,
       data.telephone_contact || null,
-      data.email_contact || null
+      data.email_contact || null,
     ];
 
     const { rows } = await pool.query(query, values);
@@ -55,7 +57,8 @@ export class DeclarationRepository {
    * Find declarations by reporter ID
    */
   async findByReporterId(reporterId: string): Promise<DocumentDeclaration[]> {
-    const query = 'SELECT * FROM declarations WHERE reporter_id = $1 ORDER BY created_at DESC';
+    const query =
+      "SELECT * FROM declarations WHERE reporter_id = $1 ORDER BY created_at DESC";
     const { rows } = await pool.query(query, [reporterId]);
     return rows;
   }
@@ -64,7 +67,7 @@ export class DeclarationRepository {
    * Count declarations by reporter ID
    */
   async countByReporterId(reporterId: string): Promise<number> {
-    const query = 'SELECT COUNT(*) FROM declarations WHERE reporter_id = $1';
+    const query = "SELECT COUNT(*) FROM declarations WHERE reporter_id = $1";
     const { rows } = await pool.query(query, [reporterId]);
     return parseInt(rows[0].count);
   }
@@ -73,7 +76,8 @@ export class DeclarationRepository {
    * Find all available declarations (for search)
    */
   async findAllAvailable(): Promise<DocumentDeclaration[]> {
-    const query = "SELECT * FROM declarations WHERE status = 'AVAILABLE' ORDER BY created_at DESC";
+    const query =
+      "SELECT * FROM declarations WHERE status = 'AVAILABLE' ORDER BY created_at DESC";
     const { rows } = await pool.query(query);
     return rows;
   }
@@ -82,7 +86,7 @@ export class DeclarationRepository {
    * Find by ID
    */
   async findById(id: string): Promise<DocumentDeclaration | null> {
-    const query = 'SELECT * FROM declarations WHERE id = $1';
+    const query = "SELECT * FROM declarations WHERE id = $1";
     const { rows } = await pool.query(query, [id]);
     return rows[0] || null;
   }
@@ -90,8 +94,12 @@ export class DeclarationRepository {
   /**
    * Update status
    */
-  async updateStatus(id: string, status: string): Promise<DocumentDeclaration | null> {
-    const query = 'UPDATE declarations SET status = $1 WHERE id = $2 RETURNING *';
+  async updateStatus(
+    id: string,
+    status: string,
+  ): Promise<DocumentDeclaration | null> {
+    const query =
+      "UPDATE declarations SET status = $1 WHERE id = $2 RETURNING *";
     const { rows } = await pool.query(query, [status, id]);
     return rows[0] || null;
   }
@@ -114,7 +122,8 @@ export class DeclarationRepository {
    * Find by fingerprint
    */
   async findByFingerprint(fingerprint: string): Promise<DocumentDeclaration[]> {
-    const query = 'SELECT * FROM declarations WHERE fingerprint = $1 AND status != \'RETURNED\'';
+    const query =
+      "SELECT * FROM declarations WHERE fingerprint = $1 AND status != 'RETURNED'";
     const { rows } = await pool.query(query, [fingerprint]);
     return rows;
   }
@@ -123,7 +132,7 @@ export class DeclarationRepository {
    * Search declarations with filters
    */
   async search(filters: any): Promise<DocumentDeclaration[]> {
-    let query = 'SELECT * FROM declarations WHERE 1=1';
+    let query = "SELECT * FROM declarations WHERE 1=1";
     const values: any[] = [];
     let paramIndex = 1;
 
@@ -149,7 +158,7 @@ export class DeclarationRepository {
       values.push(filters.declaration_type);
     }
 
-    query += ' ORDER BY created_at DESC';
+    query += " ORDER BY created_at DESC";
     const { rows } = await pool.query(query, values);
     return rows;
   }
@@ -175,21 +184,35 @@ export class DeclarationRepository {
   /**
    * Find potential candidates for matching (opposite type, same doc_type)
    */
-  async findCandidatesForMatch(docType: string, oppositeType: string): Promise<DocumentDeclaration[]> {
+  async findCandidatesForMatch(
+    docTypeId: string,
+    docTypeCode: string,
+    oppositeType: string,
+  ): Promise<DocumentDeclaration[]> {
+    // We match by exact ID OR by code (ILIKE).
+    // This allows matching between new ID-based records and legacy code-based records.
     const query = `
       SELECT * FROM declarations 
-      WHERE (doc_type ILIKE $1 OR (doc_type ILIKE 'passport' AND $1 ILIKE 'passeport') OR (doc_type ILIKE 'passeport' AND $1 ILIKE 'passport'))
-      AND declaration_type = $2 
+      WHERE (
+        doc_type = $1 
+        OR doc_type ILIKE $2
+        OR (doc_type ILIKE 'passport' AND $2 ILIKE 'passeport') 
+        OR (doc_type ILIKE 'passeport' AND $2 ILIKE 'passport')
+      )
+      AND declaration_type = $3
       AND status NOT IN ('RETURNED', 'CLAIMED', 'CANCELLED')
     `;
-    const { rows } = await pool.query(query, [docType, oppositeType]);
+    const { rows } = await pool.query(query, [docTypeId, docTypeCode, oppositeType]);
     return rows;
   }
 
   /**
    * Check for duplicate declarations (same type, same fingerprint)
    */
-  async checkDuplicate(fingerprint: string, declarationType: string): Promise<DocumentDeclaration | null> {
+  async checkDuplicate(
+    fingerprint: string,
+    declarationType: string,
+  ): Promise<DocumentDeclaration | null> {
     const query = `
       SELECT * FROM declarations 
       WHERE fingerprint = $1 
@@ -204,7 +227,11 @@ export class DeclarationRepository {
   /**
    * Update a declaration
    */
-  async update(id: string, reporterId: string, data: Partial<DocumentDeclaration>): Promise<DocumentDeclaration | null> {
+  async update(
+    id: string,
+    reporterId: string,
+    data: Partial<DocumentDeclaration>,
+  ): Promise<DocumentDeclaration | null> {
     const query = `
       UPDATE declarations 
       SET 
@@ -249,7 +276,7 @@ export class DeclarationRepository {
       data.email_contact,
       data.mode_contact,
       id,
-      reporterId
+      reporterId,
     ]);
 
     return rows[0] || null;
@@ -265,7 +292,78 @@ export class DeclarationRepository {
     const { rows } = await pool.query(query);
     return {
       total_lost: parseInt(rows[0].total_lost),
-      total_recovered: parseInt(rows[0].total_recovered)
+      total_recovered: parseInt(rows[0].total_recovered),
     };
+  }
+
+  /**
+   * Get performance stats by document type with trend percentage
+   * @param period 'day', 'week', 'month', 'year'
+   */
+  async getPerformanceStats(period: string = "month") {
+    let interval = "1 month";
+    if (period === "day") interval = "1 day";
+    if (period === "week") interval = "1 week";
+    if (period === "year") interval = "1 year";
+
+    const query = `
+      WITH normalized_docs AS (
+        SELECT 
+          *,
+          CASE 
+            WHEN LOWER(TRIM(doc_type)) IN ('passport', 'passeport') THEN 'Passeport'
+            WHEN LOWER(TRIM(doc_type)) IN ('cni', 'carte d''identité', 'attestation') THEN 'CNI'
+            ELSE INITCAP(TRIM(doc_type))
+          END as normalized_type
+        FROM declarations
+        WHERE declaration_type = 'FOUND'
+      ),
+      current_period AS (
+          SELECT normalized_type, COUNT(*) as count
+          FROM normalized_docs
+          WHERE created_at >= NOW() - INTERVAL '${interval}'
+          GROUP BY normalized_type
+      ),
+      previous_period AS (
+          SELECT normalized_type, COUNT(*) as count
+          FROM normalized_docs
+          WHERE created_at >= NOW() - (INTERVAL '${interval}' * 2)
+            AND created_at < NOW() - INTERVAL '${interval}'
+          GROUP BY normalized_type
+      ),
+      items_list AS (
+          SELECT 
+            normalized_type,
+            json_agg(
+              json_build_object(
+                'id', id,
+                'type', declaration_type,
+                'ville', ville,
+                'date', created_at,
+                'doc_type_raw', doc_type
+              ) ORDER BY created_at DESC
+            ) as items
+          FROM normalized_docs
+          GROUP BY normalized_type
+      )
+      SELECT 
+          COALESCE(c.normalized_type, p.normalized_type) as name,
+          COALESCE(c.count, 0)::int as count,
+          COALESCE(p.count, 0)::int as previous_count,
+          CASE 
+              WHEN COALESCE(p.count, 0) = 0 AND COALESCE(c.count, 0) > 0 THEN 100
+              WHEN COALESCE(p.count, 0) = 0 AND COALESCE(c.count, 0) = 0 THEN 0
+              ELSE ROUND(((COALESCE(c.count, 0) - COALESCE(p.count, 0))::numeric / GREATEST(p.count, 1)) * 100, 1)
+          END as trend,
+          i.items as recent_items
+      FROM current_period c
+      FULL OUTER JOIN previous_period p ON c.normalized_type = p.normalized_type
+      LEFT JOIN items_list i ON COALESCE(c.normalized_type, p.normalized_type) = i.normalized_type
+      ORDER BY count DESC
+    `;
+
+    const { rows } = await pool.query(query);
+    console.log("📊 Performance Stats with items:", rows.length);
+    return rows;
   }
 }

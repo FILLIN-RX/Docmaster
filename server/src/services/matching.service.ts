@@ -4,27 +4,52 @@ import { NotificationService } from './notification.service.ts';
 import { MatchRepository } from '../repositories/match.repository.ts';
 import { DocumentRepository } from '../repositories/document.repository.ts';
 import { deviceRepository } from '../repositories/device.repository.ts';
+import { ClaimRepository } from '../repositories/claim.repository.ts';
+
+import { DocumentTypeRepository } from '../repositories/document-type.repository.ts';
 
 export class MatchingService {
   private declarationRepository: DeclarationRepository;
   private notificationService: NotificationService;
   private matchRepository: MatchRepository;
   private documentRepository: DocumentRepository;
+  private claimRepository: ClaimRepository;
+  private docTypeRepository: DocumentTypeRepository;
 
   constructor() {
     this.declarationRepository = new DeclarationRepository();
     this.notificationService = new NotificationService();
     this.matchRepository = new MatchRepository();
     this.documentRepository = new DocumentRepository();
+    this.claimRepository = new ClaimRepository();
+    this.docTypeRepository = new DocumentTypeRepository();
   }
 
   /**
    * Main entry point to find matches for a declaration
    */
   async findAndNotifyMatches(declaration: DocumentDeclaration): Promise<void> {
-    const normalizedDocType = this.normalizeDocType(declaration.doc_type);
+    // 1. Resolve Document Type Code for normalization (if doc_type is an ID)
+    let docTypeCode = declaration.doc_type;
+    // Try by ID then by code
+    let docTypeMeta = await this.docTypeRepository.findById(declaration.doc_type);
+    if (!docTypeMeta) {
+      docTypeMeta = await this.docTypeRepository.findByCode(declaration.doc_type);
+    }
+    
+    if (docTypeMeta) {
+      docTypeCode = docTypeMeta.code;
+    }
+
+    const normalizedDocType = this.normalizeDocType(docTypeCode);
     const oppositeType = declaration.declaration_type === 'LOST' ? 'FOUND' : 'LOST';
-    const candidates = await this.declarationRepository.findCandidatesForMatch(normalizedDocType, oppositeType);
+    
+    // We look for candidates by the ID and the normalized code
+    const candidates = await this.declarationRepository.findCandidatesForMatch(
+      declaration.doc_type, 
+      docTypeCode,
+      oppositeType
+    );
 
     console.log(`📊 [Matching] Comparing ${declaration.identifiant_doc_dm} (${declaration.doc_type}) with ${candidates.length} candidates...`);
 
@@ -73,6 +98,8 @@ export class MatchingService {
   private async checkAgainstPrivateVaults(foundDecl: DocumentDeclaration) {
     console.log(`🛡️ [VaultMatch] Checking found item ${foundDecl.identifiant_doc_dm} against private vaults...`);
     
+    const docTypeName = await this.getDocTypeName(foundDecl.doc_type);
+
     // Check Documents Vault
     if (foundDecl.fingerprint) {
         const vaultDocs = await this.documentRepository.findCandidatesByFingerprint(foundDecl.fingerprint);
@@ -82,7 +109,7 @@ export class MatchingService {
                 doc.user_id, 
                 foundDecl.reporter_id!, 
                 foundDecl.id, 
-                foundDecl.doc_type
+                docTypeName
             );
         }
     }
@@ -96,7 +123,7 @@ export class MatchingService {
                 vaultDevice.user_id, 
                 foundDecl.reporter_id!, 
                 foundDecl.id, 
-                foundDecl.doc_type
+                docTypeName
             );
         }
     }
@@ -220,14 +247,45 @@ export class MatchingService {
       // Update statuses to MATCHED when matched
       await this.declarationRepository.update(lostId, lostUserId, { status: 'MATCHED' });
       await this.declarationRepository.update(foundId, foundUserId, { status: 'MATCHED' });
+
+      // Create automatic claim for recovery process
+      const verificationCode = this.generateVerificationCode();
+      await this.claimRepository.create({
+        doc_id: foundId,
+        owner_id: lostUserId,
+        finder_id: foundUserId,
+        verification_code: verificationCode,
+        status: 'PENDING'
+      });
+
+      console.log(`🔐 [Claim] Auto-generated claim for document ${foundId} with code ${verificationCode}`);
       
+      // Resolve human-readable doc type for notification
+      const docTypeName = await this.getDocTypeName(d1.doc_type);
+
       await this.notificationService.notifyMatchFound(
         lostUserId, 
         foundUserId, 
         lostId, 
-        d1.doc_type
+        docTypeName
       );
     }
+  }
+
+  /**
+   * Helper to get human-readable name from ID or Code
+   */
+  private async getDocTypeName(docType: string): Promise<string> {
+    const meta = await this.docTypeRepository.findById(docType) 
+              || await this.docTypeRepository.findByCode(docType);
+    return meta ? meta.nom : docType;
+  }
+
+  /**
+   * Generate a 6-digit verification code
+   */
+  private generateVerificationCode(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString();
   }
   private normalizeDocType(type: string): string {
     const t = type.toLowerCase().trim();

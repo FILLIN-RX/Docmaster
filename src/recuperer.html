@@ -11,8 +11,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script type="module" src="/js/services/auth.js"></script>
-  <script type="module" src="/js/services/recovery.js"></script>
-  <script src="./js/ui/sidebar.js"></script>
+  <script type="module" src="/js/pages/recuperer.js"></script>
+  <script type="module" src="/js/ui/sidebar.js"></script>
   <link rel="shortcut icon" href="./assets/images/favicon.png" type="image/x-icon" />
   <link href="/css/main.css" rel="stylesheet" />
   <script>
@@ -118,6 +118,7 @@
 </head>
 
 <body>
+  <script type="module" src="/js/utils/ui-helpers.js"></script>
 
   <div id="sidebar-root"></div>
 
@@ -208,7 +209,11 @@
               
               <div class="p-8 md:p-12 bg-surface2/20 flex items-center justify-center relative min-h-[300px]">
                 <div class="relative group" id="docPreviewOwner">
-                   <img id="docImage" src="./assets/images/carte.jpeg" class="w-[480px] h-auto shadow-2xl rounded-2xl border-4 border-white transition-transform duration-500 group-hover:scale-[1.02]" alt="Document trouvé">
+                   <img id="docImage" src="" class="w-[480px] h-auto shadow-2xl rounded-2xl border-4 border-white transition-transform duration-500 group-hover:scale-[1.02] hidden" alt="Document trouvé">
+                   <div id="imagePlaceholder" class="flex flex-col items-center justify-center text-textMuted/40">
+                      <i class="fa-solid fa-image text-5xl mb-4"></i>
+                      <span class="text-sm font-bold uppercase tracking-widest">Aperçu du document</span>
+                   </div>
                    <div class="absolute -top-4 -right-4 bg-white p-3 rounded-2xl shadow-xl border border-borderMain flex items-center gap-3 animate-bounce">
                       <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white"><i class="fa-solid fa-check text-[10px]"></i></div>
                       <span class="text-[12px] font-bold text-textMain pr-2">Identifiants corrects</span>
@@ -225,6 +230,37 @@
                     </div>
                  </div>
               </div>
+            </div>
+
+            <!-- Finder Report Info -->
+            <div class="bg-white rounded-[32px] border border-borderMain p-8 shadow-sm space-y-6">
+                <div class="flex items-center justify-between">
+                    <h4 class="font-bricolage text-lg font-bold text-textMain">Détails du signalement</h4>
+                    <span class="px-3 py-1 bg-surface2 border border-borderMain rounded-full text-[10px] font-bold text-textMuted uppercase tracking-widest">Infos Trouveur</span>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div class="p-4 bg-surface2 rounded-2xl border border-borderMain/50">
+                            <p class="text-[10px] font-bold text-textMuted uppercase mb-1">Nom sur le document</p>
+                            <p class="text-[13px] text-textMain font-bold" id="docOwnerName">Chargement...</p>
+                        </div>
+                        <div class="p-4 bg-surface2 rounded-2xl border border-borderMain/50">
+                            <p class="text-[10px] font-bold text-textMuted uppercase mb-1">Signalé par</p>
+                            <p class="text-[13px] text-textMain font-medium" id="finderName">Chargement...</p>
+                        </div>
+                        <div class="p-4 bg-surface2 rounded-2xl border border-borderMain/50">
+                            <p class="text-[10px] font-bold text-textMuted uppercase mb-1">Description fournie</p>
+                            <p class="text-[13px] text-textMain leading-relaxed" id="finderDescription">"Chargement de la description..."</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-surface2 rounded-2xl border border-borderMain/50">
+                            <p class="text-[10px] font-bold text-textMuted uppercase mb-1">Précisions sur le lieu</p>
+                            <p class="text-[13px] text-textMain leading-relaxed" id="finderLocationNote">Chargement...</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Security info -->
@@ -249,7 +285,7 @@
                     <div class="text-center">
                         <p class="text-[11px] font-black text-primary uppercase tracking-widest mb-2">Montant de la procédure</p>
                         <div class="flex items-baseline justify-center gap-1.5 mb-2">
-                           <span class="font-bricolage text-5xl font-black text-textMain tracking-tighter">5 000</span>
+                           <span class="font-bricolage text-5xl font-black text-textMain tracking-tighter" id="recoveryPriceDisplay">5 000</span>
                            <span class="text-lg font-bold text-textMuted">FCFA</span>
                         </div>
                         <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-full text-[10px] font-bold">
@@ -306,7 +342,7 @@
           <h2 class="text-primary font-black text-xl uppercase tracking-tighter">Paiement de Récupération</h2>
           <div class="mt-4 p-6 bg-slate-50 rounded-2xl border border-slate-100 text-center relative overflow-hidden">
             <p class="text-slate-500 text-[13px] font-bold uppercase tracking-widest mb-1">Total à régler</p>
-            <div class="font-bricolage text-4xl font-black text-primary">5 000 FCFA</div>
+            <div class="font-bricolage text-4xl font-black text-primary" id="recoveryModalPriceDisplay">5 000 FCFA</div>
           </div>
         </div>
 
@@ -336,61 +372,6 @@
 
   </div>
 
-  <script>
-    function closeRecoveryModal() {
-        const box = document.getElementById("recoveryModalBox");
-        const wrapper = document.getElementById("recoveryModalWrapper");
-        box.classList.add("translate-y-full");
-        setTimeout(() => { wrapper.classList.add("hidden"); }, 300);
-    }
-
-    function goToRecoveryStep2() {
-        document.getElementById("recoveryStep1").classList.add("hidden");
-        document.getElementById("recoveryStep2").classList.remove("hidden");
-        document.getElementById("recoverySubmitBtn").innerText = "Confirmer le paiement";
-    }
-
-    function ownerConfirm() {
-        const wrapper = document.getElementById("recoveryModalWrapper");
-        const box = document.getElementById("recoveryModalBox");
-        document.getElementById("recoveryStep1").classList.remove("hidden");
-        document.getElementById("recoveryStep2").classList.add("hidden");
-        document.getElementById("recoverySubmitBtn").innerText = "Suivant";
-        wrapper.classList.remove("hidden");
-        setTimeout(() => box.classList.remove("translate-y-full"), 10);
-    }
-
-    function processRecoveryPayment() {
-        const step2 = document.getElementById("recoveryStep2");
-        if (step2.classList.contains("hidden")) {
-            goToRecoveryStep2();
-            return;
-        }
-        const btn = document.getElementById("recoverySubmitBtn");
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Traitement...';
-        setTimeout(() => {
-            closeRecoveryModal();
-            finishOwnerProcess();
-        }, 2000);
-    }
-
-    function finishOwnerProcess() {
-        document.getElementById('ownerActionPanel').classList.add('hidden');
-        document.getElementById('ownerSuccessPanel').classList.remove('hidden');
-        document.getElementById('ownerProgressionText').textContent = 'Paiement Validé — Récupération prête';
-        document.getElementById('ownerProgressBar').style.width = '100%';
-        document.getElementById('ownerProgressionPercent').textContent = '100%';
-        
-        document.getElementById('ownerStep3Dot').className = "w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-xs shadow-lg shadow-green-100";
-        document.getElementById('ownerStep3Dot').innerHTML = '<i class="fa-solid fa-check"></i>';
-        document.getElementById('ownerStep4Dot').className = "w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-base shadow-xl shadow-primary/30 pulse-ring border-4 border-white";
-        document.getElementById('ownerStep4Dot').innerHTML = '<i class="fa-solid fa-key text-sm"></i>';
-    }
-
-    function copyCode() {
-        const code = document.getElementById('pickupCode').innerText;
-        navigator.clipboard.writeText(code).then(() => { alert("Code copié !"); });
-    }
-  </script>
+  </div>
 </body>
 </html>

@@ -86,6 +86,7 @@ function _sbIsActive(href) {
   if (normalized !== current) {
     if (current === 'declarer.html' && normalized === 'docDeclares.html') return true;
     if (current === 'trouverdocument.html' && normalized === 'docDeclares.html') return true;
+    if (current === 'rendre.html' && normalized === 'docDeclares.html') return true;
     return false;
   }
 
@@ -510,19 +511,32 @@ document.addEventListener("DOMContentLoaded", function () {
           pointer-events: all;
         }
 
+        .sidebar {
+          position: fixed;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          z-index: 50;
+          transition: transform .28s cubic-bezier(.4,0,.2,1), width .28s cubic-bezier(.4,0,.2,1) !important;
+        }
+        .sidebar.open {
+          transform: translateX(0) !important;
+          width: var(--sidebar,260px) !important;
+        }
+        .sidebar.closed {
+          transform: translateX(-100%) !important;
+          width: 0 !important;
+          min-width: 0 !important;
+          overflow: hidden !important;
+        }
+
         @media (min-width: 900px) {
           .sidebar {
-            transition: transform .28s cubic-bezier(.4,0,.2,1), width .28s cubic-bezier(.4,0,.2,1) !important;
-          }
-          .sidebar.open {
-            width: var(--sidebar,260px) !important;
+            position: relative;
             transform: translateX(0) !important;
           }
           .sidebar.closed {
-            width: 0 !important;
-            min-width: 0 !important;
             transform: translateX(-100%) !important;
-            overflow: hidden !important;
           }
         }
       `;

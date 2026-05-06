@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin DocMaster — Types de Documents</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* ── DocMaster theme overrides ── */
+        [data-theme="light"] {
+            --color-primary: oklch(73.5% 0.155 59.5);       /* #F5A64B */
+            --color-primary-content: oklch(98% 0 0);
+            --color-base-100: #f9fafb;
+            --color-base-200: #f3f4f6;
+            --color-base-300: #e5e7eb;
+            --color-base-content: #111827;
+        }
+
+        body { font-family: 'Poppins', sans-serif; background-color: #f9fafb; }
+        .font-bricolage { font-family: 'Bricolage Grotesque', sans-serif; }
+
+        /* ── Custom Sidebar ── */
+        .admin-sidebar {
+            width: 260px;
+            background: #1e3a2f;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .admin-sidebar .menu li > a {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            border-radius: 8px;
+            gap: 10px;
+            transition: all 0.15s;
+        }
+        .admin-sidebar .menu li > a:hover {
+            background: rgba(255,255,255,0.06);
+            color: white;
+        }
+        .admin-sidebar .menu li > a.active {
+            background: #F5A64B;
+            color: white;
+        }
+        .admin-sidebar .menu li > a.text-red-400 {
+            color: #f87171;
+        }
+        .admin-sidebar .menu li > a.text-red-400:hover {
+            background: rgba(248,113,113,0.1);
+            color: #fca5a5;
+        }
+
+        /* ── Scrollbar ── */
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+
+        /* ── Modal scroll ── */
+        .modal-box { max-height: 88vh; overflow-y: auto; }
+
+        /* ── Hover effects ── */
+        .type-card { transition: all 0.2s; }
+        .type-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+    <!-- ── Sidebar ── -->
+    <aside class="admin-sidebar">
+        <div class="sidebar-header flex items-center gap-3">
+            <img src="../assets/images/logo.png" alt="Logo" class="h-8 w-auto">
+            <span class="font-bricolage font-extrabold text-lg tracking-tight text-white">Admin Panel</span>
+        </div>
+
+        <nav class="flex-1 p-3 flex flex-col">
+            <ul class="menu gap-1 flex-1">
+                <li><a href="dashboard.html"><i class="fa-solid fa-gauge-high w-4"></i> Vue d'ensemble</a></li>
+                <li><a href="users.html"><i class="fa-solid fa-users w-4"></i> Utilisateurs</a></li>
+                <li><a href="document-types.html" class="active"><i class="fa-solid fa-file-invoice w-4"></i> Types de Documents</a></li>
+                <li><a href="subscriptions.html"><i class="fa-solid fa-crown w-4"></i> Abonnements</a></li>
+                <li><a href="transactions.html"><i class="fa-solid fa-receipt w-4"></i> Transactions</a></li>
+                <li><a href="referrals.html"><i class="fa-solid fa-user-friends w-4"></i> Parrainages</a></li>
+                <li><a href="declarations.html"><i class="fa-solid fa-folder-open w-4"></i> Déclarations</a></li>
+            </ul>
+
+            <div class="border-t border-white/10 pt-3 mt-3">
+                <ul class="menu gap-1">
+                    <li><a href="../dashboard.html"><i class="fa-solid fa-arrow-left w-4"></i> Retour au site</a></li>
+                    <li><a href="#" class="text-red-400" id="logout-btn"><i class="fa-solid fa-right-from-bracket w-4"></i> Déconnexion</a></li>
+                </ul>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- ── Main ── -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Top bar -->
+        <div class="navbar bg-white border-b border-base-200 px-8 min-h-[60px] flex-shrink-0">
+            <div class="flex-1">
+                <h2 class="font-bricolage text-xl font-extrabold tracking-tight">Configuration des Documents</h2>
+            </div>
+            <div class="flex-none gap-3">
+                <button onclick="openTypeModal()" class="btn btn-primary btn-sm gap-2">
+                    <i class="fa-solid fa-plus text-[10px]"></i> Nouveau Type
+                </button>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto p-8 custom-scroll">
+            <div id="types-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Data will be injected here -->
+                <div class="col-span-full flex flex-col items-center justify-center py-20">
+                    <span class="loading loading-spinner loading-lg text-primary"></span>
+                    <p class="mt-4 text-base-content/40 font-medium">Chargement des configurations...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Modal ── -->
+    <dialog id="typeModal" class="modal">
+        <div class="modal-box max-w-2xl p-0 overflow-hidden rounded-3xl border border-base-200">
+            <div class="flex items-center justify-between px-8 py-5 border-b border-base-200 bg-base-100/50">
+                <h3 id="modal-title" class="font-bricolage font-bold text-lg tracking-tight">Type de Document</h3>
+                <button onclick="closeTypeModal()" class="btn btn-sm btn-circle btn-ghost">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="type-form" class="p-8 space-y-6">
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text font-bold text-xs uppercase tracking-wider opacity-50">Nom du document</span></label>
+                        <input name="nom" type="text" class="input input-bordered bg-base-200/50 focus:bg-white" placeholder="ex: Passeport" required>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text font-bold text-xs uppercase tracking-wider opacity-50">Code Unique</span></label>
+                        <input name="code" type="text" class="input input-bordered bg-base-200/50 focus:bg-white" placeholder="ex: PASSPORT" required>
+                    </div>
+                </div>
+
+                <div class="form-control">
+                    <label class="label"><span class="label-text font-bold text-xs uppercase tracking-wider opacity-50">Description</span></label>
+                    <textarea name="description" class="textarea textarea-bordered h-20 bg-base-200/50 focus:bg-white" placeholder="Brève description..."></textarea>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 p-5 bg-base-200/50 rounded-2xl">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text font-bold text-xs uppercase tracking-wider opacity-50 text-primary">Prix Retrouvaille</span></label>
+                        <input name="prix_retrouvaille" type="number" class="input input-bordered input-sm font-bold" value="5000" required>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text font-bold text-xs uppercase tracking-wider opacity-50">% Trouveur</span></label>
+                        <input name="finder_percent" type="number" class="input input-bordered input-sm" value="80" required>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text font-bold text-xs uppercase tracking-wider opacity-50">% Application</span></label>
+                        <input name="app_percent" type="number" class="input input-bordered input-sm" value="20" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text font-bold text-xs uppercase tracking-wider opacity-50">Validité (Mois)</span></label>
+                        <input name="delai_expiration_mois" type="number" class="input input-bordered" value="6" required>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text font-bold text-xs uppercase tracking-wider opacity-50">Icône FontAwesome</span></label>
+                        <input name="icone" type="text" class="input input-bordered" placeholder="ex: passport">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text font-bold text-xs uppercase tracking-wider opacity-50 text-warning">Points Recompense</span></label>
+                        <input name="points_recompense" type="number" class="input input-bordered" value="50" required>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                    <div>
+                        <span class="block font-bold text-sm text-primary">Statut Actif</span>
+                        <span class="text-[10px] text-primary/60">Visible par les utilisateurs lors de la déclaration</span>
+                    </div>
+                    <input name="is_active" type="checkbox" class="toggle toggle-primary" checked>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="closeTypeModal()" class="btn btn-ghost rounded-xl">Annuler</button>
+                    <button type="submit" class="btn btn-primary px-10 rounded-xl font-bold shadow-lg shadow-primary/20">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
+    <script type="module">
+        import { adminService } from '../js/services/admin.js';
+        import { showAlert } from '../js/utils/ui-helpers.js';
+
+        let currentId = null;
+
+        async function loadTypes() {
+            const container = document.getElementById('types-container');
+            try {
+                const types = await adminService.getDocumentTypes();
+                container.innerHTML = '';
+
+                if (!types || types.length === 0) {
+                    container.innerHTML = '<div class="col-span-full text-center py-20 opacity-40">Aucun type de document configuré.</div>';
+                    return;
+                }
+
+                types.forEach(type => {
+                    const card = document.createElement('div');
+                    card.className = `card type-card bg-white border border-base-200 shadow-sm rounded-3xl overflow-hidden ${!type.is_active ? 'opacity-60 grayscale-[0.5]' : ''}`;
+                    
+                    const finderGain = (type.prix_retrouvaille * type.finder_percent / 100).toLocaleString();
+                    const appGain = (type.prix_retrouvaille * type.app_percent / 100).toLocaleString();
+
+                    card.innerHTML = `
+                        <div class="p-6">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-xl">
+                                    <i class="fa-solid fa-${type.icone || 'file-lines'}"></i>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button class="btn btn-circle btn-xs btn-ghost edit-btn" data-id="${type.id}">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <button class="btn btn-circle btn-xs btn-ghost toggle-btn ${type.is_active ? 'text-success' : 'text-base-content/30'}" data-id="${type.id}">
+                                        <i class="fa-solid fa-power-off"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <h3 class="font-bricolage font-bold text-lg leading-tight mb-1">${type.nom}</h3>
+                            <div class="badge badge-ghost badge-sm font-bold text-[10px] opacity-50 mb-3">${type.code}</div>
+                            
+                            <p class="text-xs text-base-content/60 line-clamp-2 h-8 mb-4">${type.description || 'Aucune description.'}</p>
+
+                            <div class="space-y-3 pt-4 border-t border-dashed border-base-200">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-[10px] font-bold uppercase tracking-widest opacity-40">Prix Total</span>
+                                    <span class="font-bricolage font-extrabold text-primary">${type.prix_retrouvaille?.toLocaleString()} XAF</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="bg-base-200/50 p-2 rounded-xl">
+                                        <span class="block text-[8px] font-bold uppercase opacity-40">Finder (${type.finder_percent}%)</span>
+                                        <span class="text-xs font-bold text-success">${finderGain}</span>
+                                    </div>
+                                    <div class="bg-base-200/50 p-2 rounded-xl">
+                                        <span class="block text-[8px] font-bold uppercase opacity-40">App (${type.app_percent}%)</span>
+                                        <span class="text-xs font-bold text-info">${appGain}</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="flex items-center gap-2 text-[10px] font-medium opacity-50">
+                                        <i class="fa-solid fa-clock-rotate-left"></i>
+                                        <span>Expire après ${type.delai_expiration_mois} mois</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-[10px] font-bold text-warning">
+                                        <i class="fa-solid fa-star"></i>
+                                        <span>+${type.points_recompense} points</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+                // Attach events
+                document.querySelectorAll('.edit-btn').forEach(btn => btn.onclick = () => editType(btn.dataset.id));
+                document.querySelectorAll('.toggle-btn').forEach(btn => btn.onclick = () => toggleType(btn.dataset.id));
+
+            } catch (error) {
+                showAlert('Erreur', 'Impossible de charger les types de documents', 'error');
+            }
+        }
+
+        window.openTypeModal = () => {
+            currentId = null;
+            document.getElementById('modal-title').textContent = 'Nouveau Type de Document';
+            document.getElementById('type-form').reset();
+            document.getElementById('typeModal').showModal();
+        };
+
+        async function editType(id) {
+            currentId = id;
+            document.getElementById('modal-title').textContent = 'Modifier le Type';
+            try {
+                const types = await adminService.getDocumentTypes();
+                const type = types.find(t => t.id === id);
+                if (!type) return;
+
+                const form = document.getElementById('type-form');
+                form.nom.value = type.nom;
+                form.code.value = type.code;
+                form.description.value = type.description || '';
+                form.prix_retrouvaille.value = type.prix_retrouvaille;
+                form.finder_percent.value = type.finder_percent;
+                form.app_percent.value = type.app_percent;
+                form.delai_expiration_mois.value = type.delai_expiration_mois;
+                form.points_recompense.value = type.points_recompense || 0;
+                form.icone.value = type.icone;
+                form.is_active.checked = type.is_active;
+
+                document.getElementById('typeModal').showModal();
+            } catch (error) {
+                showAlert('Erreur', 'Détails introuvables', 'error');
+            }
+        }
+
+        async function toggleType(id) {
+            try {
+                await adminService.toggleDocumentType(id);
+                loadTypes();
+            } catch (error) {
+                showAlert('Erreur', error.message, 'error');
+            }
+        }
+
+        document.getElementById('type-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            data.is_active = formData.get('is_active') === 'on';
+            data.prix_retrouvaille = parseFloat(data.prix_retrouvaille);
+            data.finder_percent = parseFloat(data.finder_percent);
+            data.app_percent = parseFloat(data.app_percent);
+            data.delai_expiration_mois = parseInt(data.delai_expiration_mois);
+            data.points_recompense = parseInt(data.points_recompense || 0);
+
+            try {
+                if (currentId) {
+                    await adminService.updateDocumentType(currentId, data);
+                } else {
+                    await adminService.createDocumentType(data);
+                }
+                document.getElementById('typeModal').close();
+                loadTypes();
+                showAlert('Succès', 'Configuration enregistrée avec succès', 'success');
+            } catch (error) {
+                showAlert('Erreur', error.message, 'error');
+            }
+        };
+
+        window.closeTypeModal = () => document.getElementById('typeModal').close();
+
+        // Init
+        loadTypes();
+    </script>
+</body>
+</html>

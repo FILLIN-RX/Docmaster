@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Boogaloo&display=swap");
+
 /* main.css */
 .nav-link.active a {
   background-color: #F5A64B;
@@ -55,8 +57,6 @@ body {
   }
 }
 
-/* Fonts */
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Boogaloo&display=swap");
 
 /* ══ Page Transitions ══ */
 @keyframes fadeInScale {

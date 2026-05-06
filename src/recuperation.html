@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script type="module" src="/js/services/auth.js"></script>
+  <script type="module" src="/js/services/recovery.js"></script>
   <script src="./js/ui/sidebar.js"></script>
   <link rel="shortcut icon" href="./assets/images/favicon.png" type="image/x-icon" />
   <link href="/css/main.css" rel="stylesheet" />
@@ -133,6 +134,7 @@
 </head>
 
 <body>
+  <script type="module" src="/js/utils/ui-helpers.js"></script>
 
   <div id="sidebar-root"></div>
 
@@ -755,8 +757,8 @@
         });
     }
 
-    // ── Finder Perspective Simulation ────────────────────────────────────
-    function finderValidateCode() {
+    // ── Finder Perspective with Real API ────────────────────────────────────
+    async function finderValidateCode() {
         const inputs = document.querySelectorAll('#finderCodeSection input');
         const codeEntered = Array.from(inputs).map(i => i.value).join('');
         
@@ -765,13 +767,95 @@
             return;
         }
 
+        // Get docId from URL
+        const params = new URLSearchParams(window.location.search);
+        const docId = params.get('id');
+
+        if (!docId) {
+            alert("ID du document manquant.");
+            return;
+        }
+
         const btn = document.querySelector('#finderCodeSection button');
+        const originalText = btn.innerHTML;
         btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Validation du code...';
+        btn.disabled = true;
+
+        try {
+            // Use our centralized recovery service
+            const result = await window.recoveryService.validateCode(docId, codeEntered);
+
+            if (result.success) {
+                // Code validated successfully! 
+                alert("✅ Code validé ! Félicitations ! Votre gain a été versé sur votre compte DocMaster.");
+                
+                // Update UI to show completion
+                updateFinderUIForCompletion();
+                
+                // Redirect after a delay
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 2000);
+            } else {
+                alert(result.message || "Code invalide. Veuillez réessayer.");
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        } catch (error) {
+            console.error('Error validating code:', error);
+            alert("Erreur de connexion au serveur.");
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+    function updateFinderUIForCompletion() {
+        // Update progress
+        const progText = document.getElementById('finderProgressionText');
+        const progBar = document.getElementById('finderProgressBar');
+        const progPercent = document.getElementById('finderProgressionPercent');
         
-        setTimeout(() => {
-            alert("✅ Code validé ! Félicitations ! Votre gain de 2 500 FCFA a été versé sur votre compte DocMaster.");
-            window.location.href = 'dashboard.html';
-        }, 1500);
+        if (progText) progText.textContent = 'Remise validée — Gains versés';
+        if (progBar) progBar.style.width = '100%';
+        if (progPercent) progPercent.textContent = '100%';
+
+        // Update timeline steps
+        const step3Dot = document.getElementById('finderStep3Dot');
+        const step3Line = document.getElementById('finderStep3Line');
+        const step3Title = document.getElementById('finderStep3Title');
+        const step4Dot = document.getElementById('finderStep4Dot');
+        const step4Title = document.getElementById('finderStep4Title');
+        
+        if (step3Dot) {
+            step3Dot.className = "timeline-dot step-done";
+            step3Dot.innerHTML = '<i class="fa-solid fa-check"></i>';
+        }
+        
+        if (step3Line) {
+            step3Line.className = "timeline-line done";
+        }
+        
+        if (step3Title) {
+            step3Title.textContent = 'Code validé';
+            step3Title.className = "text-[14px] font-bold text-textMain";
+        }
+        
+        if (step4Dot) {
+            step4Dot.className = "timeline-dot step-done";
+            step4Dot.innerHTML = '<i class="fa-solid fa-check"></i>';
+        }
+        
+        if (step4Title) {
+            step4Title.textContent = 'Gains versés';
+            step4Title.className = "text-[14px] font-bold text-green-dark";
+        }
+
+        // Hide code section
+        const codeSection = document.getElementById('finderCodeSection');
+        if (codeSection) {
+            codeSection.style.opacity = '0.5';
+            codeSection.style.pointerEvents = 'none';
+        }
     }
 
     // Init

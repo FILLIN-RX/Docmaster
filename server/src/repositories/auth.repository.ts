@@ -164,6 +164,33 @@ export class UserRepository {
   }
 
   /**
+   * Update user wallet balance
+   */
+  async updateBalance(userId: string, amount: number): Promise<number> {
+    const query = `
+      UPDATE users 
+      SET wallet_balance = wallet_balance + $1, updated_at = NOW() 
+      WHERE id = $2 
+      RETURNING wallet_balance`;
+    const { rows } = await pool.query(query, [amount, userId]);
+    return rows[0]?.wallet_balance || 0;
+  }
+  
+  /**
+   * Update user points
+   */
+  async updatePoints(userId: string, points: number): Promise<number> {
+    const query = `
+      UPDATE users 
+      SET points = points + $1, updated_at = NOW() 
+      WHERE id = $2 
+      RETURNING points`;
+    
+    const { rows } = await pool.query(query, [points, userId]);
+    return rows[0]?.points || 0;
+  }
+
+  /**
    * Clean up expired password reset tokens
    */
   async cleanupExpiredTokens(): Promise<number> {

@@ -1,4 +1,9 @@
-import { getDeclarationById } from './api.js';
+import { 
+    getDeclarationById,
+    payRecoveryFee,
+    validateRecoveryCode,
+    getActiveClaim
+} from './api.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
@@ -50,11 +55,15 @@ function renderOwnerData(doc) {
     }
 
     const progText = document.getElementById('ownerProgressionText');
+    const actions = document.getElementById('ownerActions');
+
     if (progText) {
         if (doc.status === 'MATCHED') {
             progText.textContent = 'Étape 3 sur 4 — Confirmation & Paiement';
+            if (actions) actions.classList.remove('hidden');
         } else if (doc.status === 'RETURNED') {
             progText.textContent = 'Processus Terminé';
+            if (actions) actions.classList.add('hidden');
         }
     }
 }
@@ -66,12 +75,192 @@ function renderFinderData(doc) {
 
     // Status banner
     const progText = document.querySelector('#viewFinder .font-bold.text-white');
+    const codeSection = document.getElementById('finderCodeSection');
+
     if (progText) {
         if (doc.status === 'MATCHED') {
             progText.textContent = 'Propriétaire identifié — En attente du code';
+            if (codeSection) codeSection.classList.remove('hidden');
         } else if (doc.status === 'RETURNED') {
             progText.textContent = 'Remise effectuée — Gains versés';
+            if (codeSection) codeSection.classList.add('hidden');
         }
     }
 }
+
+// Export functions for global use in HTML
+window.recoveryService = {
+    /**
+     * Process payment for document recovery
+     */
+    async processPayment(docId, amount = 5000, paymentMethod = 'MOBILE_MONEY') {
+        try {
+            console.log('💳 [Recovery] Processing payment for document:', docId);
+            
+            const result = await payRecoveryFee({
+                docId,
+                amount,
+                paymentMethod
+            });
+
+            if (result.success) {
+                console.log('✅ [Recovery] Payment successful, verification code:', result.data.verificationCode);
+                return {
+                    success: true,
+                    verificationCode: result.data.verificationCode,
+                    transaction: result.data.transaction
+                };
+            } else {
+                console.error('❌ [Recovery] Payment failed:', result.message);
+                return { success: false, message: result.message };
+            }
+        } catch (error) {
+            console.error('❌ [Recovery] Payment error:', error);
+            return { success: false, message: 'Erreur technique lors du paiement' };
+        }
+    },
+
+    /**
+     * Validate recovery code
+     */
+    async validateCode(docId, code) {
+        try {
+            console.log('🔍 [Recovery] Validating code for document:', docId);
+            
+            const result = await validateRecoveryCode({
+                docId,
+                code
+            });
+
+            if (result.success) {
+                console.log('✅ [Recovery] Code validated successfully');
+                return {
+                    success: true,
+                    claimId: result.data.claimId,
+                    message: 'Document récupéré avec succès'
+                };
+            } else {
+                console.error('❌ [Recovery] Code validation failed:', result.message);
+                return { success: false, message: result.message };
+            }
+        } catch (error) {
+            console.error('❌ [Recovery] Validation error:', error);
+            return { success: false, message: 'Erreur technique lors de la validation' };
+        }
+    },
+
+    /**
+     * Check claim status
+     */
+    async checkClaimStatus(docId) {
+        try {
+            console.log('📊 [Recovery] Checking claim status for document:', docId);
+            
+            const result = await getActiveClaim(docId);
+            
+            if (result.success) {
+                return {
+                    success: true,
+                    claim: result.data.claim,
+                    status: result.data.claim.status
+                };
+            } else {
+                return { 
+                    success: false, 
+                    status: 'NO_CLAIM',
+                    message: 'Aucun processus de récupération en cours'
+                };
+            }
+        } catch (error) {
+            console.error('❌ [Recovery] Status check error:', error);
+            return { success: false, message: 'Erreur technique' };
+        }
+    },
+
+    /**
+     * Complete owner workflow (payment + validation)
+     */
+    async completeOwnerWorkflow(docId) {
+        try {
+            console.log('🔄 [Recovery] Starting complete owner workflow for:', docId);
+
+            // 1. Check if claim exists
+            const claimCheck = await this.checkClaimStatus(docId);
+            if (!claimCheck.success && claimCheck.status !== 'NO_CLAIM') {
+                return claimCheck;
+            }
+
+            // 2. Process payment
+            const paymentResult = await this.processPayment(docId);
+            if (!paymentResult.success) {
+                return paymentResult;
+            }
+
+            // 3. Auto-validate the code (since owner just paid)
+            const validationResult = await this.validateCode(docId, paymentResult.verificationCode);
+            if (!validationResult.success) {
+                return validationResult;
+            }
+
+            console.log('🎉 [Recovery] Owner workflow completed successfully');
+            return {
+                success: true,
+                verificationCode: paymentResult.verificationCode,
+                claimId: validationResult.claimId,
+                message: 'Document récupéré avec succès!'
+            };
+
+        } catch (error) {
+            console.error('❌ [Recovery] Workflow error:', error);
+            return { success: false, message: 'Erreur technique dans le workflow' };
+        }
+    },
+
+    /**
+     * Update UI elements based on status
+     */
+    updateUIForSuccess(verificationCode) {
+        // Update progress
+        const progText = document.getElementById('ownerProgressionText');
+        const progBar = document.getElementById('ownerProgressBar');
+        const progPercent = document.getElementById('ownerProgressionPercent');
+        
+        if (progText) progText.textContent = 'Paiement Validé — Récupération prête';
+        if (progBar) progBar.style.width = '100%';
+        if (progPercent) progPercent.textContent = '100%';
+
+        // Update steps
+        const step3Dot = document.getElementById('ownerStep3Dot');
+        const step4Dot = document.getElementById('ownerStep4Dot');
+        const step4Title = document.getElementById('ownerStep4Title');
+        
+        if (step3Dot) {
+            step3Dot.className = "w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-xs shadow-lg shadow-green-100";
+            step3Dot.innerHTML = '<i class="fa-solid fa-check"></i>';
+        }
+        
+        if (step4Dot) {
+            step4Dot.className = "w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-base shadow-xl shadow-primary/30 pulse-ring border-4 border-white";
+            step4Dot.innerHTML = '<i class="fa-solid fa-key text-sm"></i>';
+        }
+        
+        if (step4Title) {
+            step4Title.className = "text-[12px] font-black text-primary uppercase tracking-tighter";
+            step4Title.textContent = 'Code reçu';
+        }
+
+        // Show verification code
+        const codeDisplay = document.getElementById('pickupCode');
+        if (codeDisplay) {
+            codeDisplay.textContent = verificationCode;
+        }
+
+        // Switch panels
+        const actionPanel = document.getElementById('ownerActionPanel');
+        const successPanel = document.getElementById('ownerSuccessPanel');
+        
+        if (actionPanel) actionPanel.classList.add('hidden');
+        if (successPanel) successPanel.classList.remove('hidden');
+    }
+};
 

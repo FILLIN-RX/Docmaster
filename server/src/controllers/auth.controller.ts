@@ -9,12 +9,20 @@ export class AuthController {
    */
   async register(req: Request, res: Response): Promise<void> {
     try {
-      const { nom, prenom, email, mot_de_passe, telephone, pays, ville, parrain_id } = req.body;
+      const { nom, prenom, email, mot_de_passe, telephone, pays, ville, code_parrainage } = req.body;
 
       // Validate required fields
       if (!nom || !prenom || !email || !mot_de_passe) {
         res.status(400).json({ error: 'Missing required fields' });
         return;
+      }
+
+      let parrain_id = undefined;
+      if (code_parrainage) {
+        const parrain = await this.userService.getUserByReferralCode(code_parrainage);
+        if (parrain) {
+          parrain_id = parrain.id;
+        }
       }
 
       // Register user

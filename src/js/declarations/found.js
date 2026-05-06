@@ -1,4 +1,4 @@
-import { createFoundDeclaration } from '../services/api.js';
+import { createFoundDeclaration, getActiveDocumentTypes } from '../services/api.js';
 
 /**
  * Found Declaration Module
@@ -10,16 +10,8 @@ let selectedType = null;
 const tags = [];
 let currentStep = 1;
 
-// Metadata for document types
-const DOC_TYPES = [
-  { key: "cni", title: "CNI", subtitle: "Carte d'identité", icon: "fa-id-card", iconWrap: "bg-green-light", iconCls: "text-green-mid", hasExpiration: true },
-  { key: "passport", title: "Passeport", subtitle: "International", icon: "fa-passport", iconWrap: "bg-blue-50", iconCls: "text-blue-500", hasExpiration: true },
-  { key: "permis", title: "Permis", subtitle: "Conduire", icon: "fa-car", iconWrap: "bg-amber-50", iconCls: "text-amber-500", hasExpiration: true },
-  { key: "carte-pro", title: "Carte pro", subtitle: "Pro, étudiant…", icon: "fa-id-badge", iconWrap: "bg-teal-50", iconCls: "text-teal-500", hasExpiration: true },
-  { key: "autre", title: "Autre", subtitle: "Attestation, etc.", icon: "fa-ellipsis", iconWrap: "bg-gray-100", iconCls: "text-gray-500", hasExpiration: true },
-  { key: "diplome", title: "Diplôme", subtitle: "BAC, Licence…", icon: "fa-graduation-cap", iconWrap: "bg-purple-50", iconCls: "text-purple-500", hasExpiration: false },
-  { key: "acte", title: "Acte civil", subtitle: "Naissance, mariage", icon: "fa-file-lines", iconWrap: "bg-pink-50", iconCls: "text-pink-500", hasExpiration: false },
-];
+// Metadata for document types (will be loaded from API)
+let DOC_TYPES = [];
 
 /**
  * Render document type cards grouped by expiration
@@ -34,21 +26,21 @@ function renderDocTypes() {
   nexGrid.innerHTML = '';
 
   DOC_TYPES.forEach(d => {
+    const iconCls = d.icone === 'id-card' ? 'text-green-mid' : (d.icone === 'passport' ? 'text-blue-500' : 'text-primary');
+    const iconWrap = d.icone === 'id-card' ? 'bg-green-light' : (d.icone === 'passport' ? 'bg-blue-50' : 'bg-primary/10');
+    
     const html = `
-      <button class="doc-type-card" onclick="selectDocType(this,'${d.key}')">
-        <div class="w-9 h-9 rounded-[10px] ${d.iconWrap} flex items-center justify-center mx-auto mb-2">
-          <i class="fa-solid ${d.icon} ${d.iconCls} text-lg"></i>
+      <button class="doc-type-card" onclick="selectDocType(this,'${d.id}')">
+        <div class="w-9 h-9 rounded-[10px] ${iconWrap} flex items-center justify-center mx-auto mb-2">
+          <i class="fa-solid fa-${d.icone || 'file-lines'} ${iconCls} text-lg"></i>
         </div>
-        <div class="text-[12px] font-bold text-textMain">${d.title}</div>
-        <div class="text-[10px] text-textMuted mt-0.5">${d.subtitle}</div>
+        <div class="text-[12px] font-bold text-textMain">${d.nom}</div>
+        <div class="text-[10px] text-textMuted mt-0.5">${d.prix_retrouvaille.toLocaleString()} XAF</div>
       </button>
     `;
     
-    if (d.hasExpiration) {
-      expGrid.insertAdjacentHTML('beforeend', html);
-    } else {
-      nexGrid.insertAdjacentHTML('beforeend', html);
-    }
+    // Logic for expiration grid grouping if needed, or just append to one
+    expGrid.insertAdjacentHTML('beforeend', html);
   });
 }
 
@@ -71,8 +63,13 @@ export function initFoundDeclaration() {
   window.drgLeave = drgLeave;
   window.drgDrop = drgDrop;
 
-  // Render types
-  renderDocTypes();
+  // Render types (async)
+  getActiveDocumentTypes().then(res => {
+    if (res.success) {
+      DOC_TYPES = res.data;
+      renderDocTypes();
+    }
+  });
 
   // Defaults
   const dateInput = document.getElementById("lieu-date");
@@ -209,8 +206,8 @@ function showPreview(file, prevId, imgId, zoneId) {
 function fillRecap() {
   const recapType = document.getElementById("recap-doc-type");
   if (recapType) {
-    const meta = DOC_TYPES.find(d => d.key === selectedType);
-    recapType.textContent = meta ? meta.title : "Autre";
+    const meta = DOC_TYPES.find(d => d.id === selectedType);
+    recapType.textContent = meta ? meta.nom : (selectedType === 'autre' ? document.getElementById('autre-type-input')?.value : "—");
   }
   
   const addr = document.getElementById("lieu-adresse");
@@ -257,10 +254,9 @@ async function submitDeclaration() {
   // Build FormData
   const formData = new FormData();
   const details = document.getElementById('doc-details').value;
-  const otherType = document.getElementById('autre-type-input').value;
-  const docTypeLabel = selectedType === 'autre' ? otherType : selectedType;
   
-  formData.append('doc_type', docTypeLabel);
+  // Use the ID directly
+  formData.append('doc_type', selectedType);
   formData.append('owner_name', document.getElementById('owner-name').value);
   formData.append('document_number', document.getElementById('doc-num').value);
   

@@ -125,6 +125,7 @@ body { display: flex; }
 </style>
 </head>
 <body>
+  <script type="module" src="/js/utils/ui-helpers.js"></script>
 <div class="sb-overlay" id="overlay" onclick="closeSb()"></div>
 
 <!-- ══ SIDEBAR ══ -->
@@ -308,61 +309,12 @@ body { display: flex; }
   </div>
 </div>
 
+<!-- ── Page Logic ── -->
+<script type="module" src="/js/pages/gains.js"></script>
+
 <script>
 function openSb()  { document.getElementById("sidebar").classList.add("open"); document.getElementById("overlay").classList.add("show"); }
 function closeSb() { document.getElementById("sidebar").classList.remove("open"); document.getElementById("overlay").classList.remove("show"); }
-
-/* ── Transactions ── */
-const transactions = [
-  { icon:"fa-file-circle-check", iconBg:"bg-green-light",   iconCls:"text-green-mid", label:"CNI retrouvée — Aminata K.",     sub:"Récompense propriétaire",  date:"12 mars 2025",   amount:"+50 XAF",  badge:"badge-green",  badgeTxt:"Reçu"   },
-  { icon:"fa-file-circle-check", iconBg:"bg-green-light",   iconCls:"text-green-mid", label:"Passeport retrouvé — R. Fotso",  sub:"Récompense propriétaire",  date:"8 mars 2025",    amount:"+80 XAF",  badge:"badge-green",  badgeTxt:"Reçu"   },
-  { icon:"fa-star",              iconBg:"bg-primary/10",    iconCls:"text-primary",   label:"Bonus déclaration",              sub:"Points convertis",         date:"5 mars 2025",    amount:"+20 XAF",  badge:"badge-orange", badgeTxt:"Bonus"  },
-  { icon:"fa-arrow-up",          iconBg:"bg-blue-50",       iconCls:"text-blue-400",  label:"Retrait MTN Mobile Money",       sub:"Compte +237 699 XXX XX",   date:"1 mars 2025",    amount:"−80 XAF",  badge:"badge-gray",   badgeTxt:"Envoyé" },
-  { icon:"fa-file-circle-check", iconBg:"bg-green-light",   iconCls:"text-green-mid", label:"Permis retrouvé — J. Ngono",     sub:"Récompense propriétaire",  date:"24 fév. 2025",   amount:"+80 XAF",  badge:"badge-green",  badgeTxt:"Reçu"   },
-];
-
-const txList = document.getElementById("tx-list");
-transactions.forEach((tx, i) => {
-  txList.innerHTML += `
-    <div class="tx-row flex items-center gap-3 px-5 py-3.5 ${i < transactions.length-1 ? 'border-b border-borderMain' : ''}">
-      <div class="w-9 h-9 rounded-[10px] ${tx.iconBg} flex items-center justify-center flex-shrink-0">
-        <i class="fa-solid ${tx.icon} ${tx.iconCls} text-sm"></i>
-      </div>
-      <div class="flex-1 min-w-0">
-        <p class="text-[13px] font-semibold text-textMain truncate leading-tight">${tx.label}</p>
-        <p class="text-[11px] text-textMuted mt-0.5">${tx.sub} · ${tx.date}</p>
-      </div>
-      <div class="flex flex-col items-end gap-1 flex-shrink-0">
-        <span class="font-bricolage text-[14px] font-extrabold ${tx.amount.startsWith('+') ? 'text-green-mid' : 'text-textMuted'}">${tx.amount}</span>
-        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${tx.badge}">${tx.badgeTxt}</span>
-      </div>
-    </div>`;
-});
-
-/* ── Payment methods ── */
-const methods = [
-  { icon:"fa-mobile-screen-button", name:"MTN Mobile Money", color:"text-yellow-500", bg:"bg-yellow-50", connected:true  },
-  { icon:"fa-mobile-screen-button", name:"Orange Money",      color:"text-orange-500", bg:"bg-orange-50", connected:false },
-  { icon:"fa-university",           name:"Virement bancaire", color:"text-blue-400",   bg:"bg-blue-50",   connected:false },
-];
-const pmContainer = document.getElementById("payment-methods");
-methods.forEach(m => {
-  pmContainer.innerHTML += `
-    <div class="flex items-center gap-3 p-3.5 border-2 ${m.connected ? 'border-primary bg-primary/5' : 'border-borderMain bg-surface2'} rounded-[13px] cursor-pointer hover:border-primary transition-all group">
-      <div class="w-9 h-9 rounded-[10px] ${m.bg} flex items-center justify-center flex-shrink-0">
-        <i class="fa-solid ${m.icon} ${m.color} text-sm"></i>
-      </div>
-      <div class="flex-1 min-w-0">
-        <p class="text-[12.5px] font-bold text-textMain leading-tight truncate">${m.name}</p>
-        <p class="text-[10.5px] ${m.connected ? 'text-green-mid font-semibold' : 'text-textMuted'}">${m.connected ? '✓ Connecté' : 'Ajouter'}</p>
-      </div>
-      <i class="fa-solid ${m.connected ? 'fa-circle-check text-primary' : 'fa-plus text-textMuted group-hover:text-primary'} text-sm transition-colors"></i>
-    </div>`;
-});
-
-function withdraw() {
-  alert("Solde insuffisant — minimum 500 XAF requis.\nSolde actuel : 150 XAF");
-}
 </script>
 </body>
 </html>

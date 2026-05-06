@@ -8,6 +8,7 @@
 import apiClient, { setAuthToken, clearAuthToken } from '../core/axios.js';
 
 export const API_BASE_URL = 'http://localhost:5000/api';
+export const BASE_URL = 'http://localhost:5000';
 
 /**
  * Helper to get authentication headers for fetch calls
@@ -105,6 +106,25 @@ export function logout() {
   clearAuthToken();
   localStorage.removeItem('docmaster_user_session');
   window.location.href = '/login.html';
+}
+
+/**
+ * ────────────────────────────────────────────────────────────────
+ * REFERRAL ENDPOINTS
+ * ────────────────────────────────────────────────────────────────
+ */
+
+/**
+ * Get current user referrals
+ */
+export async function getMyReferrals() {
+  try {
+    const response = await apiClient.get('referrals');
+    return { success: true, data: response.data };
+  } catch (error) {
+    const message = error.response?.data?.error || 'Erreur lors de la récupération des parrainages.';
+    return { success: false, message };
+  }
 }
 
 /**
@@ -471,6 +491,32 @@ export async function getGlobalStats() {
 }
 
 /**
+ * Get DocMaster performance stats by document type with trends
+ * @param {string} period - 'day', 'week', 'month', 'year'
+ */
+export async function getPerformanceStats(period = 'month') {
+  try {
+    const response = await apiClient.get(`declarations/performance?period=${period}`);
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    return { success: false, message: 'Erreur lors de la récupération des statistiques de performance.' };
+  }
+}
+
+/**
+ * Get active document types for declarations
+ */
+export async function getActiveDocumentTypes() {
+  try {
+    const response = await apiClient.get('document-types/active');
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('Erreur getActiveDocumentTypes:', error);
+    return { success: false, message: 'Impossible de charger les types de documents.' };
+  }
+}
+
+/**
  * Public fuzzy search for found documents
  */
 export async function searchPublicFound(query) {
@@ -479,6 +525,20 @@ export async function searchPublicFound(query) {
     return { success: true, data: response.data.data };
   } catch (error) {
     return { success: false, message: 'Erreur lors de la recherche.' };
+  }
+}
+
+/**
+ * Initiate recovery process for a found document
+ * @param {string} docId - Document ID
+ */
+export async function initiateRecovery(docId) {
+  try {
+    const response = await apiClient.post(`declarations/${docId}/initiate-recovery`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    const message = error.response?.data?.message || 'Erreur lors de l\'initialisation de la récupération.';
+    return { success: false, message };
   }
 }
 
@@ -528,6 +588,214 @@ export async function markAllNotificationsAsRead() {
 
 /**
  * ────────────────────────────────────────────────────────────────
+ * CLAIM ENDPOINTS (Document Recovery)
+ * ────────────────────────────────────────────────────────────────
+ */
+
+/**
+ * Create a new claim manually
+ * @param {Object} claimData - Claim data { docId, ownerId, finderId }
+ */
+export async function createClaim(claimData) {
+  try {
+    const response = await apiClient.post('claims/create', claimData);
+    return { success: true, data: response.data };
+  } catch (error) {
+    const message = error.response?.data?.message || 'Erreur lors de la création du claim.';
+    return { success: false, message };
+  }
+}
+
+/**
+ * Get active claim for a document
+ * @param {string} docId - Document ID
+ */
+export async function getActiveClaim(docId) {
+  try {
+    const response = await apiClient.get(`claims/active/${docId}`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    const message = error.response?.data?.message || 'Erreur lors de la récupération du claim.';
+    return { success: false, message };
+  }
+}
+
+/**
+ * Validate recovery code for a document
+ * @param {Object} validationData - { docId, code }
+ */
+export async function validateRecoveryCode(validationData) {
+  try {
+    const response = await apiClient.post('claims/validate', validationData);
+    return { success: true, data: response.data };
+  } catch (error) {
+    const message = error.response?.data?.message || 'Code de validation invalide.';
+    return { success: false, message };
+  }
+}
+
+/**
+ * ────────────────────────────────────────────────────────────────
+ * PAYMENT ENDPOINTS
+ * ────────────────────────────────────────────────────────────────
+ */
+
+/**
+ * Pay recovery fee for document
+ * @param {Object} paymentData - { docId, amount, paymentMethod }
+ */
+export async function payRecoveryFee(paymentData) {
+  try {
+    const response = await apiClient.post('payments/pay-recovery', paymentData);
+    return { success: true, data: response.data };
+  } catch (error) {
+    const message = error.response?.data?.message || 'Erreur lors du paiement.';
+    return { success: false, message };
+  }
+}
+
+/**
+ * Get transaction history for current user
+ */
+export async function getMyTransactions() {
+  try {
+    const response = await apiClient.get('payments/my-transactions');
+    return { success: true, data: response.data.transactions };
+  } catch (error) {
+    const message = error.response?.data?.message || 'Erreur lors de la récupération des transactions.';
+    return { success: false, message };
+  }
+}
+
+/**
+ * ────────────────────────────────────────────────────────────────
+ * DELETION REQUEST ENDPOINTS
+ * ────────────────────────────────────────────────────────────────
+ */
+
+/**
+ * Get user's deletion requests
+ */
+export async function getMyDeletionRequests() {
+  try {
+    const response = await apiClient.get('deletion-requests/me');
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    const message = error.response?.data?.message || 'Erreur lors de la récupération des demandes de suppression.';
+    return { success: false, message };
+  }
+}
+
+/**
+ * Request deletion of a declaration
+ * @param {string} declarationId - Declaration ID
+ * @param {string} reason - Reason for deletion
+ */
+export async function requestDeclarationDeletion(declarationId, reason) {
+  try {
+    const response = await apiClient.post(`deletion-requests/declarations/${declarationId}/request-deletion`, { reason });
+    return { success: true, data: response.data };
+  } catch (error) {
+    const message = error.response?.data?.message || 'Erreur lors de la demande de suppression.';
+    return { success: false, message };
+  }
+}
+
+/**
+ * ────────────────────────────────────────────────────────────────
+ * ADMIN ENDPOINTS
+ * ────────────────────────────────────────────────────────────────
+ */
+
+/**
+ * Get admin statistics (admin only)
+ */
+export async function getAdminStats() {
+  try {
+    const response = await apiClient.get('subscriptions/admin/stats');
+    return { success: true, data: response.data };
+  } catch (error) {
+    const message = error.response?.data?.message || 'Erreur lors de la récupération des statistiques admin.';
+    return { success: false, message };
+  }
+}
+
+/**
+ * Get all subscriptions (admin only)
+ */
+export async function getAllSubscriptions() {
+  try {
+    const response = await apiClient.get('subscriptions/admin/all');
+    return { success: true, data: response.data };
+  } catch (error) {
+    const message = error.response?.data?.message || 'Erreur lors de la récupération des abonnements.';
+    return { success: false, message };
+  }
+}
+
+/**
+ * Update subscription status (admin only)
+ * @param {string} subscriptionId - Subscription ID
+ * @param {string} status - New status
+ */
+export async function updateSubscriptionStatus(subscriptionId, status) {
+  try {
+    const response = await apiClient.patch(`subscriptions/admin/${subscriptionId}/status`, { status });
+    return { success: true, data: response.data };
+  } catch (error) {
+    const message = error.response?.data?.message || 'Erreur lors de la mise à jour du statut.';
+    return { success: false, message };
+  }
+}
+
+/**
+ * ────────────────────────────────────────────────────────────────
+ * PLAN ENDPOINTS
+ * ────────────────────────────────────────────────────────────────
+ */
+
+/**
+ * Get all available plans
+ */
+export async function getAllPlans() {
+  try {
+    const response = await apiClient.get('plans');
+    return { success: true, data: response.data };
+  } catch (error) {
+    const message = error.response?.data?.message || 'Erreur lors de la récupération des plans.';
+    return { success: false, message };
+  }
+}
+
+/**
+ * Get plan by ID (admin only)
+ * @param {string} planId - Plan ID
+ */
+export async function getPlanById(planId) {
+  try {
+    const response = await apiClient.get(`plans/${planId}`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    const message = error.response?.data?.message || 'Erreur lors de la récupération du plan.';
+    return { success: false, message };
+  }
+}
+
+/**
+ * Get feature definitions (admin only)
+ */
+export async function getFeatureDefinitions() {
+  try {
+    const response = await apiClient.get('plans/features/definitions');
+    return { success: true, data: response.data };
+  } catch (error) {
+    const message = error.response?.data?.message || 'Erreur lors de la récupération des définitions.';
+    return { success: false, message };
+  }
+}
+
+/**
+ * ────────────────────────────────────────────────────────────────
  * SUBSCRIPTION ENDPOINTS
  * ────────────────────────────────────────────────────────────────
  */
@@ -559,5 +827,23 @@ export async function getMySubscription() {
     return { success: true, data: response.data.data };
   } catch (error) {
     return { success: false, message: 'Erreur lors de la récupération de l\'abonnement.' };
+  }
+}
+/**
+ * ────────────────────────────────────────────────────────────────
+ * TRANSACTION / PAYMENT ENDPOINTS
+ * ────────────────────────────────────────────────────────────────
+ */
+
+/**
+ * Get transaction history for current user
+ */
+export async function getTransactionHistory() {
+  try {
+    const response = await apiClient.get('payments/my-history');
+    return { success: true, data: response.data.transactions };
+  } catch (error) {
+    const message = error.response?.data?.message || 'Erreur lors de la récupération de l\'historique.';
+    return { success: false, message };
   }
 }

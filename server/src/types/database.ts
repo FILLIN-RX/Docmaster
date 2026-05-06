@@ -18,6 +18,7 @@ export interface User {
     wallet_balance: number;
     date_naissance?: Date;
     lieu_naissance?: string;
+    photo_url?: string;
     currency: string;
     role: 'USER' | 'ADMIN';
     created_at: Date;
@@ -25,7 +26,7 @@ export interface User {
 }
 
 export type DeclarationType = 'LOST' | 'FOUND';
-export type DocumentStatus = 'AVAILABLE' | 'SEARCHING' | 'RETURNED';
+export type DocumentStatus = 'AVAILABLE' | 'SEARCHING' | 'RETURNED' | 'MATCHED';
 
 export interface DocumentDeclaration {
     id: string;
@@ -81,9 +82,9 @@ export interface Claim {
     doc_id: string;
     owner_id: string;
     finder_id: string;
-    verificat_code: string;
+    verification_code: string;
     status: 'PENDING' | 'VALIDATED' | 'FAILED';
-    verificat_attempts: number;
+    verification_attempts: number;
     created_at: Date;
 }
 
@@ -95,7 +96,8 @@ export interface Transaction {
     status: 'PENDING' | 'SUCCESS' | 'FAILED';
     payment_method: string;
     transact_id_external?: string;
-    type: 'subscription' | 'declarat_fee' | 'finder_payout';
+    external_ref?: string;
+    type: 'subscription' | 'declarat_fee' | 'finder_payout' | 'recovery_fee';
     metadata?: any;
     created_at: Date;
 }
@@ -125,4 +127,22 @@ export interface DeletionRequest {
     created_at: Date;
     reviewed_at?: Date;
     executed_at?: Date;
+}
+
+export type WithdrawalRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'PAID' | 'CANCELLED';
+
+export interface WithdrawalRequest {
+    id: string;
+    user_id: string;
+    amount: number;
+    currency: string;
+    payment_method: string;
+    payment_details: string; // ex: numéro orange money, compte bancaire, etc.
+    status: WithdrawalRequestStatus;
+    admin_id?: string;
+    admin_comment?: string;
+    transaction_id?: string; // id de la transaction de débit associée
+    created_at: Date;
+    updated_at: Date;
+    processed_at?: Date;
 }

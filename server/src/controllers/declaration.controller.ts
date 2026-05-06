@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
 import { DeclarationService } from '../services/declaration.service.ts';
+import { PdfService } from '../services/pdf.service.ts';
 import { CreateDeclarationDTO, RequestDeleteDeclarationDTO } from '../dtos/declaration.dto.ts';
 import { validateDTO, mapFormDataToObject, formatValidationErrors } from '../utils/validation.utils.ts';
 
 const declarationService = new DeclarationService();
+const pdfService = new PdfService();
 
 export const createLostDeclaration = async (req: Request, res: Response) => {
   try {
@@ -122,6 +124,16 @@ export const getGlobalStats = async (req: Request, res: Response) => {
   }
 };
 
+export const getPerformanceStats = async (req: Request, res: Response) => {
+  try {
+    const { period } = req.query; // day, week, month, year
+    const stats = await declarationService.getPerformanceStats(period as string);
+    res.json({ success: true, data: stats });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const searchPublicFound = async (req: Request, res: Response) => {
   try {
     const { q } = req.query;
@@ -145,5 +157,42 @@ export const getDeclarationById = async (req: Request, res: Response) => {
     res.json({ success: true, data: result });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const initiateRecovery = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { amount, method } = req.body;
+    const userId = (req as any).user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Non authentifié' });
+    }
+
+    const result = await declarationService.initiateRecovery(id as string, userId, Number(amount), method);
+    res.json(result);
+  } catch (error: any) {
+    console.error('❌ Erreur initiation récupération:', error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const generatePdf = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const declaration = await declarationService.getDeclarationById(id as string);
+    
+    if (!declaration) {
+      return res.status(404).json({ success: false, message: 'Déclaration introuvable' });
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=declaration_${id}.pdf`);
+    
+    await pdfService.generateDeclarationPdf(declaration, res);
+  } catch (error: any) {
+    console.error('❌ Erreur génération PDF:', error);
+    res.status(500).json({ success: false, message: 'Erreur lors de la génération du PDF' });
   }
 };

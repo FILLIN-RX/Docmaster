@@ -113,6 +113,31 @@ export class NotificationService {
       metadata: { docId, matchType: 'FOUND_SIDE' }
     });
   }
+
+  /**
+   * Notify the finder that the owner has paid
+   */
+  async notifyPaymentReceived(finderId: string, docType: string, docId: string) {
+    await this.createNotification({
+      user_id: finderId,
+      type: 'PAYMENT_RECEIVED',
+      title: 'Paiement reçu !',
+      message: `Le propriétaire du document (${docType}) a effectué le paiement. Il vous contactera bientôt avec un code de vérification.`,
+      metadata: { docId, action: 'RECOVERY_START' }
+    });
+  }
+  /**
+   * Notify the owner that the document has been successfully recovered
+   */
+  async notifyDocumentRecovered(ownerId: string, docType: string, docId: string) {
+    await this.createNotification({
+      user_id: ownerId,
+      type: 'RECOVERY_SUCCESS',
+      title: 'Document récupéré !',
+      message: `Votre ${docType} a été officiellement marqué comme récupéré. Merci d'avoir utilisé DocMaster !`,
+      metadata: { docId, action: 'RECOVERY_COMPLETE' }
+    });
+  }
 }
 
 export const notificationService = new NotificationService();

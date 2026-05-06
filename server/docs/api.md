@@ -1,6 +1,7 @@
 # DocMaster API Documentation
 
 ## Base URL
+
 ```
 http://localhost:5000/api
 ```
@@ -10,11 +11,13 @@ http://localhost:5000/api
 ## Authentication Endpoints
 
 ### 1. Register User
+
 **POST** `/auth/register`
 
 Create a new user account. A unique referral code is automatically generated.
 
 #### Request Body
+
 ```json
 {
   "nom": "Dupont",
@@ -29,6 +32,7 @@ Create a new user account. A unique referral code is automatically generated.
 ```
 
 #### Response (201 Created)
+
 ```json
 {
   "message": "User registered successfully",
@@ -51,6 +55,7 @@ Create a new user account. A unique referral code is automatically generated.
 ```
 
 #### Error Responses
+
 - **400**: Missing required fields (nom, prenom, email, mot_de_passe)
 - **409**: Email already exists
 - **500**: Server error
@@ -58,11 +63,13 @@ Create a new user account. A unique referral code is automatically generated.
 ---
 
 ### 2. Login User
+
 **POST** `/auth/login`
 
 Authenticate user and receive JWT token for subsequent requests.
 
 #### Request Body
+
 ```json
 {
   "email": "jean.dupont@example.com",
@@ -71,6 +78,7 @@ Authenticate user and receive JWT token for subsequent requests.
 ```
 
 #### Response (200 OK)
+
 ```json
 {
   "message": "Login successful",
@@ -94,6 +102,7 @@ Authenticate user and receive JWT token for subsequent requests.
 ```
 
 #### Error Responses
+
 - **400**: Email and password required
 - **401**: Invalid email or password
 - **500**: Server error
@@ -101,11 +110,13 @@ Authenticate user and receive JWT token for subsequent requests.
 ---
 
 ### 3. Forgot Password
+
 **POST** `/auth/forgot-password`
 
 Request a password reset. In production, a reset link should be sent via email.
 
 #### Request Body
+
 ```json
 {
   "email": "jean.dupont@example.com"
@@ -113,6 +124,7 @@ Request a password reset. In production, a reset link should be sent via email.
 ```
 
 #### Response (200 OK)
+
 ```json
 {
   "message": "Password reset email sent",
@@ -121,6 +133,7 @@ Request a password reset. In production, a reset link should be sent via email.
 ```
 
 #### Error Responses
+
 - **400**: Email required
 - **404**: User not found
 - **500**: Server error
@@ -128,11 +141,13 @@ Request a password reset. In production, a reset link should be sent via email.
 ---
 
 ### 4. Reset Password
+
 **POST** `/auth/reset-password`
 
 Complete password reset using the token received from forgot-password endpoint.
 
 #### Request Body
+
 ```json
 {
   "token": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
@@ -141,6 +156,7 @@ Complete password reset using the token received from forgot-password endpoint.
 ```
 
 #### Response (200 OK)
+
 ```json
 {
   "message": "Password reset successfully",
@@ -152,6 +168,7 @@ Complete password reset using the token received from forgot-password endpoint.
 ```
 
 #### Error Responses
+
 - **400**: Token and password required
 - **401**: Invalid or expired reset token
 - **500**: Server error
@@ -159,16 +176,19 @@ Complete password reset using the token received from forgot-password endpoint.
 ---
 
 ### 5. Get User Profile
+
 **GET** `/auth/profile` (Protected)
 
 Retrieve current user's profile information.
 
 #### Headers
+
 ```
 Authorization: Bearer <your-jwt-token>
 ```
 
 #### Response (200 OK)
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -191,26 +211,30 @@ Authorization: Bearer <your-jwt-token>
 ---
 
 ### 6. Update User Profile
+
 **PUT** `/auth/profile` (Protected)
 
 Update user profile details and/or profile photo. Supports `multipart/form-data`.
 
 #### Headers
+
 ```
 Authorization: Bearer <your-jwt-token>
 Content-Type: multipart/form-data
 ```
 
 #### Request Body (Form Data)
-| Key | Type | Description |
-| :--- | :--- | :--- |
-| `nom` | string | User's last name |
-| `prenom` | string | User's first name |
-| `telephone` | string | User's phone number |
-| `ville` | string | User's city |
-| `photo_profile` | file | Profile photo (PNG, JPG, max 5MB) |
+
+| Key             | Type   | Description                       |
+| :-------------- | :----- | :-------------------------------- |
+| `nom`           | string | User's last name                  |
+| `prenom`        | string | User's first name                 |
+| `telephone`     | string | User's phone number               |
+| `ville`         | string | User's city                       |
+| `photo_profile` | file   | Profile photo (PNG, JPG, max 5MB) |
 
 #### Response (200 OK)
+
 ```json
 {
   "message": "Profile updated successfully",
@@ -231,27 +255,31 @@ Content-Type: multipart/form-data
 ## Document Endpoints
 
 ### 1. Register Document
+
 **POST** `/documents` (Protected)
 
 Register a personal document with photos. Supports `multipart/form-data`.
 
 #### Headers
+
 ```
 Authorization: Bearer <your-jwt-token>
 Content-Type: multipart/form-data
 ```
 
 #### Request Body (Form Data)
-| Key | Type | Description |
-| :--- | :--- | :--- |
-| `type_doc` | string | Type of document (CNI, Passeport, etc.) |
-| `numero_doc` | string | Document number |
-| `nom_complet` | string | Name on document |
-| `date_expiration` | date | Expiry date (optional) |
-| `photo_recto` | file | Front photo |
-| `photo_verso` | file | Back photo |
+
+| Key               | Type   | Description                             |
+| :---------------- | :----- | :-------------------------------------- |
+| `type_doc`        | string | Type of document (CNI, Passeport, etc.) |
+| `numero_doc`      | string | Document number                         |
+| `nom_complet`     | string | Name on document                        |
+| `date_expiration` | date   | Expiry date (optional)                  |
+| `photo_recto`     | file   | Front photo                             |
+| `photo_verso`     | file   | Back photo                              |
 
 #### Response (201 Created)
+
 ```json
 {
   "success": true,
@@ -263,11 +291,13 @@ Content-Type: multipart/form-data
 ---
 
 ### 2. List My Documents
+
 **GET** `/documents` (Protected)
 
 List all personal documents registered by the current user.
 
 #### Response (200 OK)
+
 ```json
 {
   "success": true,
@@ -282,11 +312,13 @@ List all personal documents registered by the current user.
 ---
 
 ### 3. Delete Document
+
 **DELETE** `/documents/:id` (Protected)
 
 Delete a personal document.
 
 #### Response (200 OK)
+
 ```json
 {
   "success": true,
@@ -296,25 +328,165 @@ Delete a personal document.
 
 ---
 
+## Declaration Endpoints
+
+### 1. Submit Lost Declaration
+
+**POST** `/declarations/lost` (Protected)
+
+Submit a new lost document declaration. Supports `multipart/form-data`.
+
+#### Request Body (Form Data)
+
+| Key | Type | Description |
+| :--- | :--- | :--- |
+| `doc_type` | string | CNI, Passeport, etc. |
+| `nom_complet` | string | Name on doc |
+| `document_number`| string | Unique number |
+| `ville` | string | City of loss |
+| `photo_recto` | file | Optional photo |
+
+### 2. Submit Found Declaration
+
+**POST** `/declarations/found` (Protected)
+
+### 3. Initiate Recovery
+
+**POST** `/declarations/:id/initiate-recovery` (Protected)
+
+Starts the recovery process for a matched document. Generates the 6-digit code upon payment success.
+
+#### Request Body
+
+```json
+{
+  "amount": 2500,
+  "method": "MOBILE_MONEY"
+}
+```
+
+#### Response (200 OK)
+
+```json
+{
+  "success": true,
+  "transactionId": "...",
+  "verificationCode": "123456"
+}
+```
+
+---
+
+## Claim Endpoints
+
+### 1. Validate Recovery Code
+
+**POST** `/claims/validate` (Protected)
+
+Used by the **finder** to validate the 6-digit code provided by the owner.
+
+#### Request Body
+
+```json
+{
+  "docId": "uuid-of-document",
+  "code": "123456"
+}
+```
+
+#### Response (200 OK)
+
+```json
+{
+  "success": true,
+  "message": "Code validé ! Le document est marqué comme rendu."
+}
+```
+
+---
+
+## Match Endpoints
+
+### 1. Get Match Details
+
+**GET** `/matches/:id` (Protected)
+
+Retrieve comprehensive details about a match, including the found document info, finder details, and owner details.
+
+#### Response (200 OK)
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "...",
+    "status": "MATCHED",
+    "found_doc_name": "Jean Dupont",
+    "found_doc_number": "123456789",
+    "found_city": "Douala",
+    "photo_recto": "uploads/...",
+    "finder_name": "Alice Find",
+    "finder_phone": "+237...",
+    "owner_name": "Jean Dupont"
+  }
+}
+```
+
+---
+
+## Payment Endpoints
+
+### 1. Process Recovery Payment
+
+**POST** `/payments/pay-recovery` (Protected)
+
+Process payment for a specific document recovery.
+
+#### Request Body
+
+```json
+{
+  "docId": "uuid-of-document",
+  "amount": 2500,
+  "method": "MOBILE_MONEY"
+}
+```
+
+#### Response (200 OK)
+
+```json
+{
+  "success": true,
+  "message": "Paiement effectué avec succès !",
+  "transaction": { ... },
+  "verificationCode": "123456"
+}
+```
+
+---
+
+### 2. My Payment History
+
+**GET** `/payments/my-history` (Protected)
+
+Get the list of all transactions made by the user.
+
+---
+
 ## Key Features
 
 ### 🔐 Security
-- Passwords hashed with **Argon2** (strongest hashing algorithm)
+
+- Passwords hashed with **Argon2**
 - JWT tokens with configurable expiry (default: 24h)
-- Password reset tokens expire after 24h
-- Reset tokens marked as used after one-time use (prevents reuse)
+- 6-digit verification code for secure document handovers
 - SQL injection prevention using prepared statements
 
-### 🎯 Referral System
-- Unique 8-character referral code generated automatically per user
-- Format: Alphanumeric (A-Z, 0-9) - Example: `XY7KA9Z2`
-- Stored in `code_invitation` field
-- Can be used for referral tracking
+### 🎯 Matching & Recovery
 
-### 📧 JWT Token
-- Contains: `id`, `email`
-- Expiry: 24 hours (configurable in `.env`)
-- Use in subsequent requests as: `Authorization: Bearer <token>`
+- Automatic matching between LOST and FOUND declarations
+- Secure handover using unique codes
+- Integrated payment simulation for recovery fees
 
 ---
 
@@ -323,8 +495,7 @@ Delete a personal document.
 Add these to your `.env` file:
 
 ```env
-JWT_SECRET=your-secret-key-min-32-chars-for-production
-JWT_EXPIRY=24h
+JWT_SECRET=your-secret-key
 DATABASE_URL=postgresql://user:password@localhost:5432/docmaster
 PORT=5000
 ```
@@ -334,12 +505,11 @@ PORT=5000
 ## Error Handling
 
 All endpoints follow standard HTTP status codes:
+
 - **200**: Success
 - **201**: Created successfully
-- **400**: Bad request (validation error)
-- **401**: Unauthorized (invalid credentials/token)
+- **401**: Unauthorized (invalid token)
 - **404**: Not found
-- **409**: Conflict (duplicate email)
 - **500**: Server error
 
 ---
@@ -348,7 +518,4 @@ All endpoints follow standard HTTP status codes:
 
 - [ ] POST `/auth/verify-email` - Email verification
 - [ ] POST `/auth/refresh-token` - Refresh JWT
-- [ ] POST `/auth/logout` - Logout (optional, stateless)
 - [ ] GET `/auth/referrals` - Get user referrals
-- [ ] POST `/declarations` - Declare a lost/found document
-- [ ] GET `/declarations` - List declared documents

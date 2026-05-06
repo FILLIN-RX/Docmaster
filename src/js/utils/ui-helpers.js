@@ -121,5 +121,115 @@ export function toggleReferral(prefix) {
  */
 export function resendPin(event) {
   event?.preventDefault();
-  alert('Un nouveau code a été envoyé à votre adresse email.');
+  showAlert('Un nouveau code a été envoyé à votre adresse email.');
 }
+
+/**
+ * Show a custom modal instead of native alert
+ */
+export function showAlert(message, type = 'info') {
+  // Check if modal container already exists
+  let modalContainer = document.getElementById('global-alert-modal');
+  
+  if (!modalContainer) {
+    modalContainer = document.createElement('div');
+    modalContainer.id = 'global-alert-modal';
+    modalContainer.innerHTML = `
+      <dialog id="alert_modal_element" class="modal modal-bottom sm:modal-middle">
+        <div class="modal-box bg-white border-none shadow-2xl rounded-[32px] p-8 relative overflow-hidden">
+          <!-- Background decoration -->
+          <div class="absolute -top-24 -right-24 w-48 h-48 bg-[#f5a64b]/10 rounded-full blur-3xl"></div>
+          <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-[#f5a64b]/5 rounded-full blur-3xl"></div>
+
+          <!-- Close button top right -->
+          <form method="dialog">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-4 top-4 text-gray-400 hover:text-gray-600 transition-colors">✕</button>
+          </form>
+
+          <div class="flex flex-col items-center text-center gap-6 relative z-10">
+            <div id="modal-icon-container" class="w-20 h-20 rounded-[24px] flex items-center justify-center text-4xl transform rotate-3 transition-transform hover:rotate-0 duration-300">
+              <i id="modal-icon" class="fa-solid fa-circle-info"></i>
+            </div>
+            
+            <div class="space-y-2">
+              <h3 id="modal-title" class="font-bricolage text-3xl font-extrabold tracking-tight text-gray-900">Notification</h3>
+              <p id="modal-message" class="text-gray-500 leading-relaxed text-lg max-w-[280px] mx-auto"></p>
+            </div>
+
+            <div class="modal-action w-full mt-2">
+              <form method="dialog" class="w-full">
+                <button class="btn border-none w-full rounded-2xl text-white font-bold h-14 text-lg shadow-lg shadow-[#f5a64b]/20 hover:shadow-[#f5a64b]/40 transition-all duration-300" style="background-color: #f5a64b;">
+                  D'accord
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        <form method="dialog" class="modal-backdrop bg-black/40 backdrop-blur-sm">
+          <button class="cursor-default outline-none">close</button>
+        </form>
+      </dialog>
+    `;
+    document.body.appendChild(modalContainer);
+  }
+
+  const modal = document.getElementById('alert_modal_element');
+  const titleEl = document.getElementById('modal-title');
+  const messageEl = document.getElementById('modal-message');
+  const iconEl = document.getElementById('modal-icon');
+  const iconCont = document.getElementById('modal-icon-container');
+
+  // Set message
+  messageEl.textContent = message;
+
+  // Set type-specific styles
+  iconCont.className = 'w-20 h-20 rounded-[24px] flex items-center justify-center text-4xl transform rotate-3 transition-transform hover:rotate-0 duration-300';
+  
+  const msgLower = message.toLowerCase();
+  const isError = type === 'error' || 
+                  msgLower.includes('erreur') || 
+                  msgLower.includes('impossible') || 
+                  msgLower.includes('échouée') || 
+                  msgLower.includes('échec') || 
+                  msgLower.includes('incorrect') || 
+                  msgLower.includes('invalide') || 
+                  msgLower.includes('manquant') || 
+                  message.includes('❌');
+                  
+  const isSuccess = type === 'success' || 
+                    msgLower.includes('succès') || 
+                    msgLower.includes('félicitations') || 
+                    msgLower.includes('bravo') || 
+                    msgLower.includes('réussie') || 
+                    msgLower.includes('réussi') || 
+                    msgLower.includes('terminé') || 
+                    msgLower.includes('envoyée') || 
+                    msgLower.includes('confirmé') || 
+                    message.includes('✅') || 
+                    message.includes('✓') ||
+                    message.includes('success');
+
+  if (isError) {
+    titleEl.textContent = 'Oups !';
+    iconEl.className = 'fa-solid fa-circle-xmark';
+    iconCont.classList.add('bg-red-50', 'text-red-500');
+  } else if (isSuccess) {
+    titleEl.textContent = 'Génial !';
+    iconEl.className = 'fa-solid fa-circle-check';
+    iconCont.classList.add('bg-green-50', 'text-green-500');
+  } else {
+    titleEl.textContent = 'Notification';
+    iconEl.className = 'fa-solid fa-circle-info';
+    iconCont.classList.add('bg-[#f5a64b]/10', 'text-[#f5a64b]');
+  }
+
+  modal.showModal();
+}
+
+// Make it global so it can be used easily everywhere
+window.showAlert = showAlert;
+
+// Override native alert to use our custom modal
+window.alert = function(message) {
+  showAlert(message);
+};

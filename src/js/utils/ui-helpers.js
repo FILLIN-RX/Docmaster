@@ -193,15 +193,15 @@ export function showAlert(message, type = 'info') {
     modalContainer = document.createElement('div');
     modalContainer.id = 'global-alert-modal';
     modalContainer.innerHTML = `
-      <dialog id="alert_modal_element" class="modal modal-bottom sm:modal-middle">
-        <div class="modal-box bg-white border-none shadow-2xl rounded-[32px] p-8 relative overflow-hidden">
+      <dialog id="alert_modal_element" class="modal fixed inset-0 w-full h-full z-[999] flex items-center justify-center p-4 border-none bg-transparent outline-none">
+        <div class="modal-box bg-white border-none shadow-2xl rounded-[32px] p-8 relative overflow-hidden max-w-sm w-full transform transition-all duration-300 scale-100">
           <!-- Background decoration -->
           <div class="absolute -top-24 -right-24 w-48 h-48 bg-[#f5a64b]/10 rounded-full blur-3xl"></div>
           <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-[#f5a64b]/5 rounded-full blur-3xl"></div>
 
           <!-- Close button top right -->
           <form method="dialog">
-            <button class="btn btn-sm btn-circle btn-ghost absolute right-4 top-4 text-gray-400 hover:text-gray-600 transition-colors">✕</button>
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-4 top-4 text-gray-400 hover:text-gray-600 transition-colors z-20">✕</button>
           </form>
 
           <div class="flex flex-col items-center text-center gap-6 relative z-10">
@@ -223,8 +223,8 @@ export function showAlert(message, type = 'info') {
             </div>
           </div>
         </div>
-        <form method="dialog" class="modal-backdrop bg-black/40 backdrop-blur-sm">
-          <button class="cursor-default outline-none">close</button>
+        <form method="dialog" class="modal-backdrop fixed inset-0 bg-black/40 backdrop-blur-sm -z-10">
+          <button class="w-full h-full cursor-default outline-none">close</button>
         </form>
       </dialog>
     `;

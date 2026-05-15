@@ -170,12 +170,28 @@ document.addEventListener("DOMContentLoaded", () => {
           if (result.success) {
             const data = result.data;
             if (data.status === 'PENDING_PAYMENT') {
-              alert(data.message); // "Paiement initié. Veuillez valider sur votre téléphone."
-              // We could show a specific "Waiting for payment" UI here
+              // Update modal to "Waiting" state
+              const flow = document.getElementById("paymentFlow");
+              if (flow) {
+                flow.innerHTML = `
+                  <div class="text-center py-10 space-y-6 animate-fade-in">
+                    <div class="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <div>
+                      <p class="font-bricolage text-lg font-black text-slate-800">Validation en cours...</p>
+                      <p class="text-sm text-slate-500 mt-2">Veuillez valider l'opération sur votre téléphone pour activer votre abonnement.</p>
+                    </div>
+                  </div>
+                `;
+              }
+              if (btn) btn.classList.add('hidden');
+
+              // Start Polling
+              startSubscriptionPolling();
             } else {
               alert(`Félicitations !\nVotre abonnement "${currentPlanData.nom}" est maintenant actif.`);
+              window.closeSubscriptionModal();
+              window.location.reload();
             }
-            window.closeSubscriptionModal();
           } else {
             alert(result.message);
           }
@@ -188,6 +204,31 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   };
+
+  function startSubscriptionPolling() {
+    const pollInterval = setInterval(async () => {
+      try {
+        console.log('🔍 [Subscription] Polling for payment status...');
+        const result = await getUserSubscriptionUsage();
+        
+        if (result.success && result.data) {
+          const usage = result.data;
+          if (usage.subscription_id) {
+             console.log('🎉 [Subscription] Payment confirmed!');
+             clearInterval(pollInterval);
+             alert(`Félicitations !\nVotre abonnement "${usage.plan_name}" est maintenant actif.`);
+             window.closeSubscriptionModal();
+             window.location.reload();
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ [Subscription] Polling error:', error);
+      }
+    }, 5000);
+
+    // Timeout after 5 minutes
+    setTimeout(() => clearInterval(pollInterval), 300000);
+  }
 
   function getFullNumber() {
     if (!iti) {

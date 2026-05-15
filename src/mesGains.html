@@ -129,6 +129,17 @@ body { display: flex; }
   <script type="module" src="/js/utils/ui-helpers.js"></script>
 <div class="sb-overlay" id="overlay" onclick="closeSb()"></div>
 
+<!-- ══ LOADING OVERLAY ══ -->
+<div id="page-loader" class="fixed inset-0 z-[100] bg-bgMain/80 backdrop-blur-md flex items-center justify-center transition-all duration-500 opacity-0 pointer-events-none">
+  <div class="flex flex-col items-center gap-4">
+    <div class="relative w-16 h-16">
+      <div class="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
+      <div class="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"></div>
+    </div>
+    <p class="font-bricolage text-primary font-bold animate-pulse">Chargement...</p>
+  </div>
+</div>
+
 <!-- ══ SIDEBAR ══ -->
 <div id="sidebar-root"></div>
 
@@ -167,7 +178,7 @@ body { display: flex; }
         <div class="flex items-start justify-between mb-5 relative z-10">
           <div>
             <p class="text-white/60 text-[12px] font-medium uppercase tracking-widest mb-1">Solde disponible</p>
-            <p class="font-bricolage text-4xl font-extrabold tracking-tight" id="balance-display">150 <span class="text-2xl font-bold text-white/70">XAF</span></p>
+            <p class="font-bricolage text-4xl font-extrabold tracking-tight" id="balance-display">0 <span class="text-2xl font-bold text-white/70">XAF</span></p>
           </div>
           <div class="w-11 h-11 rounded-[13px] bg-white/10 border border-white/15 flex items-center justify-center">
             <i class="fa-solid fa-sack-dollar text-primary text-lg"></i>
@@ -177,7 +188,7 @@ body { display: flex; }
         <div class="relative z-10 mb-5">
           <div class="flex justify-between text-[11.5px] mb-1.5">
             <span class="text-white/60 font-medium">Progrès vers le prochain retrait</span>
-            <span class="text-white font-bold">150 / 500 XAF</span>
+            <span class="text-white font-bold">0 / 500 XAF</span>
           </div>
           <div class="prog-track bg-white/15">
             <div class="prog-fill bg-gradient-to-r from-primary to-primary-dark" style="width:30%"></div>
@@ -201,28 +212,28 @@ body { display: flex; }
           <div class="w-9 h-9 rounded-[10px] bg-green-light flex items-center justify-center mb-3">
             <i class="fa-solid fa-file-circle-check text-green-mid text-sm"></i>
           </div>
-          <p class="font-bricolage text-2xl font-extrabold text-textMain leading-none mb-1">8</p>
+          <p class="font-bricolage text-2xl font-extrabold text-textMain leading-none mb-1">0</p>
           <p class="text-[11.5px] text-textMuted font-medium leading-snug">Documents retrouvés</p>
         </div>
         <div class="stat-card bg-white border border-borderMain rounded-[16px] p-4 cursor-default">
           <div class="w-9 h-9 rounded-[10px] bg-primary/10 flex items-center justify-center mb-3">
             <i class="fa-solid fa-handshake text-primary text-sm"></i>
           </div>
-          <p class="font-bricolage text-2xl font-extrabold text-textMain leading-none mb-1">5</p>
+          <p class="font-bricolage text-2xl font-extrabold text-textMain leading-none mb-1">0</p>
           <p class="text-[11.5px] text-textMuted font-medium leading-snug">Documents remis</p>
         </div>
         <div class="stat-card bg-white border border-borderMain rounded-[16px] p-4 cursor-default">
           <div class="w-9 h-9 rounded-[10px] bg-amber-50 flex items-center justify-center mb-3">
             <i class="fa-solid fa-coins text-amber-500 text-sm"></i>
           </div>
-          <p class="font-bricolage text-2xl font-extrabold text-textMain leading-none mb-1">230</p>
+          <p class="font-bricolage text-2xl font-extrabold text-textMain leading-none mb-1">0</p>
           <p class="text-[11.5px] text-textMuted font-medium leading-snug">XAF gagnés total</p>
         </div>
         <div class="stat-card bg-white border border-borderMain rounded-[16px] p-4 cursor-default">
           <div class="w-9 h-9 rounded-[10px] bg-blue-50 flex items-center justify-center mb-3">
             <i class="fa-solid fa-arrow-up-right-from-square text-blue-400 text-sm"></i>
           </div>
-          <p class="font-bricolage text-2xl font-extrabold text-textMain leading-none mb-1">80</p>
+          <p class="font-bricolage text-2xl font-extrabold text-textMain leading-none mb-1">0</p>
           <p class="text-[11.5px] text-textMuted font-medium leading-snug">XAF retirés</p>
         </div>
       </div>
@@ -239,43 +250,43 @@ body { display: flex; }
               <p class="text-[11px] text-textMuted">Programme de fidélité</p>
             </div>
           </div>
-          <span class="font-bricolage text-xl font-extrabold text-primary">340 pts</span>
+          <span class="font-bricolage text-xl font-extrabold text-primary">0 pts</span>
         </div>
         <!-- Points breakdown -->
         <div class="flex flex-col gap-2 mb-4">
           <div>
             <div class="flex justify-between text-[12px] mb-1">
-              <span class="text-textMuted font-medium">Documents déclarés <span class="text-textMain font-semibold">(+50 pts × 4)</span></span>
-              <span class="font-bold text-textMain">200 pts</span>
+              <span class="text-textMuted font-medium">Documents déclarés <span class="text-textMain font-semibold">(+0 pts × 0)</span></span>
+              <span class="font-bold text-textMain">0 pts</span>
             </div>
-            <div class="prog-track"><div class="prog-fill bg-primary" style="width:59%"></div></div>
+            <div class="prog-track"><div class="prog-fill bg-primary" style="width:0%"></div></div>
           </div>
           <div>
             <div class="flex justify-between text-[12px] mb-1">
-              <span class="text-textMuted font-medium">Documents remis <span class="text-textMain font-semibold">(+20 pts × 5)</span></span>
-              <span class="font-bold text-textMain">100 pts</span>
+              <span class="text-textMuted font-medium">Documents remis <span class="text-textMain font-semibold">(+0 pts × 0)</span></span>
+              <span class="font-bold text-textMain">0 pts</span>
             </div>
-            <div class="prog-track"><div class="prog-fill bg-green-mid" style="width:29%"></div></div>
+            <div class="prog-track"><div class="prog-fill bg-green-mid" style="width:0%"></div></div>
           </div>
           <div>
             <div class="flex justify-between text-[12px] mb-1">
-              <span class="text-textMuted font-medium">Parrainage <span class="text-textMain font-semibold">(+40 pts × 1)</span></span>
-              <span class="font-bold text-textMain">40 pts</span>
+              <span class="text-textMuted font-medium">Parrainage <span class="text-textMain font-semibold">(+0 pts × 0)</span></span>
+              <span class="font-bold text-textMain">0 pts</span>
             </div>
-            <div class="prog-track"><div class="prog-fill bg-amber-400" style="width:12%"></div></div>
+            <div class="prog-track"><div class="prog-fill bg-amber-400" style="width:0%"></div></div>
           </div>
         </div>
         <div class="flex items-center justify-between p-3 bg-primary/5 border border-primary/15 rounded-[12px]">
           <div class="flex items-center gap-2">
             <i class="fa-solid fa-trophy text-primary text-sm"></i>
             <div>
-              <p class="text-[12.5px] font-bold text-textMain">Niveau Argent</p>
-              <p class="text-[11px] text-textMuted">160 pts pour atteindre Or</p>
+              <p class="text-[12.5px] font-bold text-textMain">Chargement...</p>
+              <p class="text-[11px] text-textMuted">Calcule des points...</p>
             </div>
           </div>
           <div class="text-right">
             <p class="text-[11px] text-textMuted">Prochain niveau</p>
-            <p class="text-[13px] font-bold text-primary">500 pts</p>
+            <p class="text-[13px] font-bold text-primary">... pts</p>
           </div>
         </div>
       </div>

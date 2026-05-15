@@ -12,45 +12,74 @@ import { authMiddleware } from '../middleware/auth.middleware.ts';
 const router = Router();
 
 /**
- * @route GET /api/deletion-requests/me
- * @desc Get user's deletion requests
- * @access Private
+ * @swagger
+ * tags:
+ *   name: DeletionRequests
+ *   description: Gestion des demandes de suppression de déclarations
+ */
+
+/**
+ * @swagger
+ * /deletion-requests/me:
+ *   get:
+ *     summary: Lister mes demandes de suppression
+ *     tags: [DeletionRequests]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste récupérée
  */
 router.get('/me', authMiddleware, getMyDeletionRequests);
 
 /**
- * @route GET /api/deletion-requests/:id
- * @desc Get a specific deletion request
- * @access Private
+ * @swagger
+ * /deletion-requests/{id}:
+ *   get:
+ *     summary: Détails d'une demande de suppression
+ *     tags: [DeletionRequests]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Détails récupérés
  */
 router.get('/:id', authMiddleware, getDeletionRequestById);
 
 /**
- * @route POST /api/declarations/:id/request-deletion
- * @desc Request declaration deletion with reason
- * @access Private
+ * @swagger
+ * /deletion-requests/declarations/{id}/request-deletion:
+ *   post:
+ *     summary: Demander la suppression d'une déclaration
+ *     tags: [DeletionRequests]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [reason]
+ *             properties:
+ *               reason: { type: string, example: "Document retrouvé ailleurs" }
+ *     responses:
+ *       201:
+ *         description: Demande envoyée
  */
 router.post('/declarations/:id/request-deletion', authMiddleware, requestDeletionDeclaration);
 
-/**
- * @route GET /api/admin/deletion-requests
- * @desc Get all pending deletion requests (admin only)
- * @access Admin
- */
+// Admin routes
 router.get('/admin/pending', authMiddleware, getPendingDeletionRequests);
-
-/**
- * @route POST /api/admin/deletion-requests/:id/approve
- * @desc Approve a deletion request (admin only)
- * @access Admin
- */
 router.post('/admin/:id/approve', authMiddleware, approveDeletionRequest);
-
-/**
- * @route POST /api/admin/deletion-requests/:id/reject
- * @desc Reject a deletion request (admin only)
- * @access Admin
- */
 router.post('/admin/:id/reject', authMiddleware, rejectDeletionRequest);
 
 export default router;

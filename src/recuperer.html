@@ -347,19 +347,19 @@
 
         <div class="space-y-4">
           <div id="recoveryStep1" class="grid grid-cols-2 gap-4">
-            <button onclick="goToRecoveryStep2()" class="flex flex-col items-center gap-3 border-2 border-slate-100 bg-white rounded-2xl p-4 hover:border-primary transition-all">
+            <button onclick="goToRecoveryStep2('ORANGE_MONEY')" class="flex flex-col items-center gap-3 border-2 border-slate-100 bg-white rounded-2xl p-4 hover:border-primary transition-all">
               <img src="./assets/images/orange_money.jpg" class="w-10 h-10 rounded shadow-sm"/>
-              <span class="font-bold text-slate-700 text-[11px]">Mobile Money</span>
+              <span class="font-bold text-slate-700 text-[11px]">Orange Money</span>
             </button>
-            <button onclick="goToRecoveryStep2()" class="flex flex-col items-center gap-3 border-2 border-slate-100 bg-white rounded-2xl p-4 hover:border-primary transition-all">
+            <button onclick="goToRecoveryStep2('MTN_MOMO')" class="flex flex-col items-center gap-3 border-2 border-slate-100 bg-white rounded-2xl p-4 hover:border-primary transition-all">
               <img src="./assets/images/paypoint (2).png" class="w-10 h-10 rounded shadow-sm"/>
-              <span class="font-bold text-slate-700 text-[11px]">PayPoint</span>
+              <span class="font-bold text-slate-700 text-[11px]">MTN MoMo</span>
             </button>
           </div>
 
           <div id="recoveryStep2" class="hidden space-y-3">
+            <p class="text-[11px] text-textMuted font-bold uppercase mb-1 px-1">Numéro de téléphone Orange/MTN</p>
             <input type="tel" id="recupPhone" placeholder="6xx xxx xxx" class="w-full border-2 border-slate-100 rounded-xl p-3.5 outline-none focus:border-primary font-bold bg-slate-50">
-            <input type="password" maxlength="4" placeholder="Code PIN (1234)" class="w-full border-2 border-slate-100 rounded-xl p-3.5 outline-none focus:border-primary font-bold bg-slate-50">
           </div>
 
           <button id="recoverySubmitBtn" onclick="processRecoveryPayment()" class="w-full mt-2 bg-primary text-white py-4 rounded-2xl font-black text-lg">

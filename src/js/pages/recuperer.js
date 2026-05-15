@@ -52,7 +52,8 @@ function setupEventListeners() {
         }, 300);
     };
 
-    const goToRecoveryStep2 = () => {
+    const goToRecoveryStep2 = (method = 'MTN_MOMO') => {
+        window.selectedRecoveryMethod = method;
         document.getElementById("recoveryStep1").classList.add("hidden");
         document.getElementById("recoveryStep2").classList.remove("hidden");
         document.getElementById("recoverySubmitBtn").innerText = "Confirmer le paiement";
@@ -206,17 +207,38 @@ async function processRecoveryPayment() {
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Traitement...';
 
+        const phone = document.getElementById("recupPhone").value;
+        if (!phone || phone.length < 9) {
+            alert("Veuillez entrer un numéro de téléphone valide.");
+            btn.disabled = false;
+            btn.innerText = originalText;
+            return;
+        }
+
         console.log('💳 [Recuperer] Processing payment for:', docId);
         const result = await payRecoveryFee({
             docId,
             amount: window.currentRecoveryPrice || 5000,
-            paymentMethod: 'MOBILE_MONEY'
+            paymentMethod: window.selectedRecoveryMethod || 'MTN_MOMO',
+            phone: phone
         });
 
         if (result.success) {
-            console.log('✅ [Recuperer] Payment successful!');
-            window.closeRecoveryModal();
-            showSuccessState(result.data.verificationCode);
+            console.log('✅ [Recuperer] Payment initiated:', result.data.nokashId);
+            
+            // Switch to "Waiting" state in the modal
+            const step2 = document.getElementById("recoveryStep2");
+            step2.innerHTML = `
+                <div class="text-center py-6 space-y-4">
+                    <div class="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p class="font-bold text-textMain">En attente de validation sur votre téléphone...</p>
+                    <p class="text-[12px] text-textMuted">Veuillez valider la transaction sur votre mobile pour recevoir votre code de retrait.</p>
+                </div>
+            `;
+            btn.classList.add('hidden'); // Hide button while waiting
+            
+            // Start polling for status
+            startPaymentPolling(docId);
         } else {
             alert(result.message || "Erreur lors du processus de récupération.");
             btn.disabled = false;
@@ -228,6 +250,38 @@ async function processRecoveryPayment() {
         btn.disabled = false;
         btn.innerText = originalText;
     }
+}
+
+/**
+ * Poll the backend to check if the payment has been confirmed
+ */
+function startPaymentPolling(docId) {
+    const pollInterval = setInterval(async () => {
+        try {
+            console.log('🔍 [Recuperer] Polling for payment status...');
+            const result = await getDeclarationById(docId);
+            
+            if (result.success) {
+                const data = result.data;
+                if (data.claim && data.claim.status === 'PAID') {
+                    console.log('🎉 [Recuperer] Payment confirmed!');
+                    clearInterval(pollInterval);
+                    window.closeRecoveryModal();
+                    showSuccessState(data.claim.verification_code);
+                    
+                    // Trigger a celebratory sound or notification if desired
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ [Recuperer] Polling error:', error);
+        }
+    }, 5000); // Check every 5 seconds
+
+    // Stop polling after 5 minutes (timeout)
+    setTimeout(() => {
+        clearInterval(pollInterval);
+        console.log('⏹️ [Recuperer] Polling stopped (timeout).');
+    }, 300000);
 }
 
 /**

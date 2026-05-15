@@ -11,6 +11,8 @@ import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
 import dotenv from "dotenv";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./src/config/swagger.ts";
 import { pool } from "./src/database/db.js";
 import authRoutes from "./src/routes/auth.routes.ts";
 import documentRoutes from "./src/routes/document.routes.ts";
@@ -41,7 +43,7 @@ export function createApp(): Application {
   // SECURITY MIDDLEWARE
   // ═════════════════════════════════════════════════════════════════
 
-  // Helmet - Security headers with CSP adjustment for local images
+  // Helmet - Security headers with CSP adjustment for local images and Swagger UI
   app.use(
     helmet({
       crossOriginResourcePolicy: { policy: "cross-origin" },
@@ -53,7 +55,10 @@ export function createApp(): Application {
             "data:",
             "http://localhost:5000",
             "http://127.0.0.1:5000",
+            "validator.swagger.io"
           ],
+          "script-src": ["'self'", "'unsafe-inline'"],
+          "style-src": ["'self'", "'unsafe-inline'"],
         },
       },
     }),
@@ -152,6 +157,17 @@ export function createApp(): Application {
       });
     }
   });
+
+  // ═════════════════════════════════════════════════════════════════
+  // SWAGGER DOCUMENTATION
+  // ═════════════════════════════════════════════════════════════════
+
+  /**
+   * Serve Swagger API Documentation
+   * Accessible at /api-docs
+   */
+  console.log('📑 [Swagger] Spec generated:', !!swaggerSpec);
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
   // ═════════════════════════════════════════════════════════════════
   // API ROUTES

@@ -375,39 +375,52 @@ export class DeclarationService {
     userId: string,
     amount: number,
     method: string,
+    phone?: string
   ) {
     // 1. Check declaration
-    const declaration =
-      await this.declarationRepository.findById(declarationId);
+    const declaration = await this.declarationRepository.findById(declarationId);
     if (!declaration) throw new Error("Déclaration introuvable");
-    if (declaration.reporter_id !== userId)
-      throw new Error("Action non autorisée");
+    if (declaration.reporter_id !== userId) throw new Error("Action non autorisée");
 
-    // 2. Create Transaction (SUCCESS mock)
-    const transaction = await this.transactionRepository.create({
-      user_id: userId,
-      amount: amount,
-      status: "SUCCESS",
-      payment_method: method || "MOBILE_MONEY",
-      type: "recovery_fee",
-      metadata: { declarationId },
+    // 2. Resolve Document Type for real price
+    let docType = null;
+    if (declaration.doc_type && this.isUuid(declaration.doc_type)) {
+      docType = await this.docTypeRepository.findById(declaration.doc_type);
+    }
+    const finalAmount = docType ? Number(docType.prix_retrouvaille) : (amount || 5000);
+
+    // 3. Initiate Nokash Payment
+    const orderId = `REC-${uuidv4().substring(0, 8)}`;
+    const nokashRes = await nokashService.initiatePayment({
+      payment_method: method === 'ORANGE_MONEY' ? 'ORANGE_MONEY' : 'MTN_MOMO',
+      amount: finalAmount,
+      order_id: orderId,
+      user_phone: phone,
+      country: 'CM'
     });
 
-    // 3. Find the associated claim to get the code
-    const claim = await this.claimRepository.findByDocIdAndOwner(
-      declarationId,
-      userId,
-    );
-    if (!claim) throw new Error("Aucune réclamation active pour ce document");
+    if (nokashRes.status !== 'REQUEST_OK') {
+      throw new Error(`Nokash: ${nokashRes.message || 'Erreur lors de l\'initialisation'}`);
+    }
 
-    // 4. Update match/declaration status if needed
-    // We could update to 'RECOVERY_PAID' or similar, but for now we keep MATCHED
-    // as the UI relies on statuses to show/hide steps.
+    // 4. Create PENDING Transaction
+    const transaction = await this.transactionRepository.create({
+      user_id: userId,
+      amount: finalAmount,
+      status: "PENDING",
+      payment_method: method || "MOBILE_MONEY",
+      type: "recovery_fee",
+      external_ref: nokashRes.data.id,
+      metadata: { docId: declarationId },
+    });
 
     return {
       success: true,
-      transactionId: transaction.id,
-      verificationCode: claim.verification_code,
+      message: 'Paiement initié. Veuillez valider sur votre téléphone.',
+      data: {
+        nokashId: nokashRes.data.id,
+        orderId
+      }
     };
   }
 

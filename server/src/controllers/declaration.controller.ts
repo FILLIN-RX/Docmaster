@@ -202,14 +202,14 @@ export const getDeclarationById = async (req: Request, res: Response) => {
 export const initiateRecovery = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { amount, method } = req.body;
+    const { amount, method, phone } = req.body;
     const userId = (req as any).user?.id;
 
     if (!userId) {
       return res.status(401).json({ success: false, message: 'Non authentifié' });
     }
 
-    const result = await declarationService.initiateRecovery(id as string, userId, Number(amount), method);
+    const result = await declarationService.initiateRecovery(id as string, userId, Number(amount), method, phone);
     res.json(result);
   } catch (error: any) {
     console.error('❌ Erreur initiation récupération:', error);

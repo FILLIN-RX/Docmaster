@@ -10,7 +10,6 @@ import { authMiddleware } from '../middleware/auth.middleware.ts';
 
 const router = Router();
 
-// Middleware de vérification admin
 const adminMiddleware = (req: any, res: any, next: any) => {
     if (req.user && req.user.role === 'ADMIN') {
         next();
@@ -19,8 +18,33 @@ const adminMiddleware = (req: any, res: any, next: any) => {
     }
 };
 
-// Public-ish routes for plans (must be authenticated)
+/**
+ * @swagger
+ * tags:
+ *   name: Plans
+ *   description: Gestion des forfaits d'abonnement
+ */
+
+/**
+ * @swagger
+ * /plans:
+ *   get:
+ *     summary: Lister tous les forfaits disponibles
+ *     tags: [Plans]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste récupérée
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data: [{ id: "premium", name: "Premium", price_monthly: 1000 }]
+ */
 router.get('/', authMiddleware, getAllPlans);
+
+// Admin routes
 router.get('/:id', authMiddleware, adminMiddleware, getPlanById);
 router.get('/features/definitions', authMiddleware, adminMiddleware, getFeatureDefinitions);
 router.put('/:id', authMiddleware, adminMiddleware, updatePlan);

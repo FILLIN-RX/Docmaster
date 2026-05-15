@@ -8,6 +8,15 @@ http://localhost:5000/api
 
 ---
 
+## Documentation Interactive (Swagger)
+
+Accédez à la documentation interactive et testez l'API ici :
+```
+http://localhost:5000/api-docs
+```
+
+---
+
 ## Authentication Endpoints
 
 ### 1. Register User
@@ -338,13 +347,13 @@ Submit a new lost document declaration. Supports `multipart/form-data`.
 
 #### Request Body (Form Data)
 
-| Key | Type | Description |
-| :--- | :--- | :--- |
-| `doc_type` | string | CNI, Passeport, etc. |
-| `nom_complet` | string | Name on doc |
-| `document_number`| string | Unique number |
-| `ville` | string | City of loss |
-| `photo_recto` | file | Optional photo |
+| Key               | Type   | Description          |
+| :---------------- | :----- | :------------------- |
+| `doc_type`        | string | CNI, Passeport, etc. |
+| `nom_complet`     | string | Name on doc          |
+| `document_number` | string | Unique number        |
+| `ville`           | string | City of loss         |
+| `photo_recto`     | file   | Optional photo       |
 
 ### 2. Submit Found Declaration
 

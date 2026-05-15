@@ -5,16 +5,64 @@ import { authMiddleware } from '../middleware/auth.middleware.ts';
 const router = Router();
 const notificationController = new NotificationController();
 
-// All notification routes require authentication
+/**
+ * @swagger
+ * tags:
+ *   name: Notifications
+ *   description: Gestion des notifications utilisateur
+ */
+
 router.use(authMiddleware);
 
-// GET /api/notifications - List user notifications
+/**
+ * @swagger
+ * /notifications:
+ *   get:
+ *     summary: Lister mes notifications
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste récupérée
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data: [{ id: "uuid", title: "Document trouvé", message: "...", is_read: false }]
+ */
 router.get('/', notificationController.getMyNotifications);
 
-// PATCH /api/notifications/:id/read - Mark as read
+/**
+ * @swagger
+ * /notifications/{id}/read:
+ *   patch:
+ *     summary: Marquer une notification comme lue
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Succès
+ */
 router.patch('/:id/read', notificationController.markAsRead);
 
-// PATCH /api/notifications/read-all - Mark all as read
+/**
+ * @swagger
+ * /notifications/read-all:
+ *   patch:
+ *     summary: Marquer toutes les notifications comme lues
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Succès
+ */
 router.patch('/read-all', notificationController.markAllRead);
 
 export default router;

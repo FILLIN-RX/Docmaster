@@ -53,6 +53,8 @@ class SubscriptionService {
         country: 'CM'
       });
 
+      console.log('🚀 [Nokash Response]', JSON.stringify(nokashRes, null, 2));
+
       if (nokashRes.status !== 'REQUEST_OK') {
         throw new Error(`Nokash: ${nokashRes.message || 'Erreur lors de l\'initialisation'}`);
       }

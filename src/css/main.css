@@ -194,7 +194,54 @@ img {
   background: var(--card);
   padding: 12px;
   border-radius: 12px;
+:root { --bottom-bar: 76px; }
   box-shadow: var(--shadow);
+@media (max-width: 767px) {
+  /* Reserve space at page bottoms so fixed mobile nav doesn't cover content */
+  .page-body, #pageBody, .main-content, main, .contain, .containr, .container {
+    padding-bottom: calc(var(--bottom-bar) + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Reduce topbar text density on small screens */
+  .topbar nav { font-size: 11px !important; }
+  .topbar h1 { font-size: 16px !important; line-height:1.05; }
+  /* Hide extended username in compact header */
+  #topName { display: none !important; }
+
+  /* Hide profile avatar on mobile topbars: target the last child inside the right-side group */
+  .topbar > div:last-child > *:last-child { display: none !important; }
+
+  /* Also hide common ids used for initials/top avatar */
+  #topInitial, #userInitial, .top-avatar { display: none !important; }
+
+  /* Ensure modal bottom sheets account for safe area */
+  .modal, .modal-bg, .detail-panel, .detail-overlay { padding-bottom: env(safe-area-inset-bottom, 0px); }
+}
+
+@supports (padding: env(safe-area-inset-bottom)) {
+  html { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+/* Button utilities to avoid inline JS hover (reduces forced reflow) */
+.icon-btn {
+  width:36px;height:36px;border-radius:10px;border:1.5px solid #E0D5C4;background:white;color:#6B7280;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;transition:color .12s,border-color .12s,background .12s;
+}
+.icon-btn:hover{border-color:#F5A64B;color:#F5A64B}
+
+.btn-primary {
+  width:100%;margin-bottom:10px;padding:13px 16px;background:#F5A64B;border:none;border-radius:12px;font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:800;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(245,166,75,.35);transition:background .15s;
+}
+.btn-primary:hover{background:#D98A30}
+
+.btn-ghost { flex:1;padding:12px;border:1.5px solid #E0D5C4;background:white;border-radius:12px;font-family:'Poppins',sans-serif;font-size:13.5px;font-weight:600;color:#374151;cursor:pointer;transition:background .15s }
+.btn-ghost:hover{background:#F9F6F1}
+
+.btn-solid { flex:1;padding:12px;background:#1E3A2F;border:none;border-radius:12px;font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:800;color:white;cursor:pointer;transition:background .15s }
+.btn-solid:hover{background:#2D5A42}
+
+.btn-danger { flex:1;padding:12px;background:#ef4444;color:white;border:none;border-radius:12px;font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(239,68,68,.25);transition:background .12s }
+.btn-danger:hover{background:#f05252}
+
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1271,6 +1318,16 @@ hr {
   }
   .containr {
     padding: 0 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+
+  body {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom));
   }
 }
 

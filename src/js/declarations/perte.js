@@ -551,7 +551,11 @@ function showStep(step){
   currentStep=Math.max(1,Math.min(totalSteps,step));
   document.querySelectorAll('.form-step').forEach(s=>s.classList.toggle('active',Number(s.dataset.step)===currentStep));
   updateProgressUI();
-  document.getElementById('formLeft').scrollTop=0;
+  if (window.matchMedia('(max-width: 768px)').matches) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    document.getElementById('formLeft').scrollTop=0;
+  }
   if(currentStep===3){ activeDocIdx=0; buildStep2('right'); }
   if(currentStep===5) fillSummary();
   
@@ -624,9 +628,14 @@ function updateProgressUI(){
   document.getElementById('progressBar').style.width=`${(currentStep/totalSteps)*100}%`;
   document.getElementById('stepCounter').textContent=`Étape ${currentStep} / ${totalSteps}`;
   const prev=document.getElementById('prevStepBtn'),next=document.getElementById('nextStepBtn'),actions=document.getElementById('stepActions');
+  const wizardControls=document.getElementById('wizardControls');
+  const isMobile=window.matchMedia('(max-width: 768px)').matches;
   prev.disabled=currentStep===1; prev.style.opacity=currentStep===1?'0.45':'1';
   next.style.display=currentStep===totalSteps?'none':'flex';
   actions.classList.toggle('active',currentStep===totalSteps);
+  if (wizardControls) {
+    wizardControls.style.display = isMobile && currentStep === totalSteps ? 'none' : 'flex';
+  }
 }
 
 function goToNextStep(){

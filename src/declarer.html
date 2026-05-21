@@ -3,11 +3,15 @@
 <head>
   <script type="module" src="/js/utils/page-loader.js"></script>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1E3A2F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>DocMaster – Déclarer un document perdu</title>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="./css/input.css" />
+  <link rel="stylesheet" href="/css/main.css" />
   <script src="https://cdn.tailwindcss.com"></script>
    <script defer src="./js/ui/sidebar.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -174,15 +178,140 @@
     .place-tag:hover{border-color:#F5A64B;background:#FEF0DC;color:#D98A30}
     .place-tag.active{border-color:#F5A64B;background:#F5A64B;color:white}
 
-    /* ── Success ── */
-    .success-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);z-index:100;align-items:center;justify-content:center}
-    .success-overlay.show{display:flex;animation:fadeIn .3s ease}
-    .success-card{background:white;border-radius:24px;padding:44px 40px;max-width:420px;width:90%;text-align:center;animation:popUp .4s cubic-bezier(.34,1.56,.64,1)}
+    /* ── Modals Responsives ── */
+    .success-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      align-items: flex-end;        /* ← Bottom sheet */
+      justify-content: center;
+      padding: 16px;
+      padding-bottom: env(safe-area-inset-bottom, 16px);
+    }
+
+    .success-overlay.show {
+      display: flex;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .success-card {
+      background: white;
+      border-radius: 24px 24px 0 0;  /* ← Arrondi du bas seulement */
+      padding: 32px 24px;
+      max-width: 100%;
+      width: 100%;
+      max-height: 90vh;
+      text-align: center;
+      animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      overflow-y: auto;
+    }
+
+    /* Drag handle (mobile only) */
+    .success-card::before {
+      content: '';
+      display: block;
+      width: 36px;
+      height: 4px;
+      background: #E0D5C4;
+      border-radius: 2px;
+      margin: 0 auto 16px;
+    }
+
+    .confirm-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(30, 58, 47, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 90;
+      align-items: flex-end;        /* ← Bottom sheet */
+      justify-content: center;
+      padding: 16px;
+      padding-bottom: env(safe-area-inset-bottom, 16px);
+    }
+
+    .confirm-overlay.show {
+      display: flex;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .confirm-card {
+      background: white;
+      border-radius: 24px 24px 0 0;  /* ← Arrondi du bas seulement */
+      padding: 32px 24px;
+      max-width: 100%;
+      width: 100%;
+      max-height: 90vh;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+    }
+
+    /* Drag handle (mobile only) */
+    .confirm-card::before {
+      content: '';
+      display: block;
+      width: 36px;
+      height: 4px;
+      background: #E0D5C4;
+      border-radius: 2px;
+      margin: 0 auto 16px;
+    }
+
+    /* DESKTOP (640px+) */
+    @media (min-width: 640px) {
+      .success-overlay {
+        align-items: center;        /* ← Centré */
+        justify-content: center;
+        padding: 20px;
+        padding-bottom: 20px;
+      }
+
+      .success-card {
+        border-radius: 24px;        /* ← Arrondi partout */
+        padding: 44px 40px;
+        max-width: 420px;
+        max-height: 80vh;
+        animation: popUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      /* Retirer drag handle sur desktop */
+      .success-card::before {
+        display: none;
+      }
+
+      .confirm-overlay {
+        align-items: center;        /* ← Centré */
+        justify-content: center;
+        padding: 20px;
+        padding-bottom: 20px;
+      }
+
+      .confirm-card {
+        border-radius: 22px;        /* ← Arrondi partout */
+        padding: 32px 40px;
+        max-width: 400px;
+        max-height: 80vh;
+        animation: popUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      /* Retirer drag handle sur desktop */
+      .confirm-card::before {
+        display: none;
+      }
+    }
+
     .success-icon{width:80px;height:80px;border-radius:50%;background:#E8F5EE;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px}
     .ref-badge{display:inline-block;padding:8px 20px;background:#F2EBD9;border-radius:8px;font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:800;color:#1E3A2F;letter-spacing:.08em;margin:12px 0}
-    .confirm-overlay{display:none;position:fixed;inset:0;background:rgba(30,58,47,.85);backdrop-filter:blur(8px);z-index:90;align-items:center;justify-content:center}
-    .confirm-overlay.show{display:flex;animation:fadeIn .2s ease}
-    .confirm-card{background:white;border-radius:22px;padding:32px;max-width:400px;width:90%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(100%); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     #wizardControls{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:10px;background:white;border:1px solid #EDE7DB;border-radius:14px;padding:10px 14px}
 
@@ -274,7 +403,7 @@
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
-      <button onclick="openNotifModal()" style="width:36px;height:36px;border-radius:10px;border:1.5px solid #E0D5C4;background:white;color:#6B7280;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;" onmouseover="this.style.borderColor='#F5A64B';this.style.color='#F5A64B'" onmouseout="this.style.borderColor='#E0D5C4';this.style.color='#6B7280'">
+      <button class="icon-btn" onclick="openNotifModal()" aria-label="Ouvrir les notifications">
         <i class="fa-solid fa-bell"></i>
         <div id="notifDot" style="position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;border:2px solid white;transition:background 0.3s;"></div>
       </button>
@@ -549,15 +678,19 @@
       <div class="field-group" style="margin-bottom:24px;">
         <div class="field-wrapper">
           <i class="fa-solid fa-lock field-icon"></i>
-          <input type="password" id="confirmPassword" class="field-input" placeholder="Votre mot de passe" style="border-color:#E0D5C4"/>
+          <input type="password" id="confirmPassword" class="field-input" placeholder="Votre mot de passe" autocomplete="current-password"/>
         </div>
         <p id="passwordError" style="display:none;font-size:11px;color:#ef4444;margin-top:4px;font-weight:600;">Mot de passe incorrect</p>
       </div>
     </form>
 
-    <div style="display:flex;gap:10px;">
-      <button onclick="closeConfirmModal()" style="flex:1;padding:12px;border:1.5px solid #E0D5C4;background:white;border-radius:12px;font-family:'Poppins',sans-serif;font-size:13.5px;font-weight:600;color:#374151;cursor:pointer;">Annuler</button>
-      <button id="finalSubmitBtn" onclick="validateAndSubmit()" style="flex:1;padding:12px;background:#ef4444;color:white;border:none;border-radius:12px;font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(239,68,68,.25);">Confirmer</button>
+    <div style="display:flex;flex-direction:column;gap:10px;width:100%;">
+      <button id="finalSubmitBtn" onclick="validateAndSubmit()" style="width:100%;padding:12px 16px;background:#1E3A2F;color:white;border:none;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;">
+        Confirmer
+      </button>
+      <button onclick="closeConfirmModal()" style="width:100%;padding:12px 16px;background:#F2EBD9;color:#374151;border:none;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;">
+        Annuler
+      </button>
     </div>
   </div>
 </div>
@@ -570,12 +703,17 @@
     <p style="font-size:13px;color:#6B7280;line-height:1.6;margin-bottom:14px;">Votre déclaration a été publiée. Vous serez notifié dès qu'un match est trouvé.</p>
     <div class="ref-badge" id="refNumber">DOC-2024-XXXX</div>
     <p style="font-size:11px;color:#9CA3AF;margin-bottom:16px;">Conservez ce numéro de référence.</p>
-    <button id="downloadPdfBtn" onclick="downloadDeclarationPdf()" style="width:100%;margin-bottom:10px;padding:13px 16px;background:#F5A64B;border:none;border-radius:12px;font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:800;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(245,166,75,.35);transition:background .2s;" onmouseover="this.style.background='#D98A30'" onmouseout="this.style.background='#F5A64B'">
-      <i class="fa-solid fa-file-arrow-down"></i> Télécharger la déclaration PDF
-    </button>
-    <div style="display:flex;gap:10px;">
-      <button onclick="resetForm()" style="flex:1;padding:12px;border:1.5px solid #E0D5C4;background:white;border-radius:12px;font-family:'Poppins',sans-serif;font-size:13.5px;font-weight:600;color:#374151;cursor:pointer;" onmouseover="this.style.background='#F9F6F1'" onmouseout="this.style.background='white'">Nouvelle déclaration</button>
-      <button onclick="window.location.href='docDeclares.html'" style="flex:1;padding:12px;background:#1E3A2F;border:none;border-radius:12px;font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:800;color:white;cursor:pointer;" onmouseover="this.style.background='#2D5A42'" onmouseout="this.style.background='#1E3A2F'">Mes déclarations</button>
+    
+    <div style="display:flex;flex-direction:column;gap:10px;width:100%;margin-bottom:12px;">
+      <button id="downloadPdfBtn" onclick="downloadDeclarationPdf()" style="width:100%;padding:12px 16px;background:#1E3A2F;color:white;border:none;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <i class="fa-solid fa-file-arrow-down"></i> Télécharger PDF
+      </button>
+      <button onclick="window.location.href='docDeclares.html'" style="width:100%;padding:12px 16px;background:#F5A64B;color:white;border:none;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;">
+        Mes déclarations
+      </button>
+      <button onclick="resetForm()" style="width:100%;padding:12px 16px;background:#F2EBD9;color:#374151;border:none;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;">
+        Nouvelle déclaration
+      </button>
     </div>
   </div>
 </div>
@@ -586,6 +724,57 @@
   </script>
   
 
+  <script>
+    /**
+     * Contrôler le scroll du body quand les modals sont ouvertes
+     */
+    function manageBodyScroll(shouldDisable) {
+      if (shouldDisable) {
+        document.body.style.overflow = 'hidden';
+        // Sur mobile, empêcher le scroll via touch
+        document.body.style.touchAction = 'none';
+      } else {
+        document.body.style.overflow = '';
+        document.body.style.touchAction = '';
+      }
+    }
+
+    // Intercepter les ouvertures de modal
+    document.addEventListener('DOMContentLoaded', () => {
+      const confirmOverlay = document.getElementById('confirmOverlay');
+      if (confirmOverlay) {
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            if (confirmOverlay.classList.contains('show')) {
+              manageBodyScroll(true);
+            }
+          });
+        });
+        observer.observe(confirmOverlay, { attributes: true, attributeFilter: ['class'] });
+      }
+
+      const successOverlay = document.getElementById('successOverlay');
+      if (successOverlay) {
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            if (successOverlay.classList.contains('show')) {
+              manageBodyScroll(true);
+            }
+          });
+        });
+        observer.observe(successOverlay, { attributes: true, attributeFilter: ['class'] });
+      }
+    });
+
+    // Au fermeture de confirm
+    window.closeConfirmModal = function() {
+      const overlay = document.getElementById('confirmOverlay');
+      if (overlay) {
+        overlay.classList.remove('show');
+        manageBodyScroll(false);
+      }
+    }
+  </script>
   <script>
     window.addEventListener("load", function() {
         var loader = document.getElementById("dm-global-page-loader");

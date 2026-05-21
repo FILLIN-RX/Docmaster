@@ -15,6 +15,7 @@ export class MatchingService {
   private documentRepository: DocumentRepository;
   private claimRepository: ClaimRepository;
   private docTypeRepository: DocumentTypeRepository;
+  private hasNewDeclarations: boolean = true; // Start true to catch up on startup
 
   constructor() {
     this.declarationRepository = new DeclarationRepository();
@@ -23,6 +24,14 @@ export class MatchingService {
     this.documentRepository = new DocumentRepository();
     this.claimRepository = new ClaimRepository();
     this.docTypeRepository = new DocumentTypeRepository();
+  }
+
+  /**
+   * Signal that a new declaration has been added, 
+   * so the next cron job cycle should run.
+   */
+  public notifyNewDeclaration() {
+    this.hasNewDeclarations = true;
   }
 
   /**
@@ -149,7 +158,13 @@ export class MatchingService {
    * Suitable for background jobs
    */
   async runFullMatchingCycle(): Promise<void> {
-    console.log('🔄 [MatchingWorker] Starting full matching cycle...');
+    if (!this.hasNewDeclarations) {
+      return; // Skip cycle if nothing new
+    }
+
+    console.log('🔄 [MatchingWorker] Starting full matching cycle (new data detected)...');
+    this.hasNewDeclarations = false;
+    
     try {
       // Get all active lost declarations
       const query = "SELECT * FROM declarations WHERE declaration_type = 'LOST' AND status = 'SEARCHING'";

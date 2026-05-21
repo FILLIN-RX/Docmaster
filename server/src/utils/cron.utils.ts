@@ -14,7 +14,6 @@ export const initCronJobs = () => {
   // 1. Matching Worker - Runs every 30 seconds
   // Syntax: second minute hour day-of-month month day-of-week
   cron.schedule('*/30 * * * * *', () => {
-    console.log('⏰ [CRON] Starting periodic matching cycle...');
     matchingService.runFullMatchingCycle();
   });
 

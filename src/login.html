@@ -215,14 +215,14 @@
             <label class="field-label"><i class="fa-solid fa-envelope text-primary text-[11px]"></i> Adresse e-mail</label>
             <div class="relative flex items-center group">
               <i class="fa-regular fa-envelope absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none transition-colors group-focus-within:text-primary"></i>
-              <input type="email" placeholder="vous@exemple.com" class="field-input field-input-mobile" required />
+              <input type="email" placeholder="vous@exemple.com" class="field-input field-input-mobile" required autocomplete="email" />
             </div>
           </div>
           <div class="flex flex-col">
             <label class="field-label"><i class="fa-solid fa-lock text-primary text-[11px]"></i> Mot de passe</label>
             <div class="relative flex items-center group">
               <i class="fa-solid fa-lock absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none transition-colors group-focus-within:text-primary"></i>
-              <input type="password" id="login-pw" placeholder="••••••••" class="field-input field-input-mobile field-input-right" required />
+              <input type="password" id="login-pw" placeholder="••••••••" class="field-input field-input-mobile field-input-right" required autocomplete="current-password" />
               <button class="absolute right-3 p-1.5 text-textMuted hover:text-primary transition-colors cursor-pointer" onclick="togglePw('login-pw', this)" type="button"><i class="fa-regular fa-eye"></i></button>
             </div>
           </div>
@@ -306,14 +306,14 @@
               <label class="field-label"><i class="fa-solid fa-envelope text-primary text-[11px]"></i> E-mail</label>
               <div class="relative flex items-center group">
                 <i class="fa-regular fa-envelope absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
-                <input type="email" id="m-email" placeholder="vous@exemple.com" class="field-input field-input-mobile" required />
+                <input type="email" id="m-email" placeholder="vous@exemple.com" class="field-input field-input-mobile" required autocomplete="email" />
               </div>
             </div>
             <div class="flex flex-col">
               <label class="field-label"><i class="fa-solid fa-lock text-primary text-[11px]"></i> Mot de passe</label>
               <div class="relative flex items-center group">
                 <i class="fa-solid fa-lock absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
-                <input type="password" id="m-pw1" placeholder="Min. 8 caractères" class="field-input field-input-mobile field-input-right" oninput="checkStrength(this,'m')" required />
+                <input type="password" id="m-pw1" placeholder="Min. 8 caractères" class="field-input field-input-mobile field-input-right" oninput="checkStrength(this,'m')" required autocomplete="new-password" />
                 <button class="absolute right-3 p-1.5 text-textMuted hover:text-primary transition-colors cursor-pointer" onclick="togglePw('m-pw1',this)" type="button"><i class="fa-regular fa-eye"></i></button>
               </div>
               <div class="flex gap-1 mt-1.5">
@@ -348,7 +348,7 @@
               <label class="field-label"><i class="fa-solid fa-lock-open text-primary text-[11px]"></i> Confirmer le mot de passe</label>
               <div class="relative flex items-center group">
                 <i class="fa-solid fa-lock-open absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
-                <input type="password" id="m-pw2" placeholder="Répétez votre mot de passe" class="field-input field-input-mobile field-input-right" oninput="checkMatch('m')" required />
+                <input type="password" id="m-pw2" placeholder="Répétez votre mot de passe" class="field-input field-input-mobile field-input-right" oninput="checkMatch('m')" required autocomplete="new-password" />
                 <button class="absolute right-3 p-1.5 text-textMuted hover:text-primary transition-colors cursor-pointer" onclick="togglePw('m-pw2',this)" type="button"><i class="fa-regular fa-eye"></i></button>
               </div>
               <p class="text-[12px] font-medium mt-1.5 hidden text-red-500" id="m-pw-error"><i class="fa-solid fa-circle-xmark mr-1"></i>Les mots de passe ne correspondent pas.</p>
@@ -519,7 +519,7 @@
               <label class="field-label"><i class="fa-solid fa-lock text-primary text-[11px]"></i> Mot de passe</label>
               <div class="relative flex items-center group">
                 <i class="fa-solid fa-lock absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
-                <input type="password" id="dlogin-pw" placeholder="••••••••" class="field-input field-input-desktop field-input-right" required />
+                <input type="password" id="dlogin-pw" placeholder="••••••••" class="field-input field-input-desktop field-input-right" required autocomplete="current-password" />
                 <button class="absolute right-3 p-1.5 text-textMuted hover:text-primary transition-colors cursor-pointer" onclick="togglePw('dlogin-pw',this)" type="button"><i class="fa-regular fa-eye"></i></button>
               </div>
             </div>
@@ -615,7 +615,7 @@
                 <label class="field-label"><i class="fa-solid fa-lock text-primary text-[11px]"></i> Mot de passe</label>
                 <div class="relative flex items-center group">
                   <i class="fa-solid fa-lock absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
-                  <input type="password" id="d-pw1" placeholder="Min. 8 caractères" class="field-input field-input-desktop field-input-right" oninput="checkStrength(this,'d')" required />
+                  <input type="password" id="d-pw1" placeholder="Min. 8 caractères" class="field-input field-input-desktop field-input-right" oninput="checkStrength(this,'d')" required autocomplete="new-password" />
                   <button class="absolute right-3 p-1.5 text-textMuted hover:text-primary transition-colors cursor-pointer" onclick="togglePw('d-pw1',this)" type="button"><i class="fa-regular fa-eye"></i></button>
                 </div>
                 <div class="flex gap-1 mt-1.5">
@@ -653,7 +653,7 @@
                 <label class="field-label"><i class="fa-solid fa-lock-open text-primary text-[11px]"></i> Confirmer le mot de passe</label>
                 <div class="relative flex items-center group">
                   <i class="fa-solid fa-lock-open absolute left-3.5 text-[#c4bab0] text-[14px] pointer-events-none group-focus-within:text-primary"></i>
-                  <input type="password" id="d-pw2" placeholder="Répétez votre mot de passe" class="field-input field-input-desktop field-input-right" oninput="checkMatch('d')" required />
+                  <input type="password" id="d-pw2" placeholder="Répétez votre mot de passe" class="field-input field-input-desktop field-input-right" oninput="checkMatch('d')" required autocomplete="new-password" />
                   <button class="absolute right-3 p-1.5 text-textMuted hover:text-primary transition-colors cursor-pointer" onclick="togglePw('d-pw2',this)" type="button"><i class="fa-regular fa-eye"></i></button>
                 </div>
                 <p class="text-[12px] font-medium mt-1.5 hidden text-red-500" id="d-pw-error"><i class="fa-solid fa-circle-xmark mr-1"></i>Les mots de passe ne correspondent pas.</p>

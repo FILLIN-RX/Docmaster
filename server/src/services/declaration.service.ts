@@ -187,6 +187,7 @@ export class DeclarationService {
 
     // 7. Check for matches
     console.log('🔵 [8] Vérification des matches...');
+    matchingService.notifyNewDeclaration();
     matchingService
       .findAndNotifyMatches(declaration)
       .catch((err) => console.error("Error checking matches:", err));
@@ -383,6 +384,10 @@ export class DeclarationService {
         userId,
         declaration.doc_type,
       );
+
+      // Trigger matching again for the updated declaration
+      matchingService.notifyNewDeclaration();
+      matchingService.findAndNotifyMatches(declaration).catch(err => console.error(err));
     }
 
     return declaration;

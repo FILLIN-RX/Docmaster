@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="fr">
 <head>
+  <script type="module" src="/js/utils/page-loader.js"></script>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>DocMaster – Déclarer un document perdu</title>
@@ -69,9 +70,9 @@
     .topbar{flex-shrink:0;background:white;border-bottom:1px solid #E0D5C4;padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;z-index:20}
     #pageBody{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;padding:16px 8px 0}
     #alertBanner{flex-shrink:0;margin-bottom:14px}
-    #formGrid{flex:1;min-height:0;display:grid;grid-template-columns:1fr;gap:20px;overflow:hidden}
+    #formGrid{flex:1;min-height:0;display:grid;grid-template-columns:1fr 360px;gap:20px;overflow:hidden}
     #formLeft{min-height:0;overflow-y:auto;padding-bottom:20px;display:flex;flex-direction:column;gap:14px}
-    #formRight{display:none !important}
+    #formRight{display:block}
     #formLeft::-webkit-scrollbar,#formRight::-webkit-scrollbar{width:4px}
     #formLeft::-webkit-scrollbar-thumb,#formRight::-webkit-scrollbar-thumb{background:#D0C6B8;border-radius:99px}
 
@@ -198,12 +199,63 @@
     .animate-in{animation:slideUp .35s ease both}
     .d1{animation-delay:.04s} .d2{animation-delay:.08s} .d3{animation-delay:.12s} .d4{animation-delay:.16s}
   </style>
+  <script src="/js/loader.js"></script>
   <script type="module" src="/js/index.js"></script>
 </head>
 <body>
+
+  <div id="dm-global-page-loader" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;display:flex;align-items:center;justify-content:center;background:#F4EFE6;">
+    <div style="width:40px;height:40px;border:4px solid #F5A64B;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;"></div>
+  </div>
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
   <script type="module" src="/js/utils/ui-helpers.js"></script>
 
-<div id="sidebar-root"></div>
+  <!-- Overlay mobile -->
+  <div class="sb-overlay page-fade-in" id="overlay" onclick="closeSb()"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar w-[var(--sidebar,260px)] bg-green-dark flex flex-col page-fade-in" id="sidebar">
+    <!-- Logo -->
+    <div class="flex items-center gap-3 px-5 py-4 border-b border-white/10 flex-shrink-0">
+      <img src="./assets/images/docmaster.png" alt="DocMaster" class="h-14 w-auto object-contain rounded" />
+      <button class="ml-auto text-white/40 hover:text-white lg:hidden transition-colors" onclick="closeSb()" aria-label="Fermer le menu">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Nav links -->
+    <div class="flex-1 overflow-y-auto py-2 custom-scroll">
+      <div class="px-5 pt-4 pb-1 text-[9.5px] font-bold text-white/30 uppercase tracking-widest">Principal</div>
+      <nav class="flex flex-col gap-0.5 px-2">
+        <a class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[13px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90" href="/dashboard.html"><i class="fa-solid fa-house w-4 text-center"></i> Tableau de bord</a>
+        <a class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[13px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90" href="/Mesdocument.html"><i class="fa-solid fa-list-check w-4 text-center"></i> Mes sauvegardes</a>
+        <a class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[13px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90" href="/Mesappareils.html"><i class="fa-solid fa-mobile-screen-button w-4 text-center"></i> Mes appareils</a>
+      </nav>
+      <div class="px-5 pt-5 pb-1 text-[9.5px] font-bold text-white/30 uppercase tracking-widest">Compte</div>
+      <nav class="flex flex-col gap-0.5 px-2">
+        <a class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[13px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90" href="/docDeclares.html"><i class="fa-solid fa-clock-rotate-left w-4 text-center"></i> Historique</a>
+        <a class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[13px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90" href="/mesGains.html"><i class="fa-solid fa-wallet w-4 text-center"></i> Mes Gains</a>
+        <a class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[13px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90" href="/Abonnement.html"><i class="fa-solid fa-crown w-4 text-center"></i> Abonnement</a>
+        <a class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[13px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90" href="/infosProfil.html"><i class="fa-solid fa-user w-4 text-center"></i> Mon Profil</a>
+        <a class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[13px] font-medium text-red-400/70 hover:bg-white/5 hover:text-red-400" href="#" data-logout="true"  ><i class="fa-solid fa-right-from-bracket w-4 text-center"></i> data-logout="true">Déconnexion</a> 
+      </nav>
+    </div>
+
+    <!-- User footer -->
+    <div class="px-2 py-3 border-t border-white/10">
+      <div class="flex items-center gap-2.5 px-3 py-2 rounded-[10px] cursor-pointer hover:bg-white/5 transition-colors">
+        <div class="w-[30px] h-[30px] rounded-[8px] bg-primary flex items-center justify-center font-bricolage text-[10px] font-extrabold text-white">
+          <span id="userInitial">JM</span>
+        </div>
+        <div>
+          <div class="text-[12.5px] font-semibold text-white leading-tight" id="userName">Jean-Marc D.</div>
+          <div class="text-[10.5px] text-white/40">Plan Standard</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
 <script src="./js/ui/notifications.js"></script>
 
 <main class="main-wrap">
@@ -363,40 +415,11 @@
           </div>
         </div>
 
-        <!-- ── ÉTAPE 5 : Photos ── -->
-        <div class="section-card animate-in d4 form-step" data-step="5">
-          <div class="section-badge"><div class="section-badge-num">5</div><span class="section-badge-text">Photo</span></div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-            <h2 style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:800;color:#1A1A1A;">Ajouter une photo</h2>
-            <span class="opt-badge" style="font-size:11px;padding:3px 10px;">Optionnel</span>
-          </div>
-          <p style="font-size:12.5px;color:#6B7280;margin-bottom:14px;">Une photo augmente significativement les chances de retrouver le document.</p>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-            <div>
-              <p style="font-size:11.5px;font-weight:700;color:#374151;margin-bottom:7px;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-image" style="color:#F5A64B;"></i> Recto</p>
-              <div class="upload-zone" id="uploadRecto" onclick="document.getElementById('fileRecto').click()" ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="dropFile(event,this,'previewRecto')">
-                <div style="width:42px;height:42px;border-radius:10px;background:#F2EBD9;display:flex;align-items:center;justify-content:center;" id="uploadRectoIcon"><i class="fa-solid fa-cloud-arrow-up" style="color:#C4BAB0;font-size:20px;"></i></div>
-                <div id="uploadRectoText"><p style="font-size:12.5px;font-weight:600;color:#374151;">Glisser-déposer</p><p style="font-size:11px;color:#9CA3AF;">ou cliquer pour parcourir</p></div>
-                <img id="previewRecto" src="" alt="" style="display:none;max-height:100px;border-radius:8px;object-fit:cover;"/>
-              </div>
-              <input type="file" id="fileRecto" accept="image/*" style="display:none;" onchange="previewFile(this,'previewRecto','uploadRecto','uploadRectoText','uploadRectoIcon')"/>
-            </div>
-            <div>
-              <p style="font-size:11.5px;font-weight:700;color:#374151;margin-bottom:7px;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-rotate-right" style="color:#F5A64B;"></i> Verso</p>
-              <div class="upload-zone" id="uploadVerso" onclick="document.getElementById('fileVerso').click()" ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="dropFile(event,this,'previewVerso')">
-                <div style="width:42px;height:42px;border-radius:10px;background:#F2EBD9;display:flex;align-items:center;justify-content:center;" id="uploadVersoIcon"><i class="fa-solid fa-cloud-arrow-up" style="color:#C4BAB0;font-size:20px;"></i></div>
-                <div id="uploadVersoText"><p style="font-size:12.5px;font-weight:600;color:#374151;">Glisser-déposer</p><p style="font-size:11px;color:#9CA3AF;">ou cliquer pour parcourir</p></div>
-                <img id="previewVerso" src="" alt="" style="display:none;max-height:100px;border-radius:8px;object-fit:cover;"/>
-              </div>
-              <input type="file" id="fileVerso" accept="image/*" style="display:none;" onchange="previewFile(this,'previewVerso','uploadVerso','uploadVersoText','uploadVersoIcon')"/>
-            </div>
-          </div>
-          <p style="font-size:11px;color:#9CA3AF;margin-top:8px;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-shield-halved" style="color:#F5A64B;"></i> Données sensibles floutées automatiquement. JPG, PNG, WebP · Max 5 Mo</p>
-        </div>
+        <!-- Photo step removed (moved to optional upload in summary) -->
 
         <!-- ── ÉTAPE 6 : Contact ── -->
-        <div class="section-card animate-in d4 form-step" data-step="6">
-          <div class="section-badge"><div class="section-badge-num">6</div><span class="section-badge-text">Contact &amp; urgence</span></div>
+        <div class="section-card animate-in d4 form-step" data-step="5">
+          <div class="section-badge"><div class="section-badge-num">5</div><span class="section-badge-text">Contact &amp; urgence</span></div>
           <h2 style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:800;color:#1A1A1A;margin-bottom:4px;">Comment vous contacter ?</h2>
           <p style="font-size:12.5px;color:#6B7280;margin-bottom:16px;">Permet à un trouveur de vous joindre rapidement.</p>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
@@ -442,7 +465,7 @@
         <div id="stepActions" class="animate-in d4" style="flex-shrink:0;">
           <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:14px;">
             <div style="flex-shrink:0;margin-top:1px;"><div id="checkboxUI" onclick="toggleCheckbox()" style="width:19px;height:19px;border:2px solid #E0D5C4;border-radius:5px;background:white;display:flex;align-items:center;justify-content:center;transition:all .2s;cursor:pointer;"><i class="fa-solid fa-check" style="font-size:9px;color:white;display:none;" id="checkIcon"></i></div></div>
-            <p style="font-size:12px;color:#6B7280;line-height:1.6;">Je certifie que les informations fournies sont exactes et j'accepte les <a href="#" style="color:#F5A64B;font-weight:600;text-decoration:none;">Conditions d'utilisation</a>.</p>
+            <p style="font-size:12px;color:#6B7280;line-height:1.6;">Je certifie que les informations fournies sont exactes et j'accepte les <a href="#"  style="color:#F5A64B;font-weight:600;text-decoration:none;">Conditions d'utilisation</a>.</p>
           </label>
           <button type="button" class="submit-btn" onclick="submitDeclaration()"><i class="fa-solid fa-paper-plane"></i> Soumettre ma déclaration</button>
           <p style="font-size:11px;color:#9CA3AF;text-align:center;margin-top:8px;"><i class="fa-solid fa-shield-halved" style="color:#F5A64B;margin-right:4px;"></i>Vos données sont protégées.</p>
@@ -451,7 +474,7 @@
         <!-- Wizard nav -->
         <div id="wizardControls">
           <button type="button" id="prevStepBtn" onclick="goToPrevStep()" style="padding:9px 16px;border:1.5px solid #E0D5C4;background:white;border-radius:10px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;color:#374151;cursor:pointer;display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-arrow-left" style="font-size:11px;"></i> Précédent</button>
-          <p id="stepCounter" style="font-size:12px;font-weight:700;color:#6B7280;">Étape 1 / 6</p>
+          <p id="stepCounter" style="font-size:12px;font-weight:700;color:#6B7280;">Étape 1 / 5</p>
           <button type="button" id="nextStepBtn" onclick="goToNextStep()" style="padding:9px 16px;border:none;background:#1E3A2F;border-radius:10px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;color:white;cursor:pointer;display:flex;align-items:center;gap:6px;">Suivant <i class="fa-solid fa-arrow-right" style="font-size:11px;"></i></button>
         </div>
 
@@ -466,7 +489,7 @@
         <!-- Progression wizard -->
         <div style="background:white;border-radius:18px;padding:20px;border:1px solid #EDE7DB;box-shadow:0 2px 12px rgba(0,0,0,.04);flex-shrink:0;">
           <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:800;color:#1A1A1A;margin-bottom:12px;">Progression</h3>
-          <div style="background:#F2EBD9;border-radius:99px;height:5px;margin-bottom:14px;overflow:hidden;"><div id="progressBar" style="height:100%;background:linear-gradient(90deg,#F5A64B,#D98A30);border-radius:99px;width:16%;transition:width .5s ease;"></div></div>
+          <div style="background:#F2EBD9;border-radius:99px;height:5px;margin-bottom:14px;overflow:hidden;"><div id="progressBar" style="height:100%;background:linear-gradient(90deg,#F5A64B,#D98A30);border-radius:99px;width:20%;transition:width .5s ease;"></div></div>
           <div>
             <div class="progress-step"><div class="progress-dot current" id="ps1">1</div><div><p style="font-size:12px;font-weight:700;color:#1A1A1A;">Propriété</p><p style="font-size:10.5px;color:#9CA3AF;" id="ps1sub">En cours</p></div></div>
             <div class="progress-vline" id="pl1"></div>
@@ -476,9 +499,7 @@
             <div class="progress-vline" id="pl3"></div>
             <div class="progress-step"><div class="progress-dot" id="ps4">4</div><div><p style="font-size:12px;font-weight:600;color:#6B7280;">Lieu &amp; date</p><p style="font-size:10.5px;color:#C4BAB0;">En attente</p></div></div>
             <div class="progress-vline" id="pl4"></div>
-            <div class="progress-step"><div class="progress-dot" id="ps5">5</div><div><p style="font-size:12px;font-weight:600;color:#6B7280;">Photos <span style="font-size:10px;color:#C4BAB0;font-style:italic;">(opt.)</span></p><p style="font-size:10.5px;color:#C4BAB0;">En attente</p></div></div>
-            <div class="progress-vline" id="pl5"></div>
-            <div class="progress-step"><div class="progress-dot" id="ps6">6</div><div><p style="font-size:12px;font-weight:600;color:#6B7280;">Contact</p><p style="font-size:10.5px;color:#C4BAB0;">En attente</p></div></div>
+            <div class="progress-step"><div class="progress-dot" id="ps5">5</div><div><p style="font-size:12px;font-weight:600;color:#6B7280;">Contact</p><p style="font-size:10.5px;color:#C4BAB0;">En attente</p></div></div>
           </div>
         </div>
 
@@ -564,5 +585,16 @@
     document.addEventListener('DOMContentLoaded', initLostDeclaration);
   </script>
   
+
+  <script>
+    window.addEventListener("load", function() {
+        var loader = document.getElementById("dm-global-page-loader");
+        if(loader) {
+            loader.style.opacity = "0";
+            loader.style.transition = "opacity 0.5s";
+            setTimeout(function() { loader.remove(); }, 500);
+        }
+    });
+  </script>
 </body>
 </html>

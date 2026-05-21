@@ -29,7 +29,11 @@ const SIDEBAR_NAV = {
     },
   ],
   compte: [
-    
+     {
+      href: "/docDeclares.html",
+      icon: "fa-clock-rotate-left",
+      label: "Historique",
+    },
     {
       href: "/mesGains.html",
       icon: "fa-wallet",
@@ -45,11 +49,7 @@ const SIDEBAR_NAV = {
       icon: "fa-users-gear",
       label: "Parrainage",
     },
-    {
-      href: "/docDeclares.html",
-      icon: "fa-clock-rotate-left",
-      label: "Historique",
-    },
+   
     {
       href: "/infosProfil.html",
       icon: "fa-user",
@@ -159,7 +159,7 @@ function _sbRender() {
       </div>
 
       <!-- Nav links -->
-      <div class="flex-1 overflow-y-auto py-2 custom-scroll">
+      <div class="flex-1 overflow-y-auto py-2">
         <div class="px-5 pt-4 pb-1 text-[9.5px] font-bold text-white/30 uppercase tracking-widest">Principal</div>
         <nav class="flex flex-col gap-0.5 px-2" aria-label="Navigation principale">
           ${SIDEBAR_NAV.principal.filter(filterAdmin).map(_sbNavItem).join("")}
@@ -184,7 +184,6 @@ function _sbRender() {
             <div class="text-[12.5px] font-semibold text-white leading-tight" id="userName" data-user-name>Jean-Marc D.</div>
             <div class="text-[10.5px] text-white/40">Plan Standard</div>
           </div>
-          <i class="fa-solid fa-chevron-up ml-auto text-white/30 text-[10px]"></i>
         </div>
       </div>
     </aside>`;
@@ -290,7 +289,7 @@ function _sbInjectTopbarActions() {
     form.addEventListener('submit', function (event) {
       event.preventDefault();
       const value = input.value.trim();
-      window.location.href = value ? `rechercher.html?q=${encodeURIComponent(value)}` : 'rechercher.html';
+      window.location.href = value ? `recherche-auth.html?q=${encodeURIComponent(value)}` : 'recherche-auth.html';
     });
   }
 }
@@ -506,14 +505,7 @@ window.toggleDeclModal = toggleDeclModal;
 
 // ── Injection dans le DOM + listeners (après que le DOM est prêt) ─────────────
 document.addEventListener("DOMContentLoaded", function () {
-  // 1. Montage du sidebar
-  const root = document.getElementById("sidebar-root");
-  if (root) {
-    root.outerHTML = _sbRender();
-  }
-
-  // Set initial state
-  document.body.classList.add("sidebar-open");
+  // 1. Initialisation de l'état
   
   const mainWrapper = document.getElementById("mainWrapper");
   if (mainWrapper) mainWrapper.classList.add("page-fade-in");
@@ -566,7 +558,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         @media (min-width: 900px) {
           .sidebar-open .main-wrapper, .sidebar-open .main-wrap, .main-wrapper, .main-wrap {
-            margin-left: 0 !important; /* Flexbox handles the spacing */
+            margin-left: 0 !important; 
             flex: 1 !important;
             min-width: 0 !important;
             width: 100%;
@@ -590,6 +582,7 @@ document.addEventListener("DOMContentLoaded", function () {
   _sbInjectDeclarationModal();
   _sbApplyMobileBottomNavActiveState();
 
+  // Set sidebar to open by default on desktop
   _sbSetState(window.innerWidth >= 900);
 
   // 2. Hydratation depuis la session auth
@@ -661,5 +654,28 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     _sbToggleTopRightControlsByViewport();
+  });
+
+  // Close sidebar when clicking outside of it (but ignore clicks on open/close controls)
+  document.addEventListener('click', function (e) {
+    const sb = document.getElementById('sidebar');
+    if (!sb) return;
+
+    const isOpen = sb.classList.contains('open') && !sb.classList.contains('closed');
+    if (!isOpen) return;
+
+    // If click is inside the sidebar, ignore
+    if (sb.contains(e.target)) return;
+
+    // If click is on the overlay, close (overlay already wired, but keep safe)
+    if (e.target && e.target.id === 'overlay') { closeSb(); return; }
+
+    // Ignore clicks on elements that explicitly open/toggle the sidebar
+    if (e.target.closest && (e.target.closest('[onclick*="openSb("]') || e.target.closest('[onclick*="toggleSb("]') || e.target.closest('[data-sb-ignore]'))) {
+      return;
+    }
+
+    // Otherwise, close the sidebar
+    closeSb();
   });
 });

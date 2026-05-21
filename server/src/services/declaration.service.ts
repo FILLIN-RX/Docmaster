@@ -400,12 +400,33 @@ export class DeclarationService {
    * Search for FOUND documents with public data masking
    */
   async searchPublicFound(query: string) {
-    const results = await this.declarationRepository.searchPublicFound(query);
+    let results = [];
+
+    if (!query || query.trim() === '') {
+      // No query provided: return all AVAILABLE found declarations
+      const all = await this.declarationRepository.findAllAvailable();
+      results = all.filter((d) => d.declaration_type === 'FOUND');
+    } else {
+      results = await this.declarationRepository.searchPublicFound(query);
+    }
 
     return results.map((doc) => ({
-      ...doc,
-      owner_name: this.maskName(doc.owner_name),
-      document_number: this.maskNumber(doc.document_number),
+      id: doc.id,
+      identifiant_doc_dm: doc.identifiant_doc_dm,
+      doc_type: doc.doc_type,
+      owner_name: doc.owner_name,
+      date_trouvaille: doc.date_perte,
+      date_perte: doc.date_perte,
+      created_at: doc.created_at,
+      ville: doc.ville,
+      region: doc.region,
+      pays: doc.pays,
+      found_location: doc.found_location,
+      status: doc.status,
+      declaration_type: doc.declaration_type,
+      // Public response must not expose any photo
+      photo_recto: null,
+      photo_verso: null,
       // Mask reporter if present
       reporter_id: "HIDDEN",
     }));

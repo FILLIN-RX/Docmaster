@@ -254,10 +254,9 @@ export const getPerformanceStats = async (req: Request, res: Response) => {
 export const searchPublicFound = async (req: Request, res: Response) => {
   try {
     const { q } = req.query;
-    if (!q) {
-      return res.json({ success: true, data: [] });
-    }
-    const result = await declarationService.searchPublicFound(q as string);
+    // Let the service decide what to do when `q` is empty.
+    // service.searchPublicFound handles empty queries by returning all AVAILABLE FOUND declarations.
+    const result = await declarationService.searchPublicFound((q as string) || "");
     res.json({ success: true, count: result.length, data: result });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
@@ -271,7 +270,34 @@ export const getDeclarationById = async (req: Request, res: Response) => {
     if (!result) {
       return res.status(404).json({ success: false, message: 'Déclaration introuvable' });
     }
-    res.json({ success: true, data: result });
+
+    // By default, do not return full details. Only return full details
+    // when the authenticated user actually has an active LOST declaration.
+    const userId = (req as any).user?.id;
+    if (userId) {
+      // Fetch user's declarations and check for an active LOST
+      const myDecls = await declarationService.getUserDeclarations(userId);
+      const hasActiveLost = Array.isArray(myDecls) && myDecls.some((d: any) => d.declaration_type === 'LOST' && !['RETURNED','CANCELLED','CLAIMED'].includes(d.status));
+      if (hasActiveLost) {
+        return res.json({ success: true, data: result });
+      }
+    }
+
+    // Otherwise return a minimal masked response
+    const maskName = (name: string) => {
+      if (!name) return '***';
+      return name.split(' ').map((p: string) => (p.length > 1 ? p[0] + '*'.repeat(p.length - 1) : p + '*')).join(' ');
+    };
+
+    const minimal = {
+      id: result.id,
+      doc_type: result.doc_type,
+      owner_name: maskName(result.owner_name),
+      // prefer specific date fields used by frontend
+      date: result.date_trouvaille || result.date_perte || result.created_at || null
+    };
+
+    res.json({ success: true, data: minimal });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }

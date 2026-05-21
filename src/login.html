@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="fr">
   <head>
+  <script type="module" src="/js/utils/page-loader.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DocMaster - Connexion</title>
@@ -164,6 +165,12 @@
 </style>
   </head>
   <body>
+
+  <div id="dm-global-page-loader" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;display:flex;align-items:center;justify-content:center;background:#F4EFE6;">
+    <div style="width:40px;height:40px;border:4px solid #F5A64B;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;"></div>
+  </div>
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
   <script type="module" src="/js/utils/ui-helpers.js"></script>
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
@@ -363,7 +370,7 @@
               <div class="w-14 h-14 bg-green-dark rounded-full flex items-center justify-center mb-1">
                 <i class="fa-solid fa-mobile-screen-button text-primary text-[22px]"></i>
               </div>
-              <p class="text-[13px] text-textMuted leading-[1.6]">Un code PIN à 6 chiffres a été envoyé à l'adresse <span class="font-semibold text-textMain" id="m-email-display"></span></p>
+              <p class="text-[13px] text-textMuted leading-[1.6]" id="m-step3-text">Un code PIN à 6 chiffres a été envoyé par SMS au <span class="font-semibold text-textMain" id="m-email-display"></span></p>
             </div>
             <div class="flex justify-center gap-2.5 my-2">
               <input class="pin-input" maxlength="1" type="text" inputmode="numeric" data-idx="0" data-prefix="m" />
@@ -373,7 +380,7 @@
               <input class="pin-input" maxlength="1" type="text" inputmode="numeric" data-idx="4" data-prefix="m" />
               <input class="pin-input" maxlength="1" type="text" inputmode="numeric" data-idx="5" data-prefix="m" />
             </div>
-            <p class="text-[12px] text-textMuted text-center">Vous n'avez pas reçu le code ? <a href="#" onclick="resendPin(event)" class="text-primary font-semibold hover:underline">Renvoyer</a></p>
+            <p class="text-[12px] text-textMuted text-center">Vous n'avez pas reçu le code ? <a href="#"  onclick="resendPin(event)" class="text-primary font-semibold hover:underline">Renvoyer</a></p>
             <div class="flex gap-2.5 mt-1">
               <button type="button" onclick="prevStep('m',3)" class="p-[14px_16px] bg-white/65 backdrop-blur-md border-[1.5px] border-white/90 rounded-v14 font-poppins text-[14px] font-semibold text-textMain cursor-pointer flex items-center justify-center gap-2 transition-all active:scale-[0.97]">
                 <i class="fa-solid fa-arrow-left"></i>
@@ -681,7 +688,7 @@
                 <input class="pin-input" maxlength="1" type="text" inputmode="numeric" data-idx="4" data-prefix="d" />
                 <input class="pin-input" maxlength="1" type="text" inputmode="numeric" data-idx="5" data-prefix="d" />
               </div>
-              <p class="text-[12px] text-textMuted text-center">Vous n'avez pas reçu le code ? <a href="#" onclick="resendPin(event)" class="text-primary font-semibold hover:underline">Renvoyer</a></p>
+              <p class="text-[12px] text-textMuted text-center">Vous n'avez pas reçu le code ? <a href="#"  onclick="resendPin(event)" class="text-primary font-semibold hover:underline">Renvoyer</a></p>
               <div class="flex gap-3 mt-1">
                 <button type="button" onclick="prevStep('d',3)" class="p-[14px_18px] bg-[#faf8f5] border-[1.5px] border-borderMain rounded-v14 font-poppins text-[14px] font-semibold text-textMain cursor-pointer flex items-center justify-center gap-2 transition-all hover:bg-white active:scale-[0.97]">
                   <i class="fa-solid fa-arrow-left"></i> Retour
@@ -882,5 +889,16 @@
       };
     </script>
 
+
+  <script>
+    window.addEventListener("load", function() {
+        var loader = document.getElementById("dm-global-page-loader");
+        if(loader) {
+            loader.style.opacity = "0";
+            loader.style.transition = "opacity 0.5s";
+            setTimeout(function() { loader.remove(); }, 500);
+        }
+    });
+  </script>
 </body>
 </html>

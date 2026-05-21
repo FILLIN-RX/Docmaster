@@ -12,6 +12,7 @@ YELLOW=\033[0;33m
 NC=\033[0m
 
 .PHONY: deploy deploy-full health restart stop start logs help
+.PHONY: deploy-migrate deploy-backup-migrate
 
 help:
 	@echo "Commandes disponibles :"
@@ -19,6 +20,8 @@ help:
 	@echo "DÉPLOIEMENT V2:"
 	@echo "  make deploy      - Sépare, envoie et extrait le Front et le Back (simple)"
 	@echo "  make deploy-full - Déploiement complet (Envoi + Installation + Compilations + PM2)"
+	@echo "  make deploy-migrate - Déploiement complet et exécution des migrations distantes"
+	@echo "  make deploy-backup-migrate - Backup/extraction + exécution des migrations distantes"
 	@echo ""
 	@echo "GESTION DES SERVICES V2:"
 	@echo "  make restart     - Redémarre proprement les processus PM2 V2"
@@ -31,6 +34,12 @@ deploy:
 
 deploy-full:
 	@bash deploy.sh full
+
+deploy-migrate:
+	@bash deploy.sh full -m
+
+deploy-backup-migrate:
+	@bash deploy.sh backup -m
 
 restart:
 	@echo "$(YELLOW)Redémarrage des services PM2 V2 sur le VPS...$(NC)"

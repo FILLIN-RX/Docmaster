@@ -17,6 +17,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 1. Initialize Basic UI
     setupBasicUI();
 
+    // Setup Search Redirection
+    const searchForm = document.getElementById("mobileSearchForm");
+    const searchInput = document.getElementById("mobileSearchInput");
+    if (searchForm && searchInput) {
+      searchForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const query = searchInput.value.trim();
+        window.location.href = query 
+          ? `recherche-auth.html?q=${encodeURIComponent(query)}` 
+          : "recherche-auth.html";
+      });
+    }
+
     // Check for new user welcome
     checkNewUserWelcome();
 
@@ -48,8 +61,13 @@ function setupBasicUI() {
   if (user) {
     // Hello Name
     const helloName = document.getElementById("helloName");
-    if (helloName)
-      helloName.textContent = user.prenom || user.nom || "Utilisateur";
+    if (helloName) {
+      const hour = new Date().getHours();
+      let greeting = "Bonjour";
+      if (hour >= 18) greeting = "Bonsoir";
+      else if (hour < 5) greeting = "Bonne nuit";
+      helloName.textContent = `${greeting}, ${user.prenom || user.nom || "Utilisateur"}`;
+    }
 
     // Top Profile
     const topName = document.getElementById("topName");
@@ -227,7 +245,7 @@ function createLostBlock(decl) {
             : hasPotential
               ? `
         <div class="mt-6 flex justify-end">
-          <button onclick="window.location.href='rechercher.html?query=${encodeURIComponent(decl.doc_type)}'" class="px-4 py-2 bg-orange-500 text-white rounded-[10px] text-[11px] font-bold hover:bg-orange-600 transition-all flex items-center gap-2">
+          <button onclick="window.location.href='recherche-auth.html?query=${encodeURIComponent(decl.doc_type)}'" class="px-4 py-2 bg-orange-500 text-white rounded-[10px] text-[11px] font-bold hover:bg-orange-600 transition-all flex items-center gap-2">
             <i class="fa-solid fa-eye"></i> Voir les correspondances
           </button>
         </div>`
@@ -243,17 +261,15 @@ function createLostBlock(decl) {
  */
 function createFoundBlock(decl) {
   const hasMatch = decl.status === "MATCHED" || decl.status === "RETURNED";
-  const hasPotential =
-    !hasMatch && decl.matches.some((m) => m.status === "PENDING");
 
-  // For found items, the user wants to stay blue even if matched
-  const color =
-    decl.status === "RETURNED" ? "green" : hasPotential ? "orange" : "blue";
+  // The finder's UI is simple: blue → matched (green) → returned (grey)
+  // They NEVER see "Correspondance possible" — that's only for the owner (LOST block)
+  const color = decl.status === "RETURNED" ? "green" : hasMatch ? "green" : "blue";
   const div = document.createElement("div");
   div.className = `bg-white border-2 border-${color}-500 rounded-[18px] overflow-hidden shadow-md shadow-${color}-500/5 transition-colors duration-500`;
 
   let step = 1;
-  let progressWidth = "33%";
+  let progressWidth = "25%";
   if (decl.status === "AVAILABLE") {
     step = 2;
     progressWidth = "50%";
@@ -267,14 +283,33 @@ function createFoundBlock(decl) {
     progressWidth = "100%";
   }
 
+  // Header label for the finder — simple and clear
+  const headerLabel = decl.status === "RETURNED"
+    ? "Document remis ✓"
+    : hasMatch
+      ? "Propriétaire identifié — À rendre"
+      : "Document que j'ai trouvé";
+
+  const headerIcon = decl.status === "RETURNED"
+    ? "fa-circle-check"
+    : hasMatch
+      ? "fa-handshake animate-bounce"
+      : "fa-hand-holding-heart";
+
+  const badgeLabel = decl.status === "RETURNED"
+    ? "Remis"
+    : hasMatch
+      ? "À rendre"
+      : "Signalé";
+
   div.innerHTML = `
       <div class="px-4 sm:px-5 py-3 border-b border-${color}-100 flex items-center justify-between bg-${color}-50/50">
         <div class="font-bricolage text-[13px] font-bold text-${color}-600 flex items-center gap-2">
-          <i class="fa-solid ${decl.status === "MATCHED" ? "fa-handshake animate-bounce" : "fa-hand-holding-heart"}"></i> 
-          ${decl.status === "MATCHED" ? "Propriétaire identifié !" : hasPotential ? "Correspondance possible" : "Document que j'ai trouvé"}
+          <i class="fa-solid ${headerIcon}"></i> 
+          ${headerLabel}
         </div>
         <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-${color}-500 text-white uppercase tracking-wider">
-          ${decl.status === "MATCHED" ? "Match trouvé" : decl.status === "RETURNED" ? "Remis" : hasPotential ? "Potentiel" : "Trouvé"}
+          ${badgeLabel}
         </span>
       </div>
       <div class="p-4 sm:p-5">
@@ -291,29 +326,28 @@ function createFoundBlock(decl) {
           <div class="absolute top-3 left-[40px] right-[40px] h-[2px] bg-${color}-100"></div>
           <div class="absolute top-3 left-[40px] h-[2px] bg-${color}-500" style="width: ${progressWidth}"></div>
           
-          ${renderSteps(["Trouvé", "Signalé", "Matching", "Rendre"], step, color)}
+          ${renderSteps(["Trouvé", "Signalé", "Propriétaire", "Rendu"], step, color)}
         </div>
         ${
-          decl.status === "MATCHED"
+          hasMatch && decl.status !== "RETURNED"
             ? `
         <div class="mt-6 flex justify-end">
-          <button onclick="window.location.href='rendre.html?id=${decl.id}'" class="px-4 py-2 bg-blue-600 text-white rounded-[10px] text-[11px] font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20">
+          <button onclick="window.location.href='rendre.html?id=${decl.id}'" class="px-4 py-2 bg-green-600 text-white rounded-[10px] text-[11px] font-bold hover:bg-green-700 transition-all flex items-center gap-2 shadow-lg shadow-green-500/20">
             <i class="fa-solid fa-hand-holding-heart"></i> Rendre le document
           </button>
         </div>`
-            : hasPotential
-              ? `
-        <div class="mt-6 flex justify-end">
-          <button onclick="window.location.href='rechercher.html?query=${encodeURIComponent(decl.doc_type)}'" class="px-4 py-2 bg-orange-500 text-white rounded-[10px] text-[11px] font-bold hover:bg-orange-600 transition-all flex items-center gap-2">
-            <i class="fa-solid fa-eye"></i> Voir les correspondances
-          </button>
-        </div>`
-              : ""
+            : decl.status === "RETURNED"
+              ? `<div class="mt-4 text-center text-[11px] text-green-600 font-bold italic">✓ Document remis avec succès</div>`
+              : `<div class="mt-4 text-[11px] text-textMuted italic text-center bg-blue-50 rounded-xl py-2 px-3">
+                  <i class="fa-solid fa-clock-rotate-left text-blue-400 mr-1"></i>
+                  En attente qu'un propriétaire confirme ce document
+                </div>`
         }
       </div>
     `;
   return div;
 }
+
 
 /**
  * Renders the steps circles for progress bars

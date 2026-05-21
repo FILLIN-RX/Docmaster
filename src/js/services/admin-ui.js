@@ -38,7 +38,7 @@ export function initAdminUI() {
         
         bellBtn.addEventListener('click', () => {
             window.location.href = 'settings.html#notifications'; // Or similar
-            // alert('Système de notifications admin.');
+            // window.showAlert('Système de notifications admin.');
         });
     }
 }

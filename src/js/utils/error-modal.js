@@ -11,7 +11,7 @@ export function showErrorModal(title = 'Erreur', message = '') {
   if (window.showAlert) {
     window.showAlert(message, 'error');
   } else {
-    alert(message);
+    window.showAlert(message);
   }
 }
 
@@ -22,7 +22,7 @@ export function showSuccessModal(title = 'Succès', message = '') {
   if (window.showAlert) {
     window.showAlert(message, 'success');
   } else {
-    alert(message);
+    window.showAlert(message);
   }
 }
 
@@ -33,6 +33,6 @@ export function showInfoModal(title = 'Info', message = '', type = 'info') {
   if (window.showAlert) {
     window.showAlert(message, type);
   } else {
-    alert(message);
+    window.showAlert(message);
   }
 }

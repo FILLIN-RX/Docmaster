@@ -821,7 +821,7 @@ export async function validateAndSubmitLost() {
 
 export function downloadDeclarationPdf() {
   if (!lastCreatedDeclarationId) {
-    alert('Aucun rapport disponible.');
+    window.showAlert('Aucun rapport disponible.');
     return;
   }
   

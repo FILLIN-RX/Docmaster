@@ -297,37 +297,5 @@ window.alert = function(message) {
   showAlert(message);
 };
 
-/**
- * Toggle the global page loader
- */
-export function toggleLoader(show = true) {
-  let loader = document.getElementById('page-loader');
-  
-  // Auto-inject if missing
-  if (!loader) {
-    loader = document.createElement('div');
-    loader.id = 'page-loader';
-    loader.className = 'fixed inset-0 z-[100] bg-[#F4EFE6]/80 backdrop-blur-md flex items-center justify-center transition-all duration-500 opacity-0 pointer-events-none';
-    loader.innerHTML = `
-      <div class="flex flex-col items-center gap-4">
-        <div class="relative w-16 h-16">
-          <div class="absolute inset-0 border-4 border-[#F5A64B]/20 rounded-full"></div>
-          <div class="absolute inset-0 border-4 border-[#F5A64B] rounded-full border-t-transparent animate-spin"></div>
-        </div>
-        <p class="font-bricolage text-[#F5A64B] font-bold animate-pulse">Chargement...</p>
-      </div>
-    `;
-    document.body.appendChild(loader);
-  }
-  
-  if (show) {
-    loader.classList.remove('opacity-0', 'pointer-events-none');
-    loader.classList.add('opacity-100');
-  } else {
-    loader.classList.add('opacity-0', 'pointer-events-none');
-    loader.classList.remove('opacity-100');
-  }
-}
 
-// Make it global
-window.toggleLoader = toggleLoader;
+

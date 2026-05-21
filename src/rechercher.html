@@ -2,7 +2,17 @@
 <html lang="fr" class="scroll-smooth">
 
 <head>
+  <script type="module" src="/js/utils/page-loader.js"></script>
   <meta charset="UTF-8" />
+  <!-- Anti-FOUC: hide page until i18n translations are applied -->
+  <script>
+    (function() {
+      var lang = localStorage.getItem('lang') || 'fr';
+      document.documentElement.setAttribute('lang', lang);
+      document.documentElement.style.visibility = 'hidden';
+      setTimeout(function() { document.documentElement.style.visibility = ''; }, 500);
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DocMaster — Rechercher un document</title>
   <meta name="description"
@@ -47,11 +57,9 @@
   </script>
   <!-- <link rel="stylesheet" href="/css/main.css" />
   <link rel="stylesheet" href="/css/rechercher.css" /> -->
+  <script src="/js/loader.js"></script>
   <script type="module" src="/js/index.js"></script>
-  <!-- <script type="module" src="/js/fillin.js"></script> -->
-  <!-- <script type="module" src="/js/ui/sidebar.js"></script> -->
-  <!-- <script type="module" src="/js/ui/notifications.js"></script> -->
-  <!-- <script type="module" src="/js/services/auth.js"></script> -->
+  <script type="module" src="/js/i18n/index.js"></script>
   <script type="module">
     import { searchPublicFound, API_BASE_URL } from './js/services/api.js';
     window.searchPublicFound = searchPublicFound;
@@ -228,6 +236,12 @@
 </head>
 
 <body>
+
+  <div id="dm-global-page-loader" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;display:flex;align-items:center;justify-content:center;background:#F4EFE6;">
+    <div style="width:40px;height:40px;border:4px solid #F5A64B;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;"></div>
+  </div>
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
   <script type="module" src="/js/utils/ui-helpers.js"></script>
 
   <!-- ═══════════════════════════════════════════
@@ -488,29 +502,29 @@
         <div>
           <h3 class="text-primary font-bold mb-5 text-[13px] uppercase tracking-wider">Services</h3>
           <ul class="space-y-3">
-            <li><a href="#" class="text-white/60 hover:text-white text-sm transition flex items-center gap-2"><i
+            <li><a href="#"  class="text-white/60 hover:text-white text-sm transition flex items-center gap-2"><i
                   class="fa-solid fa-id-card w-4 text-xs"></i> Cartes d'identité</a></li>
-            <li><a href="#" class="text-white/60 hover:text-white text-sm transition flex items-center gap-2"><i
+            <li><a href="#"  class="text-white/60 hover:text-white text-sm transition flex items-center gap-2"><i
                   class="fa-solid fa-passport w-4 text-xs"></i> Passeports</a></li>
-            <li><a href="#" class="text-white/60 hover:text-white text-sm transition flex items-center gap-2"><i
+            <li><a href="#"  class="text-white/60 hover:text-white text-sm transition flex items-center gap-2"><i
                   class="fa-solid fa-graduation-cap w-4 text-xs"></i> Diplômes</a></li>
-            <li><a href="#" class="text-white/60 hover:text-white text-sm transition flex items-center gap-2"><i
+            <li><a href="#"  class="text-white/60 hover:text-white text-sm transition flex items-center gap-2"><i
                   class="fa-solid fa-car w-4 text-xs"></i> Permis de conduire</a></li>
           </ul>
         </div>
         <div>
           <h3 class="text-primary font-bold mb-5 text-[13px] uppercase tracking-wider">Restez connecté</h3>
           <div class="flex gap-2 mb-5">
-            <a href="#"
+            <a href="#" 
               class="w-9 h-9 bg-white/10 border border-white/10 flex items-center justify-center rounded-xl hover:bg-primary hover:border-primary transition-all text-white text-sm"><i
                 class="fa-brands fa-facebook-f"></i></a>
-            <a href="#"
+            <a href="#" 
               class="w-9 h-9 bg-white/10 border border-white/10 flex items-center justify-center rounded-xl hover:bg-primary hover:border-primary transition-all text-white text-sm"><i
                 class="fa-brands fa-twitter"></i></a>
-            <a href="#"
+            <a href="#" 
               class="w-9 h-9 bg-white/10 border border-white/10 flex items-center justify-center rounded-xl hover:bg-primary hover:border-primary transition-all text-white text-sm"><i
                 class="fa-brands fa-instagram"></i></a>
-            <a href="#"
+            <a href="#" 
               class="w-9 h-9 bg-white/10 border border-white/10 flex items-center justify-center rounded-xl hover:bg-primary hover:border-primary transition-all text-white text-sm"><i
                 class="fa-brands fa-whatsapp"></i></a>
           </div>
@@ -560,8 +574,10 @@
 
     document.addEventListener('click', () => document.getElementById('langDropdown')?.classList.add('hidden'));
 
-    function changeLang(code, flag) {
-      document.getElementById('currentFlag').src = flag;
+    function changeLang(code, flag, langName) {
+      if (window.setLanguage) {
+        window.setLanguage(code);
+      }
       document.getElementById('langDropdown').classList.add('hidden');
     }
 
@@ -607,16 +623,50 @@
       const container = document.getElementById('document-container');
       container.innerHTML = docs.map((doc, i) => {
         const score = Math.round((doc.score || 0) * 100);
+        const hasDeclaration = Boolean(doc.document_owner || doc.owner_name || doc.owner || doc.declaration_id || doc.counterPart);
+        const photo = doc.photo_recto || doc.photo || doc.image_url || '';
+        const docType = doc.document_type || doc.doc_type || 'Document';
+        const dateText = new Date(doc.created_at || Date.now()).toLocaleDateString('fr-FR');
+        const locationText = doc.location || doc.ville || doc.city || doc.pays || 'Lieu non spécifié';
+
+        if (!hasDeclaration) {
+          // Minimal card for items without a declaration
+          return `
+          <div class="doc-card group bg-white border border-borderMain rounded-[24px] overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 animate-fade-in" style="animation-delay:${i * 50}ms">
+            <div class="relative h-40 bg-surface2 flex items-center justify-center overflow-hidden">
+              ${photo ? `<img src="${photo}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />` : `<div class="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center"><i class="fa-solid fa-file-lines text-primary text-3xl"></i></div>`}
+              <div class="absolute top-3 left-3">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/90 backdrop-blur-md rounded-full text-[10px] font-black uppercase border border-borderMain text-textMain">
+                  <i class="fa-solid fa-shield-halved text-primary"></i> ${docType}
+                </span>
+              </div>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-[10px] font-bold text-primary uppercase tracking-widest">Document</span>
+                <span class="text-[10px] font-bold text-textMain">${dateText}</span>
+              </div>
+              <h3 class="font-bricolage font-bold text-textMain text-[17px] mb-3">${docType}</h3>
+              <div class="text-[13px] text-textMuted mb-4">
+                <i class="fa-solid fa-location-dot text-primary mr-2"></i>
+                <span class="font-medium">${locationText}</span>
+              </div>
+              <a href="recuperer.html?id=${doc.id}" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl font-bold text-[13px] hover:bg-primary-dark transition-all shadow-md">Voir les détails</a>
+            </div>
+          </div>`;
+        }
+
+        // Full card for items with a declaration
         return `
         <div class="doc-card group bg-white border border-borderMain rounded-[24px] overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 animate-fade-in" style="animation-delay:${i * 50}ms">
           <div class="relative h-48 bg-surface2 flex items-center justify-center overflow-hidden">
-            ${doc.photo_recto 
-              ? `<img src="${doc.photo_recto}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 blur-[5px]" />` 
+            ${photo 
+              ? `<img src="${photo}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 blur-[5px]" />` 
               : `<div class="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center"><i class="fa-solid fa-file-lines text-primary text-3xl"></i></div>`
             }
             <div class="absolute top-3 left-3">
               <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/90 backdrop-blur-md rounded-full text-[10px] font-black uppercase border border-borderMain text-textMain">
-                <i class="fa-solid fa-shield-halved text-primary"></i> ${doc.document_type || doc.doc_type || 'Document'}
+                <i class="fa-solid fa-shield-halved text-primary"></i> ${docType}
               </span>
             </div>
             ${score > 30 ? `<div class="match-score-badge">${score}% MATCH</div>` : ''}
@@ -624,7 +674,7 @@
           <div class="p-5">
             <div class="flex items-center justify-between mb-3">
               <span class="text-[10px] font-bold text-primary uppercase tracking-widest">Document trouvé</span>
-              <span class="text-[10px] font-bold text-textMain">${new Date(doc.created_at || new Date()).toLocaleDateString('fr-FR')}</span>
+              <span class="text-[10px] font-bold text-textMain">${dateText}</span>
             </div>
             
             <!-- NOM VISIBLE (PAS FLOU) -->
@@ -638,11 +688,11 @@
               </p>
               <div class="flex items-center gap-2 py-2 border-y border-borderMain/50">
                 <i class="fa-solid fa-location-dot text-primary text-[11px]"></i>
-                <span class="blurred-info text-[12px] font-medium">${doc.location || doc.ville || 'Lieu non spécifié'}, ${doc.country || doc.pays || 'Cameroun'}</span>
+                <span class="blurred-info text-[12px] font-medium">${locationText}, ${doc.country || doc.pays || 'Cameroun'}</span>
               </div>
             </div>
 
-            <a href="recuperation.html?id=${doc.id}" class="flex items-center justify-center gap-2 w-full py-3 bg-primary text-secondary rounded-[14px] font-bold text-[13px] hover:bg-primary-dark transition-all shadow-md shadow-primary/20 active:scale-95">
+            <a href="recuperer.html?id=${doc.id}" class="flex items-center justify-center gap-2 w-full py-3 bg-primary text-secondary rounded-[14px] font-bold text-[13px] hover:bg-primary-dark transition-all shadow-md shadow-primary/20 active:scale-95">
               <i class="fa-solid fa-hand-holding-heart text-xs"></i> C'est le mien
             </a>
           </div>
@@ -909,6 +959,17 @@
     }
   </script>
 
+
+  <script>
+    window.addEventListener("load", function() {
+        var loader = document.getElementById("dm-global-page-loader");
+        if(loader) {
+            loader.style.opacity = "0";
+            loader.style.transition = "opacity 0.5s";
+            setTimeout(function() { loader.remove(); }, 500);
+        }
+    });
+  </script>
 </body>
 
 </html>

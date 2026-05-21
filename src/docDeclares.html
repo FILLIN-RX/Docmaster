@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <script type="module" src="/js/utils/page-loader.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DocMaster — Mes déclarations</title>
@@ -61,9 +62,59 @@
   <script type="module" src="/js/index.js"></script>
 </head>
 <body>
+
+  <div id="dm-global-page-loader" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;display:flex;align-items:center;justify-content:center;background:#F4EFE6;">
+    <div style="width:40px;height:40px;border:4px solid #F5A64B;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;"></div>
+  </div>
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
   <script type="module" src="/js/utils/ui-helpers.js"></script>
 
-<div id="sidebar-root" class="sidebar-skeleton"></div>
+  <!-- Overlay mobile -->
+  <div class="sb-overlay page-fade-in" id="overlay" onclick="closeSb()"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar w-[var(--sidebar,260px)] bg-green-dark flex flex-col page-fade-in" id="sidebar">
+    <!-- Logo -->
+    <div class="flex items-center gap-3 px-5 py-4 border-b border-white/10 flex-shrink-0">
+      <img src="./assets/images/docmaster.png" alt="DocMaster" class="h-14 w-auto object-contain rounded" />
+      <button class="ml-auto text-white/40 hover:text-white lg:hidden transition-colors" onclick="closeSb()" aria-label="Fermer le menu">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Nav links -->
+    <div class="flex-1 overflow-y-auto py-2 custom-scroll">
+      <div class="px-5 pt-4 pb-1 text-[9.5px] font-bold text-white/30 uppercase tracking-widest">Principal</div>
+      <nav class="flex flex-col gap-0.5 px-2">
+        <a class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[13px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90" href="/dashboard.html"><i class="fa-solid fa-house w-4 text-center"></i> Tableau de bord</a>
+        <a class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[13px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90" href="/Mesdocument.html"><i class="fa-solid fa-list-check w-4 text-center"></i> Mes sauvegardes</a>
+        <a class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[13px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90" href="/Mesappareils.html"><i class="fa-solid fa-mobile-screen-button w-4 text-center"></i> Mes appareils</a>
+      </nav>
+      <div class="px-5 pt-5 pb-1 text-[9.5px] font-bold text-white/30 uppercase tracking-widest">Compte</div>
+      <nav class="flex flex-col gap-0.5 px-2">
+        <a class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[13px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90" href="/docDeclares.html"><i class="fa-solid fa-clock-rotate-left w-4 text-center"></i> Historique</a>
+        <a class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[13px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90" href="/mesGains.html"><i class="fa-solid fa-wallet w-4 text-center"></i> Mes Gains</a>
+        <a class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[13px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90" href="/Abonnement.html"><i class="fa-solid fa-crown w-4 text-center"></i> Abonnement</a>
+        <a class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[13px] font-medium text-white/60 hover:bg-white/5 hover:text-white/90" href="/infosProfil.html"><i class="fa-solid fa-user w-4 text-center"></i> Mon Profil</a>
+        <a class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[13px] font-medium text-red-400/70 hover:bg-white/5 hover:text-red-400" href="#" data-logout="true"  ><i class="fa-solid fa-right-from-bracket w-4 text-center"></i> data-logout="true">Déconnexion</a> 
+      </nav>
+    </div>
+
+    <!-- User footer -->
+    <div class="px-2 py-3 border-t border-white/10">
+      <div class="flex items-center gap-2.5 px-3 py-2 rounded-[10px] cursor-pointer hover:bg-white/5 transition-colors">
+        <div class="w-[30px] h-[30px] rounded-[8px] bg-primary flex items-center justify-center font-bricolage text-[10px] font-extrabold text-white">
+          <span id="userInitial">JM</span>
+        </div>
+        <div>
+          <div class="text-[12.5px] font-semibold text-white leading-tight" id="userName">Jean-Marc D.</div>
+          <div class="text-[10.5px] text-white/40">Plan Standard</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
 
 <div class="main-wrapper" id="mainWrapper">
   <header class="h-[58px] bg-white border-b border-borderMain flex items-center px-4 gap-3 flex-shrink-0">
@@ -184,5 +235,16 @@
   
   document.addEventListener('DOMContentLoaded', initDocDeclares);
 </script>
+
+  <script>
+    window.addEventListener("load", function() {
+        var loader = document.getElementById("dm-global-page-loader");
+        if(loader) {
+            loader.style.opacity = "0";
+            loader.style.transition = "opacity 0.5s";
+            setTimeout(function() { loader.remove(); }, 500);
+        }
+    });
+  </script>
 </body>
 </html>

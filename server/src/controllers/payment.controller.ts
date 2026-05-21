@@ -5,6 +5,10 @@ import { subscriptionService } from '../services/subscription.service.ts';
 import { notificationService } from '../services/notification.service.ts';
 import { nokashService } from '../services/nokash.service.ts';
 
+const NOKASH_POLL_INTERVAL_MS = 5000;
+const NOKASH_POLL_TIMEOUT_MS = 5 * 60 * 1000;
+const nokashPollTimers = new Map<string, ReturnType<typeof setInterval>>();
+
 /**
  * Handle Nokash Payment Callback
  * Body format: { id, status, amount, phone, orderId }
@@ -133,6 +137,26 @@ export const payRecovery = async (req: Request, res: Response) => {
     }
 
     try {
+      // Optional: check configured/allowed Nokash methods from env (comma-separated)
+      // Accept both long names (ORANGE_MONEY/MTN_MOMO) and short Nokash codes (OM/MOMO)
+      const enabledMethodsEnv = process.env.NOKASH_ENABLED_METHODS || '';
+      const enabledMethodsRaw = enabledMethodsEnv.split(',').map(m => m.trim()).filter(Boolean);
+      if (enabledMethodsRaw.length > 0) {
+        const mapToCanonical = (m?: string) => {
+          if (!m) return '';
+          const u = m.toString().toUpperCase();
+          if (u === 'ORANGE_MONEY' || u === 'OM') return 'OM';
+          if (u === 'MTN_MOMO' || u === 'MOMO') return 'MOMO';
+          return u;
+        };
+
+        const enabledCanonical = enabledMethodsRaw.map(mapToCanonical);
+        const requestedCanonical = mapToCanonical(paymentMethod);
+        if (!enabledCanonical.includes(requestedCanonical)) {
+          console.warn('[PayRecovery] Payment method not enabled:', requestedCanonical, 'enabled:', enabledCanonical);
+          return res.status(400).json({ success: false, message: `La méthode de paiement '${paymentMethod}' n'est pas configurée pour cette application.` });
+        }
+      }
         // 1. Check if declaration exists
         const declRes = await query('SELECT * FROM declarations WHERE id = $1', [docId]);
         if (declRes.rows.length === 0) {
@@ -147,16 +171,33 @@ export const payRecovery = async (req: Request, res: Response) => {
 
         // 3. Initiate Nokash Payment
         const orderId = `REC-${uuidv4().substring(0, 8)}`;
-        const nokashRes = await nokashService.initiatePayment({
-            payment_method: paymentMethod === 'ORANGE_MONEY' ? 'ORANGE_MONEY' : 'MTN_MOMO',
+        let nokashRes;
+        try {
+          nokashRes = await nokashService.initiatePayment({
+            payment_method: paymentMethod,
             amount: finalAmount,
             order_id: orderId,
             user_phone: req.body.phone, // Phone provided in body
             country: 'CM'
-        });
+          });
 
-        if (nokashRes.status !== 'REQUEST_OK') {
-            throw new Error(`Nokash: ${nokashRes.message || 'Erreur lors de l\'initialisation'}`);
+          if (nokashRes.status !== 'REQUEST_OK') {
+            // Nokash returns a message explaining the problem; map common cases to 400
+            const nokashMsg = (nokashRes.message || '').toString();
+            if (nokashMsg.toLowerCase().includes('intégr') && nokashMsg.toLowerCase().includes('méthode')) {
+              console.warn('[PayRecovery] Nokash method not integrated:', nokashMsg);
+              return res.status(400).json({ success: false, message: `La méthode de paiement demandée n'est pas activée sur votre compte de paiement. Veuillez vérifier la configuration Nokash.` });
+            }
+            throw new Error(`Nokash: ${nokashMsg || 'Erreur lors de l\'initialisation'}`);
+          }
+        } catch (err: any) {
+          // If nokashService threw a network/other error, surface a clearer response
+          const em = (err && err.message) ? err.message.toLowerCase() : '';
+          if (em.includes('méthode') && em.includes('nokash')) {
+            return res.status(400).json({ success: false, message: 'La méthode de paiement sélectionnée n\'est pas disponible pour votre application Nokash.' });
+          }
+          console.error('❌ [PayRecovery] Nokash call failed:', err);
+          return res.status(502).json({ success: false, message: 'Échec de la communication avec le service de paiement externe.' });
         }
 
         // 4. Create PENDING transaction
@@ -174,6 +215,14 @@ export const payRecovery = async (req: Request, res: Response) => {
                 JSON.stringify({ docId })
             ]
         );
+
+        startNokashPaymentPolling({
+          externalRef: nokashRes.data.id,
+          userId,
+          docId,
+          paymentMethod: paymentMethod || 'MOBILE_MONEY',
+          amount: finalAmount,
+        });
 
         res.status(200).json({
             success: true,
@@ -252,4 +301,87 @@ async function activateRecovery(userId: string, docId: string, transactionId: st
         console.error('Error activating recovery:', err);
         throw err;
     }
+}
+
+function stopNokashPolling(externalRef: string) {
+    const timer = nokashPollTimers.get(externalRef);
+    if (timer) {
+      clearInterval(timer);
+      nokashPollTimers.delete(externalRef);
+    }
+}
+
+function normalizeNokashStatus(payload: any) {
+  const status = (payload?.status || payload?.data?.status || payload?.result?.status || '').toString().toUpperCase();
+  return {
+    status,
+    success: ['SUCCESS', 'SUCCEEDED', 'SUCCESSFUL', 'PAID', 'COMPLETED'].includes(status),
+    terminal: ['SUCCESS', 'SUCCEEDED', 'SUCCESSFUL', 'PAID', 'COMPLETED', 'FAILED', 'CANCELED', 'CANCELLED', 'EXPIRED', 'REJECTED'].includes(status),
+  };
+}
+
+function startNokashPaymentPolling(params: {
+  externalRef: string;
+  userId: string;
+  docId: string;
+  paymentMethod: string;
+  amount: number;
+}) {
+  const { externalRef, userId, docId } = params;
+
+  stopNokashPolling(externalRef);
+
+  const startedAt = Date.now();
+
+  const timer = setInterval(async () => {
+    try {
+      if (Date.now() - startedAt > NOKASH_POLL_TIMEOUT_MS) {
+        console.warn(`[Nokash Poll] Timeout reached for ${externalRef}`);
+        stopNokashPolling(externalRef);
+        return;
+      }
+
+      const transactionRes = await query(
+        'SELECT id, status FROM transactions WHERE external_ref = $1 LIMIT 1',
+        [externalRef]
+      );
+
+      if (transactionRes.rows.length === 0) {
+        stopNokashPolling(externalRef);
+        return;
+      }
+
+      const transaction = transactionRes.rows[0];
+      if (transaction.status === 'SUCCESS' || transaction.status === 'FAILED' || transaction.status === 'CANCELED') {
+        stopNokashPolling(externalRef);
+        return;
+      }
+
+      const statusRes = await nokashService.checkStatus(externalRef);
+      const normalized = normalizeNokashStatus(statusRes);
+
+      if (!normalized.status) {
+        return;
+      }
+
+      console.log(`[Nokash Poll] ${externalRef} -> ${normalized.status}`);
+
+      if (normalized.success) {
+        await query('UPDATE transactions SET status = $1 WHERE id = $2', ['SUCCESS', transaction.id]);
+        await activateRecovery(userId, docId, transaction.id);
+        stopNokashPolling(externalRef);
+        return;
+      }
+
+      if (normalized.terminal) {
+        const terminalStatus = normalized.status === 'CANCELLED' ? 'CANCELED' : normalized.status;
+        await query('UPDATE transactions SET status = $1 WHERE id = $2', [terminalStatus, transaction.id]);
+        stopNokashPolling(externalRef);
+      }
+    } catch (error) {
+      console.error(`[Nokash Poll] Error for ${externalRef}:`, error);
+    }
+  }, NOKASH_POLL_INTERVAL_MS);
+
+  nokashPollTimers.set(externalRef, timer);
 }

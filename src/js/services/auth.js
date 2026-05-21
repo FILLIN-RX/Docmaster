@@ -250,6 +250,19 @@ async function logout() {
     await apiLogout();
     socketService.disconnect();
     console.log("✓ Déconnexion réussie");
+    
+    // Clear local session, admin flag, and all auth cookies
+    localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem('docmaster_admin_login');
+    deleteToken();
+    
+    // Explicitly wipe cookies
+    document.cookie.split(";").forEach(function(c) { 
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+    });
+
+    // Redirect to public login
+    window.location.href = "/login.html";
     return { success: true };
   } catch (error) {
     console.error("❌ Erreur de déconnexion:", error);
@@ -295,6 +308,13 @@ async function loginWithGoogle() {
     
     const user = result.user;
     const token = await user.getIdToken();
+    const activeForm = document.activeElement && typeof document.activeElement.closest === 'function'
+      ? document.activeElement.closest('form')
+      : null;
+    const adminLoginContext = Boolean(
+      (activeForm && activeForm.classList.contains('admin-login')) ||
+      document.querySelector('.form-login.admin-login')
+    );
     
     console.log("✓ Google Sign-in réussi:", user.email);
     console.log("✓ Got Firebase ID token (length:", token.length, ")");
@@ -316,6 +336,21 @@ async function loginWithGoogle() {
       
       // Save session with JWT from backend
       saveSession(dbUser, jwtToken);
+
+      const isAdmin = dbUser.role && dbUser.role.toUpperCase() === 'ADMIN';
+      if (adminLoginContext) {
+        if (isAdmin) {
+          localStorage.setItem('docmaster_admin_login', 'true');
+        } else {
+          localStorage.removeItem('docmaster_admin_login');
+          localStorage.removeItem(AUTH_KEY);
+          deleteToken();
+          showErrorModal('Accès refusé', 'Ce compte n\'a pas les droits administrateur.');
+          return { success: false, message: 'Ce compte n\'a pas les droits administrateur.' };
+        }
+      } else {
+        localStorage.removeItem('docmaster_admin_login');
+      }
       
       console.log("✓ Connexion Google réussie!");
       showSuccessModal(
@@ -326,8 +361,7 @@ async function loginWithGoogle() {
       
       // Redirect after modal
       setTimeout(() => {
-        const isAdmin = dbUser.role && dbUser.role.toUpperCase() === 'ADMIN';
-        if (isAdmin) {
+        if (adminLoginContext && isAdmin) {
           window.location.href = "/admin/dashboard.html";
         } else {
           window.location.href = "/dashboard.html";
@@ -383,6 +417,9 @@ function checkAuth() {
     "login.html",
     "rechercher.html",
     "rechercher.old.html",
+    // Recovery / public detail pages - allow anonymous access when following a public link
+    "recuperer.html",
+    "rendre.html",
     "",
   ];
 
@@ -400,9 +437,11 @@ function checkAuth() {
     const isAdmin = session.role && session.role.toUpperCase() === 'ADMIN';
     const isInsideAdmin = window.location.pathname.includes('/admin/');
 
-    // Auto-redirect Admin to their dashboard if they are on user pages
-    if (isAdmin && !isInsideAdmin && !isPublicPage) {
-      console.log("⚡ Redirection Admin vers Dashboard Admin...");
+    // Only auto-redirect admins to admin dashboard if they logged in via admin login page
+    const adminLoginFlag = localStorage.getItem('docmaster_admin_login') === 'true';
+
+    if (isAdmin && adminLoginFlag && !isInsideAdmin && !isPublicPage) {
+      console.log("⚡ Redirection Admin (admin-login) vers Dashboard Admin...");
       window.location.href = "/admin/dashboard.html";
       return;
     }
@@ -414,9 +453,9 @@ function checkAuth() {
       return;
     }
 
-    // Redirect to dashboard if on login page
+    // Redirect to dashboard if on login page. Respect adminLoginFlag to choose admin redirect.
     if (isLoginPage) {
-      if (isAdmin) {
+      if (isAdmin && adminLoginFlag) {
         window.location.href = "/admin/dashboard.html";
       } else {
         window.location.href = "/dashboard.html";
@@ -599,9 +638,19 @@ document.querySelectorAll(".form-login").forEach((form) => {
       if (result.success) {
         console.log("✓ Connexion réussie!");
         const isAdmin = result.user && result.user.role && result.user.role.toUpperCase() === 'ADMIN';
-        if (isAdmin) {
-          window.location.href = "/admin/dashboard.html";
+        const isAdminForm = form.classList.contains('admin-login');
+
+        // If this is the admin login page, require ADMIN role and mark admin-login flag
+        if (isAdminForm) {
+          if (isAdmin) {
+            localStorage.setItem('docmaster_admin_login', 'true');
+            window.location.href = "/admin/dashboard.html";
+          } else {
+            showErrorModal('Accès refusé', 'Ce compte n\'a pas les droits administrateur.');
+          }
         } else {
+          // Normal login page: always send user to regular dashboard
+          localStorage.removeItem('docmaster_admin_login');
           window.location.href = "/dashboard.html";
         }
       }
@@ -793,3 +842,5 @@ checkAuth();
 
 // Export functions
 export { login, register, logout, checkAuth, getSession, updateUI, handleUpdateProfile };
+
+window.logout = logout;

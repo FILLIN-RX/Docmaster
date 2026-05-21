@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <script type="module" src="/js/utils/page-loader.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -12,6 +13,7 @@
 <!-- Font Awesome -->
 <link rel="stylesheet"
 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<script src="/js/loader.js"></script>
 <script type="module" src="/js/index.js"></script>
 </head>
 
@@ -181,5 +183,16 @@ count.innerText = parseInt(count.innerText)+1
 </script>
 
 
+
+  <script>
+    window.addEventListener("load", function() {
+        var loader = document.getElementById("dm-global-page-loader");
+        if(loader) {
+            loader.style.opacity = "0";
+            loader.style.transition = "opacity 0.5s";
+            setTimeout(function() { loader.remove(); }, 500);
+        }
+    });
+  </script>
 </body>
 </html>

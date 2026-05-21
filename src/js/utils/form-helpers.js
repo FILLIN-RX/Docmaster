@@ -25,7 +25,7 @@ export async function nextStep(prefix, currentStep) {
     }
     if (pw1.value.length < 8) {
       shake(prefix + '-step-1');
-      alert('Le mot de passe doit avoir au moins 8 caractères.');
+      window.showAlert('Le mot de passe doit avoir au moins 8 caractères.');
       return;
     }
     
@@ -53,7 +53,20 @@ export async function nextStep(prefix, currentStep) {
     const email = document.getElementById(`${prefix}-email`)?.value.trim();
     const telephone = document.getElementById(`${prefix}-phone`)?.value.trim();
     
-    if (email) {
+    // Display used communication medium
+    const mediumDisplay = document.getElementById(`${prefix}-email-display`);
+    const step3Text = document.getElementById(`${prefix}-step3-text`);
+    if (mediumDisplay) {
+        if (telephone) {
+            mediumDisplay.textContent = telephone;
+            if (step3Text) step3Text.innerHTML = `Un code PIN à 6 chiffres a été envoyé par <strong>SMS</strong> au <span class="font-semibold text-textMain">${telephone}</span>`;
+        } else {
+            mediumDisplay.textContent = email;
+            if (step3Text) step3Text.innerHTML = `Un code PIN à 6 chiffres a été envoyé par <strong>Email</strong> à <span class="font-semibold text-textMain">${email}</span>`;
+        }
+    }
+    
+    if (email || telephone) {
       const btn = document.getElementById(`${prefix}-step2-btn`);
       if (btn) startButtonLoader(btn);
       
@@ -62,7 +75,7 @@ export async function nextStep(prefix, currentStep) {
       if (btn) stopButtonLoader(btn);
       
       if (!result.success) {
-        alert(result.message);
+        window.showAlert(result.message);
         return;
       }
     }
@@ -78,7 +91,7 @@ export async function nextStep(prefix, currentStep) {
     
     if (pin.length < 6) {
       shake(prefix + '-step-3');
-      alert('Veuillez entrer le code à 6 chiffres.');
+      window.showAlert('Veuillez entrer le code à 6 chiffres.');
       return;
     }
 
@@ -91,7 +104,7 @@ export async function nextStep(prefix, currentStep) {
 
     if (!result.success) {
       shake(prefix + '-step-3');
-      alert(result.message);
+      window.showAlert(result.message);
       return;
     }
 
@@ -229,7 +242,7 @@ export async function submitRegister(prefix) {
 
     // Validate inputs exist
     if (!nomInput || !emailInput || !passwordInput) {
-      alert("Erreur: Formulaire incomplet");
+      window.showAlert("Erreur: Formulaire incomplet");
       return;
     }
 
@@ -242,19 +255,19 @@ export async function submitRegister(prefix) {
 
     // Validate data
     if (!nom || !email || !password) {
-      alert("Veuillez remplir tous les champs obligatoires.");
+      window.showAlert("Veuillez remplir tous les champs obligatoires.");
       return;
     }
 
     if (password.length < 8) {
-      alert("Le mot de passe doit contenir au moins 8 caractères.");
+      window.showAlert("Le mot de passe doit contenir au moins 8 caractères.");
       return;
     }
 
     // Validate pseudo
     const pseudoVal = document.getElementById(`${prefix}-pseudo`)?.value.trim() || '';
     if (pseudoVal.length < 3 || !/^[a-zA-Z0-9_]+$/.test(pseudoVal)) {
-      alert("Veuillez choisir un pseudo valide (min. 3 caractères).");
+      window.showAlert("Veuillez choisir un pseudo valide (min. 3 caractères).");
       return;
     }
 
@@ -281,10 +294,10 @@ export async function submitRegister(prefix) {
         window.location.href = "/dashboard.html";
       }, 2500);
     } else {
-      alert("❌ " + result.message);
+      window.showAlert("❌ " + result.message);
     }
   } catch (error) {
     console.error("❌ Erreur:", error);
-    alert("Une erreur est survenue lors de l'inscription.");
+    window.showAlert("Une erreur est survenue lors de l'inscription.");
   }
 }

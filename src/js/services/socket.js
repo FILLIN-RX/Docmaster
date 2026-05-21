@@ -3,6 +3,7 @@
  */
 import { io } from 'socket.io-client';
 import { getToken } from '../utils/cookie.js';
+import { API_BASE_URL } from './api.js';
 
 class SocketService {
     constructor() {
@@ -26,36 +27,108 @@ class SocketService {
 
         console.log('🔌 Connecting to real-time server...');
         
-        // Dynamic URL detection (same as api.js)
-        const origin = window.location.origin;
-        let socketUrl = 'http://localhost:5000';
-        if (!origin.includes('localhost') && !origin.includes('127.0.0.1')) {
-            // Production: replace port 3003 with 5000
-            socketUrl = origin.replace(':3003', ':5000');
-        }
+        // Derive Socket URL from API base URL (remove '/api' and protocol/host logic)
+        // API_BASE_URL is usually something like "http://<host>:5000/api"
+        const socketUrl = API_BASE_URL.replace('/api', '');
         
         this.socket = io(socketUrl, {
-            auth: { token }
+            auth: { token },
+            transports: ['websocket', 'polling'] // Explicitly enable websocket transport
         });
 
         this.socket.on('connect', () => {
-            console.log('✅ Real-time connection established');
+            console.log('✅ Real-time connection established at:', socketUrl);
         });
 
         this.socket.on('connect_error', (err) => {
             console.error('❌ Socket connection error:', err.message);
         });
-
-        this.socket.on('NEW_NOTIFICATION', (notification) => {
-            console.log('🔔 New notification received:', notification);
-            this.handleNotification(notification);
+        // Basic lifecycle handlers
+        this.socket.on('disconnect', (reason) => {
+            console.log('🔌 Socket disconnected:', reason);
         });
 
-        this.socket.on('disconnect', () => {
-            console.log('🔌 Socket disconnected');
+        // Server may emit an auth/handshake event with user info
+        this.socket.on('authenticated', (payload) => {
+            try {
+                this.userId = payload?.userId || null;
+            } catch (e) {
+                this.userId = null;
+            }
+            console.log('🔐 Socket authenticated as user:', this.userId);
         });
+
+        // Common notification event from backend
+        this.socket.on('notification', (notification) => {
+            try {
+                this.handleNotification(notification);
+            } catch (err) {
+                console.error('Error handling notification:', err);
+            }
+        });
+
+        // Reattach token on reconnect attempts (useful if token was refreshed)
+        this.socket.io && this.socket.io.on && this.socket.io.on('reconnect_attempt', () => {
+            const newToken = getToken();
+            if (newToken) this.socket.auth = { token: newToken };
+        });
+
+        return this.socket;
     }
 
+
+    /**
+     * Register an event listener on the socket and track it for cleanup
+     */
+    on(event, handler) {
+        if (!this.socket) return;
+        this.socket.on(event, handler);
+        const set = this.listeners.get(event) || new Set();
+        set.add(handler);
+        this.listeners.set(event, set);
+    }
+
+    /**
+     * Remove a specific listener or all listeners for an event
+     */
+    off(event, handler) {
+        if (!this.socket) return;
+        if (handler) {
+            this.socket.off(event, handler);
+            const set = this.listeners.get(event);
+            if (set) {
+                set.delete(handler);
+                if (set.size === 0) this.listeners.delete(event);
+            }
+        } else {
+            // remove all tracked listeners for the event
+            const set = this.listeners.get(event);
+            if (set) {
+                set.forEach(h => this.socket.off(event, h));
+                this.listeners.delete(event);
+            } else {
+                this.socket.removeAllListeners(event);
+            }
+        }
+    }
+
+    /**
+     * Emit an event to the server
+     */
+    emit(event, payload) {
+        if (!this.socket || !this.socket.connected) {
+            console.warn('Socket not connected — emit skipped for', event);
+            return;
+        }
+        this.socket.emit(event, payload);
+    }
+
+    /**
+     * Convenience alias for `on`
+     */
+    subscribe(event, handler) {
+        this.on(event, handler);
+    }
     /**
      * Handle incoming notifications
      */

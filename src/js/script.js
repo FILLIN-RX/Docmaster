@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const phone = phoneInput ? phoneInput.value : "";
 
       if (!phone) {
-        alert("Veuillez remplir votre numéro de téléphone.");
+        window.showAlert("Veuillez remplir votre numéro de téléphone.");
         return;
       }
       
@@ -220,15 +220,15 @@ document.addEventListener("DOMContentLoaded", () => {
               // Start Polling
               startSubscriptionPolling();
             } else {
-              alert(`Félicitations !\nVotre abonnement "${currentPlanData.nom}" est maintenant actif.`);
+              window.showAlert(`Félicitations !\nVotre abonnement "${currentPlanData.nom}" est maintenant actif.`);
               window.closeSubscriptionModal();
               window.location.reload();
             }
           } else {
-            alert(result.message);
+            window.showAlert(result.message);
           }
         } catch (error) {
-          alert("Une erreur est survenue lors de la souscription.");
+          window.showAlert("Une erreur est survenue lors de la souscription.");
         } finally {
           btn.innerHTML = originalText;
           btn.disabled = false;
@@ -248,7 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (usage.subscription_id) {
              console.log('🎉 [Subscription] Payment confirmed!');
              clearInterval(pollInterval);
-             alert(`Félicitations !\nVotre abonnement "${usage.plan_name}" est maintenant actif.`);
+             window.showAlert(`Félicitations !\nVotre abonnement "${usage.plan_name}" est maintenant actif.`);
              window.closeSubscriptionModal();
              window.location.reload();
           }
@@ -271,7 +271,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (iti.isValidNumber()) {
       return iti.getNumber();
     } else {
-      alert("Numéro de téléphone invalide pour le pays sélectionné");
+      window.showAlert("Numéro de téléphone invalide pour le pays sélectionné");
       return null;
     }
   }

@@ -19,7 +19,9 @@ ARCHIVE_FRONT="Docmaster_Frontend.7z"
 ARCHIVE_BACK="Docmaster_Backend.7z"
 
 # --- Processus PM2 Réels V2 ---
-SERVICES=("docmaster-web-v2" "DOCMASTER-API_V2")
+# Correction : Chaîne de caractères standard à la place du format tableau Bash (...) 
+# pour éviter l'erreur "syntax error near unexpected token '('" sous SSH.
+SERVICES="docmaster-web-v2 DOCMASTER-API_V2"
 
 # --- Couleurs pour la Console ---
 GREEN='\033[0;32m'
@@ -32,4 +34,4 @@ NC='\033[0m'
 log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
 log_success() { echo -e "${GREEN}[✓ SUCCESS]${NC} $1"; }
 log_error() { echo -e "${RED}[✗ ERROR]${NC} $1"; }
-log_warning() { echo -e "${YELLOW}[!]${NC} $1"; }
+log_warning() { echo -e "${YELLOW}[⚠️ WARNING]${NC} $1"; }

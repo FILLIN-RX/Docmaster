@@ -48,6 +48,17 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   updateCounts();
 });
+
+// Hide page loader (if present) as soon as initial JS has run
+document.addEventListener("DOMContentLoaded", () => {
+  const pl = document.getElementById('page-loader');
+  if (pl) {
+    // gently fade out then remove
+    pl.style.transition = 'opacity 300ms ease';
+    pl.style.opacity = '0';
+    setTimeout(() => pl.remove(), 350);
+  }
+});
 // 1. Vos données JSON
 window.data = {
   documents: [
@@ -196,7 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
 /* Récupération (placeholder) */
 function handleRecuperation(id) {
   console.log("Récupération demandée pour id:", id);
-  alert("Demande de récupération enregistrée (id: " + id + ")");
+  window.showAlert("Demande de récupération enregistrée (id: " + id + ")");
 }
 
 /* --------------------------

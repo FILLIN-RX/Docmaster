@@ -81,6 +81,21 @@ export class MatchingService {
       } else if (score >= 50) {
         console.log(`      🔎 [POTENTIAL MATCH] Score: ${score} between ${lostId} and ${foundId}`);
         await this.matchRepository.create(lostId, foundId, score, 'PENDING');
+        try {
+          // Notify the owner (lost side) about a potential match so it appears in their interface
+          const ownerId = declaration.declaration_type === 'LOST' ? declaration.reporter_id : candidate.reporter_id;
+          const docTypeName = await this.getDocTypeName(declaration.doc_type);
+          await this.notificationService.createNotification({
+            user_id: ownerId,
+            type: 'MATCH_POTENTIAL',
+            title: 'Correspondance potentielle trouvée',
+            message: `Des correspondances potentielles ont été trouvées pour votre ${docTypeName}. Connectez-vous pour voir les détails.`,
+            metadata: { lostId, foundId, score, docType: docTypeName }
+          });
+          console.log(`      🔔 [NOTIFY] Owner ${ownerId} notified about potential match (${score})`);
+        } catch (err) {
+          console.error('❌ Error notifying owner about potential match:', err);
+        }
       } else {
         console.log(`      ⚪ [LOW] No action taken.`);
       }

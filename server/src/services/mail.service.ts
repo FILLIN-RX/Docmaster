@@ -38,7 +38,7 @@ export class MailService {
    * Send a password reset email
    */
   async sendPasswordResetEmail(to: string, token: string): Promise<void> {
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password.html?token=${token}`;
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3003'}/reset-password.html?token=${token}`;
     const fromName = "DocMaster Support";
     const fromEmail = process.env.MAIL_FROM || process.env.MAIL_USER || 'assistance@dm.cm';
     
@@ -103,7 +103,7 @@ export class MailService {
           <p>DocMaster vous aide à sécuriser et retrouver vos documents importants en toute simplicité.</p>
           <p>Vous pouvez dès maintenant commencer à déclarer vos documents ou rechercher des objets perdus.</p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard.html" style="background-color: #f5a64b; color: white; padding: 14px 25px; text-decoration: none; border-radius: 10px; font-weight: bold; display: inline-block;">Accéder à mon tableau de bord</a>
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:3003'}/dashboard.html" style="background-color: #f5a64b; color: white; padding: 14px 25px; text-decoration: none; border-radius: 10px; font-weight: bold; display: inline-block;">Accéder à mon tableau de bord</a>
           </div>
           <hr style="border: 0; border-top: 1px solid #e5e0d8; margin: 20px 0;">
           <p style="font-size: 12px; color: #8e8e8e; text-align: center;">
@@ -194,7 +194,7 @@ export class MailService {
       : `Le propriétaire du document <strong>${docType}</strong> que vous avez signalé a été identifié.`;
     
     const actionText = isLostSide ? "Voir les détails et récupérer" : "Voir les détails";
-    const actionUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard.html`;
+    const actionUrl = `${process.env.FRONTEND_URL || 'http://localhost:3003'}/dashboard.html`;
 
     const mailOptions = {
       from: `"${fromName}" <${fromEmail}>`,

@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DocMaster — Admin Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      font-family: 'Poppins', sans-serif;
+      height: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      background: linear-gradient(135deg, #F4EFE6 0%, #FAF7F2 50%, #E8F5EE 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Blobs Background */
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.3;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .blob-1 {
+      width: 300px;
+      height: 300px;
+      background: linear-gradient(135deg, #A8CBAF 0%, #E8F5EE 100%);
+      top: -100px;
+      left: -100px;
+      animation-delay: 0s;
+    }
+
+    .blob-2 {
+      width: 250px;
+      height: 250px;
+      background: linear-gradient(135deg, #E8B89A 0%, #FEF0DC 100%);
+      bottom: -50px;
+      right: -50px;
+      animation-delay: 2s;
+    }
+
+    .blob-3 {
+      width: 200px;
+      height: 200px;
+      background: linear-gradient(135deg, #1E3A2F 0%, #2D5A42 100%);
+      top: 50%;
+      right: 10%;
+      opacity: 0.15;
+      animation-delay: 4s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(20px); }
+    }
+
+    /* Container */
+    .login-container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 500px;
+      padding: 24px;
+      animation: slideUp 0.6s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Card */
+    .login-card {
+      background: #FFFFFF;
+      border-radius: 24px;
+      padding: 48px 32px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+      border: 1px solid #EAE3D8;
+      backdrop-filter: blur(10px);
+    }
+
+    /* Header */
+    .login-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .logo-box {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #1E3A2F 0%, #2D5A42 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      box-shadow: 0 10px 30px rgba(30, 58, 47, 0.2);
+      animation: rotate 20s linear infinite;
+    }
+
+    @keyframes rotate {
+      0% { transform: rotateZ(0deg); }
+      100% { transform: rotateZ(360deg); }
+    }
+
+    .logo-box i {
+      font-size: 36px;
+      color: #F5A64B;
+    }
+
+    .login-header h1 {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: #1A1A1A;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .login-header p {
+      font-size: 14px;
+      color: #6B7280;
+      font-weight: 500;
+    }
+
+    /* Form */
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group label {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #6B7280;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .form-group label i {
+      color: #F5A64B;
+      font-size: 12px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px 12px 44px;
+      border: 1.5px solid #EAE3D8;
+      border-radius: 12px;
+      background: #F9F6F1;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      color: #1A1A1A;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    .form-group input::placeholder {
+      color: #C4BAB0;
+    }
+
+    .form-group input:focus {
+      border-color: #F5A64B;
+      background: #FFFFFF;
+      box-shadow: 0 0 0 4px rgba(245, 166, 75, 0.12);
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      color: #D98A30;
+      font-size: 14px;
+      pointer-events: none;
+      transition: color 0.3s ease;
+    }
+
+    .form-group input:focus ~ .input-icon,
+    .input-wrapper:has(input:focus) .input-icon {
+      color: #F5A64B;
+    }
+
+    /* Remember & Forgot */
+    .form-options {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .form-options label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: #6B7280;
+      font-weight: 500;
+      margin: 0;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+
+    .form-options input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: #F5A64B;
+    }
+
+    .form-options a {
+      color: #F5A64B;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    .form-options a:hover {
+      color: #D98A30;
+    }
+
+    /* Submit Button */
+    .submit-btn {
+      width: 100%;
+      padding: 14px 24px;
+      background: linear-gradient(135deg, #1E3A2F 0%, #2D5A42 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+      box-shadow: 0 10px 25px rgba(30, 58, 47, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .submit-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.2);
+      transition: left 0.3s ease;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 35px rgba(30, 58, 47, 0.3);
+    }
+
+    .submit-btn:hover::before {
+      left: 100%;
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .submit-btn i {
+      font-size: 14px;
+    }
+
+    /* Error Message */
+    .error-message {
+      display: none;
+      padding: 12px 14px;
+      background: #fef2f2;
+      border: 1.5px solid #FECACA;
+      border-radius: 10px;
+      color: #ef4444;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      animation: shake 0.4s ease-in-out;
+    }
+
+    .error-message.show {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    /* Divider */
+    .form-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 8px 0;
+    }
+
+    .form-divider::before,
+    .form-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #EAE3D8;
+    }
+
+    .form-divider span {
+      font-size: 12px;
+      color: #9CA3AF;
+      font-weight: 500;
+    }
+
+    /* Footer Links */
+    .login-footer {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #EAE3D8;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .login-footer a {
+      color: #F5A64B;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .login-footer a:hover {
+      color: #D98A30;
+      gap: 10px;
+    }
+
+    .login-footer a i {
+      font-size: 12px;
+    }
+
+    /* Loading State */
+    .submit-btn.loading {
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .login-card {
+        padding: 32px 20px;
+      }
+
+      .login-header h1 {
+        font-size: 24px;
+      }
+
+      .form-group input {
+        padding: 11px 14px 11px 40px;
+        font-size: 13px;
+      }
+
+      .submit-btn {
+        padding: 12px 20px;
+        font-size: 14px;
+      }
+
+      .blob-1, .blob-2, .blob-3 {
+        opacity: 0.15;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .login-container {
+        padding: 16px;
+      }
+
+      .login-card {
+        padding: 24px 16px;
+      }
+
+      .login-header {
+        margin-bottom: 28px;
+      }
+
+      .logo-box {
+        width: 64px;
+        height: 64px;
+      }
+
+      .logo-box i {
+        font-size: 28px;
+      }
+
+      .login-header h1 {
+        font-size: 20px;
+      }
+
+      .form-options {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Animated Blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <!-- Login Container -->
+  <div class="login-container">
+    <div class="login-card">
+      <!-- Header -->
+      <div class="login-header">
+        <div class="logo-box">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h1>Admin DocMaster</h1>
+        <p>Connexion Administrateur Sécurisée</p>
+      </div>
+
+      <!-- Form -->
+      <form class="form-login admin-login" novalidate id="adminLoginForm">
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span id="errorText"></span>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label>
+            <i class="fa-solid fa-envelope"></i>
+            Adresse Email
+          </label>
+          <div class="input-wrapper">
+            <input 
+              type="email" 
+              name="email" 
+              id="emailInput"
+              placeholder="admin@docmaster.com" 
+              required 
+              autocomplete="email"
+            />
+            <i class="fa-solid fa-envelope input-icon"></i>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label>
+            <i class="fa-solid fa-lock"></i>
+            Mot de Passe
+          </label>
+          <div class="input-wrapper">
+            <input 
+              type="password" 
+              name="password" 
+              id="passwordInput"
+              placeholder="••••••••" 
+              required 
+              autocomplete="current-password"
+            />
+            <i class="fa-solid fa-lock input-icon"></i>
+          </div>
+        </div>
+
+        <!-- Remember & Forgot -->
+        <div class="form-options">
+          <label>
+            <input type="checkbox" name="remember" />
+            Se souvenir de moi
+          </label>
+          <a href="/forgot-password.html">
+            Mot de passe oublié ?
+          </a>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="submit-btn" id="submitBtn">
+          <i class="fa-solid fa-arrow-right-to-bracket"></i>
+          <span>Se Connecter</span>
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="form-divider">
+        <span>Besoin d'aide ?</span>
+      </div>
+
+      <!-- Footer -->
+      <div class="login-footer">
+        <a href="/login.html">
+          <i class="fa-solid fa-arrow-left"></i>
+          Retour au login utilisateur
+        </a>
+        <a href="https://docmaster.com/contact" target="_blank">
+          Contacter le support
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/services/auth.js"></script>
+</body>
+</html>

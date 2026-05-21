@@ -5,6 +5,9 @@ import {
     getActiveClaim
 } from './api.js';
 
+// Current loaded declaration (for ownerConfirm etc.)
+let CURRENT_DECLARATION = null;
+
 document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
     const docId = params.get('id');
@@ -16,11 +19,80 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const result = await getDeclarationById(docId);
     if (result.success) {
+        CURRENT_DECLARATION = result.data;
         renderRecoveryData(result.data);
     } else {
-        alert(result.message);
+        window.showAlert(result.message);
     }
 });
+
+/**
+ * Reveal finder/contact/map info after successful payment
+ */
+function revealFinderInfo() {
+    try {
+        // Finder name
+        const nameEl = document.getElementById('finderName');
+        if (nameEl && nameEl.dataset && nameEl.dataset.real) {
+            nameEl.textContent = nameEl.dataset.real;
+            nameEl.classList.add('revealed');
+        }
+
+        // Finder contact
+        const contactEl = document.getElementById('finderContactBlur');
+        if (contactEl) {
+            const span = contactEl.querySelector('span');
+            if (span && contactEl.dataset && contactEl.dataset.real) {
+                span.textContent = contactEl.dataset.real;
+            }
+            contactEl.classList.add('revealed');
+            // remove inline blur style if present
+            if (contactEl.style) contactEl.style.filter = 'none';
+        }
+
+        // Finder location
+        const locEl = document.getElementById('finderLocBlur');
+        if (locEl && locEl.dataset && locEl.dataset.real) {
+            const span = locEl.querySelector('span');
+            if (span) span.textContent = locEl.dataset.real;
+            locEl.classList.add('revealed');
+            if (locEl.style) locEl.style.filter = 'none';
+        }
+
+        // Unblur document preview
+        const docPreview = document.getElementById('docPreviewOwner');
+        if (docPreview) {
+            docPreview.classList.remove('blur-doc');
+            // also unblur any children placeholders
+            const blurs = docPreview.querySelectorAll('[style]');
+            blurs.forEach(el => {
+                if (el.style && el.style.filter) el.style.filter = 'none';
+            });
+        }
+
+        // Initialize map with stored coords if available
+        if (window.FINDER_LAT && window.FINDER_LNG && typeof window.initFinderMap === 'function') {
+            window.initFinderMap(window.FINDER_LAT, window.FINDER_LNG, window.FINDER_PHONE);
+        }
+
+        // Hide locked overlays if any
+        const finderOverlay = document.getElementById('finder-info-locked');
+        if (finderOverlay) finderOverlay.style.display = 'none';
+        const mapOverlay = document.getElementById('finder-map-locked');
+        if (mapOverlay) mapOverlay.style.display = 'none';
+
+        // If there is a finder avatar element, reveal it
+        const avatar = document.getElementById('finderAvatar');
+        if (avatar && avatar.dataset && avatar.dataset.real) {
+            avatar.textContent = avatar.dataset.real;
+        }
+    } catch (e) {
+        console.error('[Recovery] revealFinderInfo error', e);
+    }
+}
+
+// Expose for debug or other modules
+window.revealFinderInfo = revealFinderInfo;
 
 function renderRecoveryData(doc) {
     const isOwnerPage = window.location.pathname.includes('recuperer.html');
@@ -43,6 +115,10 @@ function renderOwnerData(doc) {
     const docImage = document.getElementById('docImage');
     if (docImage && doc.counterPartPhotoRecto) {
         docImage.src = doc.counterPartPhotoRecto.startsWith('http') ? doc.counterPartPhotoRecto : '/' + doc.counterPartPhotoRecto.replace(/^\//, '');
+        // show image and hide placeholder
+        docImage.classList.remove('hidden');
+        const placeholder = document.getElementById('imagePlaceholder');
+        if (placeholder) placeholder.classList.add('hidden');
     }
 
     const docMatchDate = document.getElementById('docMatchDate');
@@ -93,10 +169,7 @@ function renderOwnerData(doc) {
             if (span && locEl.classList.contains('revealed')) span.textContent = window.FINDER_CITY;
         }
 
-        // Initialize Map with real coordinates
-        if (typeof window.initFinderMap === 'function') {
-            setTimeout(() => window.initFinderMap(window.FINDER_LAT, window.FINDER_LNG, window.FINDER_PHONE), 500);
-        }
+        // Map initialization is deferred until the owner pays (so itinerary is hidden)
     }
 
     // 4. Progress & Actions
@@ -113,6 +186,57 @@ function renderOwnerData(doc) {
         }
     }
 }
+
+/**
+ * Called when owner clicks the main action to pay & recover
+ * Attached to window.ownerConfirm via HTML button
+ */
+window.ownerConfirm = async function ownerConfirm() {
+    if (!CURRENT_DECLARATION || !CURRENT_DECLARATION.id) {
+        console.error('No current declaration to process');
+        return;
+    }
+
+    const btn = document.getElementById('btnOwnerPrimary');
+    try {
+        if (btn) {
+            btn.disabled = true;
+            btn.classList.add('opacity-70');
+        }
+
+        // Use recovery service workflow if available
+        if (window.recoveryService && typeof window.recoveryService.completeOwnerWorkflow === 'function') {
+            const res = await window.recoveryService.completeOwnerWorkflow(CURRENT_DECLARATION.id);
+            if (res.success) {
+                // Update UI for success
+                if (window.recoveryService.updateUIForSuccess) window.recoveryService.updateUIForSuccess(res.verificationCode || '—');
+                // Reveal finder info and map
+                revealFinderInfo();
+                return;
+            } else {
+                alert(res.message || 'Le paiement a échoué.');
+            }
+        } else {
+            // Fallback: call processPayment directly
+            const fallback = await (window.recoveryService && window.recoveryService.processPayment ? window.recoveryService.processPayment(CURRENT_DECLARATION.id) : null);
+            if (fallback && fallback.success) {
+                if (window.recoveryService.updateUIForSuccess) window.recoveryService.updateUIForSuccess(fallback.verificationCode || '—');
+                revealFinderInfo();
+                return;
+            } else {
+                alert('Erreur lors du paiement.');
+            }
+        }
+    } catch (err) {
+        console.error('ownerConfirm error', err);
+        alert('Erreur technique lors du paiement.');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('opacity-70');
+        }
+    }
+};
 
 function renderFinderData(doc) {
     // History summary

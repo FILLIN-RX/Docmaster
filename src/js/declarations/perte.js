@@ -229,7 +229,7 @@ let isThirdParty = false;
 const selectedDocs = [];
 let activeDocIdx = 0;
 let currentStep = 1;
-const totalSteps = 6;
+const totalSteps = 5;
 let checked = false;
 export let lastDeclarationData = null;
 
@@ -491,10 +491,10 @@ function buildStep2(direction){
 
     if(f.type === 'textarea'){
       if(inGrid){ html += '</div>'; inGrid=false; }
-      html += buildField(f, 'margin-top:14px;', defaultValue);
+      html += buildField(f, 'margin-top:14px;', defaultValue, id);
     } else {
       if(!inGrid){ html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">'; inGrid=true; }
-      html += buildField(f, '', defaultValue);
+      html += buildField(f, '', defaultValue, id);
     }
   });
   if(inGrid) html += '</div></div>';
@@ -511,11 +511,12 @@ function buildStep2(direction){
   }
 }
 
-function buildField(f, extra, defaultValue = ''){
+function buildField(f, extra, defaultValue = '', docId = ''){
   const optBadge = f.optional ? `<span class="opt-badge">Optionnel</span>` : '';
   const iconHtml = f.icon ? `<i class="fa-solid ${f.icon} field-icon"></i>` : '';
   const noIcon   = !f.icon ? ' no-icon' : '';
   const valAttr  = defaultValue ? `value="${defaultValue}"` : '';
+  const fieldId  = docId ? `${f.id}_${docId}` : f.id;
 
   if(f.type === 'select'){
     const opts = (f.options || []).map(o => `<option value="${o}" ${o===defaultValue?'selected':''}>${o}</option>`).join('');
@@ -523,7 +524,7 @@ function buildField(f, extra, defaultValue = ''){
       <label class="field-label"><i class="fa-solid ${f.icon}" style="color:#F5A64B;font-size:10px;"></i> ${f.label} ${optBadge}</label>
       <div class="field-wrapper">
         ${iconHtml}
-        <select class="field-input" id="${f.id}" name="${f.id}"><option value="">Sélectionner…</option>${opts}</select>
+        <select class="field-input" id="${fieldId}" name="${fieldId}"><option value="">Sélectionner…</option>${opts}</select>
         <i class="fa-solid fa-chevron-down" style="position:absolute;right:14px;color:#C4BAB0;font-size:11px;pointer-events:none;"></i>
       </div>
     </div>`;
@@ -531,12 +532,12 @@ function buildField(f, extra, defaultValue = ''){
   if(f.type === 'textarea'){
     return `<div class="field-group" style="${extra}">
       <label class="field-label">${f.icon ? `<i class="fa-solid ${f.icon}" style="color:#F5A64B;font-size:10px;"></i>` : ''} ${f.label} ${optBadge}</label>
-      <div class="field-wrapper"><textarea class="field-input no-icon" id="${f.id}" name="${f.id}" placeholder="${f.placeholder}">${defaultValue}</textarea></div>
+      <div class="field-wrapper"><textarea class="field-input no-icon" id="${fieldId}" name="${fieldId}" placeholder="${f.placeholder}">${defaultValue}</textarea></div>
     </div>`;
   }
   return `<div class="field-group" style="${extra}">
     <label class="field-label">${f.icon ? `<i class="fa-solid ${f.icon}" style="color:#F5A64B;font-size:10px;"></i>` : ''} ${f.label} ${optBadge}</label>
-    <div class="field-wrapper">${iconHtml}<input type="${f.type}" class="field-input${noIcon}" id="${f.id}" name="${f.id}" placeholder="${f.placeholder||''}" ${valAttr}/></div>
+    <div class="field-wrapper">${iconHtml}<input type="${f.type}" class="field-input${noIcon}" id="${fieldId}" name="${fieldId}" placeholder="${f.placeholder||''}" ${valAttr}/></div>
   </div>`;
 }
 
@@ -552,7 +553,7 @@ function showStep(step){
   updateProgressUI();
   document.getElementById('formLeft').scrollTop=0;
   if(currentStep===3){ activeDocIdx=0; buildStep2('right'); }
-  if(currentStep===6) fillSummary();
+  if(currentStep===5) fillSummary();
   
   // Restaurer les données sauvegardées après un délai (pour laisser le DOM se construire)
   setTimeout(() => restoreDeclarationDraft(), 100);
@@ -656,8 +657,12 @@ function goToPrevStep(){
 function selectPlace(btn){ document.querySelectorAll('.place-tag').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
 
 function setUrgency(level,btn){ 
-  document.querySelectorAll('.urgency-btn').forEach(b=>b.className='urgency-btn'); 
-  btn.classList.add('sel-'+level); 
+  document.querySelectorAll('.urgency-btn').forEach(b=>{
+    b.className='urgency-btn'; 
+    b.removeAttribute('data-selected');
+  });
+  btn.classList.add('sel-'+level);
+  btn.setAttribute('data-selected', 'true');
   const urgTexts={low:'Situation non urgente, quelques semaines acceptables.',medium:'Document important, situation gérable sous quelques jours.',high:'URGENT — Ce document est indispensable dès maintenant !'};
   document.getElementById('urgencyDesc').textContent=urgTexts[level]; 
 }
@@ -801,7 +806,7 @@ async function validateAndSubmit() {
   const btn = document.getElementById('finalSubmitBtn');
 
   if (passInput.value.length < 4) {
-    alert("Veuillez saisir votre code secret.");
+    window.showAlert("Veuillez saisir votre code secret.");
     return;
   }
 
@@ -842,31 +847,34 @@ async function validateAndSubmit() {
     console.log(inputsMap);
     console.groupEnd();
     
-    // Mapper chaque champ en cherchant par ID (pas par ordre)
-    docMeta.fields.forEach((fieldMeta) => {
-      const input = inputsMap[fieldMeta.id];
-      if (!input) {
-        console.warn(`❌ Champ "${fieldMeta.id}" NON TROUVÉ dans le DOM`);
-        return;
-      }
+    // Mapper chaque champ en cherchant par ID (avec préfixe)
+    selectedDocs.forEach(docId => {
+      const docMeta = getDocMeta(docId);
       
-      let value = input.value?.trim() || '';
-      if (!value) {
-        console.log(`⊘ ${fieldMeta.id}: vide (input.id=${input.id}, input.name=${input.name})`);
-        return; // Ignore les champs vides
-      }
-      
-      let fieldName = fieldMeta.id;
-      
-      // Mapper les noms des champs
-      if (fieldName === 'titulaire') fieldName = 'owner_name';
-      if (fieldName === 'numero') fieldName = 'document_number';
-      if (fieldName === 'expiration') fieldName = 'date_expiration';
-      if (fieldName === 'date_naissance') fieldName = 'date_naissance';
-      if (fieldName === 'desc') fieldName = 'description';
-      
-      console.log(`✓ ${fieldMeta.id} (type=${input.type}) → ${fieldName}: "${value}"`);
-      formData.append(fieldName, value);
+      docMeta.fields.forEach((fieldMeta) => {
+        const inputId = `${fieldMeta.id}_${docId}`;
+        const input = document.getElementById(inputId);
+        if (!input) {
+          console.warn(`❌ Champ "${inputId}" NON TROUVÉ`);
+          return;
+        }
+        
+        let value = input.value?.trim() || '';
+        if (!value) return;
+        
+        // Mapper les noms des champs
+        let fieldName = fieldMeta.id;
+        if (fieldName === 'titulaire') fieldName = 'owner_name';
+        if (fieldName === 'numero') fieldName = 'document_number';
+        if (fieldName === 'expiration') fieldName = 'date_expiration';
+        if (fieldName === 'date_naissance') fieldName = 'date_naissance';
+        if (fieldName === 'desc') fieldName = 'description';
+        
+        // Note: Pour supporter plusieurs documents au backend, il faudrait peut-être indexer ces noms.
+        // Pour l'instant, on ajoute les champs au FormData.
+        console.log(`✓ ${inputId} → ${fieldName}: "${value}"`);
+        formData.append(fieldName, value);
+      });
     });
 
     // ③ Date de perte (champ requis par le formulaire)
@@ -943,9 +951,10 @@ async function validateAndSubmit() {
     }
 
     // ⑪ Niveau urgence (optionnel)
-    const urgEl = document.querySelector('.urgency-btn.sel-low, .urgency-btn.sel-medium, .urgency-btn.sel-high');
-    if (urgEl?.textContent) {
-      formData.append('urgence_niveau', urgEl.textContent.trim());
+    const urgEl = document.querySelector('.urgency-btn[data-selected="true"]');
+    if (urgEl) {
+       // Maps the class name suffix (low, medium, high) back to label if needed, or just textContent
+       formData.append('urgence_niveau', urgEl.textContent.trim());
     }
 
     // ⑫ Montant récompense (optionnel)
@@ -1013,14 +1022,14 @@ async function validateAndSubmit() {
             errorMsg += `   ${messages}\n`;
           }
         }
-        alert(errorMsg);
+        window.showAlert(errorMsg);
       } else {
-        alert("❌ " + (result.message || "Erreur lors de l'enregistrement"));
+        window.showAlert("❌ " + (result.message || "Erreur lors de l'enregistrement"));
       }
     }
   } catch (error) {
     console.error('❌ Erreur:', error);
-    alert("❌ " + error.message);
+    window.showAlert("❌ " + error.message);
   } finally {
     btn.disabled = false;
     btn.innerHTML = 'Envoyer la déclaration';
@@ -1029,14 +1038,14 @@ async function validateAndSubmit() {
 
 function downloadDeclarationPdf() {
   if (!lastDeclarationData) {
-    alert("Erreur: Données de déclaration introuvables.");
+    window.showAlert("Erreur: Données de déclaration introuvables.");
     return;
   }
 
   if (typeof window.generateSwornStatementPdf === 'function') {
     window.generateSwornStatementPdf(lastDeclarationData);
   } else {
-    alert("Le générateur de PDF n'est pas encore prêt. Veuillez patienter.");
+    window.showAlert("Le générateur de PDF n'est pas encore prêt. Veuillez patienter.");
     console.error("generateSwornStatementPdf is not defined on window");
   }
 }

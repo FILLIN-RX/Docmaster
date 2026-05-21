@@ -126,6 +126,20 @@ function updateUI(data) {
         pointsDisplay.textContent = `+${data.reward_points}`;
     }
 
+    // Update sticky mobile validation bar
+    const stickyRendreDocType = document.getElementById('stickyRendreDocType');
+    if (stickyRendreDocType) stickyRendreDocType.textContent = data.doc_type || 'Objet trouvé';
+    
+    const stickyRendreGains = document.getElementById('stickyRendreGains');
+    if (stickyRendreGains && data.reward_amount) {
+        stickyRendreGains.textContent = `+${data.reward_amount.toLocaleString()} FCFA`;
+    }
+    
+    const stickyRendreLocation = document.getElementById('stickyRendreLocation');
+    if (stickyRendreLocation) {
+        stickyRendreLocation.textContent = data.ville || 'En agence';
+    }
+
     // Update detailed breakdown if docTypeInfo exists
     if (data.docTypeInfo) {
         const civicRewardEl = document.getElementById('civicRewardDisplay');
@@ -198,7 +212,7 @@ async function finderValidateCode() {
     
     const code = Array.from(inputs).map(i => i.value).join('');
     if (code.length < 6) {
-        alert('Veuillez entrer le code complet à 6 chiffres.');
+        window.showAlert('Veuillez entrer le code complet à 6 chiffres.');
         return;
     }
 
@@ -206,7 +220,7 @@ async function finderValidateCode() {
     const docId = params.get('id');
 
     if (!docId) {
-        alert('ID du document manquant.');
+        window.showAlert('ID du document manquant.');
         return;
     }
 
@@ -231,7 +245,7 @@ async function finderValidateCode() {
                 window.location.href = '/dashboard.html';
             }, 2000);
         } else {
-            alert(result.message || 'Code invalide');
+            window.showAlert(result.message || 'Code invalide');
             if (btn) {
                 btn.disabled = false;
                 btn.innerHTML = originalContent;
@@ -241,7 +255,7 @@ async function finderValidateCode() {
         }
     } catch (error) {
         console.error('❌ [Rendre] Error validating code:', error);
-        alert('Erreur de connexion au serveur.');
+        window.showAlert('Erreur de connexion au serveur.');
         if (btn) {
             btn.disabled = false;
             btn.innerHTML = originalContent;

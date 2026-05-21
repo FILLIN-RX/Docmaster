@@ -371,6 +371,6 @@ window.withdraw = function () {
       `Solde insuffisant — minimum ${minAmount} XAF requis.\nSolde actuel : ${balance} XAF`,
     );
   } else {
-    alert("Fonctionnalité de retrait bientôt disponible !");
+    window.showAlert("Fonctionnalité de retrait bientôt disponible !");
   }
 };

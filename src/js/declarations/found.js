@@ -77,7 +77,9 @@ export function initFoundDeclaration() {
   window.drgDrop = drgDrop;
 
   // Render types (async)
+  window.showPageLoader();
   getActiveDocumentTypes().then(res => {
+    window.hidePageLoader();
     console.log('📄 [found.js] Types de documents reçus:', res);
     if (res.success && Array.isArray(res.data) && res.data.length > 0) {
       DOC_TYPES = res.data;
@@ -88,6 +90,7 @@ export function initFoundDeclaration() {
       DOC_TYPES = res.data || [];
     }
   }).catch(err => {
+    window.hidePageLoader();
     console.error('❌ [found.js] Erreur chargement types documents:', err);
     DOC_TYPES = [];
   });
@@ -105,14 +108,14 @@ export function initFoundDeclaration() {
 function goToStep(n) {
   // Simple validation before moving
   if (n === 2 && !selectedType) {
-    alert("Veuillez sélectionner un type de document.");
+    window.showAlert("Veuillez sélectionner un type de document.");
     return;
   }
   
   if (n === 3 && currentStep === 2) {
     const ownerName = document.getElementById('owner-name').value;
     if (!ownerName || ownerName.trim().length < 2) {
-      alert("Veuillez entrer le nom du propriétaire (ou 'Inconnu' si illisible).");
+      window.showAlert("Veuillez entrer le nom du propriétaire (ou 'Inconnu' si illisible).");
       return;
     }
   }
@@ -120,7 +123,7 @@ function goToStep(n) {
   if (n === 4 && currentStep === 3) {
     const ville = document.getElementById('lieu-adresse').value;
     if (!ville || ville.trim().length < 2) {
-      alert("Veuillez préciser la ville ou le quartier.");
+      window.showAlert("Veuillez préciser la ville ou le quartier.");
       return;
     }
   }
@@ -283,13 +286,13 @@ async function submitDeclaration() {
   
   const consent = document.getElementById("consent-found");
   if (!consent || !consent.checked) {
-    alert("Veuillez accepter les conditions d'utilisation.");
+    window.showAlert("Veuillez accepter les conditions d'utilisation.");
     return;
   }
 
   // Validate selected type
   if (!selectedType) {
-    alert("Veuillez sélectionner un type de document.");
+    window.showAlert("Veuillez sélectionner un type de document.");
     return;
   }
 
@@ -325,14 +328,14 @@ async function submitDeclaration() {
   
   // Validate required fields
   if (!ownerName) {
-    alert("Veuillez entrer le nom du propriétaire.");
+    window.showAlert("Veuillez entrer le nom du propriétaire.");
     if (btn) btn.disabled = false;
     if (wrap) wrap.classList.add("hidden");
     return;
   }
   
   if (!ville) {
-    alert("Veuillez préciser la ville ou le quartier.");
+    window.showAlert("Veuillez préciser la ville ou le quartier.");
     if (btn) btn.disabled = false;
     if (wrap) wrap.classList.add("hidden");
     return;
@@ -395,16 +398,12 @@ async function submitDeclaration() {
     if (lat === undefined || lng === undefined) {
       console.error('❌ [submitDeclaration] Coordonnées invalides:', selectedLocation);
     } else {
-      // Option 1: Envoyer en JSON string
-      const locationObj = { lat, long: lng, city };
-      formData.append('found_location', JSON.stringify(locationObj));
+    // Version standardisée: envoyer une chaîne simple "lat,long"
+    const locationString = `${lat},${lng}`;
+    formData.append('found_location', locationString);
+    formData.append('found_location_city', city);
       
-      // Option 2: Ajouter aussi les champs individuels comme fallback
-      formData.append('found_location_lat', lat.toString());
-      formData.append('found_location_long', lng.toString());
-      formData.append('found_location_city', city);
-      
-      console.log('📍 [submitDeclaration] Location ajoutée:', locationObj);
+    console.log('📍 [submitDeclaration] Location envoyée:', locationString);
     }
   }
 
@@ -462,7 +461,7 @@ async function submitDeclaration() {
           .map(([key, val]) => `- ${key}: ${val}`)
           .join('\n');
       }
-      alert(errorMessage);
+      window.showAlert(errorMessage);
       if (btn) {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-paper-plane text-[12px]"></i> Réessayer';
@@ -472,7 +471,7 @@ async function submitDeclaration() {
   } catch (error) {
     console.error('💥 [submitDeclaration] Exception:', error);
     clearInterval(interval);
-    alert('Erreur de connexion au serveur. Veuillez vérifier votre connexion et réessayer.');
+    window.showAlert('Erreur de connexion au serveur. Veuillez vérifier votre connexion et réessayer.');
     if (btn) {
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-paper-plane text-[12px]"></i> Réessayer';
@@ -543,7 +542,7 @@ function initInlineMap() {
  */
 async function useCurrentLocation() {
   if (!navigator.geolocation) {
-    alert("La géolocalisation n'est pas supportée par votre navigateur.");
+    window.showAlert("La géolocalisation n'est pas supportée par votre navigateur.");
     return;
   }
 
@@ -567,7 +566,7 @@ async function useCurrentLocation() {
     },
     (error) => {
       console.error("Geolocation error:", error);
-      alert("Impossible de récupérer votre position. Assurez-vous d'avoir autorisé l'accès.");
+      window.showAlert("Impossible de récupérer votre position. Assurez-vous d'avoir autorisé l'accès.");
       btn.innerHTML = originalHtml;
       btn.disabled = false;
     },
@@ -686,5 +685,5 @@ document.addEventListener('click', (e) => {
 window.searchLocation = searchLocation;
 window.copyRef = function() {
   const ref = document.getElementById("decl-ref").textContent;
-  navigator.clipboard.writeText(ref).then(() => alert("Référence copiée !"));
+  navigator.clipboard.writeText(ref).then(() => window.showAlert("Référence copiée !"));
 };

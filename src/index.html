@@ -3,6 +3,21 @@
 
 <head>
   <meta charset="UTF-8" />
+  <!-- Anti-FOUC: hide page until i18n translations are applied -->
+  <script>
+    (function() {
+      var lang = localStorage.getItem('lang') || 'fr';
+      document.documentElement.setAttribute('lang', lang);
+      document.documentElement.style.visibility = 'hidden';
+      // Safety fallback: always reveal page after 500ms even if i18n fails
+      setTimeout(function() {
+        document.documentElement.style.visibility = '';
+      }, 500);
+    })();
+  </script>
+  <script type="module" src="/js/utils/page-loader.js"></script>
+  <script type="module" src="/js/i18n/index.js"></script>
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DocMaster — Retrouvez vos documents perdus au Cameroun</title>
   <meta name="description"
@@ -43,8 +58,10 @@
     }
   </script>
   <link rel="stylesheet" href="/css/main.css" />
+  <script src="/js/loader.js"></script>
   <script type="module" src="/js/index.js"></script>
   <script type="module" src="/js/script.js"></script>
+  <script type="module" src="/js/i18n/index.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@24.5.0/build/js/intlTelInput.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@24.5.0/build/css/intlTelInput.css" />
@@ -226,6 +243,12 @@
 </head>
 
 <body>
+
+  <div id="dm-global-page-loader" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;display:flex;align-items:center;justify-content:center;background:#F4EFE6;">
+    <div style="width:40px;height:40px;border:4px solid #F5A64B;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;"></div>
+  </div>
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
   <script type="module" src="/js/utils/ui-helpers.js"></script>
 
   <!-- ═══════════════════════════════════════════
@@ -244,13 +267,13 @@
         <li>
           <a href="index.html"
             class="px-4 py-2 rounded-xl text-white/90 hover:text-primary hover:bg-white/5 text-sm font-semibold transition-all flex items-center gap-2">
-            <i class="fa-solid fa-house text-xs"></i> Accueil
+            <i class="fa-solid fa-house text-xs"></i> <span data-i18n="nav_home">Accueil</span>
           </a>
         </li>
         <li>
           <a href="rechercher.html"
             class="px-4 py-2 rounded-xl text-white/90 hover:text-primary hover:bg-white/5 text-sm font-semibold transition-all flex items-center gap-2">
-            <i class="fa-solid fa-magnifying-glass text-xs"></i> Rechercher
+            <i class="fa-solid fa-magnifying-glass text-xs"></i> <span data-i18n="nav_search">Rechercher</span>
           </a>
         </li>
       </ul>
@@ -276,7 +299,7 @@
 
         <a href="login.html"
           class="hidden md:flex items-center gap-2 px-5 py-2.5 bg-primary text-green-dark rounded-[14px] text-sm font-black hover:bg-primary-dark transition-all shadow-lg shadow-primary/30 active:scale-95">
-          Connexion <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          <span data-i18n="nav_login">Connexion</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
         </a>
 
         <!-- Mobile hamburger -->
@@ -291,14 +314,14 @@
     <div id="mobileMenu" class="hidden md:hidden bg-green-dark/98 border-t border-white/10 px-5 pb-5 pt-3 space-y-1">
       <a href="index.html"
         class="flex items-center gap-3 px-4 py-3 rounded-xl text-white/90 hover:bg-white/10 text-sm font-semibold transition-all"><i
-          class="fa-solid fa-house w-4"></i> Accueil</a>
+          class="fa-solid fa-house w-4"></i> <span data-i18n="nav_home">Accueil</span></a>
       <a href="rechercher.html"
         class="flex items-center gap-3 px-4 py-3 rounded-xl text-white/90 hover:bg-white/10 text-sm font-semibold transition-all"><i
-          class="fa-solid fa-magnifying-glass w-4"></i> Rechercher</a>
+          class="fa-solid fa-magnifying-glass w-4"></i> <span data-i18n="nav_search">Rechercher</span></a>
       <div class="pt-2">
         <a href="login.html"
           class="flex items-center justify-center gap-2 w-full py-3.5 bg-primary text-green-dark rounded-2xl font-black text-sm shadow-lg shadow-primary/30">
-          Connexion <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          <span data-i18n="nav_login">Connexion</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
         </a>
       </div>
     </div>
@@ -329,18 +352,18 @@
         <div
           class="inline-flex items-center gap-2.5 px-4 py-2 bg-primary/15 border border-primary/20 rounded-full mb-8">
           <span class="w-2 h-2 rounded-full bg-primary pulse-dot"></span>
-          <span class="text-xs font-bold text-primary dark:text-primary uppercase tracking-widest">+2 000 documents
+          <span class="text-xs font-bold text-primary dark:text-primary uppercase tracking-widest" data-i18n="hero_badge">+2 000 documents
             retrouvés</span>
         </div>
 
         <h1
           class="font-bricolage text-[2.2rem] sm:text-[2.6rem] lg:text-[3.2rem] font-extrabold text-textMain leading-tight tracking-normal mb-8">
-          Retrouvez<br />
-          vos documents<br />
-          <span class="gradient-text">perdus.</span>
+          <span data-i18n="hero_title_1">Retrouvez</span><br />
+          <span data-i18n="hero_title_2">vos documents</span><br />
+          <span class="gradient-text" data-i18n="hero_title_3">perdus.</span>
         </h1>
 
-        <p class="text-textMuted text-[15px] leading-loose mb-10 max-w-lg tracking-wide">
+        <p class="text-textMuted text-[15px] leading-loose mb-10 max-w-lg tracking-wide" data-i18n="hero_desc">
           DocMaster connecte les propriétaires de documents perdus avec des citoyens solidaires. Déclarez une perte,
           signalez une trouvaille et récupérez ce qui compte.
         </p>
@@ -349,12 +372,12 @@
           <a href="declarer.html" id="cta-main"
             class="inline-flex items-center gap-2.5 px-8 py-4 bg-primary text-white rounded-[18px] font-black text-[15px] shadow-xl shadow-primary/40 hover:bg-primary-dark transition-all hover:-translate-y-1 active:scale-95">
             <i class="fa-solid fa-file-circle-plus"></i>
-            Déclarer une perte
+            <span data-i18n="btn_declare_loss">Déclarer une perte</span>
           </a>
           <a href="rechercher.html" id="cta-search"
             class="inline-flex items-center gap-2.5 px-8 py-4 bg-white border border-borderMain text-textMain rounded-[18px] font-bold text-[15px] hover:bg-white/80 transition-all hover:-translate-y-1 active:scale-95 shadow-sm">
             <i class="fa-solid fa-magnifying-glass"></i>
-            Rechercher
+            <span data-i18n="btn_search">Rechercher</span>
           </a>
         </div>
 
@@ -800,11 +823,11 @@
       <div class="text-center mb-16">
         <span
           class="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 text-primary rounded-full text-[11px] font-black uppercase tracking-widest mb-5 border border-primary/20">
-          <i class="fa-solid fa-chart-pie text-[10px]"></i> Impact & Chiffres
+          <i class="fa-solid fa-chart-pie text-[10px]"></i> <span data-i18n="stat_impact_badge">Impact & Chiffres</span>
         </span>
-        <h2 class="font-bricolage text-2xl md:text-3xl font-black text-[#1A1A1A] tracking-normal mb-4">DocMaster en
+        <h2 class="font-bricolage text-2xl md:text-3xl font-black text-[#1A1A1A] tracking-normal mb-4" data-i18n="stats_title">DocMaster en
           Chiffres</h2>
-        <p class="text-gray-500 text-[14px] leading-relaxed tracking-wide">Notre impact réel sur la communauté camerounaise.</p>
+        <p class="text-gray-500 text-[14px] leading-relaxed tracking-wide" data-i18n="stats_subtitle">Notre impact réel sur la communauté camerounaise.</p>
       </div>
 
       <!-- RADAR CONTAINER -->
@@ -852,7 +875,7 @@
             </div>
             <div class="text-center mt-2">
               <div class="font-bricolage text-xl font-black text-[#1A1A1A] counter-radar" data-target="2847">0</div>
-              <p class="text-[9px] text-gray-400 uppercase font-bold leading-tight">Docs<br />Déclarés</p>
+              <p class="text-[9px] text-gray-400 uppercase font-bold leading-tight"><span data-i18n="stat_docs">Docs</span><br /><span data-i18n="stat_declared">Déclarés</span></p>
             </div>
           </div>
 
@@ -864,7 +887,7 @@
             </div>
             <div class="text-center mt-2">
               <div class="font-bricolage text-xl font-black text-[#1A1A1A] counter-radar" data-target="2156">0</div>
-              <p class="text-[9px] text-gray-400 uppercase font-bold leading-tight">Docs<br />Retrouvés</p>
+              <p class="text-[9px] text-gray-400 uppercase font-bold leading-tight"><span data-i18n="stat_docs">Docs</span><br /><span data-i18n="stat_recovered_label">Retrouvés</span></p>
             </div>
           </div>
 
@@ -876,7 +899,7 @@
             </div>
             <div class="text-center mt-2">
               <div class="font-bricolage text-xl font-black text-[#1A1A1A] counter-radar" data-target="1523">0</div>
-              <p class="text-[9px] text-gray-400 uppercase font-bold leading-tight">Utilisateurs<br />Actifs</p>
+              <p class="text-[9px] text-gray-400 uppercase font-bold leading-tight"><span data-i18n="stat_users_label">Utilisateurs</span><br /><span data-i18n="stat_active_label">Actifs</span></p>
             </div>
           </div>
 
@@ -888,7 +911,7 @@
             </div>
             <div class="text-center mt-2">
               <div class="font-bricolage text-xl font-black text-[#1A1A1A]">4.8★</div>
-              <p class="text-[9px] text-gray-400 uppercase font-bold leading-tight">Note<br />Moyenne</p>
+              <p class="text-[9px] text-gray-400 uppercase font-bold leading-tight"><span data-i18n="stat_rating_label">Note</span><br /><span data-i18n="stat_average_label">Moyenne</span></p>
             </div>
           </div>
         </div>
@@ -898,26 +921,26 @@
           <div
             class="bg-white border border-[#EAE3D8] rounded-[20px] p-5 text-center shadow-sm hover:border-primary transition-all hover:-translate-y-1 duration-200">
             <div class="font-bricolage text-3xl font-black text-primary mb-1" data-target2="2847" id="sc0">2847</div>
-            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Déclarés</p>
+            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-wider" data-i18n="stat_declared">Déclarés</p>
           </div>
           <div
             class="bg-white border border-[#EAE3D8] rounded-[20px] p-5 text-center shadow-sm hover:border-primary transition-all hover:-translate-y-1 duration-200">
             <div class="font-bricolage text-3xl font-black text-[#1E3A2F] mb-1" id="sc1">2156</div>
-            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Retrouvés</p>
+            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-wider" data-i18n="stat_recovered_label">Retrouvés</p>
           </div>
           <div
             class="bg-white border border-[#EAE3D8] rounded-[20px] p-5 text-center shadow-sm hover:border-primary transition-all hover:-translate-y-1 duration-200">
             <div class="font-bricolage text-3xl font-black text-primary mb-1" id="sc2">1523</div>
-            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Membres</p>
+            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-wider" data-i18n="stat_members">Membres</p>
           </div>
           <div
             class="bg-white border border-[#EAE3D8] rounded-[20px] p-5 text-center shadow-sm hover:border-primary transition-all hover:-translate-y-1 duration-200">
             <div class="font-bricolage text-3xl font-black text-[#1E3A2F] mb-1">4.8★</div>
-            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Note moy.</p>
+            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-wider" data-i18n="stat_average_rating">Note moy.</p>
           </div>
           <div class="col-span-2 bg-primary rounded-[20px] p-5 text-center shadow-lg shadow-primary/20">
             <div class="font-bricolage text-3xl font-black text-white mb-1">75%</div>
-            <p class="text-white/70 text-[10px] font-bold uppercase tracking-wider">Taux de récupération</p>
+            <p class="text-white/70 text-[10px] font-bold uppercase tracking-wider" data-i18n="stat_rate">Taux de récupération</p>
           </div>
         </div>
       </div>
@@ -1135,11 +1158,11 @@
       <div class="text-center mb-14">
         <span
           class="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 text-primary rounded-full text-[11px] font-black uppercase tracking-widest mb-5 border border-primary/20">
-          <i class="fa-solid fa-quote-left text-[10px]"></i> Avis clients
+          <i class="fa-solid fa-quote-left text-[10px]"></i> <span data-i18n="testimonials_badge">Avis clients</span>
         </span>
-        <h2 class="font-bricolage text-2xl md:text-3xl font-black text-textMain tracking-normal mb-4">Ce que disent nos
+        <h2 class="font-bricolage text-2xl md:text-3xl font-black text-textMain tracking-normal mb-4" data-i18n="testimonials_title">Ce que disent nos
           utilisateurs</h2>
-        <p class="text-textMuted text-[14px] tracking-wide leading-relaxed">Ils nous ont fait confiance et ont retrouvé leurs précieux documents.</p>
+        <p class="text-textMuted text-[14px] tracking-wide leading-relaxed" data-i18n="testimonials_subtitle">Ils nous ont fait confiance et ont retrouvé leurs précieux documents.</p>
       </div>
 
       <div class="relative rounded-[32px] overflow-hidden shadow-xl border border-borderMain">
@@ -1325,7 +1348,7 @@
             </a>
 
             <!-- App Store Badge -->
-            <a href="#" id="btn-appstore"
+            <a href="#"  id="btn-appstore"
               class="flex items-center gap-3.5 bg-[#111111] hover:bg-[#222] px-5 py-3.5 rounded-2xl transition-colors w-fit">
               <svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 814 1000" xmlns="http://www.w3.org/2000/svg">
                 <path fill="white"
@@ -1412,7 +1435,7 @@
             </a>
 
             <!-- App Store Badge -->
-            <a href="#" id="btn-appstore"
+            <a href="#"  id="btn-appstore"
               class="flex items-center gap-3.5 bg-[#111111] hover:bg-[#222] px-5 py-3.5 rounded-2xl transition-colors w-fit">
               <svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 814 1000" xmlns="http://www.w3.org/2000/svg">
                 <path fill="white"
@@ -1450,13 +1473,13 @@
         <div>
           <h3 class="text-primary font-bold mb-5 text-[13px] uppercase tracking-wider">Services</h3>
           <ul class="space-y-3">
-            <li><a href="#" class="text-white/60 hover:text-white text-sm transition flex items-center gap-2"><i
+            <li><a href="#"  class="text-white/60 hover:text-white text-sm transition flex items-center gap-2"><i
                   class="fa-solid fa-id-card w-4 text-xs"></i> Cartes d'identité</a></li>
-            <li><a href="#" class="text-white/60 hover:text-white text-sm transition flex items-center gap-2"><i
+            <li><a href="#"  class="text-white/60 hover:text-white text-sm transition flex items-center gap-2"><i
                   class="fa-solid fa-passport w-4 text-xs"></i> Passeports</a></li>
-            <li><a href="#" class="text-white/60 hover:text-white text-sm transition flex items-center gap-2"><i
+            <li><a href="#"  class="text-white/60 hover:text-white text-sm transition flex items-center gap-2"><i
                   class="fa-solid fa-graduation-cap w-4 text-xs"></i> Diplômes</a></li>
-            <li><a href="#" class="text-white/60 hover:text-white text-sm transition flex items-center gap-2"><i
+            <li><a href="#"  class="text-white/60 hover:text-white text-sm transition flex items-center gap-2"><i
                   class="fa-solid fa-key w-4 text-xs"></i> Permis de conduire</a></li>
           </ul>
         </div>
@@ -1465,16 +1488,16 @@
         <div>
           <h3 class="text-primary font-bold mb-5 text-[13px] uppercase tracking-wider">Restez connecté</h3>
           <div class="flex gap-2 mb-6">
-            <a href="#"
+            <a href="#" 
               class="w-9 h-9 bg-white/10 border border-white/10 flex items-center justify-center rounded-xl hover:bg-primary hover:border-primary transition-all text-white text-sm"><i
                 class="fa-brands fa-facebook-f"></i></a>
-            <a href="#"
+            <a href="#" 
               class="w-9 h-9 bg-white/10 border border-white/10 flex items-center justify-center rounded-xl hover:bg-primary hover:border-primary transition-all text-white text-sm"><i
                 class="fa-brands fa-twitter"></i></a>
-            <a href="#"
+            <a href="#" 
               class="w-9 h-9 bg-white/10 border border-white/10 flex items-center justify-center rounded-xl hover:bg-primary hover:border-primary transition-all text-white text-sm"><i
                 class="fa-brands fa-instagram"></i></a>
-            <a href="#"
+            <a href="#" 
               class="w-9 h-9 bg-white/10 border border-white/10 flex items-center justify-center rounded-xl hover:bg-primary hover:border-primary transition-all text-white text-sm"><i
                 class="fa-brands fa-whatsapp"></i></a>
           </div>
@@ -1534,9 +1557,12 @@
     document.addEventListener('click', () => {
       document.getElementById('langDropdown')?.classList.add('hidden');
     });
-    function changeLang(code, flag) {
-      document.getElementById('currentFlag').src = flag;
-      document.getElementById('langDropdown').classList.add('hidden');
+    function changeLang(code, flag, langName) {
+      if (window.setLanguage) {
+        window.setLanguage(code);
+      }
+      document.getElementById('currentLangName').innerText = langName;
+      document.getElementById('langDropdown')?.classList.add('hidden');
     }
 
     // ── Intersection Observer for counters ──
@@ -1572,22 +1598,27 @@
     const loaderBar = document.getElementById('loader-bar');
 
     function initCarousel() {
-      rail.innerHTML = testimonials.map(item => `
+      rail.innerHTML = testimonials.map((item, index) => {
+        const quote = window.translate ? window.translate(`testimonial_${index + 1}_quote`) : item.quote;
+        const role = window.translate ? window.translate(`testimonial_${index + 1}_role`) : item.role;
+        return `
         <div class="w-full flex-shrink-0">
           <div class="p-8 md:p-14 relative min-h-[320px] flex flex-col justify-center">
             <div class="absolute top-6 right-10 text-6xl text-primary/10 select-none"><i class="fa-solid fa-quote-right"></i></div>
-            <p class="text-lg text-textMain leading-relaxed mb-10 max-w-2xl font-medium italic">"${item.quote}"</p>
+            <p class="text-lg text-textMain leading-relaxed mb-10 max-w-2xl font-medium italic">"${quote}"</p>
             <div class="flex items-center gap-4">
               <div class="w-14 h-14 bg-green-dark rounded-full flex items-center justify-center text-white text-xl shadow-lg"><i class="fa-solid fa-user"></i></div>
               <div>
                 <h4 class="font-bricolage font-black text-textMain uppercase tracking-tight">${item.author}</h4>
-                <div class="flex items-center text-sm text-primary font-medium mt-0.5"><i class="${item.icon} mr-1.5 text-xs"></i>${item.role}</div>
+                <div class="flex items-center text-sm text-primary font-medium mt-0.5"><i class="${item.icon} mr-1.5 text-xs"></i>${role}</div>
               </div>
             </div>
           </div>
-        </div>`).join('');
+        </div>`;
+      }).join('');
       updateDots(); resetLoader();
     }
+    window.addEventListener('langChanged', initCarousel);
     function resetLoader() {
       loaderBar.style.transition = 'none'; loaderBar.style.width = '0%';
       void loaderBar.offsetWidth;
@@ -1741,6 +1772,17 @@
   </div>
 
   
+
+  <script>
+    window.addEventListener("load", function() {
+        var loader = document.getElementById("dm-global-page-loader");
+        if(loader) {
+            loader.style.opacity = "0";
+            loader.style.transition = "opacity 0.5s";
+            setTimeout(function() { loader.remove(); }, 500);
+        }
+    });
+  </script>
 </body>
 
 </html>

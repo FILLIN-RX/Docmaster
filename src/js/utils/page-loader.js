@@ -1,41 +1,57 @@
-// page-loader.js - Page loader utilities
-export function showPageLoader() {
-    let loader = document.getElementById('pageLoader');
+// page-loader.js - Centralized Page loader utilities
+
+/**
+ * Ensures the loader element exists, creates it if not.
+ * We use 'dm-global-page-loader' ID to avoid collisions.
+ */
+function getLoader() {
+    let loader = document.getElementById('dm-global-page-loader');
     if (!loader) {
         loader = document.createElement('div');
-        loader.id = 'pageLoader';
+        loader.id = 'dm-global-page-loader';
+        loader.className = 'fixed inset-0 z-[1000] flex items-center justify-center bg-[#F4EFE6]/90 backdrop-blur-md transition-opacity duration-300 opacity-0 pointer-events-none';
         loader.innerHTML = `
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-                <div style="border: 4px solid #f3f4f6; border-top: 4px solid #F5A64B; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
-                <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">Chargement...</p>
+            <div class="flex flex-col items-center gap-4">
+                <div class="relative w-16 h-16">
+                    <div class="absolute inset-0 border-4 border-[#F5A64B]/20 rounded-full"></div>
+                    <div class="absolute inset-0 border-4 border-[#F5A64B] rounded-full border-t-transparent animate-spin"></div>
+                </div>
+                <p class="font-bricolage text-[#F5A64B] font-bold animate-pulse">Chargement...</p>
             </div>
         `;
-        loader.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;z-index:9999;';
-        
-        // Add animation
-        if (!document.querySelector('style[data-page-loader]')) {
+        document.body.appendChild(loader);
+
+        // Add keyframe style
+        if (!document.querySelector('style[data-dm-loader-style]')) {
             const style = document.createElement('style');
-            style.setAttribute('data-page-loader', 'true');
+            style.setAttribute('data-dm-loader-style', 'true');
             style.innerHTML = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
             document.head.appendChild(style);
         }
-        
-        document.body.appendChild(loader);
     }
-    loader.style.display = 'flex';
+    return loader;
+}
+
+export function showPageLoader() {
+    const loader = getLoader();
+    loader.classList.remove('opacity-0', 'pointer-events-none');
+    loader.classList.add('opacity-100');
 }
 
 export function hidePageLoader() {
-    const loader = document.getElementById('pageLoader');
+    const loader = document.getElementById('dm-global-page-loader');
     if (loader) {
-        loader.style.display = 'none';
+        loader.classList.add('opacity-0', 'pointer-events-none');
+        loader.classList.remove('opacity-100');
     }
 }
 
 export function togglePageLoader(show = true) {
-    if (show) {
-        showPageLoader();
-    } else {
-        hidePageLoader();
-    }
+    if (show) showPageLoader();
+    else hidePageLoader();
 }
+
+// Global window access
+window.toggleLoader = togglePageLoader;
+window.showPageLoader = showPageLoader;
+window.hidePageLoader = hidePageLoader;

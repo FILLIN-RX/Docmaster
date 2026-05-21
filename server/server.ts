@@ -12,7 +12,7 @@ import { matchingService } from './src/services/matching.service.ts';
 import { SocketService } from './src/services/socket.service.ts';
 
 // Get configuration from environment
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3003;
 
 // Create the app (all middlewares and routes are set up in index.ts)
 const app = createApp();

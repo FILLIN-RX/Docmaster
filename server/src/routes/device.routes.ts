@@ -5,7 +5,9 @@ import {
   reportDeviceLost,
   reportDeviceFound,
   deleteDevice,
-  verifyDevice
+  verifyDevice,
+  updateMyDevice,
+  getDeviceMedia
 } from '../controllers/device.controller.ts';
 import { authMiddleware } from '../middleware/auth.middleware.ts';
 import { upload } from '../utils/upload.utils.ts';
@@ -77,6 +79,15 @@ router.post('/', authMiddleware, upload.fields([
   { name: 'photo_face', maxCount: 1 },
   { name: 'photo_serial', maxCount: 1 }
 ]), registerMyDevice);
+
+router.put('/:id', authMiddleware, upload.fields([
+  { name: 'photo_facture', maxCount: 1 },
+  { name: 'photo_face', maxCount: 1 },
+  { name: 'photo_serial', maxCount: 1 }
+]), updateMyDevice);
+
+// Return encoded media (base64) for a device field (example: ?field=photo_facture)
+router.get('/:id/media', authMiddleware, getDeviceMedia);
 
 /**
  * @swagger

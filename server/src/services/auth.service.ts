@@ -10,6 +10,7 @@ import { DeclarationRepository } from '../repositories/declaration.repository.ts
 import { ReferralRepository } from '../repositories/referral.repository.ts';
 import { SettingRepository } from '../repositories/setting.repository.ts';
 import { DocumentTypeRepository } from '../repositories/document-type.repository.ts';
+import { encodeMediaFields } from '../utils/media.utils.ts';
 
 export class UserService {
   private userRepository = new UserRepository();
@@ -76,7 +77,7 @@ export class UserService {
       console.warn('Could not send welcome email:', err);
     }
 
-    return user;
+    return await encodeMediaFields(user);
   }
 
   /**
@@ -126,7 +127,7 @@ export class UserService {
     // Return user and token (without password hash)
     const { mot_de_passe, ...userWithoutPassword } = user;
     return {
-      user: userWithoutPassword as any,
+      user: await encodeMediaFields(userWithoutPassword as any),
       token,
     };
   }
@@ -157,7 +158,7 @@ export class UserService {
     // Mark token as used
     await this.userRepository.markResetTokenAsUsed(resetToken.id);
 
-    return user;
+    return await encodeMediaFields(user);
   }
 
   /**
@@ -177,35 +178,39 @@ export class UserService {
     if (!user) {
       throw new Error('User not found');
     }
-    return user;
+    return await encodeMediaFields(user);
   }
 
   /**
    * Get user by ID
    */
   async getUserById(userId: string): Promise<User | null> {
-    return await this.userRepository.findById(userId);
+    const user = await this.userRepository.findById(userId);
+    return await encodeMediaFields(user);
   }
 
   /**
    * Get user by Referral Code
    */
   async getUserByReferralCode(code: string): Promise<User | null> {
-    return await this.userRepository.findByReferralCode(code);
+    const user = await this.userRepository.findByReferralCode(code);
+    return await encodeMediaFields(user);
   }
 
   /**
    * Get user by Email
    */
   async getUserByEmail(email: string): Promise<User | null> {
-    return await this.userRepository.findByEmail(email);
+    const user = await this.userRepository.findByEmail(email);
+    return await encodeMediaFields(user);
   }
 
   /**
    * Get all users for admin
    */
   async getAllUsersForAdmin(): Promise<any[]> {
-    return await this.userRepository.getAllUsersForAdmin();
+    const users = await this.userRepository.getAllUsersForAdmin();
+    return await encodeMediaFields(users);
   }
 
   /**

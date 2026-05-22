@@ -13,6 +13,7 @@ import { subscriptionService } from "./subscription.service.ts";
 import { SettingRepository } from "../repositories/setting.repository.ts";
 import { v4 as uuidv4 } from "uuid";
 import { nokashService } from "./nokash.service.ts";
+import { encodeMediaFields } from "../utils/media.utils.ts";
 
 
 export class DeclarationService {
@@ -202,7 +203,7 @@ export class DeclarationService {
     }
 
     console.log('✅ [DeclarationService.createDeclaration] === FIN SUCCÈS ===');
-    return declaration;
+    return await encodeMediaFields(declaration);
   } catch (error) {
     console.error('🔴 [6] Erreur sauvegarde DB:', error);
     throw error;
@@ -253,7 +254,7 @@ export class DeclarationService {
       })
     );
     
-    return results;
+    return await encodeMediaFields(results);
   }
 
   /**
@@ -286,14 +287,15 @@ export class DeclarationService {
       }),
     );
 
-    return results;
+    return await encodeMediaFields(results);
   }
 
   /**
    * Get all available declarations
    */
   async getAllDeclarations(): Promise<DocumentDeclaration[]> {
-    return await this.declarationRepository.findAllAvailable();
+    const declarations = await this.declarationRepository.findAllAvailable();
+    return await encodeMediaFields(declarations);
   }
 
   /**
@@ -362,7 +364,7 @@ export class DeclarationService {
       }
     }
 
-    return enrichedData;
+    return await encodeMediaFields(enrichedData);
   }
 
   /**
@@ -390,7 +392,7 @@ export class DeclarationService {
       matchingService.findAndNotifyMatches(declaration).catch(err => console.error(err));
     }
 
-    return declaration;
+    return await encodeMediaFields(declaration);
   }
 
   async getGlobalStats() {

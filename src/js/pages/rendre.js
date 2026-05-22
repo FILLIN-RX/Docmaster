@@ -6,6 +6,7 @@
  */
 
 import { getDeclarationById, validateRecoveryCode, BASE_URL } from '../services/api.js';
+import { getImageUrl } from '../utils/index.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Setup UI interactions
@@ -161,7 +162,7 @@ function updateUI(data) {
     const docImage = document.getElementById('docImage');
     const imagePlaceholder = document.getElementById('imagePlaceholder');
     if (docImage && data.photo_recto) {
-        const imageUrl = data.photo_recto.startsWith('http') ? data.photo_recto : `${BASE_URL}/${data.photo_recto.replace(/^\//, '')}`;
+        const imageUrl = getImageUrl(data.photo_recto);
         docImage.src = imageUrl;
         docImage.classList.remove('hidden');
         if (imagePlaceholder) imagePlaceholder.classList.add('hidden');

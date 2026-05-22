@@ -1,5 +1,6 @@
 import { ShareRepository, DocumentShare } from '../repositories/share.repository.ts';
 import crypto from 'crypto';
+import { encodeMediaFields } from '../utils/media.utils.ts';
 
 export class ShareService {
   private shareRepository: ShareRepository;
@@ -38,14 +39,15 @@ export class ShareService {
       await this.shareRepository.incrementViewCount(share.id);
     }
     
-    return share;
+    return await encodeMediaFields(share);
   }
 
   /**
    * List shares for a document
    */
   async getDocumentShares(documentId: string, userId: string): Promise<DocumentShare[]> {
-    return await this.shareRepository.findByDocumentId(documentId, userId);
+    const shares = await this.shareRepository.findByDocumentId(documentId, userId);
+    return await encodeMediaFields(shares);
   }
 
   /**

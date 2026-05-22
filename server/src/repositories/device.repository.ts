@@ -20,6 +20,22 @@ export interface Device {
   created_at?: Date;
 }
 
+export interface UpdateDeviceInput {
+  category: string;
+  brand: string;
+  model: string;
+  serial_number_imei: string;
+  color: string;
+  purchase_date: string;
+  purchase_value: number;
+  currency: string;
+  where_buy: string;
+  garantie_end: string;
+  assurance?: string;
+  photos: string[];
+  notes?: string;
+}
+
 class DeviceRepository {
   async create(device: Device) {
     const query = `
@@ -65,6 +81,45 @@ class DeviceRepository {
   async updateStatus(id: string, status: string) {
     const query = 'UPDATE my_devices SET status = $1 WHERE id = $2 RETURNING *';
     const { rows } = await pool.query(query, [status, id]);
+    return rows[0];
+  }
+
+  async update(id: string, device: UpdateDeviceInput) {
+    const query = `
+      UPDATE my_devices SET
+        category = $1,
+        brand = $2,
+        model = $3,
+        serial_number_imei = $4,
+        color = $5,
+        purchase_date = $6,
+        purchase_value = $7,
+        currency = $8,
+        where_buy = $9,
+        garantie_end = $10,
+        assurance = $11,
+        photos = $12,
+        notes = $13
+      WHERE id = $14
+      RETURNING *
+    `;
+    const values = [
+      device.category,
+      device.brand,
+      device.model,
+      device.serial_number_imei,
+      device.color,
+      device.purchase_date || null,
+      device.purchase_value || 0,
+      device.currency || 'XAF',
+      device.where_buy || '',
+      device.garantie_end || null,
+      device.assurance || 'non',
+      JSON.stringify(device.photos || []),
+      device.notes || '',
+      id
+    ];
+    const { rows } = await pool.query(query, values);
     return rows[0];
   }
 

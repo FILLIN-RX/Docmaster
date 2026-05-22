@@ -491,28 +491,28 @@
 
     <!-- Topbar -->
     <header
-      class="sticky top-0 z-30 h-[58px] bg-white border-b border-borderMain flex items-center px-4 gap-3 flex-shrink-0">
+      class="sticky top-0 z-30 h-14 bg-white border-b border-borderMain flex items-center px-3 sm:px-4 gap-2 sm:gap-3 shrink-0">
       <button
-        class="w-9 h-9 flex items-center justify-center rounded-[9px] bg-surface2 border border-borderMain hover:border-primary hover:text-primary transition-all"
+        class="w-8 h-8 shrink-0 flex items-center justify-center rounded-[9px] bg-surface2 border border-borderMain text-sm hover:border-primary hover:text-primary transition-all"
         onclick="toggleSb()"><i class="fa-solid fa-bars"></i></button>
-      <span class="font-bricolage text-base font-bold text-textMain tracking-tight">Mes Documents</span>
-      <div class="ml-auto flex items-center gap-2">
+      <span class="min-w-0 truncate font-bricolage text-[15px] sm:text-base font-bold text-textMain tracking-tight">Mes Documents</span>
+      <div class="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2">
         <button onclick="openModal()"
-          class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary text-white text-[12px] sm:text-[13px] font-bold rounded-[10px] hover:bg-primary-dark transition-all active:scale-95 shrink-0">
-          <i class="fa-solid fa-plus text-[11px]"></i>
+          class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-primary text-white text-[11px] sm:text-[12px] font-bold rounded-[10px] hover:bg-primary-dark transition-all active:scale-95 shrink-0">
+          <i class="fa-solid fa-plus text-[10px]"></i>
           <span class="sm:hidden">Ajouter</span>
           <span class="hidden sm:inline">Enregistrer un document</span>
         </button>
         <div
-          class="relative w-9 h-9 rounded-[9px] bg-surface2 border border-borderMain flex items-center justify-center text-sm text-textMain cursor-pointer hover:border-primary hover:text-primary transition-all"
+          class="relative w-8 h-8 shrink-0 rounded-[9px] bg-surface2 border border-borderMain flex items-center justify-center text-xs text-textMain cursor-pointer hover:border-primary hover:text-primary transition-all"
           onclick="openNotifModal()">
           <i class="fa-regular fa-bell"></i>
-          <div id="notifDot" class="absolute top-[7px] right-[7px] w-[7px] h-[7px] rounded-full border-2 border-white transition-colors"></div>
+          <div id="notifDot" class="absolute top-1.75 right-1.75 w-1.75 h-1.75 rounded-full border-2 border-white transition-colors"></div>
         </div>
         <div
-          class="flex items-center gap-2 pl-1.5 pr-3 py-1 bg-surface2 border border-borderMain rounded-[10px] cursor-pointer hover:border-primary transition-colors">
+          class="hidden sm:flex items-center gap-2 pl-1.5 pr-3 py-1 bg-surface2 border border-borderMain rounded-[10px] cursor-pointer hover:border-primary transition-colors">
           <div
-            class="w-[26px] h-[26px] rounded-[6px] bg-green-dark flex items-center justify-center font-bricolage text-[11px] font-extrabold text-primary overflow-hidden" id="topInitialWrap">
+            class="w-6.5 h-6.5 rounded-md bg-green-dark flex items-center justify-center font-bricolage text-[11px] font-extrabold text-primary overflow-hidden" id="topInitialWrap">
             <img id="topPhoto" src="" class="w-full h-full object-cover hidden" />
             <span id="topInitial">JM</span>
           </div>
@@ -541,7 +541,7 @@
       </div>
 
       <!-- Stats row -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div class="bg-white border border-borderMain rounded-[16px] p-4 flex flex-col gap-2">
           <div class="w-9 h-9 rounded-[10px] bg-primary/10 flex items-center justify-center"><i
               class="fa-solid fa-folder-open text-primary text-sm"></i></div>
@@ -968,118 +968,81 @@
     </div>
   </div>
 
-  <!-- View modal (Updated Detail) -->
-  <div class="modal-overlay hidden" id="view-modal">
-    <div class="modal-box max-w-5xl w-[95%] h-[90vh] flex flex-col md:flex-row overflow-hidden border border-slate-200" style="padding:0; background: #ffffff;">
-      <!-- Image Side: Professional Viewer -->
-      <div class="relative w-full md:w-3/5 h-1/2 md:h-auto bg-[#f1f5f9] flex items-center justify-center overflow-hidden group border-r border-slate-100">
-        <div id="view-img-container" class="relative z-10 w-full h-full p-8 flex items-center justify-center transition-all duration-300">
-          <img id="view-img" src="./assets/images/carte.jpeg" 
-            class="max-w-full max-h-full object-contain rounded-sm shadow-2xl" 
-            alt="Doc">
-          
-          <!-- Image Overlay Details -->
-          <div class="absolute top-6 left-6 flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg">
-            <div class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
-            <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Aperçu Sécurisé</span>
-          </div>
-        </div>
-        
-        <!-- Flip Button (Recto/Verso) -->
-        <button id="flip-btn" onclick="flipViewImage()" 
-          class="absolute bottom-8 left-1/2 -translate-x-1/2 px-8 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center gap-3 hover:bg-primary transition-all z-20 font-bold text-xs uppercase tracking-widest">
-          <i class="fa-solid fa-arrows-rotate"></i>
-          <span id="flip-label">Voir le Verso</span>
-        </button>
+  <!-- View modal (Mobile-first bottom sheet) -->
+  <div class="modal-overlay hidden fixed inset-0 z-[100] bg-slate-950/55 backdrop-blur-md items-end md:items-center justify-center px-0 md:px-4" id="view-modal">
+    <div class="w-full md:w-[95%] md:max-w-5xl h-[92vh] md:h-[90vh] overflow-hidden bg-white rounded-t-[32px] md:rounded-[28px] shadow-[0_-24px_80px_rgba(15,23,42,0.2)] flex flex-col md:flex-row border border-slate-200">
+      <div class="md:hidden flex justify-center pt-3 pb-1 shrink-0">
+        <div class="h-1.5 w-12 rounded-full bg-slate-200"></div>
+      </div>
 
-        <!-- Close Button (Mobile) -->
-        <button onclick="document.getElementById('view-modal').classList.add('hidden')"
-          class="md:hidden absolute top-6 right-6 w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-900 text-xl">
+      <div class="flex items-start justify-between px-5 md:px-8 pt-4 md:pt-6 pb-3 md:pb-4 shrink-0">
+        <div class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-orange-700">
+          <i class="fa-solid fa-lock text-[9px]"></i>
+          <span>Aperçu sécurisé</span>
+        </div>
+        <button onclick="closeViewModal()" class="h-9 w-9 shrink-0 rounded-full border border-slate-200 bg-white text-slate-500 flex items-center justify-center shadow-sm transition hover:border-slate-300 hover:text-slate-900">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <!-- Info Side: Professional Sidebar -->
-      <div class="flex-1 flex flex-col h-1/2 md:h-auto bg-white">
-        <div class="p-8 md:p-10 overflow-y-auto flex-1">
-          <div class="flex justify-between items-start mb-8">
-            <div class="space-y-1">
-              <span class="text-[11px] font-bold text-primary uppercase tracking-[0.1em]" id="view-cat-label">Identité</span>
-              <h3 class="font-bricolage text-3xl font-extrabold text-slate-900" id="view-title">Document</h3>
-              <div id="view-status-container">
-                <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-green-600 uppercase" id="view-status">
-                  <i class="fa-solid fa-circle-check"></i> Authentifié
-                </span>
+      <div class="flex-1 overflow-y-auto px-5 md:px-8 pb-5 md:pb-8 custom-scrollbar">
+        <div class="space-y-6 md:space-y-8">
+          <div class="relative rounded-[28px] border border-slate-200 bg-slate-50 p-3 md:p-4 shadow-sm overflow-hidden">
+            <div id="view-img-container" class="relative flex min-h-[280px] md:min-h-[380px] items-center justify-center overflow-hidden rounded-[22px] bg-white transition-all duration-300">
+              <img id="view-img" src="./assets/images/carte.jpeg" class="max-h-[380px] w-full object-contain" alt="Document aperçu">
+              <div class="absolute inset-0 bg-linear-to-t from-black/10 to-transparent pointer-events-none"></div>
+              <div class="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-600 shadow-sm backdrop-blur-sm">
+                <span class="h-1.5 w-1.5 rounded-full bg-primary animate-pulse"></span>
+                <span>Aperçu du document</span>
               </div>
             </div>
-            <button onclick="document.getElementById('view-modal').classList.add('hidden')"
-              class="hidden md:flex w-10 h-10 rounded-xl border border-slate-100 text-slate-400 items-center justify-center hover:bg-slate-50 hover:text-slate-900 transition-all">
-              <i class="fa-solid fa-xmark"></i>
+
+            <button id="flip-btn" onclick="flipViewImage()" class="absolute left-1/2 top-full -translate-x-1/2 -translate-y-1/2 inline-flex items-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-white shadow-lg shadow-slate-950/20 transition hover:bg-slate-800 active:scale-[0.98]">
+              <i class="fa-solid fa-arrows-rotate text-[12px]"></i>
+              <span id="flip-label">Voir le recto</span>
             </button>
           </div>
 
-          <!-- Structured Data Grid -->
-          <div class="space-y-6">
-            <div class="grid grid-cols-2 gap-3">
-              <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Numéro du document</p>
-                <p class="text-[14px] font-bold text-slate-900" id="view-number-txt">—</p>
-              </div>
-              <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Type de document</p>
-                <p class="text-[14px] font-bold text-slate-900" id="view-type-txt">—</p>
-              </div>
+          <div class="space-y-3 pt-2 md:pt-4">
+            <div class="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-orange-700">
+              <i class="fa-solid fa-id-card text-[9px]"></i>
+              <span id="view-cat-label">Identité</span>
             </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Date de délivrance</p>
-                <p class="text-[14px] font-bold text-slate-900" id="view-issued-txt">—</p>
-              </div>
-              <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Date d'expiration</p>
-                <p class="text-[14px] font-bold text-slate-900" id="view-expiry-txt">—</p>
-              </div>
+            <h3 class="font-bricolage text-[28px] md:text-[34px] font-extrabold leading-tight text-slate-950" id="view-title">Carte Nationale d'Identité</h3>
+            <div id="view-status-container">
+              <span id="view-status" class="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-orange-700 border border-orange-100">
+                <i class="fa-solid fa-clock text-[9px]"></i>
+                <span>En attente de validation</span>
+              </span>
             </div>
+          </div>
 
-            <div class="p-4 border border-slate-200 rounded-2xl space-y-4">
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 border border-slate-200">
-                  <i class="fa-solid fa-user-shield text-[14px]"></i>
-                </div>
-                <div>
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Propriétaire déclaré</p>
-                  <p class="text-[15px] font-bold text-slate-900" id="view-owner-txt">—</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 border border-slate-200">
-                  <i class="fa-solid fa-building-shield text-[14px]"></i>
-                </div>
-                <div>
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Autorité délivrante</p>
-                  <p class="text-[15px] font-bold text-slate-900" id="view-authority-txt">—</p>
-                </div>
-              </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">Numéro du document</p>
+              <p class="mt-2 text-[16px] font-extrabold text-slate-950" id="view-number-txt">—</p>
             </div>
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">Type de document</p>
+              <p class="mt-2 text-[16px] font-extrabold text-slate-950" id="view-type-txt">—</p>
+            </div>
+          </div>
 
-            <div class="space-y-2">
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Notes & Observations</p>
-              <div class="p-4 bg-[#fffbeb] border border-[#fef3c7] rounded-2xl">
-                <p class="text-[12.5px] text-amber-900 leading-relaxed font-medium" id="view-notes-txt">—</p>
+          <div class="rounded-[24px] border border-slate-200 bg-white p-4 md:p-5 shadow-sm">
+            <div class="flex items-center gap-3 text-[12px] text-slate-500">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                <i class="fa-solid fa-circle-info"></i>
+              </div>
+              <div>
+                <p class="font-bold text-slate-950">Informations rapides</p>
+                <p class="text-slate-500">Les détails essentiels de la carte restent visibles et simples à lire.</p>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Action Footer -->
-        <div class="p-6 md:p-8 bg-slate-50 border-t border-slate-100 flex items-center gap-4">
-          <button class="flex-1 h-14 bg-slate-900 text-white rounded-xl font-bold text-[13px] uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-[0.98]">
-            <i class="fa-solid fa-file-export"></i>
-            Certifier la Copie
-          </button>
-          <button onclick="openShareModalDirect()" class="w-14 h-14 bg-white text-slate-600 rounded-xl flex items-center justify-center hover:border-primary hover:text-primary border border-slate-200 transition-all active:scale-[0.98]">
-            <i class="fa-solid fa-share-nodes text-lg"></i>
+          <button onclick="downloadCurrentDocument()" class="w-full inline-flex items-center justify-center gap-3 rounded-2xl bg-blue-950 px-5 py-4 text-[12px] font-bold uppercase tracking-[0.12em] text-white shadow-lg shadow-blue-950/15 transition hover:bg-blue-900 active:scale-[0.98]">
+            <i class="fa-solid fa-download text-[13px]"></i>
+            <span>Télécharger le document</span>
           </button>
         </div>
       </div>
@@ -1315,9 +1278,42 @@
     let currentViewDoc = null;
     let showingVerso = false;
 
+    const viewDocTypeTitles = {
+      cni: "Carte Nationale d'Identité",
+      passport: 'Passeport',
+      permis: 'Permis de conduire',
+      diplome: 'Diplôme',
+      naissance: 'Acte de naissance',
+      autre: 'Document',
+    };
+
+    function closeViewModal() {
+      const modal = document.getElementById('view-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function downloadCurrentDocument() {
+      if (!currentViewDoc) return;
+      window.downloadDocument(currentViewDoc.id);
+    }
+
+    window.closeViewModal = closeViewModal;
+    window.downloadCurrentDocument = downloadCurrentDocument;
+
+    function resolveDocMediaUrl(value) {
+      if (!value) return '';
+      if (value.startsWith('data:')) return value;
+      if (/^https?:\/\//i.test(value)) return value;
+      
+      const backendBase = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+        ? 'http://localhost:5000'
+        : window.location.origin.replace(':3003', ':5000');
+      return `${backendBase}/${value.replace(/^\/+/, '')}`;
+    }
+
     function openShareModalDirect() {
       if (!currentViewDoc) return;
-      document.getElementById('view-modal').classList.add('hidden');
+      closeViewModal();
       if (typeof window.openShareModal === 'function') {
         window.openShareModal(currentViewDoc.id);
       }
@@ -1337,7 +1333,7 @@
       
       setTimeout(() => {
         const photo = showingVerso ? currentViewDoc.photo_verso : currentViewDoc.photo_recto;
-        viewImg.src = photo.startsWith('http') ? photo : '/' + photo.replace(/^\//, '');
+        viewImg.src = resolveDocMediaUrl(photo);
         label.textContent = showingVerso ? 'Voir le Recto' : 'Voir le Verso';
         
         container.style.transform = 'scale(1) rotateY(0deg)';
@@ -1384,31 +1380,36 @@
         autre: 'Divers'
       };
 
-      document.getElementById('view-title').textContent = typeLabels[data.type_doc] || 'Document';
-      document.getElementById('view-cat-label').textContent = catLabels[data.type_doc] || 'Document';
-      
       const statusEl = document.getElementById('view-status');
       if (data.is_verified) {
-        statusEl.innerHTML = '<i class="fa-solid fa-check-circle"></i> Authentifié ✓';
-        statusEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/10 text-green-600 rounded-full text-[10px] font-black uppercase tracking-wider border border-green-500/20';
+        statusEl.innerHTML = '<i class="fa-solid fa-check-circle"></i> VALIDÉ';
+        statusEl.className = 'inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700 border border-emerald-100';
       } else {
-        statusEl.innerHTML = '<i class="fa-solid fa-clock"></i> En attente de validation';
-        statusEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-wider border border-amber-500/20';
+        statusEl.innerHTML = '<i class="fa-solid fa-clock text-[9px]"></i> EN ATTENTE DE VALIDATION';
+        statusEl.className = 'inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-orange-700 border border-orange-100';
       }
 
-      document.getElementById('view-number-txt').textContent = data.numero_doc || 'Non renseigné';
-      document.getElementById('view-type-txt').textContent = typeLabels[data.type_doc] || 'Document';
-      document.getElementById('view-issued-txt').textContent = data.date_delivrance ? new Date(data.date_delivrance).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Non renseignée';
-      document.getElementById('view-expiry-txt').textContent = data.date_expiration ? new Date(data.date_expiration).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Indéfinie';
-      document.getElementById('view-owner-txt').textContent = data.nom_sur_doc || '—';
-      document.getElementById('view-authority-txt').textContent = data.nom_autorite || '—';
-      document.getElementById('view-notes-txt').textContent = data.notes || 'Aucune information complémentaire pour ce document.';
+      const typeKey = (data.type_doc || '').toLowerCase();
+      const titleText = viewDocTypeTitles[typeKey] || data.nom_sur_doc || 'Document';
+      const categoryText = typeKey === 'cni' ? 'IDENTITÉ' : (typeKey ? typeKey.toUpperCase() : 'DOCUMENT');
+
+      document.getElementById('view-cat-label').textContent = categoryText;
+      document.getElementById('view-title').textContent = titleText;
+      const numberEl = document.getElementById('view-number-txt');
+      const typeEl = document.getElementById('view-type-txt');
+      if (numberEl) numberEl.textContent = data.numero_doc || '—';
+      if (typeEl) typeEl.textContent = titleText;
       
       const viewImg = document.getElementById('view-img');
       if (data.photo_recto) {
-        viewImg.src = data.photo_recto.startsWith('http') ? data.photo_recto : '/' + data.photo_recto.replace(/^\//, '');
+        viewImg.src = resolveDocMediaUrl(data.photo_recto);
       } else {
         viewImg.src = './assets/images/carte.jpeg';
+      }
+
+      const flipLabel = document.getElementById('flip-label');
+      if (flipLabel) {
+        flipLabel.textContent = data.photo_verso ? 'Voir le verso' : 'Voir le recto';
       }
       
       document.getElementById('view-modal').classList.remove('hidden');

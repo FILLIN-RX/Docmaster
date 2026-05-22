@@ -29,13 +29,13 @@ const storage = multer.diskStorage({
 });
 
 /**
- * File filter to allow only images
+ * File filter to allow images and invoice PDFs
  */
 const fileFilter = (req: any, file: any, cb: any) => {
-  if (file.mimetype.startsWith('image/')) {
+  if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
     cb(null, true);
   } else {
-    cb(new Error('Format de fichier non supporté. Veuillez envoyer une image.'), false);
+    cb(new Error('Format de fichier non supporté. Veuillez envoyer une image ou un PDF.'), false);
   }
 };
 

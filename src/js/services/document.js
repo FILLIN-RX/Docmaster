@@ -6,6 +6,7 @@
  */
 
 import { 
+  API_BASE_URL,
   registerMyDocument, 
   getMyDocuments, 
   deleteDocument,
@@ -20,9 +21,17 @@ import {
   generateDocumentPDF as generatePDFUtil, 
   getFriendlyErrorMessage, 
   validateDocumentFile,
-  initDatePickers
+  initDatePickers,
+  getImageUrl
 } from '../utils/index.js';
 import { getToken } from '../utils/cookie.js';
+
+const DOCUMENT_MEDIA_BASE_URL = (() => {
+  if (typeof API_BASE_URL === 'string' && API_BASE_URL.startsWith('http')) {
+    return API_BASE_URL.replace(/\/api\/?$/, '');
+  }
+  return window.location.origin;
+})();
 
 // Global initialization
 document.addEventListener('DOMContentLoaded', () => {
@@ -108,15 +117,17 @@ export function renderDocuments(documents, totalCount = 0) {
 
   grid.innerHTML = documents.map(doc => {
     const isLost = doc.is_lost;
+    const rectoUrl = getImageUrl(doc.photo_recto);
+    const versoUrl = getImageUrl(doc.photo_verso);
 
     return `
     <div class="doc-card${isLost ? ' is-lost' : ''}" data-cat="${doc.type_doc}">
 
       <!-- ── Thumbnail ── -->
       <div class="card-thumb relative overflow-hidden group">
-        ${doc.photo_recto
+        ${rectoUrl
           ? `<img
-               src="${doc.photo_recto.startsWith('http') ? doc.photo_recto : '/' + doc.photo_recto.replace(/^\//, '')}"
+               src="${rectoUrl}"
                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                alt="${doc.type_doc}">`
           : `<div class="absolute inset-0 bg-slate-100 flex items-center justify-center">
@@ -144,6 +155,16 @@ export function renderDocuments(documents, totalCount = 0) {
             ${doc.nom_sur_doc || typeLabels[doc.type_doc] || 'DOCUMENT'}
           </span>
         </div>
+
+        ${versoUrl ? `
+          <div class="absolute top-2.5 left-2.5 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-black/55 text-white backdrop-blur-sm">
+            Recto + Verso
+          </div>
+        ` : `
+          <div class="absolute top-2.5 left-2.5 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-black/45 text-white backdrop-blur-sm">
+            Recto
+          </div>
+        `}
       </div>
 
       <!-- ── Card body ── -->
@@ -245,9 +266,19 @@ export async function initDocumentList() {
     
     if (grid) grid.innerHTML = skeletons + addBtnHtml;
 
+    console.log('📡 [DocumentService] Fetching documents...');
     const result = await getMyDocuments();
+    console.log('📥 [DocumentService] Received response:', result);
     
     if (result.success) {
+      console.log(`📄 [DocumentService] Rendering ${result.data?.length || 0} documents`);
+      if (result.data && result.data.length > 0) {
+        console.log('🖼️ [DocumentService] First document preview (check image fields):', {
+          id: result.data[0].id,
+          type: result.data[0].type_doc,
+          photo_recto: result.data[0].photo_recto ? (result.data[0].photo_recto.substring(0, 50) + '...') : 'N/A'
+        });
+      }
       renderDocuments(result.data, result.count);
     } else if (grid) {
       grid.innerHTML = `
@@ -693,14 +724,14 @@ export function downloadDocument(docId) {
   const doc = window.lastFetchedDocuments?.find(d => d.id === docId);
   if (!doc) return;
 
-  const photo = doc.photo_recto;
+  const photo = getImageUrl(doc.photo_recto);
   if (!photo) {
     showErrorModal("Aucune image disponible pour ce document.");
     return;
   }
 
   const link = document.createElement('a');
-  link.href = photo.startsWith('http') ? photo : '/' + photo.replace(/^\//, '');
+  link.href = photo;
   link.download = `docmaster-${doc.type_doc}-${doc.numero_doc}.jpg`;
   document.body.appendChild(link);
   link.click();

@@ -1,4 +1,5 @@
 import { ReferralRepository } from '../repositories/referral.repository.ts';
+import { encodeMediaFields } from '../utils/media.utils.ts';
 
 export class ReferralService {
   private referralRepository = new ReferralRepository();
@@ -21,7 +22,7 @@ export class ReferralService {
     const activeReferrals = referrals.length; // assuming all are active for now
     
     return {
-      referrals,
+      referrals: await encodeMediaFields(referrals),
       stats: {
         totalPoints,
         activeReferrals,
@@ -34,7 +35,8 @@ export class ReferralService {
    * Admin: Get all referrals
    */
   async getAllReferrals(): Promise<any[]> {
-    return await this.referralRepository.getAllReferrals();
+    const referrals = await this.referralRepository.getAllReferrals();
+    return await encodeMediaFields(referrals);
   }
 
   /**

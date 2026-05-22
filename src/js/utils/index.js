@@ -12,6 +12,7 @@ export { openSb, closeSb, markActiveSidebar } from './sidebar.js';
 
 // UI helpers
 export {
+  getImageUrl,
   switchTab,
   togglePw,
   checkStrength,

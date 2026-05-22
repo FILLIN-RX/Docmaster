@@ -606,7 +606,9 @@ document.addEventListener("DOMContentLoaded", function () {
       if (nameEl) nameEl.textContent = fullName;
       
       if (user.photo_url && photoEl) {
-        const fullUrl = user.photo_url.startsWith('http') ? user.photo_url : '/' + user.photo_url.replace(/^\//, '');
+        const fullUrl = (user.photo_url.startsWith('http') || user.photo_url.startsWith('data:')) 
+          ? user.photo_url 
+          : '/' + user.photo_url.replace(/^\//, '');
         photoEl.src = fullUrl;
         photoEl.classList.remove('hidden');
         if (initialEl) initialEl.classList.add('hidden');
@@ -623,7 +625,9 @@ document.addEventListener("DOMContentLoaded", function () {
       if (helloName) helloName.textContent = user.prenom || user.name || fullName;
 
       if (user.photo_url && topPhoto) {
-        const fullUrl = user.photo_url.startsWith('http') ? user.photo_url : '/' + user.photo_url.replace(/^\//, '');
+        const fullUrl = (user.photo_url.startsWith('http') || user.photo_url.startsWith('data:')) 
+          ? user.photo_url 
+          : '/' + user.photo_url.replace(/^\//, '');
         topPhoto.src = fullUrl;
         topPhoto.classList.remove('hidden');
         if (topInitial) topInitial.classList.add('hidden');

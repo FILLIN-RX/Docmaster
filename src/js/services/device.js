@@ -13,7 +13,8 @@ import {
 } from './api.js';
 import { 
   showErrorModal, 
-  showSuccessModal, 
+  showSuccessModal,
+  getImageUrl,
   getFriendlyErrorMessage,
   initDatePickers
 } from '../utils/index.js';
@@ -25,30 +26,30 @@ export async function initDeviceList() {
   const grid = document.getElementById('devices-grid');
   if (!grid) return;
 
-  const addBtnHtml = `
-    <button onclick="openAddDeviceModal()" class="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 rounded-[24px] hover:border-primary hover:bg-primary/5 transition-all group min-h-[200px]">
-      <div class="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:scale-110 group-hover:text-primary group-hover:bg-white transition-all shadow-sm">
-        <i class="fa-solid fa-plus text-2xl"></i>
-      </div>
-      <p class="mt-4 text-[14px] font-bold text-slate-600 group-hover:text-primary transition-colors">Ajouter un appareil</p>
-      <p class="text-[11px] text-slate-400">Téléphone, Ordinateur, Vélo...</p>
-    </button>
-  `;
-
   // Show skeleton loader
   grid.innerHTML = Array(2).fill(0).map(() => `
-    <div class="bg-white border border-slate-100 rounded-[24px] p-2 animate-pulse">
+    <div class="bg-white border border-slate-100 rounded-3xl p-2 animate-pulse">
       <div class="h-44 bg-slate-100 rounded-[20px] mb-4"></div>
       <div class="p-4 space-y-3">
         <div class="h-4 bg-slate-100 rounded w-3/4"></div>
         <div class="h-3 bg-slate-100 rounded w-1/2"></div>
       </div>
     </div>
-  `).join('') + addBtnHtml;
+  `).join('');
 
+  console.log('📡 [DeviceService] Fetching devices...');
   const result = await getMyDevices();
+  console.log('📥 [DeviceService] Received response:', result);
 
   if (result.success) {
+    console.log(`📄 [DeviceService] Rendering ${result.data?.length || 0} devices`);
+    if (result.data && result.data.length > 0) {
+      console.log('🖼️ [DeviceService] First device preview (check photos array):', {
+        id: result.data[0].id,
+        model: result.data[0].model,
+        first_photo: (result.data[0].photos && result.data[0].photos[0]) ? (result.data[0].photos[0].substring(0, 50) + '...') : 'N/A'
+      });
+    }
     renderDevices(result.data, result.count);
   } else {
     grid.innerHTML = `
@@ -57,7 +58,7 @@ export async function initDeviceList() {
         <p class="font-bold">${result.message}</p>
         <button onclick="initDeviceList()" class="mt-4 px-6 py-2 bg-white border border-red-200 rounded-xl text-sm font-bold hover:bg-red-50 transition-all">Réessayer</button>
       </div>
-    ` + addBtnHtml;
+    `;
   }
 }
 
@@ -98,18 +99,16 @@ function renderDevices(devices, totalCount) {
     OTHER: 'fa-microchip'
   };
 
-  const addBtnHtml = `
-    <button onclick="openAddDeviceModal()" class="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 rounded-[24px] hover:border-primary hover:bg-primary/5 transition-all group min-h-[200px]">
-      <div class="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:scale-110 group-hover:text-primary group-hover:bg-white transition-all shadow-sm">
-        <i class="fa-solid fa-plus text-2xl"></i>
-      </div>
-      <p class="mt-4 text-[14px] font-bold text-slate-600 group-hover:text-primary transition-colors">Ajouter un appareil</p>
-      <p class="text-[11px] text-slate-400">Téléphone, Ordinateur, Vélo...</p>
-    </button>
-  `;
-
   if (devices.length === 0) {
-    grid.innerHTML = addBtnHtml;
+      grid.innerHTML = `
+        <div class="col-span-full rounded-3xl border border-slate-100 bg-white px-6 py-12 text-center shadow-sm">
+          <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 text-slate-300">
+            <i class="fa-solid fa-mobile-screen-button text-2xl"></i>
+          </div>
+          <p class="text-[15px] font-bold text-slate-900">Aucun appareil enregistré</p>
+          <p class="mx-auto mt-2 max-w-sm text-[13px] text-slate-500">La liste reste vide tant qu’un appareil n’a pas été déclaré.</p>
+        </div>
+      `;
     return;
   }
 
@@ -117,11 +116,13 @@ function renderDevices(devices, totalCount) {
     const mainPhoto = (dev.photos && dev.photos.length > 0) ? dev.photos[0] : null;
     const isLost = dev.status !== 'SAFE';
 
+    let photoUrl = getImageUrl(mainPhoto);
+
     return `
-      <div class="group bg-white border ${isLost ? 'border-red-100 bg-red-50/30' : 'border-slate-100'} rounded-[24px] p-2 hover:border-primary transition-all hover:shadow-xl hover:shadow-slate-200/50 cursor-pointer overflow-hidden relative" onclick="viewDeviceDetails('${dev.id}')">
+      <div class="group bg-white border ${isLost ? 'border-red-100 bg-red-50/30' : 'border-slate-100'} rounded-3xl p-2 hover:border-primary transition-all hover:shadow-xl hover:shadow-slate-200/50 cursor-pointer overflow-hidden relative" onclick="viewDeviceDetails('${dev.id}')">
         <div class="relative h-44 bg-slate-50 rounded-[20px] overflow-hidden mb-4">
           ${mainPhoto 
-            ? `<img src="/${mainPhoto}" class="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" alt="${dev.model}">`
+            ? `<img src="${photoUrl}" class="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" alt="${dev.model}">`
             : `<div class="w-full h-full flex items-center justify-center text-slate-200 text-5xl"><i class="fa-solid ${categoryIcons[dev.category] || 'fa-microchip'}"></i></div>`
           }
           <div class="absolute top-3 right-3">
@@ -160,7 +161,7 @@ function renderDevices(devices, totalCount) {
       </div>
     `;
   }).join('') + addBtnHtml;
-}
+    `}).join('');
 
 /**
  * Handle form submission for new device
@@ -205,13 +206,14 @@ export async function submitDeviceForm() {
       showSuccessModal('Succès', 'Votre appareil a été enregistré avec succès.');
       initDeviceList();
     } else {
-      // Show server message directly to the user instead of throwing
+      // Show server message directly to the user as a visual alert
       const quotaInfo = (typeof result.limit !== 'undefined' && typeof result.current !== 'undefined')
         ? ` (${result.current}/${result.limit})`
         : '';
-      const serverMsg = `${result.message || 'Erreur lors de l\'enregistrement de l\'appareil.'}${quotaInfo}`;
+      const serverMsg = `${result.message || "Erreur lors de l'enregistrement de l'appareil."}${quotaInfo}`;
       console.warn('⚠️ [Device] server responded with non-success:', serverMsg);
-      showErrorModal('Erreur', serverMsg);
+      // Use global alert for error visual feedback
+      showAlert(serverMsg, 'error');
       // stop further processing
       return;
     }

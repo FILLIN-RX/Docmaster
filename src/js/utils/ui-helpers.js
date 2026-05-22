@@ -6,6 +6,91 @@
 
 import { apiSendVerificationPin } from '../services/api.js';
 
+function bytesToBase64(bytes) {
+  if (typeof Buffer !== 'undefined') {
+    return Buffer.from(bytes).toString('base64');
+  }
+
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+
+  return typeof btoa === 'function' ? btoa(binary) : '';
+}
+
+function bufferLikeToDataUrl(value, mime = 'image/jpeg') {
+  let bytes = null;
+
+  if (typeof Buffer !== 'undefined' && Buffer.isBuffer(value)) {
+    bytes = new Uint8Array(value);
+  } else if (value?.type === 'Buffer' && Array.isArray(value.data)) {
+    bytes = Uint8Array.from(value.data);
+  } else if (ArrayBuffer.isView(value)) {
+    bytes = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+  } else if (value instanceof ArrayBuffer) {
+    bytes = new Uint8Array(value);
+  }
+
+  if (!bytes || bytes.length === 0) return '';
+
+  const base64 = bytesToBase64(bytes);
+  return base64 ? `data:${mime};base64,${base64}` : '';
+}
+
+/**
+ * Resolve an image path to a full URL or Base64 data.
+ * Prioritizes Base64 and absolute URLs.
+ * @param {string} path - The image path, absolute URL, or Base64 data
+ * @param {string} defaultImg - Optional fallback image path
+ * @returns {string} The resolved URL
+ */
+export function getImageUrl(path, defaultImg = '') {
+  if (!path) return defaultImg;
+
+  if (typeof path === 'object') {
+    if (typeof path.dataUrl === 'string') return path.dataUrl;
+    if (typeof path.base64 === 'string') {
+      const mime = path.mime || path.mimeType || 'image/jpeg';
+      return `data:${mime};base64,${path.base64}`;
+    }
+    if (typeof path.url === 'string') return getImageUrl(path.url, defaultImg);
+    if (typeof path.src === 'string') return getImageUrl(path.src, defaultImg);
+    if (typeof path.path === 'string') return getImageUrl(path.path, defaultImg);
+
+    const bufferUrl = bufferLikeToDataUrl(path, path.mime || path.mimeType || 'image/jpeg');
+    if (bufferUrl) return bufferUrl;
+
+    return defaultImg;
+  }
+  
+  // 1. Data URLs (Base64) - Direct usage
+  if (path.startsWith('data:')) {
+    return path;
+  }
+  
+  // 2. External HTTP links (Google photo, etc)
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  
+  // 3. Frontend-local assets
+  if (path.startsWith('./assets') || path.startsWith('/assets') || path.startsWith('assets/')) {
+    return (path.startsWith('assets/') ? '/' : '') + path;
+  }
+
+  // 4. Legacy/Unencoded paths (uploads/...)
+  // Since the backend now encodes everything, this case is usually a fallback for unencoded data
+  // or a server configuration that didn't process the file.
+  // We still try to resolve it to the API URL if possible, but the goal is to have no more of these.
+  const backendBase = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+    ? 'http://localhost:5000'
+    : window.location.origin.replace(':3003', ':5000');
+    
+  return `${backendBase}/${path.replace(/^\/+/, '')}`;
+}
+
 /**
  * Switch between login and register tabs
  */

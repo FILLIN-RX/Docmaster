@@ -1,14 +1,13 @@
 import {
   getMyDeclarations,
   getMyDevices,
-  getMyNotifications,
   markAllNotificationsAsRead,
   getGlobalStats,
   getMySubscription,
   getPerformanceStats,
 } from "../services/api.js";
 import { getSession } from "../services/auth.js";
-import { showSuccessModal } from "../utils/index.js";
+import { showSuccessModal, getImageUrl } from "../utils/index.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   if (window.toggleLoader) window.toggleLoader(true);
@@ -81,7 +80,8 @@ function setupBasicUI() {
 
     const topPhoto = document.getElementById("topPhoto");
     if (user.photo_url && topPhoto) {
-      topPhoto.src = user.photo_url;
+      const fullUrl = getImageUrl(user.photo_url);
+      topPhoto.src = fullUrl;
       topPhoto.classList.remove("hidden");
       document.getElementById("topInitial").classList.add("hidden");
     }
@@ -552,10 +552,11 @@ async function loadNotifications() {
   if (typeof window.clearNotifications !== "function") return;
 
   window.clearNotifications();
-  const result = await getMyNotifications();
+  const notifications = typeof window.loadNotificationsData === "function"
+    ? await window.loadNotificationsData()
+    : [];
 
-  if (result.success && result.data.data) {
-    const notifications = result.data.data;
+  if (notifications.length) {
 
     const dashboardNotifList = document.getElementById(
       "dashboardNotificationList",
@@ -627,6 +628,14 @@ async function loadNotifications() {
     });
 
     if (dashboardNotifList && notifications.length === 0) {
+      dashboardNotifList.innerHTML =
+        '<div class="p-5 text-center text-textMuted text-xs italic">Aucune notification.</div>';
+    }
+  } else {
+    const dashboardNotifList = document.getElementById(
+      "dashboardNotificationList",
+    );
+    if (dashboardNotifList) {
       dashboardNotifList.innerHTML =
         '<div class="p-5 text-center text-textMuted text-xs italic">Aucune notification.</div>';
     }

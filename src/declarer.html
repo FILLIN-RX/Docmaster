@@ -23,8 +23,7 @@
     // Prévention des erreurs "ReferenceError" si l'utilisateur clique avant le chargement complet des modules JS
     const _pendingLoadMsg = () => {
       const msg = "Chargement en cours, veuillez patienter quelques secondes...";
-      if (window.showNotification) window.showNotification(msg, "info");
-      else alert(msg);
+        console.warn('DocMaster: action ignorée pendant le chargement de la page.');
     };
     ['openNotifModal', 'selectOwner', 'toggleDocType', 'selectPlace', 'setUrgency', 'toggleCheckbox', 'submitDeclaration', 'goToPrevStep', 'goToNextStep', 'closeConfirmModal', 'validateAndSubmit', 'downloadDeclarationPdf', 'resetForm'].forEach(f => {
       if (!window[f]) window[f] = _pendingLoadMsg;

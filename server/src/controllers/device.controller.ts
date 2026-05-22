@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
+import path from 'path';
 import { deviceService } from '../services/device.service.ts';
 import { subscriptionService } from '../services/subscription.service.ts';
+import { readFileAsBase64, fileExists, toDataUrl } from '../utils/media.utils.ts';
 
 export const registerMyDevice = async (req: Request, res: Response) => {
   try {
@@ -68,6 +70,44 @@ export const registerMyDevice = async (req: Request, res: Response) => {
   }
 };
 
+export const updateMyDevice = async (req: Request, res: Response) => {
+  try {
+    const data = req.body;
+    const userId = (req as any).user?.id;
+    const id = req.params.id as string;
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Utilisateur non authentifié'
+      });
+    }
+
+    const result = await deviceService.updateDevice(id, userId, {
+      ...data,
+      user_id: userId,
+      uploadedPhotos: {
+        photo_facture: files?.photo_facture?.map(file => file.path) || [],
+        photo_face: files?.photo_face?.map(file => file.path) || [],
+        photo_serial: files?.photo_serial?.map(file => file.path) || []
+      }
+    } as any);
+
+    res.json({
+      success: true,
+      message: 'Appareil modifié avec succès',
+      data: result
+    });
+  } catch (error: any) {
+    console.error('❌ Erreur lors de la modification de l\'appareil:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Erreur lors de la modification de l\'appareil'
+    });
+  }
+};
+
 export const getMyDevices = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.id;
@@ -91,6 +131,67 @@ export const getMyDevices = async (req: Request, res: Response) => {
       success: false,
       message: error.message || 'Erreur lors de la récupération des appareils'
     });
+  }
+};
+
+export const getDeviceMedia = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    const id = req.params.id as string;
+    const field = (req.query.field as string) || 'photo_facture';
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Utilisateur non authentifié' });
+    }
+
+    const device = await deviceService.getDeviceById(id, { encode: false });
+    if (!device || device.user_id !== userId) {
+      return res.status(404).json({ success: false, message: 'Appareil non trouvé ou accès refusé' });
+    }
+
+    const photos: string[] = Array.isArray((device as any).photos)
+      ? (device as any).photos
+      : (() => { try { return JSON.parse((device as any).photos || '[]'); } catch { return []; } })();
+
+    const resolveByField = (requestedField: string) => {
+      const normalized = requestedField.toLowerCase();
+
+      // Try to find by filename prefix first (photo_facture-, photo_face-, photo_serial-)
+      const byPrefix = photos.find(p => path.basename(p).toLowerCase().startsWith(`${normalized}-`));
+      if (byPrefix) return byPrefix;
+
+      // Then try positional fallback for legacy records
+      const idxMap: Record<string, number> = { photo_facture: 0, photo_face: 1, photo_serial: 2 };
+      const idx = idxMap[normalized];
+      if (typeof idx === 'number' && photos[idx]) return photos[idx];
+
+      // If the requested slot is missing but there is only one media file, use it.
+      if (photos.length === 1) return photos[0];
+
+      // If the requested field is missing but one of the other media files exists, return the first available.
+      return photos[0] || null;
+    };
+
+    // Try to find the best matching media for the requested field
+    const lowerField = field.toLowerCase();
+    const selected = resolveByField(lowerField);
+
+    if (!selected) {
+      return res.status(404).json({ success: false, message: 'Média introuvable pour le champ demandé' });
+    }
+
+    const exists = await fileExists(selected);
+    if (!exists) return res.status(404).json({ success: false, message: 'Fichier absent sur le serveur' });
+
+    const file = await readFileAsBase64(selected);
+    if (!file) {
+      return res.status(500).json({ success: false, message: 'Impossible de lire le média demandé' });
+    }
+
+    return res.json({ success: true, data: { filename: file.filename, mime: file.mime, base64: file.base64, dataUrl: toDataUrl(file.base64, file.mime) } });
+  } catch (error: any) {
+    console.error('❌ Erreur lors de la récupération du média:', error);
+    res.status(500).json({ success: false, message: error.message || 'Erreur lors de la récupération du média' });
   }
 };
 

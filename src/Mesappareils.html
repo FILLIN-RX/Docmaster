@@ -33,9 +33,7 @@
 
     // Stub functions until module loads
     const _pendingLoadMsg = () => {
-      const msg = "Chargement en cours, veuillez patienter quelques secondes...";
-      if (window.showNotification) window.showNotification(msg, "info");
-      else alert(msg);
+      console.warn('DocMaster: action ignorée pendant le chargement de la page.');
     };
     
     const stubFunctions = ['openNotifModal', 'setFilter', 'setView', 'openVerifyModal', 'openAddModal', 
@@ -399,36 +397,29 @@
   <!-- MAIN -->
   <div class="main-wrap" id="mainWrap">
     <!-- TOPBAR -->
-    <header class="topbar">
-      <div style="display:flex;align-items:center;gap:14px;min-width:0;flex:1;">
-        <button id="menuBtn" onclick="window.toggleSb()" style="display:flex;background:none;border:none;color:#374151;font-size:18px;cursor:pointer;padding:4px;flex-shrink:0;"><i class="fa-solid fa-bars"></i></button>
-        <div style="min-width:0;">
-          <nav style="font-size:11.5px;color:#9CA3AF;font-weight:500;display:flex;align-items:center;gap:5px;" class="hidden md:flex">
-            <a href="dashboard.html" style="color:#9CA3AF;text-decoration:none;">Accueil</a>
-            <i class="fa-solid fa-chevron-right" style="font-size:9px;"></i>
-            <span style="color:#1E3A2F;font-weight:600;">Mes appareils</span>
+    <header class="topbar h-14 px-3 md:px-4 flex items-center justify-between gap-3">
+      <div class="flex min-w-0 flex-1 items-center gap-3">
+        <button id="menuBtn" onclick="window.toggleSb()" class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gray-700 transition hover:bg-slate-100 hover:text-gray-900"><i class="fa-solid fa-bars text-base"></i></button>
+        <div class="min-w-0">
+          <nav class="hidden md:flex items-center gap-1.5 text-[11px] font-medium text-gray-400">
+            <a href="dashboard.html" class="text-gray-400 no-underline">Accueil</a>
+            <i class="fa-solid fa-chevron-right text-[8px]"></i>
+            <span class="font-semibold text-green-dark">Mes appareils</span>
           </nav>
-          <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:800;color:#1A1A1A;margin-top:1px;">Mes appareils</h1>
+          <h1 class="mt-0.5 font-bricolage text-[16px] font-extrabold text-textMain md:text-[17px]">Mes appareils</h1>
         </div>
       </div>
-      
-      <!-- Mobile Action Icons -->
-      <div class="top-actions-mobile">
-        <button class="icon-action-btn" onclick="window.refreshDevices()" title="Rafraîchir">
-          <i class="fa-solid fa-arrows-rotate"></i>
-        </button>
-        <button class="icon-action-btn" onclick="window.openAddModal()" title="Ajouter">
-          <i class="fa-solid fa-plus"></i>
-        </button>
-      </div>
 
-      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;" class="hidden md:flex">
-        <button onclick="window.openNotifModal()" style="width:36px;height:36px;border-radius:10px;border:1.5px solid #E0D5C4;background:white;color:#6B7280;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;" onmouseover="this.style.borderColor='#F5A64B';this.style.color='#F5A64B'" onmouseout="this.style.borderColor='#E0D5C4';this.style.color='#6B7280'">
-          <i class="fa-solid fa-bell"></i>
-          <div id="notifDot" style="position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;border:2px solid white;transition:background 0.3s;"></div>
+      <div class="flex shrink-0 items-center gap-2">
+        <button onclick="window.refreshDevices()" class="flex h-8 w-8 items-center justify-center rounded-[10px] border border-borderMain bg-white text-gray-500 transition hover:border-primary hover:text-primary" title="Rafraîchir">
+          <i class="fa-solid fa-arrows-rotate text-[13px]"></i>
         </button>
-        <div style="display:flex;align-items:center;gap:8px;padding:4px 8px;border:1.5px solid #E0D5C4;border-radius:10px;background:white;flex-shrink:0;">
-          <div id="topInitial" style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#1E3A2F,#2D5A42);display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-size:12px;font-weight:800;color:white;cursor:pointer;">JM</div>
+        <button onclick="window.openNotifModal()" class="relative flex h-8 w-8 items-center justify-center rounded-[10px] border border-borderMain bg-white text-gray-500 transition hover:border-primary hover:text-primary" title="Notifications">
+          <i class="fa-solid fa-bell text-[13px]"></i>
+          <div id="notifDot" class="absolute right-1.25 top-1.25 h-1.75 w-1.75 rounded-full border-2 border-white transition-colors"></div>
+        </button>
+        <div class="hidden sm:flex items-center gap-2 rounded-[10px] border border-borderMain bg-white px-2 py-1">
+          <div id="topInitial" class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-green-dark to-green-mid font-bricolage text-[12px] font-extrabold text-white cursor-pointer">JM</div>
         </div>
       </div>
     </header>
@@ -464,10 +455,6 @@
             class="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white border-none rounded-xl font-semibold text-sm transition-all shadow-sm">
             <i class="fa-solid fa-shield-halved"></i> <span>Vérifier</span>
           </button>
-          <button onclick="window.openAddModal()" 
-            class="flex items-center gap-2 px-4 py-2.5 bg-green-dark hover:bg-green-mid text-white border-none rounded-xl font-semibold text-sm transition-all shadow-sm">
-            <i class="fa-solid fa-plus"></i> <span>Ajouter</span>
-          </button>
         </div>
       </div>
 
@@ -476,19 +463,13 @@
         <div class="w-20 h-20 rounded-2xl bg-[#F2EBD9] flex items-center justify-center text-4xl mb-4">📱</div>
         <h3 class="text-gray-900 font-bold text-lg leading-tight mb-2">Aucun appareil enregistré</h3>
         <p class="text-gray-500 text-sm max-w-xs leading-relaxed mb-6">Centralisez vos factures et numéros de série en un lieu sûr.</p>
-        <button onclick="window.openAddModal()" class="h-12 w-full max-w-[280px] bg-[#1E3A2F] text-white rounded-xl font-bold flex items-center justify-center">
-          Ajouter mon premier appareil
-        </button>
       </div>
     </div>
 
     <!-- STICKY MOBILE FOOTER -->
     <div class="sticky-bottom-bar">
-      <button class="btn-secondary-mobile" onclick="window.openVerifyModal()">
+      <button class="btn-secondary-mobile w-full" onclick="window.openVerifyModal()">
         Vérifier
-      </button>
-      <button class="btn-primary-mobile" onclick="window.openAddModal()">
-        Ajouter
       </button>
     </div>
 
@@ -516,7 +497,7 @@
   </div>
 
   <div class="modal-bg" id="confirmLostModal">
-<div class="modal p-6 text-center"><div class="sheet-handle lg:hidden"></div><div class="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-triangle-exclamation text-red-500 text-2xl"></i></div><h2 class="font-bricolage text-xl font-extrabold mb-2">Signaler un problème</h2><p class="text-sm text-gray-500 mb-6">Voulez-vous déclarer cet appareil comme perdu ou volé ?</p><form onsubmit="event.preventDefault(); window.validateAndSubmitLost();"><div class="field-group text-left mb-4"><label class="field-label">Type de signalement</label><select id="reportType" class="field-input no-icon"><option value="LOST">Perdu</option><option value="STOLEN">Volé</option></select></div><div class="field-group text-left mb-6"><label class="field-label">Code secret</label><div class="field-wrapper"><i class="fa-solid fa-lock field-icon"></i><input type="password" id="confirmPassword" class="field-input" placeholder="••••" /></div></div><button type="submit" id="finalSubmitBtn" class="w-full py-4 bg-red-500 text-white rounded-2xl font-bold mb-3">Confirmer</button><button type="button" onclick="window.closeConfirmLost()" class="w-full py-3 text-gray-500 font-semibold">Annuler</button></form></div></div>
+<div class="modal p-6 text-center"><div class="sheet-handle lg:hidden"></div><div class="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-triangle-exclamation text-red-500 text-2xl"></i></div><h2 id="reportModalTitle" class="font-bricolage text-xl font-extrabold mb-2">Signaler un problème</h2><p id="reportModalDesc" class="text-sm text-gray-500 mb-6">Voulez-vous déclarer cet appareil comme perdu ou volé ?</p><form onsubmit="event.preventDefault(); window.validateAndSubmitLost();"><div id="reportTypeGroup" class="field-group text-left mb-4"><label class="field-label">Type de signalement</label><select id="reportType" class="field-input no-icon"><option value="LOST">Perdu</option><option value="STOLEN">Volé</option></select></div><div class="field-group text-left mb-6"><label class="field-label">Code secret</label><div class="field-wrapper"><i class="fa-solid fa-lock field-icon"></i><input type="password" id="confirmPassword" class="field-input" placeholder="••••" /></div></div><button type="submit" id="finalSubmitBtn" class="w-full py-4 bg-red-500 text-white rounded-2xl font-bold mb-3">Confirmer</button><button type="button" onclick="window.closeConfirmLost()" class="w-full py-3 text-gray-500 font-semibold">Annuler</button></form></div></div>
 
   <div class="modal-bg" id="addModal">
     <div class="modal">
@@ -525,13 +506,14 @@
       <div class="modal-body">
         <div class="mb-6"><p class="field-label mb-3">Type d'appareil</p><div class="grid grid-cols-5 gap-2" id="typeSelector"><div class="type-option selected" onclick="window.selectType(this,'telephone')" data-type="telephone"><div class="type-icon"><i class="fa-solid fa-mobile-screen-button"></i></div>Phone</div><div class="type-option" onclick="window.selectType(this,'ordinateur')" data-type="ordinateur"><div class="type-icon"><i class="fa-solid fa-laptop"></i></div>PC</div><div class="type-option" onclick="window.selectType(this,'tablette')" data-type="tablette"><div class="type-icon"><i class="fa-solid fa-tablet-screen-button"></i></div>Tab</div><div class="type-option" onclick="window.selectType(this,'tv')" data-type="tv"><div class="type-icon"><i class="fa-solid fa-tv"></i></div>TV</div><div class="type-option" onclick="window.selectType(this,'autre')" data-type="autre"><div class="type-icon"><i class="fa-solid fa-box"></i></div>Autre</div></div></div>
         <div class="grid grid-cols-2 gap-4 mb-4"><div class="field-group col-span-2"><label class="field-label">Nom <span class="text-red-500">*</span></label><div class="field-wrapper"><i class="fa-solid fa-tag field-icon"></i><input type="text" class="field-input" id="fNom" placeholder="iPhone 14..."/></div></div><div class="field-group"><label class="field-label">Marque</label><div class="field-wrapper"><i class="fa-solid fa-building field-icon"></i><select class="field-input" id="fMarque"><option value="">Sélectionner</option><option>Apple</option><option>Samsung</option><option>Xiaomi</option><option>Huawei</option><option>Autre</option></select></div></div><div class="field-group"><label class="field-label">Modèle</label><div class="field-wrapper"><i class="fa-solid fa-code-branch field-icon"></i><input type="text" class="field-input" id="fModele" /></div></div></div>
-        <div class="grid grid-cols-2 gap-4 mb-4"><div class="field-group"><label class="field-label">IMEI / N° Série</label><div class="field-wrapper"><i class="fa-solid fa-barcode field-icon"></i><input type="text" class="field-input" id="fSerial" /></div></div><div class="field-group"><label class="field-label">Couleur</label><div class="field-wrapper"><i class="fa-solid fa-palette field-icon"></i><input type="text" class="field-input" id="fCouleur" /></div></div></div>
+        <div class="grid grid-cols-2 gap-4 mb-4"><div class="field-group"><label class="field-label">IMEI / N° Série</label><div class="field-wrapper"><i class="fa-solid fa-barcode field-icon"></i><input type="text" class="field-input" id="fSerial" />
+          <div id="serialError" class="text-red-500 text-sm mt-1 hidden"></div></div></div><div class="field-group"><label class="field-label">Couleur</label><div class="field-wrapper"><i class="fa-solid fa-palette field-icon"></i><input type="text" class="field-input" id="fCouleur" /></div></div></div>
         <div class="grid grid-cols-3 gap-3 mb-4"><div class="field-group"><label class="field-label">Achat</label><div class="field-wrapper"><i class="fa-solid fa-calendar field-icon"></i><input type="text" class="field-input datepicker" id="fDateAchat"/></div></div><div class="field-group"><label class="field-label">Garantie</label><div class="field-wrapper"><i class="fa-solid fa-calendar-xmark field-icon"></i><input type="text" class="field-input datepicker" id="fGarantie"/></div></div><div class="field-group"><label class="field-label">Prix</label><div class="field-wrapper"><i class="fa-solid fa-franc-sign field-icon"></i><input type="number" class="field-input" id="fPrix"/></div></div></div>
         <div class="grid grid-cols-2 gap-4 mb-4"><div class="field-group"><label class="field-label">Lieu Achat</label><div class="field-wrapper"><i class="fa-solid fa-store field-icon"></i><input type="text" class="field-input" id="fLieu" /></div></div><div class="field-group"><label class="field-label">Assurance</label><div class="field-wrapper"><i class="fa-solid fa-shield-halved field-icon"></i><select class="field-input" id="fAssurance"><option value="">Non</option><option value="oui">Oui</option></select></div></div></div>
         <div class="field-group mb-6"><label class="field-label">Notes</label><div class="field-wrapper"><textarea class="field-input no-icon" id="fNotes"></textarea></div></div>
-        <div class="mb-6"><p class="field-label mb-2">Facture / Ticket</p><div class="upload-zone" id="factureZone" onclick="document.getElementById('factureInput').click()"><div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center mb-2"><i class="fa-solid fa-cloud-arrow-up text-gray-400"></i></div><p class="text-xs font-bold">Cliquer pour uploader</p><div id="factureChips"></div></div><input type="file" id="factureInput" class="hidden" multiple /></div>
-        <div class="mb-8"><p class="field-label mb-2">Photos</p><div class="grid grid-cols-2 gap-3"><div class="upload-zone min-h-[90px]" onclick="document.getElementById('photoInput').click()"><img id="photoPreview" class="hidden h-16 rounded-lg object-cover"/><div id="photoPlaceholder"><i class="fa-solid fa-image text-gray-300 text-xl"></i><p class="text-[10px]">Photo recto</p></div><input type="file" id="photoInput" class="hidden" /></div><div class="upload-zone min-h-[90px]" onclick="document.getElementById('photoSerialInput').click()"><img id="photoSerialPreview" class="hidden h-16 rounded-lg object-cover"/><div id="photoSerialPlaceholder"><i class="fa-solid fa-barcode text-gray-300 text-xl"></i><p class="text-[10px]">N° série</p></div><input type="file" id="photoSerialInput" class="hidden" /></div></div></div>
-        <div class="flex flex-col lg:flex-row gap-3"><button onclick="window.saveDevice()" class="w-full py-4 bg-green-dark text-white rounded-2xl font-bold order-1 lg:flex-2">Enregistrer</button><button onclick="window.closeAddModal()" class="w-full py-4 border border-gray-200 text-gray-600 rounded-2xl font-semibold order-2 lg:flex-1 lg:order-none">Annuler</button></div>
+        <div class="mb-6"><p class="field-label mb-2">Facture / Ticket</p><div class="upload-zone min-h-30" id="factureZone" onclick="document.getElementById('factureInput').click()"><div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-2"><i class="fa-solid fa-cloud-arrow-up text-gray-400"></i></div><p class="text-xs font-bold">Cliquer pour uploader</p><p class="text-[9px] text-gray-400 mb-1">Images ou PDF</p><div id="facturePreviewList" class="w-full flex flex-col gap-2"></div></div><input type="file" id="factureInput" class="hidden" multiple accept="image/*,.pdf" onchange="window.previewInvoiceFiles(this,'facturePreviewList')" /></div>
+        <div class="mb-8"><p class="field-label mb-2">Photos</p><div class="grid grid-cols-2 gap-3"><div class="upload-zone min-h-30" onclick="document.getElementById('photoInput').click()"><img id="photoPreview" class="hidden w-full h-24 rounded-xl object-cover" alt="Aperçu photo"/><div id="photoPlaceholder" class="flex flex-col items-center justify-center gap-1 text-center"><div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-image text-gray-300 text-xl"></i></div><p class="text-[10px] font-semibold text-gray-500">Photo recto</p><p class="text-[9px] text-gray-400">L'aperçu apparaîtra ici</p></div><input type="file" id="photoInput" class="hidden" accept="image/*" onchange="window.previewPhoto(this,'photoPreview','photoPlaceholder')" /></div><div class="upload-zone min-h-30" onclick="document.getElementById('photoSerialInput').click()"><img id="photoSerialPreview" class="hidden w-full h-24 rounded-xl object-cover" alt="Aperçu photo série"/><div id="photoSerialPlaceholder" class="flex flex-col items-center justify-center gap-1 text-center"><div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-barcode text-gray-300 text-xl"></i></div><p class="text-[10px] font-semibold text-gray-500">Photo série</p><p class="text-[9px] text-gray-400">L'aperçu apparaîtra ici</p></div><input type="file" id="photoSerialInput" class="hidden" accept="image/*" onchange="window.previewPhoto(this,'photoSerialPreview','photoSerialPlaceholder')" /></div></div></div>
+        <div class="flex flex-col lg:flex-row gap-3"><button id="saveDeviceBtn" onclick="window.saveDevice()" class="w-full py-4 bg-green-dark text-white rounded-2xl font-bold order-1 lg:flex-2">Enregistrer</button><button onclick="window.closeAddModal()" class="w-full py-4 border border-gray-200 text-gray-600 rounded-2xl font-semibold order-2 lg:flex-1 lg:order-none">Annuler</button></div>
       </div>
     </div>
   </div>
@@ -539,7 +521,7 @@
   <div class="detail-overlay" id="detailOverlay" onclick="window.closeDetail(event)"><div class="detail-panel" onclick="event.stopPropagation()"><div class="lg:hidden"><div class="sheet-handle"></div><p class="text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Détails de l'appareil</p></div><div class="hidden lg:flex items-center justify-between mb-8"><button onclick="window.closeDetail(null,true)" class="text-gray-500 font-semibold text-sm">← Retour</button><div class="flex gap-2"><button id="detailEditBtn" onclick="window.editCurrentDevice()" class="px-4 py-2 border border-gray-200 rounded-xl text-sm font-semibold">Modifier</button><button onclick="window.deleteCurrentDevice()" class="px-4 py-2 bg-red-50 text-red-600 rounded-xl text-sm font-semibold">Supprimer</button></div></div><div id="detailContent"></div><div class="mt-8 flex flex-col gap-3 lg:hidden"><button onclick="window.editCurrentDevice()" class="w-full h-12 bg-gray-100 text-gray-800 rounded-2xl font-bold">Modifier</button><button onclick="window.deleteCurrentDevice()" class="w-full h-12 bg-red-50 text-red-600 rounded-2xl font-bold">Supprimer l'appareil</button></div></div></div>
 
 <script type="module">
-import { registerMyDevice, getMyDevices, reportDeviceLost, reportDeviceFound, deleteDevice, verifyDevice } from './js/services/api.js';
+import { API_BASE_URL, registerMyDevice, updateMyDevice, getMyDevices, reportDeviceLost, reportDeviceFound, deleteDevice, verifyDevice } from './js/services/api.js';
 
 const TYPE_META = {
   telephone:  { label:'Téléphone',   icon:'fa-mobile-screen-button', color:'#3B82F6', bg:'#EFF6FF' },
@@ -547,6 +529,20 @@ const TYPE_META = {
   tablette:   { label:'Tablette',    icon:'fa-tablet-screen-button', color:'#10B981', bg:'#ECFDF5' },
   tv:         { label:'TV / Écran',  icon:'fa-tv',                   color:'#F59E0B', bg:'#FFFBEB' },
   autre:      { label:'Autre',       icon:'fa-box',                  color:'#6B7280', bg:'#F9FAFB' },
+};
+
+const MEDIA_BASE_URL = (() => {
+  if (typeof API_BASE_URL === 'string' && API_BASE_URL.startsWith('http')) {
+    return API_BASE_URL.replace(/\/api\/?$/, '');
+  }
+  return window.location.origin;
+})();
+
+const mediaUrl = (value) => {
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value) || value.startsWith('data:')) return value;
+  const clean = value.replace(/^\/+/, '');
+  return `${MEDIA_BASE_URL}/${clean}`;
 };
 
 window.refreshDevices = async function() {
@@ -557,8 +553,31 @@ window.refreshDevices = async function() {
       window._appState.devices = result.data.map(d => {
         const cat = (d.category || '').toLowerCase();
         let type = cat.includes('phone')?'telephone':cat.includes('laptop')?'ordinateur':cat.includes('tablet')?'tablette':cat.includes('tv')?'tv':'autre';
-        let photos = []; try { photos = JSON.parse(d.photos || '[]'); } catch(e) {}
-        return { ...d, type, nom: d.model || 'Sans nom', marque: d.brand || '', modele: d.model || '', serial: d.serial_number_imei || '', color: d.color || '', dateAchat: d.purchase_date || '', garantie: d.garantie_end || '', assurance: d.assurance || 'non', prix: d.purchase_value || 0, currency: d.currency || 'XAF', lieu: d.where_buy || '', notes: d.notes || '', photo: photos.length > 0 ? (photos[0].startsWith('http') ? photos[0] : '/' + photos[0]) : null, files: photos.map(p => ({ name: p.split('/').pop(), data: p.startsWith('http') ? p : '/' + p })) };
+        let photos = [];
+        try {
+          const source = d.images ?? d.photos ?? '[]';
+          photos = Array.isArray(source) ? source : JSON.parse(source || '[]');
+        } catch(e) {}
+        const normalizePath = (p) => mediaUrl(p);
+        const files = photos.map((p) => {
+          const pathValue = normalizePath(p);
+          const name = p.split('/').pop();
+          const lower = name.toLowerCase();
+          const isInvoice = /facture|ticket|invoice/.test(lower);
+          const isSerial = /serial|imei|s\.?n|numero|numéro/.test(lower);
+          const isDevice = /face|recto|front|appareil/.test(lower);
+          const isPdf = lower.endsWith('.pdf');
+          let kind = 'other';
+          if (isInvoice) kind = 'invoice';
+          else if (isSerial) kind = 'serial';
+          else if (isDevice) kind = 'device';
+          else if (isPdf) kind = 'invoice';
+          return { name, path: pathValue, kind, isPdf, isImage: !isPdf };
+        });
+        const devicePhoto = files.find(f => f.kind === 'device' && f.isImage) || files.find(f => f.kind === 'device') || files.find(f => f.isImage) || null;
+        const invoiceFile = files.find(f => f.kind === 'invoice') || null;
+        const serialFile = files.find(f => f.kind === 'serial') || null;
+        return { ...d, type, nom: d.model || 'Sans nom', marque: d.brand || '', modele: d.model || '', serial: d.serial_number_imei || '', color: d.color || '', dateAchat: d.purchase_date || '', garantie: d.garantie_end || '', assurance: d.assurance || 'non', prix: d.purchase_value || 0, currency: d.currency || 'XAF', lieu: d.where_buy || '', notes: d.notes || '', photo: devicePhoto?.path || null, invoicePhoto: invoiceFile?.path || null, serialPhoto: serialFile?.path || null, files };
       });
       renderAll();
     }
@@ -571,8 +590,24 @@ window.setView = function(v) { window._appState.currentView = v; const grid = do
 
 window.openAddModal = function(id) {
   window._appState.editingId = id || null;
-  document.getElementById('photoPreview').style.display='none'; document.getElementById('photoPlaceholder').style.display='block';
-  document.getElementById('photoSerialPreview').style.display='none'; document.getElementById('photoSerialPlaceholder').style.display='block';
+  const saveBtn = document.getElementById('saveDeviceBtn');
+  const photoPreview = document.getElementById('photoPreview');
+  const photoPlaceholder = document.getElementById('photoPlaceholder');
+  const photoSerialPreview = document.getElementById('photoSerialPreview');
+  const photoSerialPlaceholder = document.getElementById('photoSerialPlaceholder');
+  const facturePreviewList = document.getElementById('facturePreviewList');
+  const photoInput = document.getElementById('photoInput');
+  const photoSerialInput = document.getElementById('photoSerialInput');
+  const factureInput = document.getElementById('factureInput');
+  if (photoPreview) { photoPreview.src = ''; photoPreview.style.display='none'; }
+  if (photoPlaceholder) photoPlaceholder.style.display='flex';
+  if (photoSerialPreview) { photoSerialPreview.src = ''; photoSerialPreview.style.display='none'; }
+  if (photoSerialPlaceholder) photoSerialPlaceholder.style.display='flex';
+  if (facturePreviewList) facturePreviewList.innerHTML = '';
+  if (photoInput) photoInput.value = '';
+  if (photoSerialInput) photoSerialInput.value = '';
+  if (factureInput) factureInput.value = '';
+  if (saveBtn) saveBtn.textContent = id ? 'Mettre à jour' : 'Enregistrer';
   document.getElementById('modalTitle').textContent = id ? 'Modifier l\'appareil' : 'Ajouter un appareil';
   if (id) {
     const d = window._appState.devices.find(x => x.id === id); if (!d) return;
@@ -604,28 +639,135 @@ window.previewPhoto = function(input, previewId, placeholderId) {
   }
 };
 
+window.previewInvoiceFiles = function(input, listId) {
+  const listEl = document.getElementById(listId);
+  if (!listEl) return;
+  const files = Array.from(input.files || []);
+  if (!files.length) {
+    listEl.innerHTML = '';
+    return;
+  }
+
+  listEl.innerHTML = files.map(file => {
+    const isImage = file.type.startsWith('image/');
+    const label = file.name || 'Fichier';
+    if (isImage) {
+      const previewUrl = URL.createObjectURL(file);
+      return `
+        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <div class="h-24 bg-gray-50">
+            <img src="${previewUrl}" alt="${label}" class="w-full h-full object-cover" />
+          </div>
+          <div class="flex items-center gap-2 px-3 py-2">
+            <div class="w-8 h-8 rounded-lg bg-green-light flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-image text-green-dark text-xs"></i>
+            </div>
+            <div class="min-w-0 flex-1 text-left">
+              <p class="text-[11px] font-semibold text-gray-700 truncate">${label}</p>
+              <p class="text-[9px] text-gray-400">Aperçu image</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    return `
+      <div class="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2">
+        <div class="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-file-pdf text-gray-500 text-sm"></i>
+        </div>
+        <div class="min-w-0 flex-1 text-left">
+          <p class="text-[11px] font-semibold text-gray-700 truncate">${label}</p>
+          <p class="text-[9px] text-gray-400">Document PDF</p>
+        </div>
+      </div>
+    `;
+  }).join('');
+};
+
 window.saveDevice = async function() {
   const nom = document.getElementById('fNom').value.trim(); if (!nom) return;
   if (window.toggleLoader) window.toggleLoader(true);
+  const getDateValue = (id) => {
+    const input = document.getElementById(id);
+    if (!input) return '';
+    if (input._flatpickr) {
+      return input._flatpickr.input?.value || input._flatpickr.selectedDates?.[0]?.toISOString?.().slice(0, 10) || input.value || '';
+    }
+    return input.value || '';
+  };
   const formData = new FormData();
   formData.append('category', window._appState.selectedType.toUpperCase()==='TELEPHONE'?'PHONE':window._appState.selectedType.toUpperCase()==='ORDINATEUR'?'LAPTOP':window._appState.selectedType.toUpperCase()==='TABLETTE'?'TABLET':'OTHER');
   formData.append('brand', document.getElementById('fMarque').value);
   formData.append('model', document.getElementById('fModele').value.trim() || nom);
   formData.append('serial_number_imei', document.getElementById('fSerial').value.trim());
   formData.append('color', document.getElementById('fCouleur').value.trim());
-  formData.append('purchase_date', document.getElementById('fDateAchat').value);
+  formData.append('purchase_date', getDateValue('fDateAchat'));
   formData.append('purchase_value', document.getElementById('fPrix').value);
   formData.append('currency', 'XAF');
   formData.append('where_buy', document.getElementById('fLieu').value.trim());
-  formData.append('garantie_end', document.getElementById('fGarantie').value);
+  formData.append('garantie_end', getDateValue('fGarantie'));
   formData.append('assurance', document.getElementById('fAssurance').value || 'non');
   formData.append('notes', document.getElementById('fNotes').value.trim());
-  const res = await registerMyDevice(formData);
-  if (res.success) { await window.refreshDevices(); window.closeAddModal(); }
+
+  const factureInput = document.getElementById('factureInput');
+  if (factureInput?.files?.length) {
+    Array.from(factureInput.files).forEach((file) => formData.append('photo_facture', file));
+  }
+
+  const faceInput = document.getElementById('photoInput');
+  if (faceInput?.files?.[0]) {
+    formData.append('photo_face', faceInput.files[0]);
+  }
+
+  const serialInput = document.getElementById('photoSerialInput');
+  if (serialInput?.files?.[0]) {
+    formData.append('photo_serial', serialInput.files[0]);
+  }
+
+  const editingId = window._appState.editingId;
+  const res = editingId ? await updateMyDevice(editingId, formData) : await registerMyDevice(formData);
+  if (res.success) {
+    const errEl = document.getElementById('serialError');
+    if (errEl) errEl.classList.add('hidden');
+    await window.refreshDevices();
+    window.closeAddModal();
+    window.showDeviceToast(editingId ? 'Appareil modifié avec succès' : 'Appareil ajouté avec succès', 'success');
+  } else {
+    window.showDeviceToast(res.message || 'Erreur lors de l\'enregistrement', 'error');
+    if (res.message && res.message.toLowerCase().includes('déjà enregistré')) {
+      const errEl = document.getElementById('serialError');
+      if (errEl) {
+        errEl.textContent = res.message;
+        errEl.classList.remove('hidden');
+      }
+    }
+  }
   if (window.toggleLoader) window.toggleLoader(false);
 }
 
-window.openDetail = function(id) {
+window.fetchDeviceMedia = async function(deviceId, field = 'photo_facture') {
+  try {
+    // Determine API origin: prefer API_BASE_URL if present, otherwise guess backend on :5000
+    let apiOrigin = window.location.origin;
+    if (typeof API_BASE_URL === 'string' && API_BASE_URL.startsWith('http')) {
+      apiOrigin = API_BASE_URL.replace(/\/api\/?$/, '');
+    } else if (apiOrigin.includes(':3003')) {
+      apiOrigin = apiOrigin.replace(':3003', ':5000');
+    }
+    const url = `${apiOrigin}/api/devices/${deviceId}/media?field=${encodeURIComponent(field)}`;
+    const token = localStorage.getItem('docmaster_jwt_token') || null;
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+    const resp = await fetch(url, { headers });
+    if (!resp.ok) return null;
+    const json = await resp.json();
+    return json?.data?.dataUrl || null;
+  } catch (e) {
+    console.warn('fetchDeviceMedia failed', e);
+    return null;
+  }
+};
+
+window.openDetail = async function(id) {
   const d = window._appState.devices.find(x => String(x.id) === String(id)); if (!d) return;
   window._appState.detailId = id;
   const meta = TYPE_META[d.type] || TYPE_META.autre;
@@ -636,25 +778,162 @@ window.openDetail = function(id) {
       const s = val || 'Actif'; const rep = ['LOST','STOLEN','PERDU'].includes(s.toUpperCase());
       vHtml = `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase" style="background:${rep?'#fef2f2':'#E8F5EE'}; color:${rep?'#ef4444':'#1E3A2F'};">${esc(s)}</span>`;
     }
-    return `<div class="flex justify-between items-center py-3.5 border-b border-gray-50 last:border-0"><span class="text-[13px] lg:text-xs text-gray-500 font-medium">${label}</span>${vHtml}</div>`;
+    return `<div class="flex items-center justify-between gap-3 py-3.5 border-b border-gray-50 last:border-0"><span class="text-[13px] lg:text-xs text-gray-500 font-medium">${label}</span><div class="text-right">${vHtml}</div></div>`;
   };
+  const fileCards = [];
+  const renderFileCard = (file, label) => {
+    if (!file) return '';
+    if (file.isImage) {
+      return `
+        <div class="rounded-2xl border border-gray-100 bg-white overflow-hidden shadow-sm">
+          <div class="aspect-[4/3] bg-gray-50">
+            <img src="${file.path}" alt="${esc(label)}" class="w-full h-full object-cover" />
+          </div>
+          <div class="p-3">
+            <p class="text-[12px] font-semibold text-gray-800 truncate">${label}</p>
+            <p class="text-[10px] text-gray-500 truncate">${esc(file.name)}</p>
+          </div>
+        </div>
+      `;
+    }
+    return `
+      <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4 flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-white flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-file-pdf text-red-500"></i>
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-[12px] font-semibold text-gray-800 truncate">${label}</p>
+          <p class="text-[10px] text-gray-500 truncate">${esc(file.name)}</p>
+        </div>
+      </div>
+    `;
+  };
+  // Try to fetch encoded media from server; fallback to direct URL when unavailable
+  let invoiceSrc = d.invoicePhoto ? mediaUrl(d.invoicePhoto) : null;
+  let photoSrc = d.photo ? mediaUrl(d.photo) : null;
+  let serialSrc = d.serialPhoto ? mediaUrl(d.serialPhoto) : null;
+  try {
+    if (d.invoicePhoto) {
+      const dataUrl = await window.fetchDeviceMedia(d.id, 'photo_facture');
+      if (dataUrl) invoiceSrc = dataUrl;
+    }
+    if (d.photo) {
+      const dataUrl = await window.fetchDeviceMedia(d.id, 'photo_face');
+      if (dataUrl) photoSrc = dataUrl;
+    }
+    if (d.serialPhoto) {
+      const dataUrl = await window.fetchDeviceMedia(d.id, 'photo_serial');
+      if (dataUrl) serialSrc = dataUrl;
+    }
+  } catch (e) { console.warn('Could not fetch encoded media', e); }
+
+  if (d.invoicePhoto) fileCards.push(renderFileCard({ path: invoiceSrc, name: 'Facture / Ticket', isImage: !/\.pdf($|\?)/i.test(d.invoicePhoto) }, 'Facture / Ticket'));
+  if (d.photo) fileCards.push(renderFileCard({ path: photoSrc, name: 'Photo appareil', isImage: true }, 'Photo appareil'));
+  if (d.serialPhoto) fileCards.push(renderFileCard({ path: serialSrc, name: 'Photo série', isImage: true }, 'Photo série'));
+  if (!fileCards.length && Array.isArray(d.files) && d.files.length) {
+    d.files.forEach((file, index) => {
+      const label = index === 0 ? 'Photo' : 'Fichier';
+      fileCards.push(renderFileCard(file, label));
+    });
+  }
   document.getElementById('detailContent').innerHTML = `
-    <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl mb-6"><div class="w-14 h-14 rounded-xl bg-white flex items-center justify-center text-2xl shadow-sm overflow-hidden flex-shrink-0">${d.photo?`<img src="${d.photo}" class="w-full h-full object-cover"/>`:`<i class="fa-solid ${meta.icon}" style="color:${meta.color}"></i>`}</div><div class="min-w-0"><h3 class="font-bricolage text-base font-extrabold text-gray-900 truncate">${esc(d.nom)}</h3><p class="text-xs text-gray-500 font-medium">${esc(d.marque)} ${esc(d.modele)}</p></div></div>
-    <div class="space-y-0">${infoRow('Marque', d.marque)}${infoRow('Modèle', d.modele)}${infoRow('Série / IMEI', d.serial)}${infoRow('Statut', d.status, true)}${infoRow('Achat', d.dateAchat ? formatDate(d.dateAchat) : '')}${infoRow('Prix', d.prix ? Number(d.prix).toLocaleString('fr') + ' F' : '')}</div>
-    ${d.notes?`<div class="mt-6 p-4 bg-gray-50 rounded-xl"><p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Notes</p><p class="text-xs text-gray-600 leading-relaxed">${esc(d.notes)}</p></div>`:''}
+    <div class="space-y-4">
+      <div class="rounded-[24px] bg-gray-50 p-4 shadow-sm border border-gray-100">
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 rounded-2xl bg-white flex items-center justify-center text-2xl shadow-sm overflow-hidden flex-shrink-0">
+            ${d.photo?`<img src="${mediaUrl(d.photo)}" class="w-full h-full object-cover" alt="Photo appareil"/>`:`<i class="fa-solid ${meta.icon}" style="color:${meta.color}"></i>`}
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">${meta.label}</p>
+            <h3 class="font-bricolage text-xl font-extrabold text-gray-900 truncate">${esc(d.nom)}</h3>
+            <p class="text-sm text-gray-500 font-medium truncate">${esc(d.marque)} ${esc(d.modele)}</p>
+          </div>
+        </div>
+      </div>
+      ${fileCards.length ? `<div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Photos & fichiers</p><div class="grid grid-cols-1 gap-3">${fileCards.join('')}</div></div>` : ''}
+      <div class="rounded-[24px] border border-gray-100 bg-white overflow-hidden">
+        <div class="px-4 pt-4 pb-1"><p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Détails</p></div>
+        <div class="px-4 pb-3">${infoRow('Marque', d.marque)}${infoRow('Modèle', d.modele)}${infoRow('Série / IMEI', d.serial)}${infoRow('Statut', d.status, true)}${infoRow('Date d\'achat', d.dateAchat ? formatDate(d.dateAchat) : '—')}${infoRow('Fin de garantie', d.garantie ? formatDate(d.garantie) : '—')}${infoRow('Lieu d\'achat', d.lieu || '—')}${infoRow('Assurance', d.assurance === 'oui' ? 'Oui' : 'Non')}${infoRow('Prix', d.prix ? Number(d.prix).toLocaleString('fr') + ' F' : '—')}</div>
+      </div>
+      ${d.notes?`<div class="rounded-[24px] bg-gray-50 p-4"><p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Notes</p><p class="text-xs text-gray-600 leading-relaxed">${esc(d.notes)}</p></div>`:''}
+    </div>
   `;
   document.getElementById('detailOverlay').classList.add('show');
 }
 window.closeDetail = (e, f) => { if (f || (e && e.target === document.getElementById('detailOverlay'))) document.getElementById('detailOverlay').classList.remove('show'); };
 
-window.editCurrentDevice = () => { window.closeDetail(null, true); setTimeout(() => window.openAddModal(window._appState.detailId), 200); };
-window.deleteCurrentDevice = async () => { if (!window._appState.detailId || !confirm('Supprimer ?')) return; const res = await deleteDevice(window._appState.detailId); if (res.success) { await window.refreshDevices(); window.closeDetail(null, true); } };
+window.showDeviceToast = function(message, kind = 'success') {
+  let toast = document.getElementById('deviceToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'deviceToast';
+    toast.className = 'fixed left-1/2 bottom-5 z-[1100] -translate-x-1/2 px-4 py-3 rounded-2xl shadow-lg text-sm font-semibold transition-all duration-300 opacity-0 pointer-events-none';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.className = `fixed left-1/2 bottom-5 z-[1100] -translate-x-1/2 px-4 py-3 rounded-2xl shadow-lg text-sm font-semibold transition-all duration-300 ${kind === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'} opacity-100 pointer-events-auto`;
+  clearTimeout(window._deviceToastTimer);
+  window._deviceToastTimer = setTimeout(() => {
+    toast.classList.add('opacity-0');
+    toast.classList.remove('opacity-100');
+  }, 2400);
+};
 
-window.confirmLostAppareil = (id) => { window._appState.pendingDeviceId = id; document.getElementById('confirmLostModal').classList.add('show'); };
-window.closeConfirmLost = () => document.getElementById('confirmLostModal').classList.remove('show');
+window.editCurrentDevice = () => { window.closeDetail(null, true); setTimeout(() => window.openAddModal(window._appState.detailId), 200); };
+window.deleteCurrentDevice = async () => {
+  if (!window._appState.detailId || !confirm('Supprimer cet appareil ?')) return;
+  const res = await deleteDevice(window._appState.detailId);
+  if (res.success) {
+    await window.refreshDevices();
+    window.closeDetail(null, true);
+    window.showDeviceToast('Appareil supprimé avec succès', 'success');
+  } else {
+    window.showDeviceToast(res.message || 'Suppression impossible', 'error');
+  }
+};
+
+function setReportModalMode(mode) {
+  const title = document.getElementById('reportModalTitle');
+  const desc = document.getElementById('reportModalDesc');
+  const typeGroup = document.getElementById('reportTypeGroup');
+  const submitBtn = document.getElementById('finalSubmitBtn');
+
+  if (!title || !desc || !typeGroup || !submitBtn) return;
+
+  const isFoundMode = mode === 'found';
+  title.textContent = isFoundMode ? 'Marquer comme retrouvé' : 'Signaler un problème';
+  desc.textContent = isFoundMode
+    ? 'Confirmez que vous avez retrouvé cet appareil pour le remettre en état sécurisé.'
+    : 'Voulez-vous déclarer cet appareil comme perdu ou volé ?';
+  typeGroup.style.display = isFoundMode ? 'none' : '';
+  submitBtn.textContent = isFoundMode ? 'Marquer comme retrouvé' : 'Confirmer';
+  submitBtn.className = isFoundMode
+    ? 'w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold mb-3'
+    : 'w-full py-4 bg-red-500 text-white rounded-2xl font-bold mb-3';
+}
+
+window.confirmLostAppareil = (id) => {
+  window._appState.pendingDeviceId = id;
+  window._appState.pendingDeviceAction = 'lost';
+  setReportModalMode('lost');
+  document.getElementById('confirmLostModal').classList.add('show');
+};
+window.confirmFoundAppareil = (id) => {
+  window._appState.pendingDeviceId = id;
+  window._appState.pendingDeviceAction = 'found';
+  setReportModalMode('found');
+  document.getElementById('confirmLostModal').classList.add('show');
+};
+window.closeConfirmLost = () => {
+  window._appState.pendingDeviceAction = null;
+  document.getElementById('confirmLostModal').classList.remove('show');
+};
 window.validateAndSubmitLost = async () => {
   const p = document.getElementById('confirmPassword').value; if(p.length<4) return;
-  const res = await reportDeviceLost(window._appState.pendingDeviceId, p, document.getElementById('reportType').value);
+  const action = window._appState.pendingDeviceAction || 'lost';
+  const res = action === 'found'
+    ? await reportDeviceFound(window._appState.pendingDeviceId, p)
+    : await reportDeviceLost(window._appState.pendingDeviceId, p, document.getElementById('reportType').value);
   if (res.success) { await window.refreshDevices(); window.closeConfirmLost(); }
 };
 

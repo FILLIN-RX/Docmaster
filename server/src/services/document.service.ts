@@ -6,6 +6,7 @@ import { subscriptionService } from './subscription.service.ts';
 import { UserRepository } from '../repositories/auth.repository.ts';
 import { DeclarationService } from './declaration.service.ts';
 import argon2 from 'argon2';
+import { encodeMediaFields } from '../utils/media.utils.ts';
 
 export class DocumentService {
   private documentRepository: DocumentRepository;
@@ -52,21 +53,37 @@ export class DocumentService {
         await this.notificationService.notifyDocumentAdded(doc.user_id, doc.type_doc);
     }
 
-    return doc;
+    return await encodeMediaFields(doc);
   }
 
   /**
    * Get documents for a specific user
    */
   async getUserDocuments(userId: string): Promise<UserDocument[]> {
-    return await this.documentRepository.findUserDocuments(userId);
+    const docs = await this.documentRepository.findUserDocuments(userId);
+    return await encodeMediaFields(docs);
   }
 
   /**
    * Get a single document by ID
    */
-  async getDocument(id: string): Promise<UserDocument | null> {
-    return await this.documentRepository.findById(id);
+  async getDocument(id: string, options: { encode?: boolean } = { encode: true }): Promise<UserDocument | null> {
+    const doc = await this.documentRepository.findById(id);
+    if (options.encode) {
+      return await encodeMediaFields(doc);
+    }
+    return doc;
+  }
+
+  /**
+   * Get a single document by ID (internal version often used by controllers)
+   */
+  async getDocumentById(id: string, options: { encode?: boolean } = { encode: true }): Promise<UserDocument | null> {
+    const doc = await this.documentRepository.findById(id);
+    if (options.encode) {
+      return await encodeMediaFields(doc);
+    }
+    return doc;
   }
 
   /**
@@ -105,7 +122,7 @@ export class DocumentService {
       await this.notificationService.notifyDocumentUpdated(userId, doc.type_doc);
     }
 
-    return doc;
+    return await encodeMediaFields(doc);
   }
 
   /**
@@ -157,7 +174,7 @@ export class DocumentService {
     await this.notificationService.notifyDeclarationCreated(userId, 'LOST', updatedDoc.type_doc);
 
     return { 
-      document: updatedDoc,
+      document: await encodeMediaFields(updatedDoc),
       declarationId: declarationId || undefined,
       declarationIdentifiant: declarationId ? (await this.declarationService.getDeclarationById(declarationId))?.identifiant_doc_dm : undefined
     };

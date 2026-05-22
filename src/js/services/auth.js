@@ -25,6 +25,7 @@ import {
   openSb,
   closeSb,
   markActiveSidebar,
+  getImageUrl,
   switchTab,
   togglePw,
   checkStrength,
@@ -499,7 +500,7 @@ function updateUI(user) {
   // Update user photo display
   document.querySelectorAll("[data-user-photo], #userPhoto, #topPhoto").forEach(el => {
     if (user.photo_url) {
-      const fullUrl = user.photo_url.startsWith('http') ? user.photo_url : '/' + user.photo_url.replace(/^\//, '');
+      const fullUrl = getImageUrl(user.photo_url);
       if (el.tagName === 'IMG') {
         el.src = fullUrl;
         el.classList.remove('hidden');

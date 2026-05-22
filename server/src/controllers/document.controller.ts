@@ -1,6 +1,7 @@
  import { Request, Response } from 'express';
 import { DocumentService } from '../services/document.service.ts';
 import { subscriptionService } from '../services/subscription.service.ts';
+import { readFileAsBase64, fileExists, toDataUrl } from '../utils/media.utils.ts';
 
 const documentService = new DocumentService();
 
@@ -141,6 +142,35 @@ export const reportDocumentLost = async (req: Request, res: Response) => {
       success: false,
       message: error.message || 'Erreur lors de la déclaration de perte'
     });
+  }
+};
+
+export const getDocumentMedia = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    const id = req.params.id as string;
+    const field = (req.query.field as string) || 'photo_recto';
+
+    if (!userId) return res.status(401).json({ success: false, message: 'Utilisateur non authentifié' });
+
+    const doc = await documentService.getDocumentById(id, { encode: false });
+    if (!doc || doc.user_id !== userId) return res.status(404).json({ success: false, message: 'Document introuvable ou accès refusé' });
+
+    const candidate = field === 'photo_verso' ? doc.photo_verso : doc.photo_recto;
+    if (!candidate) return res.status(404).json({ success: false, message: 'Média introuvable' });
+
+    const exists = await fileExists(candidate);
+    if (!exists) return res.status(404).json({ success: false, message: 'Fichier absent sur le serveur' });
+
+    const file = await readFileAsBase64(candidate);
+    if (!file) {
+      return res.status(500).json({ success: false, message: 'Impossible de lire le média demandé' });
+    }
+
+    return res.json({ success: true, data: { filename: file.filename, mime: file.mime, base64: file.base64, dataUrl: toDataUrl(file.base64, file.mime) } });
+  } catch (error: any) {
+    console.error('❌ Erreur getDocumentMedia:', error);
+    res.status(500).json({ success: false, message: error.message || 'Erreur lors de la récupération du média' });
   }
 };
 

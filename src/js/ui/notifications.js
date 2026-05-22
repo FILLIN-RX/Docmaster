@@ -4,6 +4,155 @@
  */
 
 (function() {
+  const NOTIFICATION_TOKEN_KEY = 'docmaster_jwt_token';
+  const NOTIFICATION_CACHE = {
+    promise: null,
+    data: null,
+    loaded: false,
+    error: null,
+  };
+
+  function getStoredToken() {
+    try {
+      const localToken = localStorage.getItem(NOTIFICATION_TOKEN_KEY);
+      if (localToken) return localToken;
+    } catch (error) {}
+
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === NOTIFICATION_TOKEN_KEY) {
+        return decodeURIComponent(value || '');
+      }
+    }
+
+    return null;
+  }
+
+  function getApiBaseUrl() {
+    if (window.DOCMASTER_API_BASE_URL) return window.DOCMASTER_API_BASE_URL;
+
+    const origin = window.location.origin;
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return 'http://localhost:5000/api';
+    }
+
+    const backendUrl = origin.replace(':3003', ':5000');
+    return `${backendUrl}/api`;
+  }
+
+  function normalizeNotifications(payload) {
+    if (!payload) return [];
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload.data)) return payload.data;
+    if (Array.isArray(payload.data?.data)) return payload.data.data;
+    return [];
+  }
+
+  function renderBadgeCount(notifications) {
+    const unreadCount = notifications.filter(notification => !notification.is_read).length;
+    const countElm = document.getElementById('notifCountModal');
+    const dot = document.getElementById('notifDot');
+
+    if (countElm) countElm.innerText = String(unreadCount);
+    if (dot) dot.style.display = unreadCount > 0 ? 'block' : 'none';
+
+    return unreadCount;
+  }
+
+  function renderNotificationList(notifications) {
+    const container = document.getElementById('notifListModal');
+    if (!container) return;
+
+    if (!notifications.length) {
+      container.innerHTML = `
+        <div class="flex h-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-6 py-12 text-center">
+          <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white text-slate-300 shadow-sm">
+            <i class="fa-regular fa-bell text-lg"></i>
+          </div>
+          <p class="text-sm font-semibold text-slate-700">Aucune notification pour le moment</p>
+          <p class="mt-1 max-w-xs text-xs leading-relaxed text-slate-400">Les alertes récentes apparaîtront ici sans recharger la page.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = notifications.map((notification) => {
+      const iconClass = notification.icon || 'fa-solid fa-bell';
+      const background = notification.is_read ? '#f8fafc' : '#FEFBF6';
+      const border = notification.is_read ? '#f1f5f9' : '#FEF0DC';
+      const title = notification.title || 'Notification';
+      const message = notification.message || '';
+      const time = notification.time || notification.created_at || '';
+
+      return `
+        <div class="notif-item" style="background: ${background}; border-color: ${border}">
+          <div class="notif-icon">
+            <i class="${iconClass}" style="color:#F5A64B; font-size:0.875rem;"></i>
+          </div>
+          <div style="flex:1; min-width:0;">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:0.5rem; margin-bottom:0.2rem;">
+              <h4 style="font-family:'Bricolage Grotesque',sans-serif; font-size:0.8125rem; font-weight:800; color:#1A1A1A; text-transform:uppercase; letter-spacing:0.02em; line-height:1.3;">${title}</h4>
+              <span style="font-size:0.625rem; color:#94a3b8; font-weight:700; text-transform:uppercase; white-space:nowrap; flex-shrink:0;">${time}</span>
+            </div>
+            <p style="font-size:0.78rem; color:#64748b; line-height:1.55;">${message}</p>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function fetchNotificationsOnce(forceRefresh = false) {
+    if (NOTIFICATION_CACHE.loaded && !forceRefresh) {
+      return NOTIFICATION_CACHE.data || [];
+    }
+
+    if (NOTIFICATION_CACHE.promise && !forceRefresh) {
+      return NOTIFICATION_CACHE.promise;
+    }
+
+    const token = getStoredToken();
+    if (!token) {
+      NOTIFICATION_CACHE.loaded = true;
+      NOTIFICATION_CACHE.data = [];
+      return [];
+    }
+
+    const apiUrl = `${getApiBaseUrl().replace(/\/$/, '')}/notifications`;
+    const request = fetch(apiUrl, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+      .then(async (response) => {
+        const payload = await response.json();
+        const notifications = response.ok && payload?.success ? normalizeNotifications(payload) : [];
+        NOTIFICATION_CACHE.data = notifications;
+        NOTIFICATION_CACHE.loaded = true;
+        NOTIFICATION_CACHE.error = null;
+        return notifications;
+      })
+      .catch((error) => {
+        NOTIFICATION_CACHE.error = error;
+        NOTIFICATION_CACHE.loaded = true;
+        NOTIFICATION_CACHE.data = [];
+        return [];
+      })
+      .finally(() => {
+        NOTIFICATION_CACHE.promise = null;
+      });
+
+    NOTIFICATION_CACHE.promise = request;
+    return request;
+  }
+
+  async function loadAndRenderNotifications(forceRefresh = false) {
+    const notifications = await fetchNotificationsOnce(forceRefresh);
+    renderNotificationList(notifications);
+    renderBadgeCount(notifications);
+    return notifications;
+  }
+
   // 1. Inject CSS
   const style = document.createElement('style');
   style.id = 'dm-notifications-styles';
@@ -194,8 +343,18 @@
   });
 
   // 3. Global Functions
-  window.openNotifModal = function() {
+  window.loadNotificationsData = loadAndRenderNotifications;
+
+  window.openNotifModal = async function() {
     const modal = document.getElementById('notifModal');
+    if (!modal) return;
+
+    if (modal && !NOTIFICATION_CACHE.loaded) {
+      await loadAndRenderNotifications();
+    } else if (modal && !document.getElementById('notifListModal')?.children.length) {
+      await loadAndRenderNotifications();
+    }
+
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
 

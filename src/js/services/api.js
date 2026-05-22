@@ -33,6 +33,8 @@ export const API_BASE_URL = getApiBaseUrl();
 export const BASE_URL = window.location.origin;
 export const api = apiClient;
 
+window.DOCMASTER_API_BASE_URL = API_BASE_URL;
+
 // Debug: Log API configuration
 if (typeof console !== 'undefined') {
   console.log('[API Config]', {
@@ -472,6 +474,45 @@ export async function registerMyDevice(deviceData) {
   } catch (error) {
     console.error('❌ [API] registerMyDevice error:', error?.response || error);
     const message = error.response?.data?.message || 'Erreur lors de l\'enregistrement de l\'appareil.';
+    return {
+      success: false,
+      message,
+      limit: error.response?.data?.limit,
+      current: error.response?.data?.current,
+      data: error.response?.data
+    };
+  }
+}
+
+/**
+ * Update an existing device
+ * @param {string} id - Device ID
+ * @param {Object|FormData} deviceData - Device data
+ */
+export async function updateMyDevice(id, deviceData) {
+  console.log('🔁 [API] updateMyDevice called', id);
+  try {
+    if (deviceData instanceof FormData) {
+      try {
+        const summary = {};
+        for (const pair of deviceData.entries()) {
+          if (pair[0].startsWith('photo_')) continue;
+          summary[pair[0]] = pair[1];
+        }
+        console.log('📡 [API] updateMyDevice payload summary:', summary);
+      } catch (e) {
+        console.warn('Could not summarize deviceData FormData', e);
+      }
+    }
+
+    const response = await apiClient.put(`devices/${id}`, deviceData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    console.log('✅ [API] updateMyDevice response status:', response.status);
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('❌ [API] updateMyDevice error:', error?.response || error);
+    const message = error.response?.data?.message || 'Erreur lors de la modification de l\'appareil.';
     return {
       success: false,
       message,

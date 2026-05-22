@@ -1,4 +1,5 @@
 import { getMyDeclarations } from '../services/api.js';
+import { getImageUrl } from '../utils/index.js';
 
 /**
  * My Declarations Page Module
@@ -31,10 +32,20 @@ async function loadDeclarations() {
   if (window.toggleLoader) window.toggleLoader(true);
 
   try {
+    console.log('📡 [DocDeclares] Fetching declarations...');
     const result = await getMyDeclarations();
+    console.log('📥 [DocDeclares] Received response:', result);
     
     if (result.success) {
       allDeclarations = result.data;
+      console.log(`📄 [DocDeclares] Rendering ${allDeclarations?.length || 0} declarations`);
+      if (allDeclarations && allDeclarations.length > 0) {
+        console.log('🖼️ [DocDeclares] First declaration preview (check image fields):', {
+          id: allDeclarations[0].id,
+          type: allDeclarations[0].doc_type,
+          photo_recto: allDeclarations[0].photo_recto ? (allDeclarations[0].photo_recto.substring(0, 50) + '...') : 'N/A'
+        });
+      }
       renderCards();
     } else {
       if (listRoot) listRoot.innerHTML = `<div class="col-span-full py-12 text-center text-red-500"><i class="fa-solid fa-circle-exclamation text-2xl mb-2"></i><p>${result.message}</p></div>`;
@@ -149,8 +160,8 @@ export function openDetail(id) {
   const typeLabel = isPerdu ? 'Déclaration de Perte' : 'Document Trouvé';
   const statusMeta = getStatusMeta(item.status);
   
-  const photoRecto = item.photo_recto ? (item.photo_recto.startsWith('http') ? item.photo_recto : '/' + item.photo_recto) : null;
-  const photoVerso = item.photo_verso ? (item.photo_verso.startsWith('http') ? item.photo_verso : '/' + item.photo_verso) : null;
+  const photoRecto = getImageUrl(item.photo_recto);
+  const photoVerso = getImageUrl(item.photo_verso);
 
   content.innerHTML = `
     <div class="space-y-6">

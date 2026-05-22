@@ -6,6 +6,7 @@
  */
 
 import { getDeclarationById, payRecoveryFee, BASE_URL, API_BASE_URL } from '../services/api.js';
+import { getImageUrl } from '../utils/index.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Initial State
@@ -130,11 +131,12 @@ function updateUI(data) {
         docVisibleOwnerName.textContent = data.owner_name || 'Non spécifié';
     }
 
+
     const docVisibleRef = document.getElementById('docVisibleRef');
     if (docVisibleRef) {
-        docVisibleRef.textContent = data.identifiant_doc_dm || data.id || '---';
+        // Only show identifiant_doc_dm (human-readable), never the UUID
+        docVisibleRef.textContent = data.identifiant_doc_dm || '---';
     }
-
     // Update summary panels (PC)
     const summaryDocType = document.getElementById('summaryDocType');
     if (summaryDocType) summaryDocType.textContent = data.doc_type || 'Document';
@@ -160,13 +162,7 @@ function updateUI(data) {
     const imagePlaceholderVerso = document.getElementById('imagePlaceholderVerso');
 
     const fallbackImage = '/assets/images/passport.png';
-    const resolveImageUrl = (path) => {
-        if (!path) return null;
-        if (path.startsWith('http://') || path.startsWith('https://')) return path;
-        const cleaned = path.replace(/^\/+/, '');
-        const apiOrigin = new URL(API_BASE_URL, window.location.origin).origin;
-        return `${apiOrigin}/${cleaned}`;
-    };
+    const resolveImageUrl = (path) => getImageUrl(path, fallbackImage);
 
     // Recto
     if (docImageRecto) {

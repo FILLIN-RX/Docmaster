@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { ClaimController } from '../controllers/claim.controller.ts';
+import { payRecovery } from '../controllers/payment.controller.ts';
 import { authMiddleware } from '../middleware/auth.middleware.ts';
 
 const router = Router();
@@ -36,6 +37,7 @@ const claimController = new ClaimController();
  *         description: Claim créé
  */
 router.post('/create', authMiddleware, (req, res) => claimController.createClaim(req, res));
+router.post('/', authMiddleware, (req, res) => claimController.createClaim(req, res));
 
 /**
  * @swagger
@@ -101,5 +103,9 @@ router.post('/validate', authMiddleware, (req, res) => claimController.validateC
  *         description: Erreur serveur
  */
 router.get('/active/:docId', authMiddleware, (req, res) => claimController.getActiveClaim(req, res));
+router.get('/:id', authMiddleware, (req, res) => claimController.getActiveClaim(req, res));
+
+// Payment alias
+router.post('/pay', authMiddleware, payRecovery);
 
 export default router;

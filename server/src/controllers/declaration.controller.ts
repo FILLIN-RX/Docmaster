@@ -305,7 +305,7 @@ export const getDeclarationById = async (req: Request, res: Response) => {
 
 export const initiateRecovery = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = (req.params.id || req.body.declaration_id) as string;
     const { amount, method, phone } = req.body;
     const userId = (req as any).user?.id;
 
@@ -313,7 +313,11 @@ export const initiateRecovery = async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, message: 'Non authentifié' });
     }
 
-    const result = await declarationService.initiateRecovery(id as string, userId, Number(amount), method, phone);
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'ID de déclaration requis' });
+    }
+
+    const result = await declarationService.initiateRecovery(id, userId, Number(amount), method, phone);
     res.json(result);
   } catch (error: any) {
     console.error('❌ Erreur initiation récupération:', error);

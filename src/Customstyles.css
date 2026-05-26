@@ -1,0 +1,360 @@
+/* CSS personnalisé complémentaire pour la déclaration */
+
+/* ════════════════════════════════════════════
+   IMPORTS & BASE
+═════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  font-family: 'Poppins', sans-serif;
+  background: #F2EBD9;
+  color: #1A1A1A;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ════════════════════════════════════════════
+   SCROLLBARS PERSONNALISÉES
+═════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D0C6B8;
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #C4BAB0;
+}
+
+/* ════════════════════════════════════════════
+   ANIMATIONS
+═════════════════════════════════════════════ */
+
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.slide-left {
+  animation: slideIn 0.3s ease-out;
+}
+
+.slide-right {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.animate-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+/* ════════════════════════════════════════════
+   FORM ELEMENTS
+═════════════════════════════════════════════ */
+
+input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+
+/* Support pour les inputs de type date */
+input[type='date'] {
+  position: relative;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  border-radius: 4px;
+  margin-right: 2px;
+  opacity: 0.6;
+  filter: invert(0.8) hue-rotate(0deg);
+}
+
+input[type='date']::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Focus states */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+}
+
+/* ════════════════════════════════════════════
+   MODALES
+═════════════════════════════════════════════ */
+
+.confirm-overlay,
+.success-overlay {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.confirm-card,
+.success-card {
+  animation: scaleIn 0.3s ease-out;
+  will-change: transform;
+}
+
+/* ════════════════════════════════════════════
+   SHADOWS & DEPTH
+═════════════════════════════════════════════ */
+
+.shadow-card {
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15);
+}
+
+.shadow-primary {
+  box-shadow: 0 4px 14px rgba(245, 166, 75, 0.35);
+}
+
+.shadow-green-dark {
+  box-shadow: 0 0 0 3px rgba(30, 58, 47, 0.15);
+}
+
+/* ════════════════════════════════════════════
+   TRANSITIONS
+═════════════════════════════════════════════ */
+
+.transition-all {
+  transition: all 0.2s ease-out;
+}
+
+.transition-colors {
+  transition: color 0.2s ease-out, background-color 0.2s ease-out,
+    border-color 0.2s ease-out;
+}
+
+.transition-transform {
+  transition: transform 0.2s ease-out;
+}
+
+.transition-opacity {
+  transition: opacity 0.2s ease-out;
+}
+
+/* ════════════════════════════════════════════
+   GRADIENTS
+═════════════════════════════════════════════ */
+
+.bg-gradient-green {
+  background: linear-gradient(135deg, #1E3A2F, #2D5A42);
+}
+
+.bg-gradient-warm {
+  background: linear-gradient(135deg, #F5A64B, #D98A30);
+}
+
+/* ════════════════════════════════════════════
+   BUTTONS
+═════════════════════════════════════════════ */
+
+button {
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: all 0.2s ease-out;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* ════════════════════════════════════════════
+   INPUTS & SELECTS
+═════════════════════════════════════════════ */
+
+input,
+textarea,
+select {
+  font-family: 'Poppins', sans-serif;
+  font-size: inherit;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 6rem;
+}
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23C4BAB0' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 40px;
+}
+
+/* ════════════════════════════════════════════
+   UTILITY CLASSES
+═════════════════════════════════════════════ */
+
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-start {
+  display: flex;
+  align-items: flex-start;
+}
+
+/* ════════════════════════════════════════════
+   RESPONSIVE
+═════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* Stack layout sur mobile */
+  .grid-auto-stack {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Réduire les espacements */
+  .p-8 {
+    padding: 1.5rem;
+  }
+
+  .gap-5 {
+    gap: 1rem;
+  }
+
+  /* Masquer la sidebar sur mobile */
+  .hide-mobile {
+    display: none;
+  }
+}
+
+/* ════════════════════════════════════════════
+   PRINT STYLES
+═════════════════════════════════════════════ */
+
+@media print {
+  body {
+    background: white;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+}
+
+/* ════════════════════════════════════════════
+   DARK MODE (OPTIONNEL)
+═════════════════════════════════════════════ */
+
+@media (prefers-color-scheme: dark) {
+  /* À implémenter selon vos besoins */
+}
+
+/* ════════════════════════════════════════════
+   ACCESSIBILITY
+═════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Focus visible pour l'accessibilité */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #F5A64B;
+  outline-offset: 2px;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: more) {
+  input,
+  select,
+  textarea {
+    border-width: 2px;
+  }
+
+  button {
+    font-weight: 700;
+  }
+}

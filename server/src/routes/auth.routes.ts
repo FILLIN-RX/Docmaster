@@ -184,6 +184,8 @@ router.get('/profile', authMiddleware, (req, res) => authController.getProfile(r
  */
 router.put('/profile', authMiddleware, upload.single('photo_profile'), (req, res) => authController.updateProfile(req, res));
 
+router.put('/password', authMiddleware, (req, res) => authController.changePassword(req, res));
+
 /**
  * @swagger
  * /auth/earnings-stats:

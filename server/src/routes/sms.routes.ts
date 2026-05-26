@@ -12,5 +12,6 @@ router.use(adminMiddleware);
 router.get('/balance', (req, res) => smsController.getBalance(req, res));
 router.get('/usage', (req, res) => smsController.getUsage(req, res));
 router.get('/purchase-history', (req, res) => smsController.getPurchaseHistory(req, res));
+router.post('/send', (req, res) => smsController.sendSms(req, res));
 
 export default router;

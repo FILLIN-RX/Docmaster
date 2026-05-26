@@ -116,6 +116,35 @@ export class AuthController {
   }
 
   /**
+   * Change password (authenticated user)
+   */
+  async changePassword(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) { res.status(401).json({ error: 'Non authentifié' }); return; }
+
+      const { current_password, new_password } = req.body;
+      if (!current_password || !new_password) {
+        res.status(400).json({ error: 'Mot de passe actuel et nouveau mot de passe requis' });
+        return;
+      }
+      if (new_password.length < 6) {
+        res.status(400).json({ error: 'Le nouveau mot de passe doit contenir au moins 6 caractères' });
+        return;
+      }
+
+      await this.userService.changePassword(userId, current_password, new_password);
+      res.status(200).json({ message: 'Mot de passe mis à jour avec succès', success: true });
+    } catch (error: any) {
+      if (error.message.includes('Current password is incorrect')) {
+        res.status(400).json({ error: 'Mot de passe actuel incorrect' });
+      } else {
+        res.status(500).json({ error: error.message || 'Erreur lors du changement de mot de passe' });
+      }
+    }
+  }
+
+  /**
    * Request password reset
    */
   async forgotPassword(req: Request, res: Response): Promise<void> {

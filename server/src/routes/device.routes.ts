@@ -80,6 +80,13 @@ router.post('/', authMiddleware, upload.fields([
   { name: 'photo_serial', maxCount: 1 }
 ]), registerMyDevice);
 
+// Alias for registerMyDevice to match frontend
+router.post('/my-devices', authMiddleware, upload.fields([
+  { name: 'photo_facture', maxCount: 1 },
+  { name: 'photo_face', maxCount: 1 },
+  { name: 'photo_serial', maxCount: 1 }
+]), registerMyDevice);
+
 router.put('/:id', authMiddleware, upload.fields([
   { name: 'photo_facture', maxCount: 1 },
   { name: 'photo_face', maxCount: 1 },
@@ -107,6 +114,7 @@ router.get('/:id/media', authMiddleware, getDeviceMedia);
  *               data: [{ id: "uuid", brand: "Samsung", model: "S21" }]
  */
 router.get('/', authMiddleware, getMyDevices);
+router.get('/my-devices', authMiddleware, getMyDevices);
 
 /**
  * @swagger
@@ -125,6 +133,7 @@ router.get('/', authMiddleware, getMyDevices);
  *         description: Statut mis à jour
  */
 router.patch('/:id/lost', authMiddleware, reportDeviceLost);
+router.patch('/:id/report-lost', authMiddleware, reportDeviceLost);
 
 /**
  * @swagger
@@ -150,6 +159,7 @@ router.patch('/:id/lost', authMiddleware, reportDeviceLost);
  *         description: Erreur serveur
  */
 router.patch('/:id/found', authMiddleware, reportDeviceFound);
+router.patch('/:id/report-found', authMiddleware, reportDeviceFound);
 
 /**
  * @swagger

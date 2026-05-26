@@ -162,6 +162,20 @@ export class UserService {
   }
 
   /**
+   * Change password (authenticated user)
+   */
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<User> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) throw new Error('User not found');
+
+    const isValid = await this.verifyPassword(user.mot_de_passe, currentPassword);
+    if (!isValid) throw new Error('Current password is incorrect');
+
+    const hashedPassword = await argon2.hash(newPassword);
+    return await this.userRepository.updatePassword(userId, hashedPassword);
+  }
+
+  /**
    * Update user profile
    */
   async updateProfile(userId: string, data: { 

@@ -72,6 +72,7 @@ router.post('/nokash/callback', nokashCallback);
  *         description: Erreur serveur
  */
 router.get('/my-history', authMiddleware, getMyTransactions);
+router.get('/transactions', authMiddleware, getMyTransactions);
 
 router.get('/admin/all', authMiddleware, getAllTransactions);
 

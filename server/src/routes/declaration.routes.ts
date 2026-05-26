@@ -328,6 +328,7 @@ router.get('/:id', authMiddleware, getDeclarationById);
  *         description: Erreur serveur
  */
 router.post('/:id/initiate-recovery', authMiddleware, initiateRecovery);
+router.post('/recover', authMiddleware, initiateRecovery);
 
 /**
  * @swagger

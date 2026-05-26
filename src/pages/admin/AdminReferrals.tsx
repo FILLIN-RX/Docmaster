@@ -1,0 +1,114 @@
+import { useEffect, useState } from "react";
+import { adminService } from "../../services/admin";
+
+interface Referral {
+  id: string;
+  referrer_name?: string;
+  referred_name?: string;
+  status?: string;
+  reward?: number;
+  created_at?: string;
+}
+
+export default function AdminReferrals() {
+  const [refs, setRefs] = useState<Referral[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    adminService
+      .getAllReferrals()
+      .then(setRefs)
+      .catch(() => setRefs([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const reward = async (id: string) => {
+    try {
+      await adminService.rewardReferral(id);
+      setRefs((prev) => prev.map((r) => (r.id === id ? { ...r, status: "rewarded" } : r)));
+    } catch {}
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-11 h-11 rounded-full border-[3px] border-gray-200 border-t-primary animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="mb-6">
+        <h1 className="font-bricolage text-2xl font-black text-gray-900">Parrainages</h1>
+        <p className="text-gray-400 text-[13px] font-medium mt-1">Suivi du programme de parrainage</p>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-200/60 overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 bg-gray-50/80">
+                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Parrain</th>
+                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Filleul</th>
+                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Statut</th>
+                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Récompense</th>
+                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Date</th>
+                <th className="text-right px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {refs.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-16 text-gray-300">
+                    <i className="fa-solid fa-gift text-3xl mb-3" />
+                    <p className="text-[13px] font-medium text-gray-400">Aucun parrainage</p>
+                  </td>
+                </tr>
+              ) : (
+                refs.map((r) => (
+                  <tr key={r.id} className="hover:bg-gray-50/60 transition-colors">
+                    <td className="px-4 py-3.5 font-semibold text-gray-900">{r.referrer_name || "—"}</td>
+                    <td className="px-4 py-3.5 text-gray-600">{r.referred_name || "—"}</td>
+                    <td className="px-4 py-3.5">
+                      <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full border ${
+                        r.status === "rewarded"
+                          ? "bg-emerald-50 text-emerald-600 border-emerald-200/50"
+                          : r.status === "pending"
+                          ? "bg-amber-50 text-amber-600 border-amber-200/50"
+                          : "bg-gray-100 text-gray-400 border-gray-200"
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          r.status === "rewarded" ? "bg-emerald-500" :
+                          r.status === "pending" ? "bg-amber-500" : "bg-gray-400"
+                        }`} />
+                        {r.status === "rewarded" ? "Récompensé" : r.status === "pending" ? "En attente" : r.status || "En attente"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5 font-semibold text-gray-700">
+                      {r.reward ? `${r.reward.toLocaleString("fr-FR")} XAF` : "—"}
+                    </td>
+                    <td className="px-4 py-3.5 text-gray-400 text-[12px]">
+                      {r.created_at ? new Date(r.created_at).toLocaleDateString("fr-FR") : "—"}
+                    </td>
+                    <td className="px-4 py-3.5 text-right">
+                      {r.status === "pending" && (
+                        <button
+                          onClick={() => reward(r.id)}
+                          className="text-[11px] px-4 py-1.5 rounded-xl bg-gradient-to-r from-primary to-primary-dark text-white hover:shadow-lg hover:shadow-primary/20 font-bold transition-all"
+                        >
+                          <i className="fa-solid fa-gift mr-1.5 text-[10px]" />
+                          Récompenser
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}

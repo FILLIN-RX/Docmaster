@@ -90,6 +90,8 @@ export default function Login() {
   const [pinMethod, setPinMethod] = useState<"SMS" | "EMAIL" | null>(null);
   const [pinTarget, setPinTarget] = useState("");
   const [pinSent, setPinSent] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const [resendSuccess, setResendSuccess] = useState<string | null>(null);
   const [showReferral, setShowReferral] = useState(() => !!localStorage.getItem("dm_referral_code"));
   const [referralLocked, setReferralLocked] = useState(() => !!localStorage.getItem("dm_referral_locked"));
   const [regError, setRegError] = useState("");
@@ -142,6 +144,20 @@ export default function Login() {
     }
   }, [showForgot]);
 
+  // Countdown timer for OTP resend (30 seconds)
+  useEffect(() => {
+    if (resendCountdown <= 0) return;
+    const timer = setTimeout(() => setResendCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCountdown]);
+
+  // Auto-dismiss resend success banner after 3s
+  useEffect(() => {
+    if (!resendSuccess) return;
+    const t = setTimeout(() => setResendSuccess(null), 3000);
+    return () => clearTimeout(t);
+  }, [resendSuccess]);
+
   const calcPwStrength = useCallback((pw: string) => {
     let score = 0;
     if (pw.length >= 8) score++;
@@ -161,7 +177,10 @@ export default function Login() {
     const next = [...pinValues];
     next[idx] = digit;
     setPinValues(next);
-    if (idx < 5) focusPinIdx(idx + 1);
+    // Auto-advance to next field immediately
+    if (idx < 5) {
+      setTimeout(() => focusPinIdx(idx + 1), 0);
+    }
   };
 
   const handlePinKey = (idx: number, e: React.KeyboardEvent) => {
@@ -203,6 +222,9 @@ export default function Login() {
       setPinMethod(res.method);
       setPinTarget(res.target);
       setPinSent(true);
+      setResendCountdown(30);
+      // Auto-focus first pin box
+      setTimeout(() => focusPinIdx(0), 100);
     } catch (err: any) {
       setPinError(err.response?.data?.error || "Erreur d'envoi du code");
     } finally {
@@ -221,14 +243,19 @@ export default function Login() {
       setRegStep(5);
     } catch (err: any) {
       setPinError(err.response?.data?.error || "Code invalide ou expiré");
+      // Clear fields and refocus on error
+      setPinValues(["", "", "", "", "", ""]);
+      setTimeout(() => focusPinIdx(0), 100);
     } finally {
       setPinSending(false);
     }
   };
 
   const handleResendPin = async () => {
+    if (resendCountdown > 0) return;
     setPinSending(true);
     setPinError("");
+    setResendSuccess(null);
     setPinValues(["", "", "", "", "", ""]);
     try {
       const res = await authService.sendVerificationPin({
@@ -238,6 +265,14 @@ export default function Login() {
       setPinMethod(res.method);
       setPinTarget(res.target);
       setPinSent(true);
+      setResendCountdown(30);
+      setResendSuccess(
+        res.method === "SMS"
+          ? `Code renvoyé par SMS au ${res.target}`
+          : `Code renvoyé par e-mail à ${res.target}`
+      );
+      // Auto-focus first pin box after resend
+      setTimeout(() => focusPinIdx(0), 100);
     } catch (err: any) {
       setPinError(err.response?.data?.error || "Erreur d'envoi du code");
     } finally {
@@ -282,6 +317,7 @@ export default function Login() {
       mot_de_passe: regForm.password,
       telephone: regForm.telephone,
       code_parrainage: regForm.referral || undefined,
+      is_verified: true,
     });
     setRegLoading(false);
     if (result.success) {
@@ -646,17 +682,58 @@ export default function Login() {
                   </div>
                   <div className="flex justify-center gap-2.5 my-2">
                     {pinValues.map((val, idx) => (
-                      <input key={idx} className={`w-12 h-14 text-center text-[22px] font-bold bg-white border-2 rounded-[14px] outline-none transition-all font-poppins text-textMain ${val ? "border-green-dark bg-green-light" : "border-[#E0D5C4]"} focus:border-primary focus:shadow-[0_0_0_4px_rgba(245,166,75,0.18)]`} maxLength={1} type="text" inputMode="numeric" autoComplete="one-time-code" value={val} disabled={pinSending} onChange={(e) => handlePinInput(idx, e.target.value)} onKeyDown={(e) => handlePinKey(idx, e)} onPaste={handlePinPaste} data-pin-idx={idx} />
+                      <input
+                        key={idx}
+                        className={`w-12 h-14 text-center text-[22px] font-bold bg-white border-2 rounded-[14px] outline-none transition-all font-poppins text-textMain ${
+                          val ? "border-green-dark bg-green-light" : "border-[#E0D5C4]"
+                        } focus:border-primary focus:shadow-[0_0_0_4px_rgba(245,166,75,0.18)]`}
+                        maxLength={1}
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        value={val}
+                        disabled={pinSending}
+                        onChange={(e) => handlePinInput(idx, e.target.value)}
+                        onKeyDown={(e) => handlePinKey(idx, e)}
+                        onPaste={handlePinPaste}
+                        data-pin-idx={idx}
+                      />
                     ))}
                   </div>
-                  <p className="text-[12px] text-textMuted text-center mt-4">
-                    {t("login_pin_not_received")} <button type="button" onClick={handleResendPin} disabled={pinSending} className="text-primary font-semibold hover:underline disabled:opacity-50">{pinSending ? <i className="fa-solid fa-spinner fa-spin" /> : t("login_pin_resend")}</button>
+                  {resendSuccess && (
+                    <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-[12px] px-3 py-2 mt-2 animate-fade-in-scale">
+                      <i className="fa-solid fa-circle-check text-green-500 text-[13px]" />
+                      <p className="text-[12px] text-green-700 font-semibold">{resendSuccess}</p>
+                    </div>
+                  )}
+                  {pinError && (
+                    <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-[12px] px-3 py-2 mt-2">
+                      <i className="fa-solid fa-circle-exclamation text-red-500 text-[13px]" />
+                      <p className="text-[12px] text-red-600 font-semibold">{pinError}</p>
+                    </div>
+                  )}
+                  <p className="text-[12px] text-textMuted text-center mt-4 flex items-center justify-center gap-1.5 flex-wrap">
+                    {t("login_pin_not_received")}
+                    {resendCountdown > 0 ? (
+                      <span className="text-primary font-semibold">
+                        <i className="fa-solid fa-clock mr-1" />{resendCountdown}s
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleResendPin}
+                        disabled={pinSending}
+                        className="text-primary font-semibold hover:underline disabled:opacity-50 flex items-center gap-1"
+                      >
+                        {pinSending ? <i className="fa-solid fa-spinner fa-spin" /> : <><i className="fa-solid fa-rotate-right" /> {t("login_pin_resend")}</>}
+                      </button>
+                    )}
                   </p>
-                  <div className="flex gap-2.5 mt-8">
+                  <div className="flex gap-2.5 mt-6">
                     <button type="button" onClick={() => setRegStep(3)} disabled={pinSending} className="px-5 py-4 bg-white/65 backdrop-blur-md border-[1.5px] border-white/90 rounded-[16px] text-textMain flex items-center justify-center transition-all active:scale-[0.97] disabled:opacity-50">
                       <i className="fa-solid fa-arrow-left" />
                     </button>
-                    <button type="button" onClick={handleVerifyPin} disabled={!canGoNext(4)} className="flex-1 py-4 bg-primary text-white rounded-[16px] font-bricolage text-[16px] font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/40 active:scale-[0.98] disabled:opacity-60">
+                    <button type="button" onClick={handleVerifyPin} disabled={!canGoNext(4) || pinSending} className="flex-1 py-4 bg-primary text-white rounded-[16px] font-bricolage text-[16px] font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/40 active:scale-[0.98] disabled:opacity-60">
                       {pinSending ? <i className="fa-solid fa-spinner fa-spin" /> : <>{t("login_btn_verify")} <i className="fa-solid fa-arrow-right" /></>}
                     </button>
                   </div>
@@ -1052,17 +1129,58 @@ export default function Login() {
                     </div>
                     <div className="flex justify-center gap-3 my-2">
                       {pinValues.map((val, idx) => (
-                        <input key={idx} className={`w-12 h-14 text-center text-[22px] font-bold bg-white border-2 rounded-[14px] outline-none transition-all font-poppins text-textMain ${val ? "border-green-dark bg-green-light" : "border-[#E0D5C4]"} focus:border-primary focus:shadow-[0_0_0_4px_rgba(245,166,75,0.18)]`} maxLength={1} type="text" inputMode="numeric" autoComplete="one-time-code" value={val} disabled={pinSending} onChange={(e) => handlePinInput(idx, e.target.value)} onKeyDown={(e) => handlePinKey(idx, e)} onPaste={handlePinPaste} data-pin-idx={idx} />
+                        <input
+                          key={idx}
+                          className={`w-12 h-14 text-center text-[22px] font-bold bg-white border-2 rounded-[14px] outline-none transition-all font-poppins text-textMain ${
+                            val ? "border-green-dark bg-green-light" : "border-[#E0D5C4]"
+                          } focus:border-primary focus:shadow-[0_0_0_4px_rgba(245,166,75,0.18)]`}
+                          maxLength={1}
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          value={val}
+                          disabled={pinSending}
+                          onChange={(e) => handlePinInput(idx, e.target.value)}
+                          onKeyDown={(e) => handlePinKey(idx, e)}
+                          onPaste={handlePinPaste}
+                          data-pin-idx={idx}
+                        />
                       ))}
                     </div>
-                    <p className="text-[12px] text-textMuted text-center mt-4">
-                      {t("login_pin_not_received")} <button type="button" onClick={handleResendPin} disabled={pinSending} className="text-primary font-semibold hover:underline disabled:opacity-50">{pinSending ? <i className="fa-solid fa-spinner fa-spin" /> : t("login_pin_resend")}</button>
+                    {resendSuccess && (
+                      <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-[12px] px-3 py-2 mt-2 animate-fade-in-scale">
+                        <i className="fa-solid fa-circle-check text-green-500 text-[13px]" />
+                        <p className="text-[12px] text-green-700 font-semibold">{resendSuccess}</p>
+                      </div>
+                    )}
+                    {pinError && (
+                      <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-[12px] px-3 py-2 mt-2">
+                        <i className="fa-solid fa-circle-exclamation text-red-500 text-[13px]" />
+                        <p className="text-[12px] text-red-600 font-semibold">{pinError}</p>
+                      </div>
+                    )}
+                    <p className="text-[12px] text-textMuted text-center mt-4 flex items-center justify-center gap-1.5 flex-wrap">
+                      {t("login_pin_not_received")}
+                      {resendCountdown > 0 ? (
+                        <span className="text-primary font-semibold">
+                          <i className="fa-solid fa-clock mr-1" />{resendCountdown}s
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleResendPin}
+                          disabled={pinSending}
+                          className="text-primary font-semibold hover:underline disabled:opacity-50 flex items-center gap-1"
+                        >
+                          {pinSending ? <i className="fa-solid fa-spinner fa-spin" /> : <><i className="fa-solid fa-rotate-right" /> {t("login_pin_resend")}</>}
+                        </button>
+                      )}
                     </p>
-                    <div className="flex gap-3 mt-8">
+                    <div className="flex gap-3 mt-6">
                       <button type="button" onClick={() => setRegStep(3)} disabled={pinSending} className="px-6 py-3.5 bg-[#faf8f5] border-[1.5px] border-borda rounded-[14px] text-textMain flex items-center justify-center transition-all hover:bg-white active:scale-[0.97] disabled:opacity-50">
                         <i className="fa-solid fa-arrow-left" />
                       </button>
-                      <button type="button" onClick={handleVerifyPin} disabled={!canGoNext(4)} className="flex-1 py-3.5 bg-primary text-white rounded-[14px] font-bricolage text-[16px] font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/40 active:scale-[0.98] disabled:opacity-60">
+                      <button type="button" onClick={handleVerifyPin} disabled={!canGoNext(4) || pinSending} className="flex-1 py-3.5 bg-primary text-white rounded-[14px] font-bricolage text-[16px] font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/40 active:scale-[0.98] disabled:opacity-60">
                         {pinSending ? <i className="fa-solid fa-spinner fa-spin" /> : <>{t("login_btn_verify")} <i className="fa-solid fa-arrow-right" /></>}
                       </button>
                     </div>

@@ -4,6 +4,7 @@ import apiClient from "../services/api";
 import { getToken, saveToken, deleteToken } from "../utils/cookie";
 import { auth, googleProvider } from "../services/firebase";
 import { signInWithPopup } from "firebase/auth";
+import { useToast } from "./ToastContext";
 
 const AuthContext = createContext(null);
 
@@ -58,6 +59,7 @@ function saveSession(user, token) {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(loadSession);
   const [loading, setLoading] = useState(true);
+  const { success: toastSuccess } = useToast();
 
   useEffect(() => {
     const token = getToken();
@@ -104,6 +106,12 @@ export function AuthProvider({ children }) {
         saveSession(res.data.user, res.data.token);
         setUser({ ...res.data.user, initial: getInitials(res.data.user.nom, res.data.user.prenom) });
         import("../services/webPushService").then((m) => m.registerPushToken()).catch(() => {});
+        const prenom = res.data.user?.prenom || res.data.user?.nom || "";
+        toastSuccess(
+          `Ravi de vous revoir${prenom ? `, ${prenom}` : ""} ! Bienvenue sur DocMaster. 🎉`,
+          "Connexion réussie",
+          5000
+        );
         return { success: true };
       }
       return { success: false, message: "Token manquant" };
@@ -154,11 +162,18 @@ export function AuthProvider({ children }) {
         pays: userData.pays || "Cameroun",
         ville: userData.ville || "Yaoundé",
         code_parrainage: userData.code_parrainage || null,
+        is_verified: userData.is_verified || false,
       });
       if (res.data.token) {
         saveSession(res.data.user, res.data.token);
         setUser({ ...res.data.user, initial: getInitials(res.data.user.nom, res.data.user.prenom) });
         import("../services/webPushService").then((m) => m.registerPushToken()).catch(() => {});
+        const prenom = res.data.user?.prenom || res.data.user?.nom || "";
+        toastSuccess(
+          `Votre compte DocMaster est prêt${prenom ? `, ${prenom}` : ""} ! Bonne utilisation. 🚀`,
+          "Compte créé avec succès",
+          6000
+        );
       }
       return { success: true, data: res.data };
     } catch (err) {

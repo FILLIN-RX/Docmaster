@@ -30,7 +30,7 @@ export class PushTokenRepository {
   }
 
   async findAllTokens(): Promise<PushToken[]> {
-    const query = `SELECT DISTINCT ON (token) * FROM push_tokens WHERE token IS NOT NULL AND token != ''`;
+    const query = `SELECT DISTINCT ON (token) * FROM push_tokens WHERE token IS NOT NULL AND token != '' ORDER BY token, updated_at DESC NULLS LAST`;
     const { rows } = await pool.query(query);
     return rows;
   }

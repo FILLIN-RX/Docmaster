@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { useToast, type Toast, type ToastType } from "../context/ToastContext";
+import { useToast, type Toast, type ToastType } from "../../context/ToastContext";
 
 // ─── Config par type ────────────────────────────────────────────────────────
 const CONFIG: Record<

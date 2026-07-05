@@ -176,7 +176,8 @@ export function AuthProvider({ children }) {
         );
       }
       return { success: true, data: res.data };
-    } catch (err) {
+    } catch (err: any) {
+      console.error("Registration error:", err.response?.data || err.message || err);
       return {
         success: false,
         message: err.response?.data?.error || "Erreur d'inscription",
@@ -209,8 +210,26 @@ export function AuthProvider({ children }) {
     });
   }, []);
 
+  const deleteAccount = useCallback(async () => {
+    try {
+      await apiClient.delete("auth/account");
+      import("../services/webPushService").then((m) => m.unregisterPushToken()).catch(() => {});
+      deleteToken();
+      localStorage.removeItem(AUTH_KEY);
+      localStorage.removeItem("docmaster_admin_login");
+      localStorage.removeItem("dm_devices_cache");
+      setUser(null);
+      return { success: true };
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err.response?.data?.error || "Erreur lors de la suppression du compte",
+      };
+    }
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, register, logout, updateUser, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );

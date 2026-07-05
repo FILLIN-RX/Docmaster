@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { authService } from "../../services/authService";
 import { useI18n } from "../../context/I18nContext";
@@ -14,8 +15,11 @@ function resolvePhotoUrl(p: string | undefined | null): string {
 
 export default function InfosProfil() {
   const { t, lang, setLanguage } = useI18n();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, deleteAccount } = useAuth();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<"personal" | "preferences">("personal");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   const [form, setForm] = useState({
     nom: "",
@@ -442,8 +446,69 @@ export default function InfosProfil() {
               </button>
             </form>
           </div>
+
+          {/* Danger Zone */}
+          <div className="bg-red-50 border border-red-200 rounded-[18px] p-5 sm:p-6 mt-6">
+            <h2 className="font-bricolage text-base font-black text-red-700 mb-1 flex items-center gap-2">
+              <i className="fa-solid fa-triangle-exclamation" />
+              {t("profil_danger_zone_title")}
+            </h2>
+            <p className="text-[13px] text-red-600 mb-4">
+              {t("profil_danger_zone_desc")}
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="px-5 py-2.5 bg-red-600 text-white rounded-xl text-[13px] font-bold hover:bg-red-700 transition-all flex items-center gap-2"
+            >
+              <i className="fa-solid fa-trash-can" /> {t("profil_delete_account")}
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Confirmation modal */}
+      <dialog ref={undefined} open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} className="modal bg-transparent open:flex open:items-center open:justify-center">
+        <div className="bg-white rounded-[24px] p-6 sm:p-8 max-w-md w-full mx-4 shadow-2xl">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <i className="fa-solid fa-triangle-exclamation text-red-600 text-3xl" />
+            </div>
+            <h3 className="font-bricolage text-lg font-black text-textMain">{t("profil_delete_confirm_title")}</h3>
+            <p className="text-[13px] text-textMuted mt-2">{t("profil_delete_confirm_desc")}</p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={async () => {
+                setDeletingAccount(true);
+                const result = await deleteAccount();
+                setDeletingAccount(false);
+                setShowDeleteConfirm(false);
+                if (result.success) {
+                  navigate("/login", { replace: true });
+                }
+              }}
+              disabled={deletingAccount}
+              className="w-full py-3 bg-red-600 text-white rounded-xl font-bold text-[14px] hover:bg-red-700 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {deletingAccount ? (
+                <><i className="fa-solid fa-spinner fa-spin" /> {t("profil_delete_deleting")}</>
+              ) : (
+                <><i className="fa-solid fa-trash-can" /> {t("profil_delete_confirm_yes")}</>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(false)}
+              disabled={deletingAccount}
+              className="w-full py-3 bg-gray-100 text-textMain rounded-xl font-bold text-[14px] hover:bg-gray-200 transition-all disabled:opacity-60"
+            >
+              {t("profil_delete_confirm_cancel")}
+            </button>
+          </div>
+        </div>
+      </dialog>
     </div>
   );
 }

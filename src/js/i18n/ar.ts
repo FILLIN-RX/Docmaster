@@ -1670,4 +1670,13 @@ export const ar = {
   reportlost_success_ref_desc: "احتفظ برقم المرجع هذا لأي تواصل.",
   reportlost_download_pdf: "تحميل PDF",
   reportlost_my_documents: "وثائقي",
+
+  profil_danger_zone_title: "منطقة خطرة",
+  profil_danger_zone_desc: "حذف حسابك لا رجعة فيه. سيتم مسح جميع بياناتك نهائيًا.",
+  profil_delete_account: "حذف حسابي",
+  profil_delete_confirm_title: "حذف حسابك؟",
+  profil_delete_confirm_desc: "هذا الإجراء لا رجعة فيه. سيتم حذف جميع بياناتك الشخصية ووثائقك وإعلاناتك وسجلك بالكامل نهائيًا.",
+  profil_delete_confirm_yes: "نعم، احذف حسابي",
+  profil_delete_confirm_cancel: "إلغاء",
+  profil_delete_deleting: "جارٍ الحذف...",
 };

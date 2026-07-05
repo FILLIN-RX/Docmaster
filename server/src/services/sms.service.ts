@@ -69,9 +69,13 @@ export class SmsService {
     
     // Ensure it starts with 237
     if (!cleaned.startsWith('237')) {
-      // If it starts with 6 (common in CM), prepend 237
+      // If it starts with 6 (9 digits), prepend 237
       if (cleaned.length === 9) {
         cleaned = '237' + cleaned;
+      }
+      // If it starts with 0 (10 digits, e.g. "0697407380"), strip 0 and prepend 237
+      if (cleaned.length === 10 && cleaned.startsWith('0')) {
+        cleaned = '237' + cleaned.substring(1);
       }
     }
     
@@ -90,21 +94,19 @@ export class SmsService {
       // The sender address in the URL must be the dev phone number (or shortcode)
       const url = `https://api.orange.com/smsmessaging/v1/outbound/${encodeURIComponent(formattedFrom)}/requests`;
 
+      // Orange API v1 is sensitive to JSON key order — senderName must come after outboundSMSTextMessage
       const body: any = {
         outboundSMSMessageRequest: {
-          address: formattedTo,
+          address: [formattedTo],
           senderAddress: formattedFrom,
           outboundSMSTextMessage: {
             message: message
-          }
+          },
+          senderName: process.env.ORANGE_SENDER_NAME || 'DocMaster'
         }
       };
 
-      // Add custom sender name if configured
-      if (process.env.ORANGE_SENDER_NAME) {
-        body.outboundSMSMessageRequest.senderName = process.env.ORANGE_SENDER_NAME;
-      }
-
+      console.log(`📤 SMS request to ${to}:`, JSON.stringify(body.outboundSMSMessageRequest));
       const response = await axios.post(url, body, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -112,11 +114,14 @@ export class SmsService {
         },
       });
 
+      console.log(`📥 SMS response:`, JSON.stringify(response.data).substring(0, 500));
+
       if (response.status === 201 || response.status === 200) {
         console.log(`✅ SMS sent successfully to ${to}`);
         return true;
       }
 
+      console.warn(`⚠️ SMS API returned unexpected status ${response.status}:`, JSON.stringify(response.data).substring(0, 500));
       return false;
     } catch (error: any) {
       console.error(`❌ Failed to send SMS to ${to}:`, error.response?.data || error.message);
@@ -128,7 +133,8 @@ export class SmsService {
    * Send OTP specifically
    */
   async sendOtp(to: string, code: string): Promise<boolean> {
-    const message = `Votre code de verification DocMaster est : ${code}. Il expire dans 10 minutes.`;
+    console.log(`🔑 OTP code for ${to}: ${code}`);
+    const message = `Votre pin DocMaster : ${code}. Valable 10 minutes.`;
     return this.sendSms(to, message);
   }
 

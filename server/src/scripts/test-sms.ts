@@ -5,7 +5,7 @@ dotenv.config();
 
 async function testSms() {
   const smsService = new SmsService();
-  const testPhone = process.env.ORANGE_DEV_PHONE || '237697407380';
+  const testPhone = process.env.ORANGE_DEV_PHONE || '682125565';
   
   console.log('🚀 Starting SMS Service Test...');
   console.log(`📱 Target Phone: ${testPhone}`);

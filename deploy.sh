@@ -79,7 +79,7 @@ compress_assets() {
         fi
         rm -f "../$ARCHIVE_BACK"
         if [ -d "./server" ]; then
-            7z a "../$ARCHIVE_BACK" ./server/* -xr!'node_modules' -xr!'.git' -xr!'dist' >/dev/null
+            7z a "../$ARCHIVE_BACK" ./server/.env ./server/* -xr!'node_modules' -xr!'.git' -xr!'dist' >/dev/null
         else
             log_error "Le dossier ./server (Backend) n'existe pas à l'emplacement attendu."
             exit 1

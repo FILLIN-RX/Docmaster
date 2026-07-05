@@ -280,6 +280,29 @@ export default function Login() {
     }
   };
 
+  const handleSendByEmail = async () => {
+    if (pinSending) return;
+    setPinSending(true);
+    setPinError("");
+    setResendSuccess(null);
+    setPinValues(["", "", "", "", "", ""]);
+    try {
+      const res = await authService.sendVerificationPin({
+        email: regForm.email,
+      }) as { method: "SMS" | "EMAIL"; target: string };
+      setPinMethod(res.method);
+      setPinTarget(res.target);
+      setPinSent(true);
+      setResendCountdown(30);
+      setResendSuccess(`Code envoyé par e-mail à ${res.target}`);
+      setTimeout(() => focusPinIdx(0), 100);
+    } catch (err: any) {
+      setPinError(err.response?.data?.error || "Erreur d'envoi du code");
+    } finally {
+      setPinSending(false);
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
@@ -714,22 +737,34 @@ export default function Login() {
                   )}
                   <p className="text-[12px] text-textMuted text-center mt-4 flex items-center justify-center gap-1.5 flex-wrap">
                     {t("login_pin_not_received")}
-                    {resendCountdown > 0 ? (
-                      <span className="text-primary font-semibold">
-                        <i className="fa-solid fa-clock mr-1" />{resendCountdown}s
-                      </span>
-                    ) : (
+                    <button
+                      type="button"
+                      onClick={handleResendPin}
+                      disabled={resendCountdown > 0 || pinSending}
+                      className="font-semibold flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed enabled:text-primary enabled:hover:underline"
+                    >
+                      {pinSending ? (
+                        <i className="fa-solid fa-spinner fa-spin" />
+                      ) : resendCountdown > 0 ? (
+                        <><i className="fa-solid fa-clock mr-1" />{resendCountdown}s</>
+                      ) : (
+                        <><i className="fa-solid fa-rotate-right" /> {t("login_pin_resend")}</>
+                      )}
+                    </button>
+                  </p>
+                  {pinMethod === "SMS" && (
+                    <div className="text-center mt-2">
                       <button
                         type="button"
-                        onClick={handleResendPin}
-                        disabled={pinSending}
-                        className="text-primary font-semibold hover:underline disabled:opacity-50 flex items-center gap-1"
+                        onClick={handleSendByEmail}
+                        disabled={resendCountdown > 0 || pinSending}
+                        className="text-[12px] font-semibold flex items-center gap-1 mx-auto disabled:opacity-40 disabled:cursor-not-allowed enabled:text-primary enabled:hover:underline"
                       >
-                        {pinSending ? <i className="fa-solid fa-spinner fa-spin" /> : <><i className="fa-solid fa-rotate-right" /> {t("login_pin_resend")}</>}
+                        <i className="fa-solid fa-envelope" /> Je n'ai pas reçu le SMS — envoyer par e-mail
                       </button>
-                    )}
-                  </p>
-                  <div className="flex gap-2.5 mt-6">
+                    </div>
+                  )}
+                  <div className="flex gap-2.5 mt-4">
                     <button type="button" onClick={() => setRegStep(3)} disabled={pinSending} className="px-5 py-4 bg-white/65 backdrop-blur-md border-[1.5px] border-white/90 rounded-[16px] text-textMain flex items-center justify-center transition-all active:scale-[0.97] disabled:opacity-50">
                       <i className="fa-solid fa-arrow-left" />
                     </button>
@@ -1161,22 +1196,34 @@ export default function Login() {
                     )}
                     <p className="text-[12px] text-textMuted text-center mt-4 flex items-center justify-center gap-1.5 flex-wrap">
                       {t("login_pin_not_received")}
-                      {resendCountdown > 0 ? (
-                        <span className="text-primary font-semibold">
-                          <i className="fa-solid fa-clock mr-1" />{resendCountdown}s
-                        </span>
-                      ) : (
+                      <button
+                        type="button"
+                        onClick={handleResendPin}
+                        disabled={resendCountdown > 0 || pinSending}
+                        className="font-semibold flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed enabled:text-primary enabled:hover:underline"
+                      >
+                        {pinSending ? (
+                          <i className="fa-solid fa-spinner fa-spin" />
+                        ) : resendCountdown > 0 ? (
+                          <><i className="fa-solid fa-clock mr-1" />{resendCountdown}s</>
+                        ) : (
+                          <><i className="fa-solid fa-rotate-right" /> {t("login_pin_resend")}</>
+                        )}
+                      </button>
+                    </p>
+                    {pinMethod === "SMS" && (
+                      <div className="text-center mt-2">
                         <button
                           type="button"
-                          onClick={handleResendPin}
-                          disabled={pinSending}
-                          className="text-primary font-semibold hover:underline disabled:opacity-50 flex items-center gap-1"
+                          onClick={handleSendByEmail}
+                          disabled={resendCountdown > 0 || pinSending}
+                          className="text-[12px] font-semibold flex items-center gap-1 mx-auto disabled:opacity-40 disabled:cursor-not-allowed enabled:text-primary enabled:hover:underline"
                         >
-                          {pinSending ? <i className="fa-solid fa-spinner fa-spin" /> : <><i className="fa-solid fa-rotate-right" /> {t("login_pin_resend")}</>}
+                          <i className="fa-solid fa-envelope" /> Je n'ai pas reçu le SMS — envoyer par e-mail
                         </button>
-                      )}
-                    </p>
-                    <div className="flex gap-3 mt-6">
+                      </div>
+                    )}
+                    <div className="flex gap-3 mt-4">
                       <button type="button" onClick={() => setRegStep(3)} disabled={pinSending} className="px-6 py-3.5 bg-[#faf8f5] border-[1.5px] border-borda rounded-[14px] text-textMain flex items-center justify-center transition-all hover:bg-white active:scale-[0.97] disabled:opacity-50">
                         <i className="fa-solid fa-arrow-left" />
                       </button>

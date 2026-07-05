@@ -88,8 +88,8 @@ export class UserService {
     // Send welcome email
     try {
       await this.mailService.sendWelcomeEmail(user.email, user.prenom);
-    } catch (err) {
-      console.warn('Could not send welcome email:', err);
+    } catch (err: any) {
+      console.error('❌ Échec envoi email de bienvenue:', err.message);
     }
 
     return await encodeMediaFields(user);
@@ -148,10 +148,38 @@ export class UserService {
   }
 
   /**
-   * Delete user account (Admin)
+   * Delete user account with cascade cleanup
    */
   async deleteUser(userId: string): Promise<boolean> {
-    return await this.userRepository.deleteUser(userId);
+    const { pool } = await import('../database/db.ts');
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      await client.query('DELETE FROM push_tokens WHERE user_id = $1', [userId]);
+      await client.query('DELETE FROM notifications WHERE user_id = $1', [userId]);
+      await client.query('DELETE FROM devices WHERE user_id = $1', [userId]);
+      await client.query('DELETE FROM declarations WHERE user_id = $1', [userId]);
+      await client.query('DELETE FROM documents WHERE user_id = $1', [userId]);
+      await client.query('DELETE FROM claims WHERE user_id = $1 OR owner_id = $1', [userId]);
+      await client.query('DELETE FROM referrals WHERE user_id = $1 OR parrain_id = $1', [userId]);
+      await client.query('DELETE FROM shares WHERE user_id = $1', [userId]);
+      await client.query('DELETE FROM payment_transactions WHERE user_id = $1', [userId]);
+      await client.query('DELETE FROM subscriptions WHERE user_id = $1', [userId]);
+      await client.query('DELETE FROM withdrawal_requests WHERE user_id = $1', [userId]);
+      await client.query('DELETE FROM verification_codes WHERE email = (SELECT email FROM users WHERE id = $1)', [userId]);
+      await client.query('DELETE FROM password_reset_tokens WHERE user_id = $1', [userId]);
+
+      const { rowCount } = await client.query('DELETE FROM users WHERE id = $1', [userId]);
+
+      await client.query('COMMIT');
+      return (rowCount ?? 0) > 0;
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 
   /**

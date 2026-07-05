@@ -375,6 +375,30 @@ export class AuthController {
   }
 
   /**
+   * Delete own account (authenticated user)
+   */
+  async deleteAccount(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        res.status(401).json({ error: 'Non authentifié' });
+        return;
+      }
+
+      const success = await this.userService.deleteUser(userId);
+      if (success) {
+        res.clearCookie('docmaster_token');
+        res.status(200).json({ message: 'Compte supprimé avec succès', success: true });
+      } else {
+        res.status(404).json({ error: 'Utilisateur introuvable' });
+      }
+    } catch (error: any) {
+      console.error('[deleteAccount]', error);
+      res.status(500).json({ error: error.message || 'Erreur lors de la suppression du compte' });
+    }
+  }
+
+  /**
    * Delete user (Admin)
    */
   async deleteAdminUser(req: Request, res: Response): Promise<void> {

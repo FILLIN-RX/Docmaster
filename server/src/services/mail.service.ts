@@ -19,7 +19,7 @@ export class MailService {
     });
 
     // Verify connection on startup
-    this.verifyConnection();
+    this.verifyConnection().catch(err => console.error('❌ SMTP verify connection failed:', err));
   }
 
   /**
@@ -118,14 +118,18 @@ export class MailService {
       console.log(`📧 Email de bienvenue envoyé à : ${to}`);
     } catch (error: any) {
       console.error(`❌ Erreur lors de l'envoi de l'email de bienvenue à ${to}:`, error.message);
-      // Fallback
+      // Fallback : essayer sans le nom d'affichage
       if (error.message.includes('550')) {
         try {
           mailOptions.from = fromEmail;
           await this.transporter.sendMail(mailOptions);
           console.log(`📧 Email de bienvenue envoyé avec succès (fallback) à : ${to}`);
-        } catch (e) {}
+          return;
+        } catch (e: any) {
+          console.error('❌ Échec définitif de l\'envoi (fallback compris):', e.message);
+        }
       }
+      throw new Error(`Impossible d'envoyer l'email de bienvenue à ${to}: ${error.message}`);
     }
   }
 

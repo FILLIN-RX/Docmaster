@@ -1716,4 +1716,13 @@ export const fr = {
   reportlost_success_ref_desc: "Conservez ce numéro de référence pour toute communication.",
   reportlost_download_pdf: "Télécharger le PDF",
   reportlost_my_documents: "Mes documents",
+
+  profil_danger_zone_title: "Zone dangereuse",
+  profil_danger_zone_desc: "La suppression de votre compte est irréversible. Toutes vos données seront définitivement effacées.",
+  profil_delete_account: "Supprimer mon compte",
+  profil_delete_confirm_title: "Supprimer votre compte ?",
+  profil_delete_confirm_desc: "Cette action est irréversible. Toutes vos données personnelles, documents, déclarations et historique seront définitivement supprimés.",
+  profil_delete_confirm_yes: "Oui, supprimer mon compte",
+  profil_delete_confirm_cancel: "Annuler",
+  profil_delete_deleting: "Suppression en cours...",
 };

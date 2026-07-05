@@ -120,11 +120,18 @@ export class NotificationService {
           // Clean up invalid/expired tokens returned by FCM
           const invalidTokens: string[] = [];
           response.responses.forEach((r, idx) => {
-            if (!r.success && r.error?.code && [
-              'messaging/invalid-registration-token',
-              'messaging/registration-token-not-registered',
-            ].includes(r.error.code)) {
-              invalidTokens.push(fcmTokens[idx]);
+            if (!r.success) {
+              const code = r.error?.code || '';
+              console.log(`[Push] FCM error for token ${idx}: ${code} - ${r.error?.message}`);
+              if (
+                code.includes('unregistered') ||
+                code.includes('invalid-registration') ||
+                code.includes('not-registered') ||
+                code.includes('sender-id-mismatch') ||
+                code.includes('NOT_FOUND')
+              ) {
+                invalidTokens.push(fcmTokens[idx]);
+              }
             }
           });
           if (invalidTokens.length > 0) {
@@ -312,11 +319,18 @@ export class NotificationService {
         // Clean invalid tokens
         const invalidTokens: string[] = [];
         response.responses.forEach((r, idx) => {
-          if (!r.success && r.error?.code && [
-            'messaging/invalid-registration-token',
-            'messaging/registration-token-not-registered',
-          ].includes(r.error.code)) {
-            invalidTokens.push(batch[idx]);
+          if (!r.success) {
+            const code = r.error?.code || '';
+            console.log(`[Broadcast] FCM error for token ${idx}: ${code} - ${r.error?.message}`);
+            if (
+              code.includes('unregistered') ||
+              code.includes('invalid-registration') ||
+              code.includes('not-registered') ||
+              code.includes('sender-id-mismatch') ||
+              code.includes('NOT_FOUND')
+            ) {
+              invalidTokens.push(batch[idx]);
+            }
           }
         });
         if (invalidTokens.length > 0) {

@@ -21,7 +21,9 @@ const firebaseConfig: Record<string, string | undefined> = {
 
 const app: FirebaseApp = initializeApp(firebaseConfig);
 
-const analytics: Analytics = getAnalytics(app);
+const analytics: Analytics | null = firebaseConfig.measurementId
+  ? getAnalytics(app)
+  : null;
 
 export const auth: Auth = getAuth(app);
 

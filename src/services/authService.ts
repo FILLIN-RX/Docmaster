@@ -81,4 +81,9 @@ export const authService = {
     });
     return res.data;
   },
+
+  async deleteAccount() {
+    const res = await apiClient.delete<ApiResponse & { success: boolean }>("auth/account");
+    return res.data;
+  },
 };

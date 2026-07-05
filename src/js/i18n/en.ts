@@ -1671,4 +1671,13 @@ export const en = {
   reportlost_success_ref_desc: "Keep this reference number for any communication.",
   reportlost_download_pdf: "Download PDF",
   reportlost_my_documents: "My documents",
+
+  profil_danger_zone_title: "Danger Zone",
+  profil_danger_zone_desc: "Deleting your account is irreversible. All your data will be permanently erased.",
+  profil_delete_account: "Delete my account",
+  profil_delete_confirm_title: "Delete your account?",
+  profil_delete_confirm_desc: "This action is irreversible. All your personal data, documents, declarations and history will be permanently deleted.",
+  profil_delete_confirm_yes: "Yes, delete my account",
+  profil_delete_confirm_cancel: "Cancel",
+  profil_delete_deleting: "Deleting...",
 };

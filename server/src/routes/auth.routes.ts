@@ -400,6 +400,24 @@ router.delete('/admin/users/:id', authMiddleware, adminMiddleware, (req, res) =>
 
 /**
  * @swagger
+ * /auth/account:
+ *   delete:
+ *     summary: Supprimer son propre compte
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Compte supprimé
+ *       401:
+ *         description: Non authentifié
+ *       500:
+ *         description: Erreur serveur
+ */
+router.delete('/account', authMiddleware, (req, res) => authController.deleteAccount(req, res));
+
+/**
+ * @swagger
  * /auth/google-oauth:
  *   post:
  *     summary: Connexion avec Google OAuth (via Firebase)

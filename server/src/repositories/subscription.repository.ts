@@ -116,15 +116,15 @@ class SubscriptionRepository {
     // 3. Estimated Revenue
     const totalRevenueRes = await query(`
         SELECT SUM(p.price) as sum
-        FROM user_subscriptions us 
-        JOIN plans p ON us.plan_id = p.id 
-        WHERE us.status = 'ACTIVE'
+        FROM user_subscriptions us
+        JOIN plans p ON us.plan_id = p.id
+        WHERE us.status = 'ACTIVE' AND p.price > 0
     `);
     const totalRevenuePrevRes = await query(`
         SELECT SUM(p.price) as sum
-        FROM user_subscriptions us 
-        JOIN plans p ON us.plan_id = p.id 
-        WHERE us.status = 'ACTIVE' AND us.date_debut < $1
+        FROM user_subscriptions us
+        JOIN plans p ON us.plan_id = p.id
+        WHERE us.status = 'ACTIVE' AND us.date_debut < $1 AND p.price > 0
     `, [currentMonthStart]);
     const estimatedMonthlyRevenue = parseFloat(totalRevenueRes.rows[0].sum || 0);
     const prevRevenue = parseFloat(totalRevenuePrevRes.rows[0].sum || 0);

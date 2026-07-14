@@ -68,9 +68,6 @@ export default function Abonnement() {
         subscriptionsService.getUsage(),
         paymentsService.getMyTransactions().catch(() => ({ success: false, data: [] })),
       ]);
-      console.log("[Abonnement] getAllPlans:", plansRes);
-      console.log("[Abonnement] getUsage:", usageRes);
-      console.log("[Abonnement] getMyTransactions:", txRes);
       if (plansRes.success && plansRes.data) setPlans(plansRes.data);
       if (usageRes.success && usageRes.data) setUsage(usageRes.data);
       if ((txRes as { success: boolean; data?: Transaction[] }).success && (txRes as { success: boolean; data?: Transaction[] }).data)
@@ -332,28 +329,7 @@ export default function Abonnement() {
         ]}
       />
 
-      <div className="custom-scroll p-4 md:p-6 flex flex-col gap-5 pb-24 md:pb-6 max-md:h-[calc(100vh-134px)] md:h-[calc(100vh-64px)] overflow-y-auto">
-
-        {/* Greeting */}
-        <div className="flex items-center gap-4 flex-wrap">
-          {user?.photo_url ? (
-            <img 
-              src={user.photo_url} 
-              alt="Profil" 
-              className="w-12 h-12 rounded-full object-cover border-2 border-primary"
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg">
-              {`${user?.prenom?.charAt(0) || ''}${user?.nom?.charAt(0) || ''}`.toUpperCase()}
-            </div>
-          )}
-          <div>
-            <h1 className="font-bricolage text-lg md:text-xl font-extrabold text-textMain tracking-tight leading-tight">
-              {t("abonnement_greeting")}, <span>{user?.prenom || t("dashboard_user")}</span>
-            </h1>
-            <p className="text-[12.5px] md:text-[13.5px] text-textMuted font-medium mt-0.5 italic">{t("abonnement_manage")}</p>
-          </div>
-        </div>
+      <div className="custom-scroll p-4 md:p-6 flex flex-col gap-5 pb-24 md:pb-6">
 
         {/* Current plan card */}
         <div className="bg-green-dark rounded-[20px] p-5 md:p-6 relative overflow-hidden shadow-2xl shadow-green-950/40 w-full">
@@ -444,7 +420,7 @@ export default function Abonnement() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-fr">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-auto">
             {loadingPlans ? (
               <>
                 {[1, 2, 3, 4].map((i) => (

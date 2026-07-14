@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useI18n } from "../../context/I18nContext";
+import { useToast } from "../../context/ToastContext";
 import { devicesService } from "../../services/devicesService";
 import Topbar from "../../layout/Topbar";
 import DatePicker from "../../components/ui/DatePicker";
@@ -82,6 +83,7 @@ type NormalizedDevice = ReturnType<typeof normalizeDevice>;
 export default function MesAppareils() {
   const { t } = useI18n();
   const { user } = useAuth();
+  const toast = useToast();
   const TYPE_META = getTypeMeta(t);
   const [devices, setDevices] = useState<NormalizedDevice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -243,7 +245,7 @@ export default function MesAppareils() {
       return;
     }
     if (fSerial.trim() && !/\d/.test(fSerial)) {
-      alert("Le numéro de série / IMEI doit contenir au moins un chiffre.");
+      toast.warning("Le numéro de série / IMEI doit contenir au moins un chiffre.");
       return;
     }
     if (fDateAchat) {
@@ -251,7 +253,7 @@ export default function MesAppareils() {
       const today = new Date();
       today.setHours(23, 59, 59, 999);
       if (d > today) {
-        alert("La date d'achat ne peut pas être dans le futur.");
+        toast.warning("La date d'achat ne peut pas être dans le futur.");
         return;
       }
     }
@@ -278,10 +280,10 @@ export default function MesAppareils() {
         await fetchDevices();
         closeAddModal();
       } else {
-        alert(result.message || "Erreur lors de l'enregistrement");
+        toast.error(result.message || "Erreur lors de l'enregistrement");
       }
     } catch (error: any) {
-      alert(error?.message || "Erreur lors de l'enregistrement");
+      toast.error(error?.message || "Erreur lors de l'enregistrement");
     } finally {
       setSaving(false);
     }
@@ -314,10 +316,10 @@ export default function MesAppareils() {
         await fetchDevices();
         closeDetail();
       } else {
-        alert(result.message);
+        toast.error(result.message);
       }
     } catch {
-      alert("Erreur lors de la suppression");
+      toast.error("Erreur lors de la suppression");
     }
   };
 
@@ -357,10 +359,10 @@ export default function MesAppareils() {
         setSuccessTitle("Appareil déclaré perdu !");
         setSuccessOpen(true);
       } else {
-        alert(result.message);
+        toast.error(result.message);
       }
     } catch {
-      alert("Erreur lors du signalement");
+      toast.error("Erreur lors du signalement");
     } finally {
       setConfirming(false);
     }
@@ -380,10 +382,10 @@ export default function MesAppareils() {
         setSuccessTitle("Appareil marqué comme retrouvé !");
         setSuccessOpen(true);
       } else {
-        alert(result.message);
+        toast.error(result.message);
       }
     } catch {
-      alert("Erreur lors de la confirmation");
+      toast.error("Erreur lors de la confirmation");
     } finally {
       setConfirming(false);
     }
@@ -391,7 +393,7 @@ export default function MesAppareils() {
 
   const startVerification = async () => {
     if (!verifyImei.trim()) {
-      alert("Veuillez saisir un numéro IMEI ou de série.");
+      toast.warning("Veuillez saisir un numéro IMEI ou de série.");
       return;
     }
     setVerifyLoading(true);

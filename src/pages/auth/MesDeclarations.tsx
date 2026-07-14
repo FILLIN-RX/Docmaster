@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { declarationsService, documentTypesService } from "../../services/declarationsService";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import { useI18n } from "../../context/I18nContext";
 import Topbar from "../../layout/Topbar";
 import type { Declaration } from "../../types/api";
@@ -51,6 +52,7 @@ export default function MesDeclarations() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const toast = useToast();
 
   const [allDeclarations, setAllDeclarations] = useState<DeclarationExtended[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +76,6 @@ export default function MesDeclarations() {
   // Load document type names to resolve UUIDs
   useEffect(() => {
     documentTypesService.getActive().then((res) => {
-      console.log("[MesDeclarations] getActive doc types response:", res);
       if (res.success && Array.isArray(res.data)) {
         const map: Record<string, string> = {};
         for (const d of res.data) {
@@ -91,7 +92,6 @@ export default function MesDeclarations() {
     setLoading(true);
     try {
       const res = await declarationsService.getMyDeclarations();
-      console.log("[MesDeclarations] getMyDeclarations response:", res);
       setAllDeclarations((res.data || []) as DeclarationExtended[]);
     } catch (e: any) {
       console.error("[MesDeclarations] fetchDeclarations error:", e?.response?.data || e);
@@ -128,11 +128,11 @@ export default function MesDeclarations() {
         setAllDeclarations((prev) => prev.filter((d) => d.id !== confirmDeleteId));
         if (detailId === confirmDeleteId) setDetailId(null);
       } else {
-        alert(res.message || "Erreur lors de la suppression");
+        toast.error(res.message || "Erreur lors de la suppression");
       }
     } catch (e: any) {
       const msg = e.response?.data?.message || e.response?.data?.error || "Erreur lors de la suppression";
-      alert(msg);
+      toast.error(msg);
     } finally {
       setDeleting(false);
       setConfirmDeleteId(null);

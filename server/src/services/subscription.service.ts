@@ -46,7 +46,8 @@ class SubscriptionService {
     // 2. Handle Payment
     if (plan.price > 0) {
       const orderId = `SUB-${uuidv4().substring(0, 8)}`;
-      const amountToPay = plan.price * months;
+      const discount = months >= 12 ? 0.8 : 1;
+      const amountToPay = Math.round(plan.price * months * discount);
 
       if (paymentDetails.method === 'POINTS') {
         const { pointsService } = await import('./points.service.ts');
@@ -172,6 +173,18 @@ class SubscriptionService {
         : `Votre abonnement au plan ${plan.name} est maintenant actif jusqu'au ${dateFin.toLocaleDateString('fr-FR')}.`,
       metadata: { planId, subId: newSub.id, startDate: dateDebut }
     });
+
+    // Reward referrer if this user was referred and is subscribing to a paid plan
+    if (plan.price > 0 && months > 0) {
+      try {
+        const { ReferralRepository } = await import('../repositories/referral.repository.ts');
+        const referralRepo = new ReferralRepository();
+        const subscriptionTotal = Math.round(plan.price * months * (months >= 12 ? 0.8 : 1));
+        await referralRepo.rewardReferrerOnSubscription(userId, subscriptionTotal);
+      } catch {
+        // Referral reward failure should not block subscription activation
+      }
+    }
 
     return { status: 'SUCCESS', data: newSub };
   }

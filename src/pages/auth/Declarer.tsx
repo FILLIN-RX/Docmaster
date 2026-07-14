@@ -6,6 +6,7 @@ import DatePicker from "../../components/ui/DatePicker";
 import Topbar from "../../layout/Topbar";
 import apiClient from "../../services/api";
 import { useI18n } from "../../context/I18nContext";
+import { useToast } from "../../context/ToastContext";
 import { useAuth } from "../../context/AuthContext";
 
 function addMonths(dateStr: string, months: number): string {
@@ -218,6 +219,7 @@ const steps = [
 export default function Declarer() {
   const { t } = useI18n();
   const { user } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [docTypes, setDocTypes] = useState<DocTypeCatalog[]>([]);
@@ -258,13 +260,12 @@ export default function Declarer() {
     const loadDocTypes = async () => {
       try {
         const res = await documentTypesService.getActive();
-        console.log("[Declarer] getActive doc types response:", res);
         if (res.data) {
           setDocTypes(res.data);
         }
       } catch (error: any) {
         console.error("Failed to load document types:", error);
-        alert(error.response?.data?.message || error.response?.data?.error || t("declarer_alert_error"));
+        toast.error(error.response?.data?.message || error.response?.data?.error || t("declarer_alert_error"));
       } finally {
         setLoading(false);
       }
@@ -319,11 +320,11 @@ export default function Declarer() {
 
   const goToNextStep = () => {
     if (currentStep === 1 && !ownerType) {
-      alert(t("declarer_alert_select_owner"));
+      toast.warning(t("declarer_alert_select_owner"));
       return;
     }
     if (currentStep === 2 && selectedDocs.length === 0) {
-      alert(t("declarer_alert_select_document"));
+      toast.warning(t("declarer_alert_select_document"));
       return;
     }
     if (currentStep === 3) {
@@ -416,8 +417,8 @@ export default function Declarer() {
 
     for (const docId of selectedDocs) {
       const docNum = getFormValue(docId, "numero");
-      if (docNum && !/\d/.test(docNum)) {
-        alert(t("declarer_alert_num_digit_prefix") + t(getDocMeta(docId).label) + t("declarer_alert_num_digit_suffix"));
+        if (docNum && !/\d/.test(docNum)) {
+          toast.warning(t("declarer_alert_num_digit_prefix") + t(getDocMeta(docId).label) + t("declarer_alert_num_digit_suffix"));
         setSubmitting(false);
         setShowConfirmModal(false);
         return;
@@ -429,7 +430,7 @@ export default function Declarer() {
       const today = new Date();
       today.setHours(23, 59, 59, 999);
       if (d > today) {
-        alert(t("declarer_alert_future_date"));
+        toast.warning(t("declarer_alert_future_date"));
         setSubmitting(false);
         setShowConfirmModal(false);
         return;
@@ -483,7 +484,6 @@ export default function Declarer() {
         if (Object.keys(metadata).length > 0) formData.append("metadata", JSON.stringify(metadata));
 
         const res = await declarationsService.createLost(formData);
-        console.log("[Declarer] createLost response:", res);
         if (res.success && res.data) {
           createdRefs.push(res.data.identifiant_doc_dm || "DOC-XXXX");
           lastId = res.data.id;
@@ -499,9 +499,9 @@ export default function Declarer() {
         const details = Object.entries(data.errors)
           .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(", ")}`)
           .join("\n");
-        alert((data?.message || t("declarer_alert_validation_failed")) + "\n\n" + details);
+        toast.error((data?.message || t("declarer_alert_validation_failed")) + "\n\n" + details);
       } else {
-        alert(data?.message || t("declarer_alert_error"));
+        toast.error(data?.message || t("declarer_alert_error"));
       }
     } finally {
       setSubmitting(false);
@@ -525,7 +525,7 @@ export default function Declarer() {
     } catch (e: any) {
       console.error("Failed to download PDF:", e);
       const msg = e.response?.data?.message || e.response?.data?.error || t("declarer_alert_pdf_error");
-      alert(msg);
+      toast.error(msg);
     }
   };
 

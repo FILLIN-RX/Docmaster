@@ -2,31 +2,22 @@ import { pool } from '../database/db.ts';
 
 export class ReferralRepository {
   /**
-   * Create a new referral and award rewards to both parrain and filleul
+   * Create a new referral on registration (no monetary reward yet - reward comes on subscription)
    */
-  async createReferral(parrainId: string, filleulId: string, pointsGagnes: number = 500): Promise<any> {
+  async createReferral(parrainId: string, filleulId: string): Promise<any> {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
 
-      // 1. Insert into referrals table
+      // 1. Insert into referrals table (no reward yet)
       const insertRefQuery = `
         INSERT INTO referrals (parrain_id, filleul_id, points_gagnes, status, recompense_attribuee)
-        VALUES ($1, $2, $3, 'VALIDATED', true)
+        VALUES ($1, $2, 0, 'PENDING', false)
         RETURNING *
       `;
-      const { rows: refRows } = await client.query(insertRefQuery, [parrainId, filleulId, pointsGagnes]);
-      
-      // 2. Award Parrain: +500 XAF to wallet_balance and +10 points
-      const updateParrainQuery = `
-        UPDATE users 
-        SET wallet_balance = COALESCE(wallet_balance, 0) + $1,
-            points = COALESCE(points, 0) + 10
-        WHERE id = $2
-      `;
-      await client.query(updateParrainQuery, [pointsGagnes, parrainId]);
+      const { rows: refRows } = await client.query(insertRefQuery, [parrainId, filleulId]);
 
-      // 3. Award Filleul: 1 month Standard plan
+      // 2. Award Filleul: 1 month Standard plan
       const planId = 'standard';
       const startDate = new Date();
       const endDate = new Date();
@@ -36,24 +27,77 @@ export class ReferralRepository {
         INSERT INTO user_subscriptions (user_id, plan_id, date_debut, date_fin, status, avantages_restants)
         VALUES ($1, $2, $3, $4, 'ACTIVE', $5)
       `;
-      // Avantages restants include 3 free declarations as requested in the UI
       const avantages = JSON.stringify({ declarations: 3 });
       await client.query(insertSubQuery, [filleulId, planId, startDate, endDate, avantages]);
-
-      // 4. Record earnings history + send notifications
-      const { EarningsService } = await import('../services/earnings.service.ts');
-      await new EarningsService().recordReferralPoints(
-        parrainId,
-        10,
-        pointsGagnes,
-        { referralId: refRows[0].id, filleulId }
-      );
 
       await client.query('COMMIT');
       return refRows[0];
     } catch (error) {
       await client.query('ROLLBACK');
-      console.error("Error in createReferral transaction:", error);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Reward the parrain when the referred user subscribes to a paid plan
+   * Gives 50% of the subscription price to the parrain's wallet
+   */
+  async rewardReferrerOnSubscription(filleulId: string, subscriptionAmount: number): Promise<void> {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Find the pending referral for this filleul
+      const findRefQuery = `
+        SELECT * FROM referrals 
+        WHERE filleul_id = $1 AND status = 'PENDING' AND recompense_attribuee = false
+        LIMIT 1
+      `;
+      const { rows } = await client.query(findRefQuery, [filleulId]);
+
+      if (rows.length === 0) {
+        await client.query('ROLLBACK');
+        return;
+      }
+
+      const referral = rows[0];
+      const bonusAmount = Math.round(subscriptionAmount * 0.5);
+
+      // 1. Credit parrain's wallet with 50% of subscription price
+      await client.query(
+        'UPDATE users SET wallet_balance = COALESCE(wallet_balance, 0) + $1 WHERE id = $2',
+        [bonusAmount, referral.parrain_id]
+      );
+
+      // 2. Update referral record
+      await client.query(
+        `UPDATE referrals SET points_gagnes = $1, recompense_attribuee = true, status = 'VALIDATED' WHERE id = $2`,
+        [bonusAmount, referral.id]
+      );
+
+      // 3. Record earnings history
+      const { EarningsService } = await import('../services/earnings.service.ts');
+      await new EarningsService().recordReferralPoints(
+        referral.parrain_id,
+        0,
+        bonusAmount,
+        { referralId: referral.id, filleulId, subscriptionAmount }
+      );
+
+      // 4. Notify parrain
+      const { notificationService } = await import('../services/notification.service.js');
+      await notificationService.create(
+        referral.parrain_id,
+        'Bonus de parrainage reçu !',
+        `Vous avez reçu ${bonusAmount} XAF pour le parrainage d'un utilisateur qui a souscrit un abonnement.`,
+        'REWARD'
+      );
+
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
       throw error;
     } finally {
       client.release();
@@ -82,8 +126,8 @@ export class ReferralRepository {
     const query = `
       SELECT 
         r.*, 
-        p.nom as parrain_nom, p.prenom as parrain_prenom, p.email as parrain_email,
-        f.nom as filleul_nom, f.prenom as filleul_prenom, f.email as filleul_email
+        CONCAT(p.prenom, ' ', p.nom) as referrer_name,
+        CONCAT(f.prenom, ' ', f.nom) as referred_name
       FROM referrals r
       JOIN users p ON r.parrain_id = p.id
       JOIN users f ON r.filleul_id = f.id
@@ -94,7 +138,7 @@ export class ReferralRepository {
   }
 
   /**
-   * Admin: Reward a referral manually
+   * Admin: Reward a referral manually (sets recompense_attribuee to true)
    */
   async rewardReferral(id: string): Promise<any> {
     const query = `
@@ -109,18 +153,6 @@ export class ReferralRepository {
       throw new Error('Le parrainage est déjà récompensé ou n\'existe pas.');
     }
 
-    const ref = rows[0];
-    
-    // Add points/wallet to parrain
-    const rewardAmount = ref.points_gagnes || 500;
-    const updateParrainQuery = `
-      UPDATE users 
-      SET wallet_balance = COALESCE(wallet_balance, 0) + $1,
-          points = COALESCE(points, 0) + 10 -- Bonus points
-      WHERE id = $2
-    `;
-    await pool.query(updateParrainQuery, [rewardAmount, ref.parrain_id]);
-
-    return ref;
+    return rows[0];
   }
 }

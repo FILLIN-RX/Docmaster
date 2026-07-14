@@ -307,8 +307,10 @@ export default function Recuperer() {
   function getImageUrl(path: string | undefined) {
     if (!path) return "";
     if (path.startsWith("http") || path.startsWith("data:")) return path;
-    const base = import.meta.env.VITE_API_URL || "http://localhost:5000/api/";
-    return base.replace(/\/+$/, "") + "/uploads/" + path.replace(/^\/+/, "");
+    const base = import.meta.env.VITE_API_URL || "";
+    // If base is empty, assume relative path /api/
+    const baseUrl = base ? base.replace(/\/+$/, "") + "/" : "/api/";
+    return baseUrl + "uploads/" + path.replace(/^\/+/, "");
   }
 
   function getFinderName(): string {

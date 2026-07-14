@@ -200,7 +200,7 @@ h1, h2, h3, h4, .brand {
   background: #fff;
   border: 1.5px solid #EAE3D8;
   border-radius: 18px;
-  overflow: hidden;
+  overflow: visible;
   transition: all .2s;
 }
 .doc-card:hover {
@@ -220,6 +220,8 @@ h1, h2, h3, h4, .brand {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  overflow: hidden;
+  border-radius: 18px 18px 0 0;
 }
 
 /* Tabs */

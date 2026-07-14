@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useI18n } from "../../context/I18nContext";
+import { useToast } from "../../context/ToastContext";
 import { declarationsService } from "../../services/declarationsService";
 import apiClient from "../../services/api";
 import InfoTooltip from "../../components/ui/InfoTooltip";
@@ -24,6 +25,7 @@ type DetailData = Declaration & {
 
 export default function AdminDeclarations() {
   const { t } = useI18n();
+  const toast = useToast();
   const [declarations, setDeclarations] = useState<Declaration[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -101,7 +103,7 @@ export default function AdminDeclarations() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-    } catch { alert("Impossible de télécharger le PDF."); }
+    } catch { toast.error("Impossible de télécharger le PDF."); }
   };
 
   const handleExport = () => {

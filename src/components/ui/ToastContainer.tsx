@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useToast, type Toast, type ToastType } from "../../context/ToastContext";
 
+type ToastEmitterPayload = {
+  type: ToastType;
+  message: string;
+  title?: string;
+};
+
 // ─── Config par type ────────────────────────────────────────────────────────
 const CONFIG: Record<
   ToastType,
@@ -131,7 +137,22 @@ function ToastItem({ toast }: { toast: Toast }) {
 
 // ─── Conteneur global ────────────────────────────────────────────────────────
 export default function ToastContainer() {
-  const { toasts } = useToast();
+  const { toasts, success, error: toastError, warning, info } = useToast();
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<ToastEmitterPayload>).detail;
+      if (!detail) return;
+      switch (detail.type) {
+        case "success": success(detail.message, detail.title); break;
+        case "error": toastError(detail.message, detail.title); break;
+        case "warning": warning(detail.message, detail.title); break;
+        case "info": info(detail.message, detail.title); break;
+      }
+    };
+    window.addEventListener("docmaster:toast", handler);
+    return () => window.removeEventListener("docmaster:toast", handler);
+  }, [success, toastError, warning, info]);
 
   return createPortal(
     <div

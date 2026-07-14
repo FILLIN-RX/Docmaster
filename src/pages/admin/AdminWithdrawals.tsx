@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "../../context/I18nContext";
+import { useToast } from "../../context/ToastContext";
 import { adminService } from "../../services/admin";
 import InfoTooltip from "../../components/ui/InfoTooltip";
 import Pagination from "../../components/ui/Pagination";
@@ -19,6 +20,7 @@ interface Withdrawal {
 
 export default function AdminWithdrawals() {
   const { t } = useI18n();
+  const toast = useToast();
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState("");
@@ -35,7 +37,7 @@ export default function AdminWithdrawals() {
 
   const handleAction = async (id: string, action: "approve" | "reject") => {
     if (action === "reject" && !note.trim()) {
-      alert("Veuillez ajouter une note expliquant le rejet.");
+      toast.warning("Veuillez ajouter une note expliquant le rejet.");
       return;
     }
     setActionId(id);

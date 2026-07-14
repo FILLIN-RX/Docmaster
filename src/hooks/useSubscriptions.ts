@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { subscriptionsService } from "../services/subscriptionsService";
+import { useToast } from "../context/ToastContext";
+import { extractApiError } from "../utils/extractApiError";
 import type { Plan, Subscription } from "../types/api";
 
 export function usePlans() {
@@ -21,6 +23,7 @@ export function useMySubscription() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   const fetch = useCallback(async () => {
     setLoading(true);
@@ -41,10 +44,16 @@ export function useMySubscription() {
   useEffect(() => { fetch(); }, [fetch]);
 
   const subscribe = useCallback(async (planId: string, months = 1, paymentMethod = "card") => {
-    const res = await subscriptionsService.subscribe({ planId, months, paymentMethod });
-    await fetch();
-    return res;
-  }, [fetch]);
+    try {
+      const res = await subscriptionsService.subscribe({ planId, months, paymentMethod });
+      toast.success("Abonnement activé avec succès");
+      await fetch();
+      return res;
+    } catch (err: any) {
+      toast.error(extractApiError(err));
+      throw err;
+    }
+  }, [fetch, toast]);
 
   return { subscription, loading, error, fetch, subscribe };
 }
@@ -52,19 +61,21 @@ export function useMySubscription() {
 export function useSubscriptionUsage() {
   const [usage, setUsage] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetch = useCallback(async (userId?: string) => {
     setLoading(true);
+    setError(null);
     try {
       const res = await subscriptionsService.getUsage(userId);
       setUsage(res.data || null);
     } catch (e: any) {
-      console.error("[useSubscriptionUsage] error:", e?.response?.data || e);
+      setError(e?.response?.data?.error || "Erreur de chargement de l'utilisation");
       setUsage(null);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  return { usage, loading, fetch };
+  return { usage, loading, error, fetch };
 }

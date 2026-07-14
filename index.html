@@ -13,7 +13,20 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
   </head>
   <body>
+    <div id="dm-page-loader" style="position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#F4EFE6;transition:opacity .4s">
+      <div style="text-align:center">
+        <div style="width:48px;height:48px;margin:0 auto;border:4px solid #EAE3D8;border-top-color:#F5A64B;border-radius:50%;animation:dm-spin 1s linear infinite"></div>
+        <p style="margin-top:12px;font-family:Poppins,sans-serif;font-size:13px;color:#8a8075;font-weight:600">DocMaster</p>
+      </div>
+    </div>
+    <style>@keyframes dm-spin{to{transform:rotate(360deg)}}</style>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      window.addEventListener('load', function() {
+        var el = document.getElementById('dm-page-loader');
+        if (el) { el.style.opacity = '0'; setTimeout(function(){ el.remove(); }, 400); }
+      });
+    </script>
   </body>
 </html>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../../context/I18nContext";
+import { useToast } from "../../context/ToastContext";
 import { paymentsService, type SavedPaymentMethod } from "../../services/paymentsService";
 import { validatePhone, formatPhone } from "../../utils/phoneValidation";
 import api from "../../services/api";
@@ -33,6 +34,7 @@ export default function PaymentModal({
   submitLabel,
 }: PaymentModalProps) {
   const { t } = useI18n();
+  const toast = useToast();
   const [payMethod, setPayMethod] = useState<"orange" | "mtn" | "points" | "">("");
   const [payPhone, setPayPhone] = useState("");
   const [pointsNeeded, setPointsNeeded] = useState<number | null>(null);
@@ -53,7 +55,7 @@ export default function PaymentModal({
   useEffect(() => {
     paymentsService.getPaymentMethods()
       .then((res) => { if (res.success && res.data) setSavedMethods(res.data); })
-      .catch(() => {});
+      .catch(() => { toast.warning("Impossible de charger les méthodes de paiement enregistrées"); });
   }, []);
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useI18n } from "../../context/I18nContext";
+import { useToast } from "../../context/ToastContext";
 import { subscriptionsService } from "../../services/subscriptionsService";
 
 import type { Plan } from "../../types/api";
@@ -71,13 +72,14 @@ const tips = [
 
 export default function Home() {
   const { t, lang } = useI18n();
+  const toast = useToast();
 
   const [plans, setPlans] = useState<Plan[]>([]);
 
   useEffect(() => {
     subscriptionsService.getAllPlans().then((res) => {
       if (res.success && res.data) setPlans(res.data);
-    }).catch(() => {});
+    }).catch(() => { toast.warning("Impossible de charger les plans d'abonnement"); });
   }, []);
 
   const statCounters = [

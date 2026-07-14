@@ -1,15 +1,13 @@
 import axios from "axios";
 import { getToken, saveToken, deleteToken } from "../utils/cookie";
+import { emitToast } from "../utils/toastEmitter";
 
 const resolveBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BACKEND_URL_PROD;
+  const envUrl = import.meta.env.VITE_API_URL;
   if (envUrl) {
     return envUrl.replace(/\/+$/, "") + "/api/";
   }
-  const origin = window.location.origin;
-  if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
-    return "http://localhost:5000/api/";
-  }
+  // If no env var, default to relative path /api/
   return "/api/";
 };
 
@@ -42,6 +40,10 @@ apiClient.interceptors.response.use(
       ) {
         window.location.href = "/login";
       }
+    } else if (!error.response) {
+      emitToast({ type: "error", message: "Erreur réseau. Vérifiez votre connexion internet." });
+    } else if (error.response.status >= 500) {
+      emitToast({ type: "error", message: "Le serveur est temporairement indisponible. Veuillez réessayer." });
     }
     return Promise.reject(error);
   }

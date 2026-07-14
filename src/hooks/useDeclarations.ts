@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { declarationsService } from "../services/declarationsService";
+import { useToast } from "../context/ToastContext";
+import { extractApiError } from "../utils/extractApiError";
 import type { Declaration } from "../types/api";
 
 export function useDeclarations() {
   const [declarations, setDeclarations] = useState<Declaration[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   const fetch = useCallback(async () => {
     setLoading(true);
@@ -24,21 +27,39 @@ export function useDeclarations() {
   useEffect(() => { fetch(); }, [fetch]);
 
   const createLost = useCallback(async (data: Parameters<typeof declarationsService.createLost>[0]) => {
-    const res = await declarationsService.createLost(data);
-    await fetch();
-    return res;
-  }, [fetch]);
+    try {
+      const res = await declarationsService.createLost(data);
+      toast.success("Déclaration de perte créée");
+      await fetch();
+      return res;
+    } catch (err: any) {
+      toast.error(extractApiError(err));
+      throw err;
+    }
+  }, [fetch, toast]);
 
   const createFound = useCallback(async (data: Parameters<typeof declarationsService.createFound>[0]) => {
-    const res = await declarationsService.createFound(data);
-    await fetch();
-    return res;
-  }, [fetch]);
+    try {
+      const res = await declarationsService.createFound(data);
+      toast.success("Déclaration de trouvaille créée");
+      await fetch();
+      return res;
+    } catch (err: any) {
+      toast.error(extractApiError(err));
+      throw err;
+    }
+  }, [fetch, toast]);
 
   const requestDeletion = useCallback(async (declarationId: string, reason: string) => {
-    const res = await declarationsService.requestDeletion({ declaration_id: declarationId, reason });
-    return res;
-  }, []);
+    try {
+      const res = await declarationsService.requestDeletion({ declaration_id: declarationId, reason });
+      toast.success("Demande de suppression envoyée");
+      return res;
+    } catch (err: any) {
+      toast.error(extractApiError(err));
+      throw err;
+    }
+  }, [toast]);
 
   return { declarations, loading, error, fetch, createLost, createFound, requestDeletion };
 }
@@ -89,19 +110,20 @@ export function useSearchDeclarations() {
 export function useDeclarationStats() {
   const [stats, setStats] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
     declarationsService.getStats()
       .then((res) => setStats(res.data || null))
       .catch((e: any) => {
-        console.error("[useDeclarationStats] error:", e?.response?.data || e);
+        setError(e?.response?.data?.error || "Erreur de chargement des statistiques");
         setStats(null);
       })
       .finally(() => setLoading(false));
   }, []);
 
-  return { stats, loading };
+  return { stats, loading, error };
 }
 
 export function useRecovery() {

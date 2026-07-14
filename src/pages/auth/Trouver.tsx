@@ -60,7 +60,6 @@ export default function Trouver() {
 
   useEffect(() => {
     documentTypesService.getActive().then((res) => {
-      console.log("[Trouver] getActive doc types response:", res);
       if (res.success && Array.isArray(res.data)) {
         setDocTypes(res.data as DocTypeItem[]);
       }
@@ -352,7 +351,6 @@ export default function Trouver() {
 
     try {
       const result = await declarationsService.createFound(formData);
-      console.log("[Trouver] createFound response:", result);
       clearInterval(interval);
       setProgress(100);
 

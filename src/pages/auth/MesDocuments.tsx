@@ -73,7 +73,7 @@ export default function MesDocuments() {
       if (res.success && Array.isArray(res.data)) {
         setDocTypes(res.data);
       }
-    });
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -311,7 +311,6 @@ export default function MesDocuments() {
               catLabels={catLabelsT}
               onView={openViewModal}
               onShare={openShareModal}
-              onDelete={handleDelete}
               onReportLost={(d) => { setSelectedDoc(d); setShowLostModal(true); }}
             />
           ))}
@@ -672,17 +671,15 @@ export default function MesDocuments() {
           doc={selectedDoc}
           catLabels={catLabelsT}
           onClose={() => setShowViewModal(false)}
-          onDelete={handleDelete}
+          onShare={() => { setShowViewModal(false); setShowShareModal(true); }}
         />
       )}
 
       {/* ── SHARE MODAL ── */}
       {showShareModal && selectedDoc && (
         <ShareModal
-          isOpen={showShareModal}
+          doc={selectedDoc}
           onClose={() => setShowShareModal(false)}
-          documentId={selectedDoc.id}
-          documentName={selectedDoc.nom_sur_doc}
         />
       )}
 

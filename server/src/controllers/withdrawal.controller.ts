@@ -24,6 +24,9 @@ export class WithdrawalController {
 
       const withdrawalId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const withdrawal = await withdrawalRepo.updateStatus(withdrawalId, 'COMPLETED', adminNote);
+
+      // Deduct balance on approval
+      await userRepo.updateBalance(withdrawal.user_id, -Number(withdrawal.amount));
       
       // Update transaction status to SUCCESS
       const transactions = await transactionRepo.findByUser(withdrawal.user_id);
@@ -33,7 +36,7 @@ export class WithdrawalController {
         await transactionRepo.updateStatus(tx.id, 'SUCCESS');
       }
 
-      res.json({ success: true, message: 'Retrait approuvé et marqué comme terminé.', data: withdrawal });
+      res.json({ success: true, message: 'Retrait approuvé. Les fonds ont été déduits du compte utilisateur.', data: withdrawal });
 
       activityLogService.log({
         user_id: (req as any).user.id,
@@ -58,9 +61,6 @@ export class WithdrawalController {
 
       const withdrawalId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const withdrawal = await withdrawalRepo.updateStatus(withdrawalId, 'REJECTED', adminNote);
-      
-      // Refund user balance
-      await userRepo.updateBalance(withdrawal.user_id, Number(withdrawal.amount));
 
       // Update transaction status to FAILED
       const transactions = await transactionRepo.findByUser(withdrawal.user_id);
@@ -90,7 +90,7 @@ export class WithdrawalController {
    */
   async getAllPendingWithdrawals(req: Request, res: Response) {
     try {
-      const query = 'SELECT w.*, u.nom, u.prenom, u.email FROM withdrawals w JOIN users u ON w.user_id = u.id WHERE w.status = \'PENDING\' ORDER BY w.created_at ASC';
+      const query = 'SELECT w.*, u.nom, u.prenom, u.email, CONCAT(u.prenom, \' \', u.nom) as user_name FROM withdrawals w JOIN users u ON w.user_id = u.id WHERE w.status = \'PENDING\' ORDER BY w.created_at ASC';
       const { rows } = await pool.query(query);
       res.json({ success: true, data: rows });
     } catch (error: any) {
@@ -129,7 +129,7 @@ export class WithdrawalController {
         payment_details: paymentDetails
       });
 
-      // 4. Record as a pending transaction (to lock the funds)
+      // 4. Record as a pending transaction
       await transactionRepo.create({
         user_id: userId,
         amount: -amount,
@@ -138,9 +138,6 @@ export class WithdrawalController {
         payment_method: paymentMethod,
         metadata: { withdrawalId: withdrawal.id, phone: paymentDetails }
       });
-
-      // 5. Deduct balance (optional: some systems wait for approval, but locking is safer)
-      await userRepo.updateBalance(userId, -amount);
 
       // Notify admins
       await notificationService.notifyAdmins(

@@ -18,7 +18,6 @@ export default function SuccessModal({
 
   const handleDownloadPdf = () => {
     // À implémenter selon votre logique de génération PDF
-    console.log("Téléchargement PDF...");
   };
 
   return createPortal(

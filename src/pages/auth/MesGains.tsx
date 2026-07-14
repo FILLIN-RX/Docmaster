@@ -6,6 +6,7 @@ import { settingsService } from "../../services/settingsService";
 import { authService } from "../../services/authService";
 import { earningsService } from "../../services/earningsService";
 import { declarationsService } from "../../services/declarationsService";
+import { useToast } from "../../context/ToastContext";
 import Topbar from "../../layout/Topbar";
 import type { Transaction, EarningsRecord, Declaration } from "../../types/api";
 
@@ -27,6 +28,7 @@ function fmtDate(v?: string | null) {
 export default function MesGains() {
   const { t } = useI18n();
   const { user, updateUser } = useAuth();
+  const toast = useToast();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [txLoading, setTxLoading] = useState(true);
   const [statsData, setStatsData] = useState<Record<string, unknown> | null>(null);
@@ -136,7 +138,7 @@ export default function MesGains() {
 
   const handleWithdraw = () => {
     if (balance < minWithdrawal) {
-      alert(`${t("mesgains_insufficient_balance")} ${minWithdrawal} XAF.\n${t("mesgains_current_balance")} ${balance} XAF`);
+      toast.warning(`${t("mesgains_insufficient_balance")} ${minWithdrawal} XAF. ${t("mesgains_current_balance")} ${balance} XAF`);
       return;
     }
     fetchMethods();
@@ -1052,18 +1054,26 @@ function WithdrawHistoryModal({ onClose, fmtAmount, fmtDate, t }: any) {
 /* ── SavedMethodsModal ── */
 
 function SavedMethodsModal({ methods, onClose, onRefresh, t }: any) {
+  const toast = useToast();
+
   const handleDelete = async (id: string) => {
     try {
       await paymentsService.deletePaymentMethod(id);
+      toast.success("Méthode de paiement supprimée");
       onRefresh();
-    } catch {}
+    } catch {
+      toast.error("Erreur lors de la suppression");
+    }
   };
 
   const handleSetDefault = async (id: string) => {
     try {
       await paymentsService.setDefaultPaymentMethod(id);
+      toast.success("Méthode définie par défaut");
       onRefresh();
-    } catch {}
+    } catch {
+      toast.error("Erreur lors de la modification");
+    }
   };
 
   const typeIcon = (type: string) => type === "MTN" || type === "ORANGE" ? "fa-mobile-screen-button" : "fa-university";

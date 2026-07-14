@@ -334,7 +334,7 @@ export default function Parrainage() {
                   color: "bg-amber-50 border-amber-200 text-amber-500",
                   step: "3",
                   title: "Vous gagnez tous les deux",
-                  desc: "500 XAF pour vous + 1 mois gratuit pour votre filleul.",
+                  desc: "50% de l'abonnement pour vous + 1 mois gratuit pour votre filleul.",
                 },
               ].map((item, idx) => (
                 <div key={item.step} className="flex sm:flex-col items-start sm:items-center gap-4 sm:gap-3 sm:text-center relative sm:px-4">
@@ -361,7 +361,7 @@ export default function Parrainage() {
               </h3>
               <div className="space-y-3">
                 {[
-                  { icon: "fa-solid fa-coins", bg: "bg-primary/10", color: "text-primary", label: "Bonus en cash", sub: "Par parrainage validé", value: "500 XAF" },
+                  { icon: "fa-solid fa-coins", bg: "bg-primary/10", color: "text-primary", label: "Bonus en cash", sub: "50% de l'abonnement du filleul", value: "Variable" },
                   { icon: "fa-solid fa-file-circle-plus", bg: "bg-green-light", color: "text-green-mid", label: "Signalement bonus", sub: "Par parrainage validé", value: "+2 slots" },
                   { icon: "fa-solid fa-crown", bg: "bg-amber-50", color: "text-amber-500", label: "Upgrade de plan", sub: "À partir de 5 filleuls", value: "1 mois Pro" },
                 ].map((item) => (

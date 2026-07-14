@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import { useI18n } from "../../context/I18nContext";
 import type { Document } from "../../types/api";
 
@@ -12,6 +13,21 @@ interface DocumentCardProps {
 
 export default function DocumentCard({ doc, catLabels, onView, onShare, onDelete, onReportLost }: DocumentCardProps) {
   const { t } = useI18n();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    if (menuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
+
   const getPhotoUrl = (url?: string) => {
     if (!url) return "";
     if (url.startsWith("http") || url.startsWith("data:")) return url;
@@ -62,26 +78,28 @@ export default function DocumentCard({ doc, catLabels, onView, onShare, onDelete
             <p className="text-[14px] font-bold text-textMain truncate">{doc.nom_sur_doc || t("doccard_no_name")}</p>
             <p className="text-[11px] text-textMuted truncate">{catLabels[doc.type_doc ?? ""] || doc.type_doc} — N° {doc.numero_doc || "---"}</p>
           </div>
-          <div className="relative group/ml">
-            <button className="text-primary text-sm hover:bg-primary/10 p-1.5 rounded-lg transition-colors flex-shrink-0">
+          <div className="relative" ref={menuRef}>
+            <button onClick={() => setMenuOpen(!menuOpen)} className="text-primary text-sm hover:bg-primary/10 p-1.5 rounded-lg transition-colors flex-shrink-0">
               <i className="fa-solid fa-ellipsis-vertical" />
             </button>
-            <div className="absolute right-0 top-full mt-1 bg-white border border-borda rounded-xl shadow-lg py-1 min-w-[160px] hidden group-hover/ml:block z-20">
-              <button onClick={() => onView(doc)} className="w-full text-left px-3 py-2 text-[12px] font-medium text-textMain hover:bg-bgMain flex items-center gap-2">
+            {menuOpen && (
+            <div className="absolute right-0 top-full mt-1 bg-white border border-borda rounded-xl shadow-lg py-1 min-w-[160px] z-20">
+              <button onClick={() => { setMenuOpen(false); onView(doc); }} className="w-full text-left px-3 py-2 text-[12px] font-medium text-textMain hover:bg-bgMain flex items-center gap-2">
                 <i className="fa-solid fa-eye text-primary text-[10px]" /> {t("doccard_view")}
               </button>
-              <button onClick={() => onShare(doc)} className="w-full text-left px-3 py-2 text-[12px] font-medium text-textMain hover:bg-bgMain flex items-center gap-2">
+              <button onClick={() => { setMenuOpen(false); onShare(doc); }} className="w-full text-left px-3 py-2 text-[12px] font-medium text-textMain hover:bg-bgMain flex items-center gap-2">
                 <i className="fa-solid fa-share-nodes text-primary text-[10px]" /> {t("doccard_share")}
               </button>
               {!doc.is_lost && (
-                <button onClick={() => onReportLost(doc)} className="w-full text-left px-3 py-2 text-[12px] font-medium text-red-600 hover:bg-red-50 flex items-center gap-2">
+                <button onClick={() => { setMenuOpen(false); onReportLost(doc); }} className="w-full text-left px-3 py-2 text-[12px] font-medium text-red-600 hover:bg-red-50 flex items-center gap-2">
                   <i className="fa-solid fa-triangle-exclamation text-[10px]" /> {t("doccard_report_lost")}
                 </button>
               )}
-              <button onClick={() => onDelete(doc)} className="w-full text-left px-3 py-2 text-[12px] font-medium text-textMuted hover:bg-bgMain flex items-center gap-2">
+              <button onClick={() => { setMenuOpen(false); onDelete(doc); }} className="w-full text-left px-3 py-2 text-[12px] font-medium text-textMuted hover:bg-bgMain flex items-center gap-2">
                 <i className="fa-solid fa-trash text-[10px]" /> {t("doccard_delete")}
               </button>
             </div>
+            )}
           </div>
         </div>
         <div className="flex items-center justify-between pt-2 border-t border-borda">

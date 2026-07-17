@@ -64,7 +64,6 @@ export default function Rechercher() {
     return map;
   }, [docTypes]);
   const [visibleCount, setVisibleCount] = useState(9);
-  const [totalCount, setTotalCount] = useState(0);
   const [filterDate, setFilterDate] = useState("");
 
   const loadDocs = useCallback(async (searchQuery?: string) => {
@@ -78,7 +77,6 @@ export default function Rechercher() {
       const docs: DocResult[] = data.data || [];
       setAllDocs(docs);
       setFilteredDocs(docs);
-      setTotalCount(docs.length);
     } catch {
       showSampleDocuments();
     } finally {
@@ -109,10 +107,16 @@ export default function Rechercher() {
     let docs = [...allDocs];
 
     if (selectedFilter !== "all") {
-      docs = docs.filter(
-        (d) =>
-          d.document_type_id === selectedFilter || d.doc_type_id === selectedFilter
-      );
+      const selectedType = docTypes.find((dt) => dt.id === selectedFilter);
+      if (selectedType) {
+        docs = docs.filter((d) => {
+          const raw = d.doc_type || d.document_type || d.type_doc || "";
+          return (
+            raw === selectedType.id ||
+            raw.toLowerCase() === selectedType.nom.toLowerCase()
+          );
+        });
+      }
     }
 
     if (sortOrder === "alpha") {
@@ -131,7 +135,7 @@ export default function Rechercher() {
 
     setFilteredDocs(docs);
     setVisibleCount(9);
-  }, [selectedFilter, sortOrder, allDocs]);
+  }, [selectedFilter, sortOrder, allDocs, docTypes]);
 
   const handleSearch = useCallback(async () => {
     if (!query.trim() || query.trim().length < 2) return;
@@ -144,10 +148,8 @@ export default function Rechercher() {
       const data = await res.json();
       const docs: DocResult[] = data.data || [];
       setAllDocs(docs);
-      setTotalCount(docs.length);
     } catch {
       setAllDocs([]);
-      setTotalCount(0);
     } finally {
       setSearching(false);
     }
@@ -161,7 +163,6 @@ export default function Rechercher() {
     ];
     setAllDocs(samples);
     setFilteredDocs(samples);
-    setTotalCount(samples.length);
   };
 
   const visibleDocs = filteredDocs.slice(0, visibleCount);
@@ -235,7 +236,7 @@ export default function Rechercher() {
 
           <h1 className="font-bricolage text-3xl md:text-5xl font-black text-white text-center tracking-tighter mb-3">
             {t("rechercher_search_title")}{" "}
-            <span className="text-primary">{totalCount.toLocaleString("fr-FR")}</span>{" "}
+            <span className="text-primary">{filteredDocs.length.toLocaleString("fr-FR")}</span>{" "}
             {t("rechercher_declarations")}
           </h1>
           <p className="text-white/50 text-center text-[15px] mb-10">

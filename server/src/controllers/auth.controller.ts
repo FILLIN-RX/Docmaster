@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { UserService } from '../services/auth.service.ts';
 import { generateToken } from '../config/jwt.ts';
 import { activityLogService } from '../services/activity-log.service.ts';
+import { subscriptionService } from '../services/subscription.service.ts';
 import admin from '../config/firebase-admin.ts';
 
 export class AuthController {
@@ -120,9 +121,22 @@ export class AuthController {
         user_agent: req.headers['user-agent'],
       }).catch(() => {});
 
+      // Fetch active subscription
+      const activeSub = await subscriptionService.getActiveSubscription(user.id);
+      let subscription = null;
+      if (activeSub) {
+        subscription = {
+          plan_id: activeSub.plan_id,
+          plan_name: activeSub.plan_name,
+          status: activeSub.date_fin > new Date() ? 'active' : 'expired',
+          start_date: activeSub.date_debut,
+          expiry_date: activeSub.date_fin,
+        };
+      }
+
       res.status(200).json({
         message: 'Login successful',
-        user,
+        user: { ...user, subscription },
         token,
       });
     } catch (error: any) {
@@ -291,7 +305,21 @@ export class AuthController {
       }
 
       const { mot_de_passe: _, ...userWithoutPassword } = user;
-      res.status(200).json(userWithoutPassword);
+
+      // Fetch active subscription
+      const activeSub = await subscriptionService.getActiveSubscription(userId);
+      let subscription = null;
+      if (activeSub) {
+        subscription = {
+          plan_id: activeSub.plan_id,
+          plan_name: activeSub.plan_name,
+          status: activeSub.date_fin > new Date() ? 'active' : 'expired',
+          start_date: activeSub.date_debut,
+          expiry_date: activeSub.date_fin,
+        };
+      }
+
+      res.status(200).json({ ...userWithoutPassword, subscription });
     } catch (error: any) {
       res.status(500).json({ error: error.message || 'Failed to fetch profile' });
     }

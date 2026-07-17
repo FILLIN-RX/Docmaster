@@ -349,6 +349,9 @@ export const ar = {
   abonnement_paid: "مدفوع",
   abonnement_pending: "قيد المعالجة",
   abonnement_failed: "فشل",
+  abonnement_active_sub_warning_title: "لديك اشتراك نشط بالفعل",
+  abonnement_active_sub_warning: "الاشتراك في خطة جديدة سي延长 اشتراكك الحالي في تاريخ انتهائه. لن تتم محاسبتك مرتين.",
+  abonnement_active_sub_warning_promo: "عرض VIP Promo (شهرين) لا يزال نشطًا. الاشتراك في خطة VIP عادية سي延长 اشتراكك بعد انتهاء العرض.",
 
   // ── Infos Profil ──
   profil_title: "إعدادات الملف الشخصي",
@@ -1682,4 +1685,18 @@ export const ar = {
   profil_delete_confirm_yes: "نعم، احذف حسابي",
   profil_delete_confirm_cancel: "إلغاء",
   profil_delete_deleting: "جارٍ الحذف...",
+
+  // ── Subscription Status (Profile) ──
+  profil_subscription_status: "الاشتراك",
+  profil_manage_subscription: "إدارة",
+  profil_sub_active: "نشط",
+  profil_sub_expired: "منتهي الصلاحية",
+  profil_sub_expires: "ينتهي في",
+  profil_no_subscription: "لا يوجد اشتراك نشط",
+  profil_discover_plans: "اكتشف الخطط",
+
+  // ── Promo Bar ──
+  promo_bar_limited: "عرض محدود",
+  promo_bar_months: "أشهر",
+  promo_bar_cta: "عرض العرض",
 };

@@ -17,6 +17,11 @@ export interface PromoSubscribePayload {
 }
 
 export const promoService = {
+  async getPublicPromo() {
+    const res = await apiClient.get<ApiResponse<PromoPlan | null>>("promos/public");
+    return res.data;
+  },
+
   async getActivePromo() {
     const res = await apiClient.get<ApiResponse<PromoPlan | null>>("promos/active");
     return res.data;

@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useI18n } from "../context/I18nContext";
 import { usePromo } from "../hooks/usePromo";
 import { getPhotoUrl } from "../utils/image";
+import VipAvatar, { isVipUser } from "../components/ui/VipBadge";
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
@@ -155,19 +156,26 @@ export default function Sidebar() {
         {/* User footer */}
         <div className="px-2 py-3 border-t border-white/10">
           <Link to="/infos-profil" className="flex items-center gap-2.5 px-3 py-2 rounded-[10px] hover:bg-white/5 transition-colors">
-            {user?.photo_url ? (
-              <img src={getPhotoUrl(user.photo_url)} alt="" className="w-[30px] h-[30px] rounded-[8px] object-cover" />
-            ) : (
-              <div className="w-[30px] h-[30px] rounded-[8px] bg-primary flex items-center justify-center font-bricolage text-[10px] font-extrabold text-white">
-                <span>{user?.initial || "DM"}</span>
-              </div>
-            )}
+            <VipAvatar isVip={isVipUser(user)}>
+              {user?.photo_url ? (
+                <img src={getPhotoUrl(user.photo_url)} alt="" className="w-[30px] h-[30px] rounded-[8px] object-cover" />
+              ) : (
+                <div className="w-[30px] h-[30px] rounded-[8px] bg-primary flex items-center justify-center font-bricolage text-[10px] font-extrabold text-white">
+                  <span>{user?.initial || "DM"}</span>
+                </div>
+              )}
+            </VipAvatar>
             <div>
               <div className="text-[12.5px] font-semibold text-white leading-tight">
                 {user?.prenom || ""} {user?.nom || ""}
               </div>
-              <div className="text-[10.5px] text-white/40">
-                {user?.subscription?.plan_name ? `${t("sidebar_plan")} ${user.subscription.plan_name}` : t("sidebar_plan_standard")}
+              <div className="text-[10.5px] text-white/40 flex items-center gap-1.5">
+                {user?.subscription?.plan_name ? (
+                  <>
+                    <span className={`w-1.5 h-1.5 rounded-full ${user?.subscription?.status === 'active' ? 'bg-green-400' : 'bg-red-400'}`} />
+                    {user.subscription.plan_name}
+                  </>
+                ) : t("sidebar_plan_standard")}
               </div>
             </div>
           </Link>

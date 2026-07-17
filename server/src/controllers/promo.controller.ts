@@ -8,6 +8,32 @@ const PROMO_PLAN_ID = 'vip_promo_2m';
 
 export class PromoController {
 
+  async getPublicPromo(req: Request, res: Response) {
+    try {
+      const plan = await planRepository.findById(PROMO_PLAN_ID);
+      if (!plan || !plan.is_active) {
+        return res.json({ success: true, data: null });
+      }
+
+      const vipPlan = await planRepository.findById('vip');
+      const originalPrice = vipPlan ? vipPlan.price * (plan.duration_months || 1) : null;
+
+      res.json({
+        success: true,
+        data: {
+          id: plan.id,
+          name: plan.name,
+          price: plan.price,
+          original_price: originalPrice,
+          duration_months: plan.duration_months,
+          features: plan.features,
+        }
+      });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
   async getActivePromo(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;

@@ -51,6 +51,7 @@ function saveSession(user, token) {
     role: user.role,
     initial: getInitials(user.nom, user.prenom),
     created_at: user.created_at,
+    subscription: user.subscription || null,
   };
   localStorage.setItem(AUTH_KEY, JSON.stringify(session));
   if (token) saveToken(token);

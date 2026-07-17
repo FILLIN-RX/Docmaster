@@ -13,6 +13,7 @@ const adminMiddleware = (req: any, res: any, next: any) => {
     }
 };
 
+router.get('/public', (req, res) => promoController.getPublicPromo(req, res));
 router.get('/active', authMiddleware, (req, res) => promoController.getActivePromo(req, res));
 router.post('/subscribe', authMiddleware, (req, res) => promoController.subscribeToPromo(req, res));
 

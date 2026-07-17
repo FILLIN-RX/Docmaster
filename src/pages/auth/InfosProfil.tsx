@@ -5,6 +5,7 @@ import { authService } from "../../services/authService";
 import { useI18n } from "../../context/I18nContext";
 import Topbar from "../../layout/Topbar";
 import DatePicker from "../../components/ui/DatePicker";
+import VipAvatar, { isVipUser } from "../../components/ui/VipBadge";
 import type { UserProfile } from "../../types/api";
 
 function resolvePhotoUrl(p: string | undefined | null): string {
@@ -243,13 +244,15 @@ export default function InfosProfil() {
                 <div className={tab !== "personal" ? "hidden" : "space-y-6"}>
                   <div className="flex flex-col sm:flex-row items-center gap-5 pb-4 border-b border-bgMain">
                     <div className="relative group">
-                      <div className="w-24 h-24 rounded-2xl bg-primary-light flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
-                        {photoPreview ? (
-                          <img src={photoPreview} className="w-full h-full object-cover" alt={t("profil_photo_alt")} />
-                        ) : (
-                          <span className="text-2xl font-bold text-primary">{initials}</span>
-                        )}
-                      </div>
+                      <VipAvatar isVip={isVipUser(user)}>
+                        <div className="w-24 h-24 rounded-2xl bg-primary-light flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
+                          {photoPreview ? (
+                            <img src={photoPreview} className="w-full h-full object-cover" alt={t("profil_photo_alt")} />
+                          ) : (
+                            <span className="text-2xl font-bold text-primary">{initials}</span>
+                          )}
+                        </div>
+                      </VipAvatar>
                       <label
                         htmlFor="photo-input"
                         className="absolute -bottom-2 -right-2 w-8 h-8 bg-white rounded-lg shadow-md border border-borda flex items-center justify-center cursor-pointer hover:bg-surface-2 transition-colors"
@@ -445,6 +448,54 @@ export default function InfosProfil() {
                 )}
               </button>
             </form>
+          </div>
+
+          {/* Subscription Status */}
+          <div className="bg-white border border-borda rounded-[18px] p-5 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-bricolage text-base font-black text-textMain flex items-center gap-2">
+                <i className="fa-solid fa-crown text-primary" />
+                {t("profil_subscription_status")}
+              </h2>
+              <a href="/abonnement" className="text-[12px] font-bold text-primary hover:text-primary-dark transition-colors">
+                {t("profil_manage_subscription")} <i className="fa-solid fa-arrow-right text-[10px]" />
+              </a>
+            </div>
+            {user?.subscription ? (
+              <div className="bg-surface2 rounded-2xl p-4 border border-borda/50">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                    user.subscription.status === "active" ? "bg-green-light" : "bg-red-50"
+                  }`}>
+                    <i className={`fa-solid ${
+                      user.subscription.status === "active" ? "fa-check-circle text-green-mid" : "fa-clock text-red-400"
+                    }`} />
+                  </div>
+                  <div>
+                    <div className="font-bold text-[14px] text-textMain">{user.subscription.plan_name}</div>
+                    <div className={`text-[12px] font-semibold ${
+                      user.subscription.status === "active" ? "text-green-mid" : "text-red-400"
+                    }`}>
+                      {user.subscription.status === "active" ? t("profil_sub_active") : t("profil_sub_expired")}
+                    </div>
+                  </div>
+                </div>
+                {user.subscription.expiry_date && (
+                  <div className="flex items-center gap-2 text-[12px] text-textMuted">
+                    <i className="fa-regular fa-calendar text-primary" />
+                    {t("profil_sub_expires")} {new Date(user.subscription.expiry_date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="bg-surface2 rounded-2xl p-4 border border-borda/50 text-center">
+                <i className="fa-solid fa-user text-2xl text-textMuted/30 mb-2" />
+                <p className="text-[13px] text-textMuted">{t("profil_no_subscription")}</p>
+                <a href="/abonnement" className="inline-flex items-center gap-1.5 mt-3 text-[12px] font-bold text-primary hover:text-primary-dark transition-colors">
+                  {t("profil_discover_plans")} <i className="fa-solid fa-arrow-right text-[10px]" />
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Danger Zone */}

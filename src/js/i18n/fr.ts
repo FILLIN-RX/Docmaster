@@ -351,6 +351,9 @@ export const fr = {
   abonnement_paid: "Payé",
   abonnement_pending: "En cours",
   abonnement_failed: "Échoué",
+  abonnement_active_sub_warning_title: "Vous avez déjà un abonnement actif",
+  abonnement_active_sub_warning: "Souscrire à un nouveau plan prolongera votre abonnement actuel à sa date d'expiration. Vous ne serez pas facturé deux fois.",
+  abonnement_active_sub_warning_promo: "Votre offre VIP Promo (2 mois) est toujours active. Souscrire à un plan VIP classique prolongera votre abonnement après expiration de la promo.",
 
   // ── Infos Profil ──
   profil_title: "Paramètres du profil",
@@ -1728,4 +1731,18 @@ export const fr = {
   profil_delete_confirm_yes: "Oui, supprimer mon compte",
   profil_delete_confirm_cancel: "Annuler",
   profil_delete_deleting: "Suppression en cours...",
+
+  // ── Subscription Status (Profile) ──
+  profil_subscription_status: "Abonnement",
+  profil_manage_subscription: "Gérer",
+  profil_sub_active: "Actif",
+  profil_sub_expired: "Expiré",
+  profil_sub_expires: "Expire le",
+  profil_no_subscription: "Aucun abonnement en cours",
+  profil_discover_plans: "Découvrir les plans",
+
+  // ── Promo Bar ──
+  promo_bar_limited: "Offre limitée",
+  promo_bar_months: "mois",
+  promo_bar_cta: "Voir l'offre",
 };

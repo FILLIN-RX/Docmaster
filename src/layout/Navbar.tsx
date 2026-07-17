@@ -3,8 +3,9 @@ import { Link, useLocation } from "react-router-dom";
 import { useI18n } from "../context/I18nContext";
 import { useAuth } from "../context/AuthContext";
 import { getPhotoUrl } from "../utils/image";
+import VipAvatar, { isVipUser } from "../components/ui/VipBadge";
 
-export default function Navbar() {
+export default function Navbar({ promoBarVisible = false }: { promoBarVisible?: boolean }) {
   const { t, lang, setLanguage } = useI18n();
   const { user } = useAuth();
   const location = useLocation();
@@ -25,7 +26,9 @@ export default function Navbar() {
   return (
     <nav
       id="navbar"
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed left-0 right-0 z-50 transition-all duration-300 ${
+        promoBarVisible ? "top-[36px]" : "top-0"
+      } ${
         isHome && !scrolled
           ? "bg-green-dark/90 backdrop-blur-md"
           : "navbar-scrolled"
@@ -96,13 +99,15 @@ export default function Navbar() {
               to="/dashboard"
               className="hidden md:flex items-center gap-2.5 px-3 py-1.5 bg-white/10 backdrop-blur rounded-[14px] hover:bg-white/20 transition-all group"
             >
-              {user.photo_url ? (
-                <img src={getPhotoUrl(user.photo_url)} alt="" className="w-7 h-7 rounded-[10px] object-cover" />
-              ) : (
-                <div className="w-7 h-7 rounded-[10px] bg-primary flex items-center justify-center font-bricolage text-[10px] font-extrabold text-green-dark">
-                  {user.initial || "DM"}
-                </div>
-              )}
+              <VipAvatar isVip={isVipUser(user)}>
+                {user.photo_url ? (
+                  <img src={getPhotoUrl(user.photo_url)} alt="" className="w-7 h-7 rounded-[10px] object-cover" />
+                ) : (
+                  <div className="w-7 h-7 rounded-[10px] bg-primary flex items-center justify-center font-bricolage text-[10px] font-extrabold text-green-dark">
+                    {user.initial || "DM"}
+                  </div>
+                )}
+              </VipAvatar>
               <span className="text-sm font-semibold text-white group-hover:text-primary transition-colors">
                 {user.prenom || ""}
               </span>
@@ -142,13 +147,15 @@ export default function Navbar() {
             <i className="fa-solid fa-magnifying-glass w-4" /> {t("nav_search")}
           </Link>
           <div className="flex items-center gap-3 px-4 py-3 border-t border-white/10 mt-2">
-            {user?.photo_url ? (
-              <img src={getPhotoUrl(user.photo_url)} alt="" className="w-8 h-8 rounded-[10px] object-cover" />
-            ) : (
-              <div className="w-8 h-8 rounded-[10px] bg-primary flex items-center justify-center font-bricolage text-[11px] font-extrabold text-green-dark">
-                {user?.initial || "DM"}
-              </div>
-            )}
+            <VipAvatar isVip={isVipUser(user)}>
+              {user?.photo_url ? (
+                <img src={getPhotoUrl(user.photo_url)} alt="" className="w-8 h-8 rounded-[10px] object-cover" />
+              ) : (
+                <div className="w-8 h-8 rounded-[10px] bg-primary flex items-center justify-center font-bricolage text-[11px] font-extrabold text-green-dark">
+                  {user?.initial || "DM"}
+                </div>
+              )}
+            </VipAvatar>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold text-white truncate">
                 {user?.prenom || ""} {user?.nom || ""}

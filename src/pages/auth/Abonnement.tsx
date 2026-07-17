@@ -263,6 +263,8 @@ export default function Abonnement() {
   const currentPlan = usage?.plan_name || t("abonnement_plan_free");
   const currentPlanObj = plans.find((p) => p.name?.toLowerCase() === currentPlan.toLowerCase());
   const percentage = usage?.percentage || 0;
+  const hasActiveSub = Boolean(usage?.subscription_id);
+  const isPromoUser = user?.subscription?.plan_id === "vip_promo_2m";
 
   const displayedPlans = billingPeriod === "annual"
     ? plans.map((p) => ({ ...p, price: Math.round((p.price || 0) * 12 * 0.8) }))
@@ -436,6 +438,25 @@ export default function Abonnement() {
             </div>
           </div>
         </div>
+
+        {/* Active subscription warning (when promo already used) */}
+        {hasActiveSub && !promo && (
+          <div className="bg-amber-50 border border-amber-200 rounded-[16px] p-4 flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <i className="fa-solid fa-circle-info text-amber-500" />
+            </div>
+            <div>
+              <p className="text-[13px] font-bold text-amber-800">
+                {t("abonnement_active_sub_warning_title")}
+              </p>
+              <p className="text-[12px] text-amber-600/80 mt-0.5">
+                {isPromoUser
+                  ? t("abonnement_active_sub_warning_promo")
+                  : t("abonnement_active_sub_warning")}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Promo VIP banner */}
         {promo && (

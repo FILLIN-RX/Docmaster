@@ -7,6 +7,7 @@ import MobileNav from "./MobileNav";
 import Footer from "./Footer";
 import NotificationModal from "../components/ui/NotificationModal";
 import PlayStoreBanner from "../components/ui/PlayStoreBanner";
+import PromoBar from "../components/ui/PromoBar";
 
 const authPages = ["/dashboard", "/mes-documents", "/mes-appareils", "/mes-declarations", "/abonnement", "/parrainage", "/mes-gains", "/infos-profil", "/declarer", "/trouver", "/rechercher", "/recuperer", "/rendre"];
 const publicPages = ["/", "/login", "/forgot-password", "/reset-password", "/recherche-publique", "/conditions", "/confidentialite", "/partage", "/partage.html"];
@@ -17,6 +18,7 @@ export default function Layout() {
   const navigate = useNavigate();
   const path = location.pathname;
   const [notifModalOpen, setNotifModalOpen] = useState(false);
+  const [promoBarVisible, setPromoBarVisible] = useState(false);
   const keyBuffer = useRef("");
 
   useEffect(() => {
@@ -55,7 +57,10 @@ export default function Layout() {
       {isAuthPage && user ? (
         <Sidebar />
       ) : (path !== "/login" && path !== "/forgot-password" && path !== "/reset-password" && !path.startsWith("/partage")) ? (
-        <Navbar />
+        <>
+          <PromoBar onVisibilityChange={setPromoBarVisible} />
+          <Navbar promoBarVisible={promoBarVisible} />
+        </>
       ) : null}
 
       <main className={(isAuthPage && user ? " ml-[var(--sidebar)] max-md:ml-0 pb-[70px] md:pb-0 transition-all duration-300" : "")}>

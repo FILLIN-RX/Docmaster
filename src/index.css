@@ -608,4 +608,7 @@ h1, h2, h3, h4, .brand {
   color: #6B7280;
 }
 
+.vip-glow {
+  box-shadow: 0 0 8px rgba(245, 166, 75, 0.4);
+}
 

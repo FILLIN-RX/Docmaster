@@ -173,7 +173,17 @@ class SubscriptionRepository {
       GROUP BY p.name
     `);
 
-    // 8. Recent Transactions
+    // 8. Revenue from transactions (subscriptions + recovery fees)
+    const subscriptionRevenueRes = await query(`
+      SELECT COALESCE(SUM(amount), 0) as sum FROM transactions
+      WHERE type = 'subscription' AND status = 'SUCCESS'
+    `);
+    const recoveryRevenueRes = await query(`
+      SELECT COALESCE(SUM(amount), 0) as sum FROM transactions
+      WHERE type = 'recovery_fee' AND status = 'SUCCESS'
+    `);
+
+    // 9. Recent Transactions
     const recentTransactionsRes = await query(`
       SELECT 
         t.id, t.amount, t.currency, t.status, t.type, t.created_at,
@@ -191,6 +201,8 @@ class SubscriptionRepository {
       subsGrowth: parseFloat(subsGrowth.toFixed(1)),
       estimatedMonthlyRevenue,
       revenueGrowth: parseFloat(revenueGrowth.toFixed(1)),
+      totalSubscriptionRevenue: parseFloat(subscriptionRevenueRes.rows[0].sum),
+      totalRecoveryFeeRevenue: parseFloat(recoveryRevenueRes.rows[0].sum),
       lostDocs,
       lostDocsGrowth: parseFloat(lostDocsGrowth.toFixed(1)),
       foundDocs,

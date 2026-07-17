@@ -52,6 +52,8 @@ interface Stats {
   subsGrowth: number;
   estimatedMonthlyRevenue: number;
   revenueGrowth: number;
+  totalSubscriptionRevenue: number;
+  totalRecoveryFeeRevenue: number;
   lostDocs: number;
   lostDocsGrowth: number;
   foundDocs: number;
@@ -124,6 +126,8 @@ export default function AdminDashboard() {
     { label: t("admin_dashboard_users"), value: stats?.totalUsers, growth: stats?.usersGrowth, icon: "fa-users", color: "text-blue-600", bg: "bg-blue-50", tooltip: "Nombre total d'utilisateurs inscrits sur la plateforme" },
     { label: t("admin_dashboard_subscriptions"), value: stats?.activeSubscriptions, growth: stats?.subsGrowth, icon: "fa-crown", color: "text-purple-600", bg: "bg-purple-50", tooltip: "Nombre d'abonnements actifs" },
     { label: t("admin_dashboard_revenue"), value: stats?.estimatedMonthlyRevenue, growth: stats?.revenueGrowth, icon: "fa-money-bill", color: "text-green-600", bg: "bg-green-50", isCurrency: true, tooltip: "Revenu mensuel récurrent estimé (MRR)" },
+    { label: "Revenu abonnements", value: stats?.totalSubscriptionRevenue, icon: "fa-credit-card", color: "text-emerald-600", bg: "bg-emerald-50", isCurrency: true, tooltip: "Total des revenus des abonnements" },
+    { label: "Frais de récupération", value: stats?.totalRecoveryFeeRevenue, icon: "fa-hand-holding-dollar", color: "text-sky-600", bg: "bg-sky-50", isCurrency: true, tooltip: "Total des frais de déclaration payés" },
     { label: t("admin_dashboard_lost_docs"), value: stats?.lostDocs, growth: stats?.lostDocsGrowth, icon: "fa-file-circle-exclamation", color: "text-amber-600", bg: "bg-amber-50", tooltip: "Documents déclarés comme perdus" },
     { label: t("admin_dashboard_found_docs"), value: stats?.foundDocs, growth: stats?.foundDocsGrowth, icon: "fa-circle-check", color: "text-emerald-600", bg: "bg-emerald-50", tooltip: "Documents déclarés comme trouvés" },
   ];
@@ -146,7 +150,7 @@ export default function AdminDashboard() {
         <p className="text-gray-400 text-sm font-medium mt-1">{t("admin_dashboard_subtitle")}</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
         {statCards.map((item, i) => (
           <div key={i} className="bg-white rounded-2xl p-5 border border-gray-200/60 shadow-sm hover:shadow-md transition-all group">
             <div className="flex items-center justify-between mb-3">

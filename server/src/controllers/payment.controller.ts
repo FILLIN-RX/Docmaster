@@ -315,6 +315,16 @@ export async function activateRecovery(userId: string, docId: string, transactio
         // 5. Update declaration status
         await query('UPDATE declarations SET payment_status = $1, status = $2 WHERE id = $3', ['PAID', 'MATCHED', docId]);
 
+        const { activityLogService } = await import('../services/activity-log.service.ts');
+        activityLogService.log({
+          user_id: userId,
+          action_type: 'RECOVERY_PAYMENT',
+          entity_type: 'declaration',
+          entity_id: docId,
+          description: `Paiement des frais de récupération pour le document ${docId}`,
+          metadata: { docId, finderId, verificationCode },
+        });
+
         // 6. Notify finder
         if (finderId) {
             await notificationService.createNotification({

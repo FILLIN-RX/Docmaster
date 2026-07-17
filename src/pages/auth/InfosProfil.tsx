@@ -468,7 +468,7 @@ export default function InfosProfil() {
       </div>
 
       {/* Confirmation modal */}
-      <dialog ref={undefined} open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} className="modal bg-transparent open:flex open:items-center open:justify-center">
+      <dialog ref={undefined} open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} className="fixed inset-0 z-50 w-full h-full bg-transparent open:flex open:items-center open:justify-center">
         <div className="bg-white rounded-[24px] p-6 sm:p-8 max-w-md w-full mx-4 shadow-2xl">
           <div className="text-center mb-6">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">

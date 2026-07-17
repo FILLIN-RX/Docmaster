@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { useI18n } from "../../context/I18nContext";
 import { adminService } from "../../services/admin";
+import { promoService } from "../../services/promoService";
+import type { PromoPlan } from "../../services/promoService";
 import InfoTooltip from "../../components/ui/InfoTooltip";
 import Pagination from "../../components/ui/Pagination";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
@@ -94,6 +96,10 @@ export default function AdminSubscriptions() {
   const [page, setPage] = useState(1);
   const [statusUpdating, setStatusUpdating] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [promo, setPromo] = useState<PromoPlan | null>(null);
+  const [promoForm, setPromoForm] = useState({ price: 0, duration_months: 2, is_active: true });
+  const [promoSaving, setPromoSaving] = useState(false);
+  const [promoLoading, setPromoLoading] = useState(true);
   const pageSize = 10;
   const [form, setForm] = useState({
     name: "", price: 0, duration_months: 1, is_featured: false, features: {} as Record<string, any>,
@@ -112,6 +118,11 @@ export default function AdminSubscriptions() {
       adminService.getAllSubscriptions().then(setSubs).catch(() => { console.error("Échec chargement abonnements"); setSubs([]); }),
       adminService.getPlans().then(setPlans).catch(() => { console.error("Échec chargement plans"); setPlans([]); }),
       adminService.getFeatureDefinitions().then(setFeatures).catch(() => { console.error("Échec chargement définitions features"); setFeatures([]); }),
+      promoService.getAdminPromo().then((res) => {
+        const p = res.data;
+        setPromo(p);
+        if (p) setPromoForm({ price: p.price, duration_months: p.duration_months, is_active: p.is_active ?? true });
+      }).catch(() => { console.error("Échec chargement promo"); }).finally(() => setPromoLoading(false)),
     ]).finally(() => setLoading(false));
   }, []);
 
@@ -283,6 +294,93 @@ export default function AdminSubscriptions() {
             })
           )}
         </div>
+      </div>
+
+      <div className="mb-8">
+        <h3 className="font-bricolage font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <i className="fa-solid fa-tag text-primary" />
+          Promotion VIP
+          <InfoTooltip text="Gérez le prix et la durée de l'offre promotionnelle VIP." />
+        </h3>
+        {promoLoading ? (
+          <div className="flex items-center justify-center py-8"><LoadingSpinner /></div>
+        ) : promo ? (
+          <div className="bg-gradient-to-r from-sky-50 to-blue-50 border border-sky-200 rounded-2xl p-6 shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Prix promo (XAF)</label>
+                <input
+                  type="number"
+                  value={promoForm.price}
+                  onChange={(e) => setPromoForm({ ...promoForm, price: Number(e.target.value) })}
+                  className="px-4 py-2.5 border border-[#EAE3D8] rounded-xl text-sm outline-none focus:border-primary transition-all bg-white"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Durée (mois)</label>
+                <input
+                  type="number"
+                  value={promoForm.duration_months}
+                  onChange={(e) => setPromoForm({ ...promoForm, duration_months: Number(e.target.value) })}
+                  className="px-4 py-2.5 border border-[#EAE3D8] rounded-xl text-sm outline-none focus:border-primary transition-all bg-white"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Statut</label>
+                <label className="relative inline-flex items-center cursor-pointer mt-2">
+                  <input
+                    type="checkbox"
+                    checked={promoForm.is_active}
+                    onChange={(e) => setPromoForm({ ...promoForm, is_active: e.target.checked })}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary" />
+                  <span className="ml-3 text-sm font-medium text-gray-700">{promoForm.is_active ? "Active" : "Inactive"}</span>
+                </label>
+              </div>
+            </div>
+            {promo.original_price && (
+              <div className="bg-white/60 rounded-xl px-4 py-2 mb-4 text-sm text-gray-600">
+                <span className="font-medium">Prix original: </span>
+                <span className="line-through text-gray-400">{promo.original_price.toLocaleString("fr-FR")} XAF</span>
+                <span className="mx-2">→</span>
+                <span className="font-bold text-sky-700">{promoForm.price.toLocaleString("fr-FR")} XAF</span>
+                <span className="ml-2 text-xs text-green-600 font-bold">
+                  (-{Math.round((1 - promoForm.price / promo.original_price) * 100)}%)
+                </span>
+              </div>
+            )}
+            <button
+              onClick={async () => {
+                setPromoSaving(true);
+                try {
+                  await promoService.updateAdminPromo({
+                    price: promoForm.price,
+                    duration_months: promoForm.duration_months,
+                    is_active: promoForm.is_active,
+                  });
+                  const res = await promoService.getAdminPromo();
+                  if (res.data) {
+                    setPromo(res.data);
+                    setPromoForm({ price: res.data.price, duration_months: res.data.duration_months, is_active: res.data.is_active ?? true });
+                  }
+                  showToast("Promotion mise à jour avec succès", "success");
+                } catch {
+                  showToast("Erreur lors de la mise à jour de la promotion", "error");
+                } finally { setPromoSaving(false); }
+              }}
+              disabled={promoSaving}
+              className="bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-primary-dark transition-all disabled:opacity-60 shadow-lg shadow-primary/20"
+            >
+              {promoSaving ? <><i className="fa-solid fa-spinner fa-spin mr-1" /> Enregistrement...</> : <><i className="fa-solid fa-floppy-disk mr-1" /> Enregistrer la promotion</>}
+            </button>
+          </div>
+        ) : (
+          <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-8 text-center">
+            <i className="fa-solid fa-tag text-3xl text-gray-300 mb-2" />
+            <p className="text-gray-400 text-sm">Aucune promotion configurée</p>
+          </div>
+        )}
       </div>
 
       <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm">

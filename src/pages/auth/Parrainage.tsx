@@ -94,7 +94,7 @@ export default function Parrainage() {
   };
 
   const shareVia = (platform: string) => {
-    const msg = `Rejoins DocMaster avec mon code *${code}* et reçois 1 mois offert + 3 analyses gratuites ! ${refLink}`;
+    const msg = `Rejoins DocMaster avec mon code *${code}* 🎉 Tu reçois 50 points de parrainage et je gagne 50% du montant de ton abonnement quand tu souscris ! ${refLink}`;
     if (platform === "whatsapp") {
       window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
     } else if (platform === "sms") {

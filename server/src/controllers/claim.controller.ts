@@ -133,7 +133,12 @@ export class ClaimController {
           const finderRewardAmount = (basePrice * finderPercent) / 100;
 
           // 1. Credit wallet
-          await userRepo.updateBalance(claim.finder_id, finderRewardAmount);
+          const { walletService } = await import('../services/wallet.service.ts');
+          await walletService.credit(claim.finder_id, finderRewardAmount, 'DECLARATION_REWARD', {
+            referenceId: claim.id,
+            referenceType: 'claim',
+            metadata: { docId: lostDecl.id }
+          });
           
           // 2. Create transaction record (payout)
           await query(

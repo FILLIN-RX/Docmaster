@@ -1300,7 +1300,7 @@ export default function Login() {
       </div>
 
       {/* ═══ FORGOT PASSWORD MODAL ═══ */}
-      <dialog ref={forgotRef} className="modal modal-bottom sm:modal-middle bg-transparent open:flex open:items-center open:justify-center">
+      <dialog ref={forgotRef} className="fixed inset-0 z-50 w-full h-full bg-transparent open:flex open:items-center open:justify-center">
         <div className="bg-white rounded-[32px] p-8 max-w-md w-full mx-4 relative overflow-hidden shadow-2xl">
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
           <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl" />

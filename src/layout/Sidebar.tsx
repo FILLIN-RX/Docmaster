@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useI18n } from "../context/I18nContext";
+import { usePromo } from "../hooks/usePromo";
 import { getPhotoUrl } from "../utils/image";
 
 export default function Sidebar() {
@@ -9,6 +10,7 @@ export default function Sidebar() {
   const { t } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
+  const { promo } = usePromo();
   const [open, setOpen] = useState(() => window.innerWidth >= 900);
   const [userClosed, setUserClosed] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -122,6 +124,33 @@ export default function Sidebar() {
             </a>
           </nav>
         </div>
+
+        {promo && (() => {
+          const p = promo as any;
+          const origPrice = p.original_price ?? 0;
+          const discount = origPrice > 0 ? Math.round((1 - p.price / origPrice) * 100) : 0;
+          return (
+            <div className="relative mx-2 mb-1 px-3 py-2.5 bg-sky-600 rounded-[12px] overflow-hidden flex-shrink-0">
+              <img
+                src="/src/assets/images/promo.png"
+                alt=""
+                className="absolute right-0 top-0 h-full w-auto object-contain pointer-events-none select-none"
+              />
+              <Link to="/abonnement" className="block relative z-10" onClick={() => { if (!isLargeScreen()) close(); }}>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">-{discount}%</span>
+                  <span className="text-white/70 text-[9px] font-medium">VIP {p.duration_months} mois</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-white text-[13px] font-extrabold">
+                    {p.price.toLocaleString("fr-FR")} <span className="text-[10px] font-bold text-white/70">XAF</span>
+                  </span>
+                  <span className="text-white/80 text-[9px] font-semibold underline underline-offset-2">Activer</span>
+                </div>
+              </Link>
+            </div>
+          );
+        })()}
 
         {/* User footer */}
         <div className="px-2 py-3 border-t border-white/10">

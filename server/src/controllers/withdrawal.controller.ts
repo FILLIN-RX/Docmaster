@@ -26,7 +26,11 @@ export class WithdrawalController {
       const withdrawal = await withdrawalRepo.updateStatus(withdrawalId, 'COMPLETED', adminNote);
 
       // Deduct balance on approval
-      await userRepo.updateBalance(withdrawal.user_id, -Number(withdrawal.amount));
+      const { walletService } = await import('../services/wallet.service.ts');
+      await walletService.debit(withdrawal.user_id, Number(withdrawal.amount), 'WITHDRAWAL', {
+        referenceId: withdrawal.id,
+        referenceType: 'withdrawal',
+      });
       
       // Update transaction status to SUCCESS
       const transactions = await transactionRepo.findByUser(withdrawal.user_id);

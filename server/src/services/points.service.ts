@@ -88,10 +88,10 @@ export class PointsService {
       await this.redeemPoints(userId, amountPoints, 'POINTS_CONVERSION', 'Conversion de points en solde portefeuille', { rate, amountXaf });
 
       // Add to wallet
-      await query(
-        'UPDATE users SET wallet_balance = COALESCE(wallet_balance, 0) + $1, updated_at = NOW() WHERE id = $2',
-        [amountXaf, userId]
-      );
+      const { walletService } = await import('./wallet.service.ts');
+      await walletService.credit(userId, amountXaf, 'POINTS_CONVERSION', {
+        metadata: { amountPoints, rate }
+      });
 
       // Record monetary earning
       await this.earningsRepository.create({

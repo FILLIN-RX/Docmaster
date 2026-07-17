@@ -130,17 +130,22 @@ class NokashService {
    */
   async checkStatus(transactionId: string) {
     try {
-      const response = await fetch(`${this.baseUrl}/310/status-request`, {
+      const url = `${this.baseUrl}/api-payin-request/407/status-request/${transactionId}`;
+      const body = {
+        i_space_key: this.i_space_key?.trim(),
+        app_space_key: this.app_space_key?.trim(),
+      };
+
+      console.log('📡 [Nokash Status Request]', JSON.stringify({ url, body }, null, 2));
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          i_space_key: this.i_space_key?.trim(),
-          app_space_key: this.app_space_key?.trim(),
-          transaction_id: transactionId
-        })
+        body: JSON.stringify(body)
       });
 
       const result = await response.json();
+      console.log('📥 [Nokash Status Response]', JSON.stringify(result, null, 2));
       return result;
     } catch (error: any) {
       console.error('Nokash Status Check Error:', error);

@@ -311,6 +311,7 @@ export default function MesDocuments() {
               catLabels={catLabelsT}
               onView={openViewModal}
               onShare={openShareModal}
+              onDelete={handleDelete}
               onReportLost={(d) => { setSelectedDoc(d); setShowLostModal(true); }}
             />
           ))}

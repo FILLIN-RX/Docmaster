@@ -163,6 +163,16 @@ class SubscriptionService {
       avantages_restants: plan.features?.bonus || { declarations: 0 }
     });
 
+    const { activityLogService } = await import('./activity-log.service.ts');
+    activityLogService.log({
+      user_id: userId,
+      action_type: 'SUBSCRIPTION_PURCHASED',
+      entity_type: 'subscription',
+      entity_id: newSub.id,
+      description: `Abonnement au plan ${plan.name} (${plan.price} XAF) - ${months} mois`,
+      metadata: { planId, planName: plan.name, price: plan.price, months, subId: newSub.id },
+    });
+
     const isQueued = dateDebut > new Date();
     await notificationService.createNotification({
       user_id: userId,

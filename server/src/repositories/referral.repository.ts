@@ -9,26 +9,12 @@ export class ReferralRepository {
     try {
       await client.query('BEGIN');
 
-      // 1. Insert into referrals table (no reward yet)
       const insertRefQuery = `
         INSERT INTO referrals (parrain_id, filleul_id, points_gagnes, status, recompense_attribuee)
         VALUES ($1, $2, 0, 'PENDING', false)
         RETURNING *
       `;
       const { rows: refRows } = await client.query(insertRefQuery, [parrainId, filleulId]);
-
-      // 2. Award Filleul: 1 month Standard plan
-      const planId = 'standard';
-      const startDate = new Date();
-      const endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + 1);
-
-      const insertSubQuery = `
-        INSERT INTO user_subscriptions (user_id, plan_id, date_debut, date_fin, status, avantages_restants)
-        VALUES ($1, $2, $3, $4, 'ACTIVE', $5)
-      `;
-      const avantages = JSON.stringify({ declarations: 3 });
-      await client.query(insertSubQuery, [filleulId, planId, startDate, endDate, avantages]);
 
       await client.query('COMMIT');
       return refRows[0];
@@ -66,10 +52,22 @@ export class ReferralRepository {
       const bonusAmount = Math.round(subscriptionAmount * 0.5);
 
       // 1. Credit parrain's wallet with 50% of subscription price
-      await client.query(
-        'UPDATE users SET wallet_balance = COALESCE(wallet_balance, 0) + $1 WHERE id = $2',
-        [bonusAmount, referral.parrain_id]
-      );
+      const { walletService } = await import('../services/wallet.service.ts');
+      await walletService.credit(referral.parrain_id, bonusAmount, 'REFERRAL_REWARD', {
+        referenceId: referral.id,
+        referenceType: 'referral',
+        metadata: { filleulId, subscriptionAmount }
+      });
+
+      const { activityLogService } = await import('../services/activity-log.service.ts');
+      await activityLogService.log({
+        user_id: referral.parrain_id,
+        action_type: 'REFERRAL_REWARD',
+        entity_type: 'referral',
+        entity_id: referral.id,
+        description: `Bonus de parrainage : +${bonusAmount} XAF (50% de ${subscriptionAmount} XAF)`,
+        metadata: { bonusAmount, subscriptionAmount, filleulId },
+      });
 
       // 2. Update referral record
       await client.query(
@@ -88,12 +86,12 @@ export class ReferralRepository {
 
       // 4. Notify parrain
       const { notificationService } = await import('../services/notification.service.js');
-      await notificationService.create(
-        referral.parrain_id,
-        'Bonus de parrainage reçu !',
-        `Vous avez reçu ${bonusAmount} XAF pour le parrainage d'un utilisateur qui a souscrit un abonnement.`,
-        'REWARD'
-      );
+      await notificationService.createNotification({
+        user_id: referral.parrain_id,
+        type: 'REWARD',
+        title: 'Bonus de parrainage reçu !',
+        message: `Vous avez reçu ${bonusAmount} XAF pour le parrainage d'un utilisateur qui a souscrit un abonnement.`,
+      });
 
       await client.query('COMMIT');
     } catch (error) {

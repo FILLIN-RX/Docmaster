@@ -38,7 +38,7 @@ export class MailService {
    * Send a password reset email
    */
   async sendPasswordResetEmail(to: string, token: string): Promise<void> {
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3003'}/reset-password.html?token=${token}`;
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3003'}/reset-password?token=${token}`;
     const fromName = "DocMaster Support";
     const fromEmail = process.env.MAIL_FROM || process.env.MAIL_USER || 'assistance@dm.cm';
     

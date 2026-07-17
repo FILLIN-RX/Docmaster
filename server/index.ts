@@ -34,6 +34,7 @@ import smsRoutes from "./src/routes/sms.routes.js";
 import earningsRoutes from "./src/routes/earnings.routes.js";
 import pointsRoutes from "./src/routes/points.routes.js";
 import paymentMethodRoutes from "./src/routes/payment-method.routes.js";
+import promoRoutes from "./src/routes/promo.routes.js";
 import adminRoutes from "./src/routes/admin.routes.js";
 
 // Load environment variables
@@ -251,6 +252,7 @@ export function createApp(): Application {
   app.use("/api/earnings", earningsRoutes);
   app.use("/api/points", pointsRoutes);
   app.use("/api/payment-methods", paymentMethodRoutes);
+  app.use("/api/promos", promoRoutes);
   app.use("/api/admin", adminRoutes);
 
   // ═════════════════════════════════════════════════════════════════

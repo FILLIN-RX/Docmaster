@@ -378,7 +378,7 @@ export class UserService {
     }
 
     // For referrals, 10 points each (as defined in ReferralRepository)
-    const refPoints = totalReferrals * 10;
+    const refPoints = totalReferrals * 50;
 
     const calculatedTotal = declPoints + returnPoints + refPoints;
 

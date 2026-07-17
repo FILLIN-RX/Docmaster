@@ -606,7 +606,12 @@ export class DeclarationService {
         const rewardAmount = (basePrice * finderPercent) / 100;
 
         // Credit Balance
-        await pool.query('UPDATE users SET wallet_balance = COALESCE(wallet_balance, 0) + $1 WHERE id = $2', [rewardAmount, claim.finder_id]);
+        const { walletService } = await import('./wallet.service.ts');
+        await walletService.credit(claim.finder_id, rewardAmount, 'DECLARATION_REWARD', {
+          referenceId: claim.id,
+          referenceType: 'claim',
+          metadata: { docId: lostDecl.id }
+        });
         
         // Credit Points
         await this.awardPoints(claim.finder_id, pointsReward);

@@ -29,6 +29,11 @@ const ACTION_ICONS: Record<string, string> = {
   REQUEST_WITHDRAWAL: "fa-money-bill-transfer text-orange-500",
   APPROVE_WITHDRAWAL: "fa-check-circle text-green-500",
   REJECT_WITHDRAWAL: "fa-ban text-red-500",
+  WALLET_CREDIT: "fa-circle-arrow-up text-emerald-500",
+  WALLET_DEBIT: "fa-circle-arrow-down text-red-500",
+  SUBSCRIPTION_PURCHASED: "fa-crown text-purple-500",
+  REFERRAL_REWARD: "fa-gift text-pink-500",
+  RECOVERY_PAYMENT: "fa-hand-holding-dollar text-sky-500",
 };
 
 const ACTION_BG: Record<string, string> = {
@@ -39,6 +44,11 @@ const ACTION_BG: Record<string, string> = {
   REQUEST_WITHDRAWAL: "bg-orange-50",
   APPROVE_WITHDRAWAL: "bg-green-50",
   REJECT_WITHDRAWAL: "bg-red-50",
+  WALLET_CREDIT: "bg-emerald-50",
+  WALLET_DEBIT: "bg-red-50",
+  SUBSCRIPTION_PURCHASED: "bg-purple-50",
+  REFERRAL_REWARD: "bg-pink-50",
+  RECOVERY_PAYMENT: "bg-sky-50",
 };
 
 function fmtDate(v?: string | null) {

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, Pressable, Animated, Dimensions, Modal,
   TextInput, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard,
-  ScrollView, StyleSheet,
+  ScrollView, StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -236,7 +236,7 @@ export function PaymentModal({
                 >
                   {processing ? (
                     <View style={s.submitInner}>
-                      <Ionicons name="sync" size={18} color="#fff" />
+                      <ActivityIndicator size="small" color="#fff" />
                       <Text style={s.submitTxt}>Traitement en cours…</Text>
                     </View>
                   ) : (

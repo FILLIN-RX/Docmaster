@@ -2,7 +2,8 @@ import { planRepository, Plan } from '../repositories/plan.repository.ts';
 
 class PlanService {
   async getAllPlans() {
-    return await planRepository.findAll();
+    const plans = await planRepository.findAll();
+    return plans.filter((p) => p.id !== 'vip_promo_2m');
   }
 
   async getPlanById(id: string) {

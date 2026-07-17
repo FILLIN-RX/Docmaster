@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useDocuments } from "../../hooks/useDocuments";
@@ -6,10 +6,16 @@ import { useNotifications } from "../../hooks/useNotifications";
 import { useDeclarations, useDeclarationStats } from "../../hooks/useDeclarations";
 import { useDevices } from "../../hooks/useDevices";
 import { useGlobalStats, usePerformanceStats } from "../../hooks/useStats";
+import { usePromo } from "../../hooks/usePromo";
+import { useToast } from "../../context/ToastContext";
 import { subscriptionsService } from "../../services/subscriptionsService";
+import apiClient from "../../services/api";
 import { socketService } from "../../services/socket";
 import Topbar from "../../layout/Topbar";
 import { useI18n } from "../../context/I18nContext";
+import PromoBanner from "../../components/ui/PromoBanner";
+import PromoPopup from "../../components/ui/PromoPopup";
+import PollingModal from "../../components/modals/PollingModal";
 import type { Subscription, Declaration } from "../../types/api";
 
 const today = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date());
@@ -71,10 +77,16 @@ export default function Dashboard() {
   const { devices, loading: devLoading } = useDevices();
   const { stats: globalStats, loading: gStatsLoading } = useGlobalStats();
   const { stats: perfStats, loading: perfLoading } = usePerformanceStats();
+  const { promo, loading: promoLoading, subscribing, subscribe: promoSubscribe, dismiss: dismissPromo, isDismissed } = usePromo();
+  const toast = useToast();
 
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [skeletonDone, setSkeletonDone] = useState(false);
   const [selectedPerfDoc, setSelectedPerfDoc] = useState<any>(null);
+  const [pollingStatus, setPollingStatus] = useState<string | null>(null);
+  const [nokashTransactionId, setNokashTransactionId] = useState<string | null>(null);
+  const [pollingElapsed, setPollingElapsed] = useState(0);
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   const loading = docsLoading || notifsLoading || declsLoading || devLoading || gStatsLoading || perfLoading;
 
@@ -84,13 +96,48 @@ export default function Dashboard() {
     }
   }, []);
 
+  const manualCheck = useCallback(async () => {
+    if (!nokashTransactionId) return;
+    try {
+      const usageRes = await subscriptionsService.getUsage();
+      if (usageRes.success && usageRes.data?.subscription_id) {
+        setPollingStatus(null);
+        setNokashTransactionId(null);
+        dismissPromo();
+        toast.success("Paiement validé avec succès !");
+        const subRes = await subscriptionsService.getMySubscription();
+        if (subRes.success && subRes.data) setSubscription(subRes.data);
+        return;
+      }
+      const forceRes = await apiClient.get(`payments/check/${nokashTransactionId}`);
+      if (forceRes.data?.success && forceRes.data?.data?.updated) {
+        setPollingStatus(null);
+        setNokashTransactionId(null);
+        dismissPromo();
+        toast.success("Paiement validé avec succès !");
+        const subRes = await subscriptionsService.getMySubscription();
+        if (subRes.success && subRes.data) setSubscription(subRes.data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, [nokashTransactionId, toast, dismissPromo]);
+
+  const manualCheckRef = useRef(manualCheck);
+  manualCheckRef.current = manualCheck;
+
   useEffect(() => {
-    const handler = () => {
-      fetchNotifs();
-    };
-    window.addEventListener("docmaster:notification", handler);
-    return () => window.removeEventListener("docmaster:notification", handler);
-  }, [fetchNotifs]);
+    let interval: any;
+    if (pollingStatus && nokashTransactionId) {
+      let tickCount = 0;
+      interval = setInterval(() => {
+        tickCount++;
+        setPollingElapsed((prev) => prev + 1);
+        if (tickCount % 5 === 0) manualCheckRef.current();
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [pollingStatus, nokashTransactionId]);
 
   useEffect(() => {
     subscriptionsService.getMySubscription().then((res) => {
@@ -106,6 +153,33 @@ export default function Dashboard() {
       return () => clearTimeout(t);
     }
   }, [loading]);
+
+  const handlePromoSubscribe = async (method: "orange" | "mtn" | "points", phone: string) => {
+    let paymentMethod = "";
+    if (method === "orange") paymentMethod = "ORANGE_MONEY";
+    else if (method === "mtn") paymentMethod = "MTN_MOMO";
+    else paymentMethod = "POINTS";
+
+    setProcessingPayment(true);
+    try {
+      const res = await promoSubscribe(paymentMethod, phone);
+      const paymentData = res?.data;
+      const txId = paymentData?.transactionId;
+      if (paymentData?.status === 'PENDING_PAYMENT' && txId) {
+        setNokashTransactionId(txId);
+        setPollingStatus("Veuillez valider le paiement sur votre téléphone");
+        setPollingElapsed(0);
+        setProcessingPayment(false);
+      } else {
+        setProcessingPayment(false);
+        dismissPromo();
+        toast.success("Félicitations ! Votre abonnement VIP est actif.");
+      }
+    } catch (err: any) {
+      setProcessingPayment(false);
+      toast.error(err.message || "Erreur lors de l'activation de l'offre");
+    }
+  };
 
   const docCount = docs.length;
   const lostCount = docs.filter((d) => d.is_lost).length || 0;
@@ -162,9 +236,20 @@ export default function Dashboard() {
               <i className="fa-regular fa-calendar text-primary" />
               <span>{today}</span>
             </div>
-          
           </div>
         </div>
+
+        {promo && !isDismissed && (
+          <div className="min-w-0">
+            <PromoBanner
+              plan={promo}
+              onSubscribe={handlePromoSubscribe}
+              onDismiss={dismissPromo}
+              processing={processingPayment || subscribing}
+              pollingStatus={pollingStatus}
+            />
+          </div>
+        )}
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -373,7 +458,27 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {selectedPerfDoc && <PerfModal doc={selectedPerfDoc} onClose={() => setSelectedPerfDoc(null)} />}
+      {selectedPerfDoc && (
+        <PerfModal
+          doc={selectedPerfDoc}
+          onClose={() => setSelectedPerfDoc(null)}
+          promo={promo}
+          isDismissed={isDismissed}
+          onPromoSubscribe={handlePromoSubscribe}
+          onPromoDismiss={dismissPromo}
+          promoProcessing={processingPayment || subscribing}
+          pollingStatus={pollingStatus}
+        />
+      )}
+
+      <PollingModal
+        isOpen={!!pollingStatus}
+        onClose={() => setPollingStatus(null)}
+        pollingStatus={pollingStatus || ""}
+        pollingElapsed={pollingElapsed}
+        nokashTransactionId={nokashTransactionId}
+        onManualCheck={manualCheck}
+      />
     </div>
   );
 }
@@ -630,7 +735,16 @@ function SkeletonCard() {
   );
 }
 
-function PerfModal({ doc, onClose }: { doc: any; onClose: () => void }) {
+function PerfModal({ doc, onClose, promo, isDismissed, onPromoSubscribe, onPromoDismiss, promoProcessing, pollingStatus }: {
+  doc: any;
+  onClose: () => void;
+  promo: any;
+  isDismissed: boolean;
+  onPromoSubscribe: (method: "orange" | "mtn" | "points", phone: string) => Promise<void>;
+  onPromoDismiss: () => void;
+  promoProcessing: boolean;
+  pollingStatus: string | null;
+}) {
   const { t } = useI18n();
   const { navigate } = useNavigate();
   const name = (doc.name || "").toUpperCase();
@@ -723,6 +837,16 @@ function PerfModal({ doc, onClose }: { doc: any; onClose: () => void }) {
           </button>
         </div>
       </div>
+
+      {promo && !isDismissed && (
+        <PromoPopup
+          plan={promo}
+          onSubscribe={onPromoSubscribe}
+          onDismiss={onPromoDismiss}
+          processing={promoProcessing}
+          pollingStatus={pollingStatus}
+        />
+      )}
     </div>
   );
 }

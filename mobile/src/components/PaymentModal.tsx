@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  View, Text, Pressable, Modal, Dimensions, Animated,
+  View, Text, Pressable, Modal, Dimensions, Animated, ActivityIndicator,
   TextInput, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -36,6 +36,22 @@ export default function PaymentModal({ visible, onClose, onPaymentSuccess, purpo
   const [step, setStep] = useState<Step>('form');
   const slideAnim = useRef(new Animated.Value(SCREEN.height)).current;
   const checkScale = useRef(new Animated.Value(0)).current;
+  const spinAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (step === 'processing') {
+      const spin = Animated.loop(
+        Animated.timing(spinAnim, { toValue: 1, duration: 1000, useNativeDriver: true })
+      );
+      spin.start();
+      return () => spin.stop();
+    }
+  }, [step]);
+
+  const spinInterpolate = spinAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
 
   useEffect(() => {
     if (visible) {
@@ -256,13 +272,14 @@ export default function PaymentModal({ visible, onClose, onPaymentSuccess, purpo
 
               {step === 'processing' && (
                 <View style={{ paddingHorizontal: 20, alignItems: 'center', paddingTop: 32, paddingBottom: 16 }}>
-                  <View style={{
+                  <Animated.View style={{
                     width: 80, height: 80, borderRadius: 40,
                     backgroundColor: colors.backgroundSelected, alignItems: 'center', justifyContent: 'center',
                     borderWidth: 3, borderColor: colors.border, borderTopColor: colors.tint,
+                    transform: [{ rotate: spinInterpolate }],
                   }}>
-                    <Ionicons name="sync" size={32} color={colors.tint} />
-                  </View>
+                    <ActivityIndicator size="large" color={colors.tint} />
+                  </Animated.View>
                   <Text style={{ fontSize: 20, fontWeight: '800', color: colors.text, textAlign: 'center', letterSpacing: -0.4, marginBottom: 6, marginTop: 20 }}>Traitement en cours...</Text>
                   <Text style={{ fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 20, paddingHorizontal: 8, marginBottom: 24 }}>Veuillez patienter pendant la confirmation du paiement.</Text>
                 </View>

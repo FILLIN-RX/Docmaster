@@ -21,4 +21,13 @@ export const notificationsService = {
     const res = await apiClient.post<ApiResponse>("notifications/broadcast", { title, message });
     return res.data;
   },
+
+  async respondVaultMatch(declarationId: string, response: "yes" | "no", vaultDocId?: string) {
+    const res = await apiClient.post<ApiResponse>("vault-match/respond", {
+      declaration_id: declarationId,
+      vault_doc_id: vaultDocId,
+      response,
+    });
+    return res.data;
+  },
 };

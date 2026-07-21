@@ -249,6 +249,24 @@ export class NotificationService {
   }
 
   /**
+   * Notify a vault owner that a found document could be theirs (needs confirmation)
+   */
+  async notifyVaultMatch(vaultOwnerId: string, foundDeclId: string, vaultDocId: string, docType: string) {
+    await this.createNotification({
+      user_id: vaultOwnerId,
+      type: 'VAULT_MATCH_PENDING',
+      title: 'Document trouvé — Confirmation requise',
+      message: `Un ${docType} trouvé pourrait être le vôtre. Confirmez-vous qu'il s'agit de votre document ?`,
+      metadata: {
+        declaration_id: foundDeclId,
+        vault_doc_id: vaultDocId,
+        docType,
+        action: 'CONFIRM_VAULT_MATCH',
+      }
+    });
+  }
+
+  /**
    * Notify the finder that the owner has paid
    */
   async notifyPaymentReceived(finderId: string, docType: string, docId: string) {

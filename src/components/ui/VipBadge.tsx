@@ -20,10 +20,8 @@ export default function VipAvatar({ children, isVip = false }: VipAvatarProps) {
   if (!isVip) return <>{children}</>;
 
   return (
-    <div className="relative inline-flex">
-      <div className="rounded-[inherit] ring-2 ring-primary ring-offset-2 ring-offset-bgMain vip-glow">
-        {children}
-      </div>
+    <div className="vip-border inline-flex">
+      {children}
     </div>
   );
 }

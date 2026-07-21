@@ -189,31 +189,68 @@ export class MatchingService {
     console.log(`🛡️ [VaultMatch] Checking found item ${foundDecl.identifiant_doc_dm} against private vaults...`);
 
     const docTypeName = await this.getDocTypeName(foundDecl.doc_type);
+    const alreadyNotified = new Set<string>();
 
+    // Skip if the reporter_id is the vault owner themselves
+    const isSelf = (userId: string) => userId === foundDecl.reporter_id;
+
+    const skipOrNotify = async (vaultDoc: { user_id: string; id: string }) => {
+      if (isSelf(vaultDoc.user_id)) return;
+      if (alreadyNotified.has(vaultDoc.user_id)) return;
+      alreadyNotified.add(vaultDoc.user_id);
+
+      console.log(`🎯 [VaultMatch] FOUND match in private vault for user ${vaultDoc.user_id}`);
+      await this.notificationService.notifyVaultMatch(
+        vaultDoc.user_id,
+        foundDecl.id,
+        vaultDoc.id,
+        docTypeName
+      );
+    };
+
+    // 1. Match by fingerprint (exact)
     if (foundDecl.fingerprint) {
-        const vaultDocs = await this.documentRepository.findCandidatesByFingerprint(foundDecl.fingerprint);
-        for (const doc of vaultDocs) {
-            console.log(`🎯 [VaultMatch] FOUND match in private vault for user ${doc.user_id}`);
-            await this.notificationService.notifyMatchFound(
-                doc.user_id,
-                foundDecl.reporter_id!,
-                foundDecl.id,
-                docTypeName
-            );
-        }
+      const vaultDocs = await this.documentRepository.findCandidatesByFingerprint(foundDecl.fingerprint);
+      for (const doc of vaultDocs) {
+        await skipOrNotify(doc);
+      }
     }
 
+    // 2. Match by document number (last 6 chars)
     if (foundDecl.document_number) {
-        const vaultDevice = await deviceRepository.findAnyByIdentifier(foundDecl.document_number);
-        if (vaultDevice) {
-            console.log(`🎯 [VaultMatch] FOUND match in device vault for user ${vaultDevice.user_id}`);
-            await this.notificationService.notifyMatchFound(
-                vaultDevice.user_id,
-                foundDecl.reporter_id!,
-                foundDecl.id,
-                docTypeName
-            );
-        }
+      const vaultDocs = await this.documentRepository.findCandidatesByDocNumber(foundDecl.document_number);
+      for (const doc of vaultDocs) {
+        await skipOrNotify(doc);
+      }
+
+      // Also check device vault
+      const vaultDevice = await deviceRepository.findAnyByIdentifier(foundDecl.document_number);
+      if (vaultDevice && !isSelf(vaultDevice.user_id) && !alreadyNotified.has(vaultDevice.user_id)) {
+        alreadyNotified.add(vaultDevice.user_id);
+        console.log(`🎯 [VaultMatch] FOUND match in device vault for user ${vaultDevice.user_id}`);
+        await this.notificationService.notifyVaultMatch(
+          vaultDevice.user_id,
+          foundDecl.id,
+          vaultDevice.id,
+          docTypeName
+        );
+      }
+    }
+
+    // 3. Match by name similarity + document type
+    if (foundDecl.owner_name) {
+      // Resolve doc type code for vault lookup
+      let vaultDocType = foundDecl.doc_type;
+      const docTypeMeta = await this.docTypeRepository.findById(foundDecl.doc_type)
+                        || await this.docTypeRepository.findByCode(foundDecl.doc_type);
+      if (docTypeMeta) {
+        vaultDocType = docTypeMeta.code;
+      }
+
+      const vaultDocs = await this.documentRepository.findCandidatesByNameAndType(foundDecl.owner_name, vaultDocType);
+      for (const doc of vaultDocs) {
+        await skipOrNotify(doc);
+      }
     }
   }
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useI18n } from "../../context/I18nContext";
 import { useNotifications } from "../../hooks/useNotifications";
 import { socketService } from "../../services/socket";
+import { notificationsService } from "../../services/notificationsService";
 
 export default function NotificationModal({ onClose }: { onClose: () => void }) {
   const { t } = useI18n();
@@ -34,6 +35,8 @@ export default function NotificationModal({ onClose }: { onClose: () => void }) 
     return () => document.removeEventListener("mousedown", handleClick);
   }, [onClose]);
 
+  const [respondingId, setRespondingId] = useState<string | null>(null);
+
   const allNotifs = [
     ...liveNotifs.map((n: any) => ({ ...n, is_read: false, lue: false, _live: true })),
     ...notifications,
@@ -51,6 +54,8 @@ export default function NotificationModal({ onClose }: { onClose: () => void }) 
         return { icon: "fa-solid fa-shield-halved", bg: "bg-purple-50", color: "text-purple-600" };
       case "PAYMENT_RECEIVED": case "payment_received":
         return { icon: "fa-solid fa-money-bill-wave", bg: "bg-green-100", color: "text-green-700" };
+      case "VAULT_MATCH_PENDING": case "vault_match_pending":
+        return { icon: "fa-solid fa-file-search", bg: "bg-amber-50", color: "text-amber-600" };
       default:
         return { icon: "fa-solid fa-bell", bg: "bg-primary-light", color: "text-primary-dark" };
     }
@@ -126,13 +131,34 @@ export default function NotificationModal({ onClose }: { onClose: () => void }) 
               {allNotifs.map((n: any, idx) => {
                 const meta = getMeta(n.type || n.notification_type);
                 const key = n.id || n._id || `notif-${idx}`;
+                const nType = n.type || n.notification_type;
+                const isVaultMatch = nType === "VAULT_MATCH_PENDING" || nType === "vault_match_pending";
+                const isResponding = respondingId === key;
+
+                const handleVaultResponse = async (response: "yes" | "no") => {
+                  setRespondingId(key);
+                  try {
+                    await notificationsService.respondVaultMatch(
+                      n.metadata?.declaration_id,
+                      response,
+                      n.metadata?.vault_doc_id
+                    );
+                    if (!n._live && !n.is_read && !n.lue) markAsRead(n.id);
+                  } catch {} finally {
+                    setRespondingId(null);
+                  }
+                };
+
                 return (
                   <div
                     key={key}
-                    onClick={() => { if (!n._live && !n.is_read && !n.lue) markAsRead(n.id); }}
-                    className={`flex gap-3 px-5 py-3.5 hover:bg-surface2 transition-colors cursor-pointer relative ${
-                      !n.is_read && !n.lue ? "bg-primary/[0.02]" : ""
-                    }`}
+                    onClick={() => {
+                      if (isVaultMatch) return;
+                      if (!n._live && !n.is_read && !n.lue) markAsRead(n.id);
+                    }}
+                    className={`flex gap-3 px-5 py-3.5 hover:bg-surface2 transition-colors relative ${
+                      !isVaultMatch ? "cursor-pointer" : ""
+                    } ${!n.is_read && !n.lue ? "bg-primary/[0.02]" : ""}`}
                   >
                     {!n.is_read && !n.lue && (
                       <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary" />
@@ -148,6 +174,24 @@ export default function NotificationModal({ onClose }: { onClose: () => void }) 
                       <div className="text-[10.5px] text-textMuted font-medium italic mt-0.5">
                         {n._live ? t("notification_just_now") : formatTimeAgo(n.created_at)}
                       </div>
+                      {isVaultMatch && (
+                        <div className="flex gap-2 mt-2.5">
+                          <button
+                            disabled={isResponding}
+                            onClick={(e) => { e.stopPropagation(); handleVaultResponse("yes"); }}
+                            className="flex-1 py-1.5 bg-primary hover:bg-primary-dark disabled:opacity-50 text-white text-[11px] font-bold rounded-[8px] transition-all active:scale-[.97]"
+                          >
+                            {isResponding ? <i className="fa-solid fa-spinner fa-spin" /> : "Oui, c'est le mien"}
+                          </button>
+                          <button
+                            disabled={isResponding}
+                            onClick={(e) => { e.stopPropagation(); handleVaultResponse("no"); }}
+                            className="flex-1 py-1.5 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 text-textMuted text-[11px] font-bold rounded-[8px] transition-all active:scale-[.97]"
+                          >
+                            Non, ce n'est pas le mien
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

@@ -131,6 +131,33 @@ export class DocumentRepository {
   }
 
   /**
+   * Find personal documents by document number (partial match, last 6 chars)
+   */
+  async findCandidatesByDocNumber(docNumber: string): Promise<UserDocument[]> {
+    const normalized = docNumber.replace(/[^a-z0-9]/gi, '');
+    if (normalized.length < 3) return [];
+    const suffix = '%' + normalized.slice(-6);
+    const query = "SELECT * FROM my_documents WHERE REPLACE(numero_doc, ' ', '') ILIKE $1";
+    const { rows } = await pool.query(query, [suffix]);
+    return rows;
+  }
+
+  /**
+   * Find personal documents by name similarity and document type
+   * Uses pg_trgm extension for fuzzy matching
+   */
+  async findCandidatesByNameAndType(name: string, typeDoc: string): Promise<UserDocument[]> {
+    const query = `
+      SELECT * FROM my_documents
+      WHERE type_doc = $1
+        AND nom_sur_doc IS NOT NULL
+        AND LOWER(nom_sur_doc) % LOWER($2)
+    `;
+    const { rows } = await pool.query(query, [typeDoc, name]);
+    return rows;
+  }
+
+  /**
    * Update the lost status of a document and link it to a declaration
    */
   async updateLostStatus(id: string, userId: string, isLost: boolean, declarationId: string | null = null): Promise<UserDocument | null> {

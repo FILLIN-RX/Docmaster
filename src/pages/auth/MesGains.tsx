@@ -332,7 +332,7 @@ export default function MesGains() {
 
       {showConvertModal && (
         <ConvertPointsModal
-          points={points}
+          points={{ totalPoints: points }}
           onClose={() => setShowConvertModal(false)}
           onDone={() => { setShowConvertModal(false); fetchData(); }}
           t={t}

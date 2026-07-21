@@ -612,3 +612,11 @@ h1, h2, h3, h4, .brand {
   box-shadow: 0 0 8px rgba(245, 166, 75, 0.4);
 }
 
+.vip-border {
+  display: inline-flex;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 3px #F5A64B,
+    0 0 12px rgba(245, 166, 75, 0.5);
+}
+

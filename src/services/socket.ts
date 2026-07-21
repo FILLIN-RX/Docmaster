@@ -63,7 +63,7 @@ class SocketService {
       this.userId = payload?.userId ?? null;
     });
 
-    this.socket.on("notification", (notification: AppNotification) => {
+    this.socket.on("NEW_NOTIFICATION", (notification: AppNotification) => {
       this.handleNotification(notification);
     });
 

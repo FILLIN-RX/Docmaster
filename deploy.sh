@@ -151,12 +151,21 @@ execute_remote_deployment() {
             echo "→ Configuration Dépendances et Build Backend..."
             cd "$BACKEND_DIR"
             npm install --quiet
-            npm run build
+            
+            # Installation des dépendances Chiller (sous-app)
+            if [ -d "backend-chillers" ]; then
+                echo "→ Installation des dépendances Chiller..."
+                cd backend-chillers
+                npm install --quiet
+                npx playwright install chromium
+                npx playwright install-deps chromium
+                cd ..
+            fi
             
             # Exécution optionnelle des migrations de base de données
             if [ "$MIGRATE" = true ]; then
-                echo "→ Exécution des migrations de base de données (Knex/Prisma)..."
-                npm run db:migrate || echo "⚠️ Attention : Échec de l'exécution du script de migration (db:migrate)."
+                echo "→ Exécution des migrations de base de données..."
+                npm run db:migrate || echo "⚠️ Échec du script de migration (db:migrate)."
             fi
         fi
         
@@ -197,7 +206,7 @@ post_deployment() {
         # 3. Relancement du Backend API V2 (seulement si full ou backup)
         if [ "$DEPLOY_MODE" = "full" ] || [ "$DEPLOY_MODE" = "backup" ]; then
             echo "Relancement du Backend API (DOCMASTER-API_V2)..."
-            pm2 restart DOCMASTER-API_V2 --update-env || pm2 start dist/index.js --name "DOCMASTER-API_V2" --update-env
+            pm2 restart DOCMASTER-API_V2 --update-env || pm2 start --interpreter tsx server.ts --name "DOCMASTER-API_V2" --update-env
         fi
         
         # Sauvegarde de la liste PM2

@@ -61,6 +61,7 @@ const features = [
   { icon: "fa-solid fa-shield-halved", bg: "bg-green-light", color: "text-green-mid", titleKey: "home_feature_secure", descKey: "home_feature_secure_desc" },
   { icon: "fa-solid fa-bolt", bg: "bg-primary/10", color: "text-primary", titleKey: "home_feature_fast", descKey: "home_feature_fast_desc" },
   { icon: "fa-solid fa-users", bg: "bg-blue-50", color: "text-blue-500", titleKey: "home_feature_community", descKey: "home_feature_community_desc" },
+  { icon: "fa-solid fa-mobile-screen-button", bg: "bg-purple-50", color: "text-purple-500", titleKey: "home_feature_payment_title", descKey: "home_feature_payment_desc" },
 ];
 
 const tips = [
@@ -93,9 +94,12 @@ export default function Home() {
       <HeroSection t={t} />
       <RecentDocsSection t={t} />
       <HowItWorksSection t={t} />
+      <MatchingSection t={t} />
       <WhyDocmasterSection t={t} />
       <DigitalVaultSection t={t} />
+      <DeviceProtectionSection t={t} />
       <StatsSection t={t} statCounters={statCounters} />
+      <WalletRewardsSection t={t} />
       <ReferralSection t={t} />
        <SubscriptionsTeaser t={t} plans={plans} />
       <TestimonialsSection t={t} lang={lang} />
@@ -422,19 +426,67 @@ function WhyDocmasterSection({ t }) {
             </div>
           </div>
 
-          <div className="feature-card bg-primary rounded-[24px] p-8 shadow-xl relative overflow-hidden" style={{ transition: "transform 0.3s, box-shadow 0.3s" }}>
+          <div className="feature-card bg-primary rounded-[24px] p-8 shadow-xl md:col-span-2 lg:col-span-3 relative overflow-hidden" style={{ transition: "transform 0.3s, box-shadow 0.3s" }}>
             <div className="absolute -left-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-xl" />
-            <div className="relative z-10">
-              <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center text-green-dark text-2xl mb-6">
+            <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+              <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center text-green-dark text-2xl flex-shrink-0">
                 <i className="fa-solid fa-coins" />
               </div>
-              <h3 className="font-bricolage text-[18px] font-bold text-green-dark mb-3">{t("home_feature_rewards")}</h3>
-              <p className="text-green-dark/70 text-[13px] leading-relaxed">{t("home_feature_rewards_desc")}</p>
+              <div>
+                <h3 className="font-bricolage text-[18px] font-bold text-green-dark mb-2 sm:mb-1">{t("home_feature_rewards")}</h3>
+                <p className="text-green-dark/70 text-[13px] leading-relaxed">{t("home_feature_rewards_desc")}</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </section>
+  );
+}
+
+/* ═══ Illustration: Digital Vault (flat, no background) ═══ */
+function VaultIllustration() {
+  return (
+    <svg viewBox="0 0 480 420" className="w-full h-auto">
+      <ellipse cx="240" cy="215" rx="190" ry="150" fill="#F5A64B" opacity="0.08" />
+
+      <g transform="translate(40,40) rotate(-8)">
+        <rect x="0" y="0" width="86" height="110" rx="10" fill="#FFFFFF" stroke="#F5A64B" strokeWidth="2" />
+        <rect x="14" y="20" width="58" height="8" rx="4" fill="#F5A64B" opacity="0.5" />
+        <rect x="14" y="38" width="42" height="6" rx="3" fill="#E5E7EB" />
+        <rect x="14" y="52" width="50" height="6" rx="3" fill="#E5E7EB" />
+        <circle cx="43" cy="82" r="14" fill="#FFF3E4" stroke="#F5A64B" strokeWidth="2" />
+        <path d="M37 82 l4 5 l8 -10" fill="none" stroke="#F5A64B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
+
+      <g transform="translate(350,30) rotate(10)">
+        <rect x="0" y="0" width="80" height="102" rx="10" fill="#FFFFFF" stroke="#F5A64B" strokeWidth="2" />
+        <rect x="12" y="18" width="50" height="7" rx="3.5" fill="#F5A64B" opacity="0.45" />
+        <rect x="12" y="34" width="38" height="6" rx="3" fill="#E5E7EB" />
+        <rect x="12" y="47" width="44" height="6" rx="3" fill="#E5E7EB" />
+        <rect x="12" y="70" width="56" height="18" rx="6" fill="#FFF3E4" />
+      </g>
+
+      <path d="M100 130 C 150 170, 170 190, 205 210" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeDasharray="5 6" />
+      <path d="M380 110 C 340 160, 310 190, 270 210" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeDasharray="5 6" />
+
+      <path d="M110 330 L370 330 L390 358 Q392 366 383 366 L97 366 Q88 366 90 358 Z" fill="#1A1A1A" />
+      <rect x="120" y="310" width="240" height="20" rx="4" fill="#2E2E2E" />
+
+      <rect x="140" y="150" width="200" height="160" rx="14" fill="#1A1A1A" />
+      <rect x="152" y="162" width="176" height="136" rx="8" fill="#FFFFFF" />
+
+      <circle cx="240" cy="230" r="52" fill="#F5A64B" opacity="0.12" />
+      <circle cx="240" cy="230" r="40" fill="none" stroke="#F5A64B" strokeWidth="6" />
+      <circle cx="240" cy="230" r="8" fill="#F5A64B" />
+      <rect x="236" y="230" width="18" height="4" rx="2" fill="#F5A64B" transform="rotate(35 240 230)" />
+
+      <g transform="translate(295,268)">
+        <circle cx="0" cy="0" r="16" fill="#F5A64B" />
+        <rect x="-6" y="-2" width="12" height="9" rx="2" fill="#FFFFFF" />
+        <path d="M-4 -2 v-3 a4 4 0 0 1 8 0 v3" fill="none" stroke="#FFFFFF" strokeWidth="2" />
+      </g>
+    </svg>
   );
 }
 
@@ -492,14 +544,14 @@ function DigitalVaultSection({ t }) {
                 <div className="w-64 h-64 bg-primary/20 rounded-full blur-[60px] animate-pulse" />
               </div>
               <div className="relative z-10 w-full max-w-md lg:max-w-lg mb-4 lg:mb-0" style={{ filter: "drop-shadow(0 30px 40px rgba(0,0,0,0.15))" }}>
-                <img src="/src/assets/images/devices_docs.png" alt="Appareils" className="w-full h-auto object-contain rounded-2xl" style={{ animation: "float 6s ease-in-out infinite" }} />
-                <div className="absolute top-4 -left-4 md:-left-8 bg-white border border-gray-100 rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3 z-20" style={{ animation: "float 5s ease-in-out infinite 1s" }}>
-                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center"><i className="fa-solid fa-check text-green-600 text-[10px]" /></div>
-                  <div><p className="text-[10px] font-black text-gray-800">{t("home_vault_imei_verified")}</p><p className="text-[9px] text-gray-400">{t("home_vault_secure")}</p></div>
+                <VaultIllustration />
+                <div className="absolute top-4 -left-4 md:-left-8 bg-white border border-borda rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3 z-20">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"><i className="fa-solid fa-check text-primary text-[10px]" /></div>
+                  <div><p className="text-[10px] font-black text-textMain">{t("home_vault_imei_verified")}</p><p className="text-[9px] text-textMuted">{t("home_vault_secure")}</p></div>
                 </div>
-                <div className="absolute bottom-10 -right-4 md:-right-8 bg-white border border-gray-100 rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3 z-20" style={{ animation: "float 4s ease-in-out infinite 0.5s" }}>
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center"><i className="fa-solid fa-lock text-blue-600 text-[10px]" /></div>
-                  <div><p className="text-[10px] font-black text-gray-800">{t("home_vault_encrypted")}</p><p className="text-[9px] text-gray-400">{t("home_vault_private")}</p></div>
+                <div className="absolute bottom-10 -right-4 md:-right-8 bg-white border border-borda rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3 z-20">
+                  <div className="w-8 h-8 rounded-full bg-green-light flex items-center justify-center"><i className="fa-solid fa-lock text-green-dark text-[10px]" /></div>
+                  <div><p className="text-[10px] font-black text-textMain">{t("home_vault_encrypted")}</p><p className="text-[9px] text-textMuted">{t("home_vault_private")}</p></div>
                 </div>
               </div>
             </div>
@@ -1102,5 +1154,293 @@ function StickyAppBar({ t }) {
         </div>
       </div>
     </div>
+  );
+}
+
+/* ═══ Matching Section ═══ */
+
+function MatchingSection({ t }) {
+  const steps = [
+    {
+      icon: "fa-solid fa-file-circle-exclamation",
+      titleKey: "home_matching_step1_title",
+      descKey: "home_matching_step1_desc",
+    },
+    {
+      icon: "fa-solid fa-robot",
+      titleKey: "home_matching_step2_title",
+      descKey: "home_matching_step2_desc",
+    },
+    {
+      icon: "fa-solid fa-bell",
+      titleKey: "home_matching_step3_title",
+      descKey: "home_matching_step3_desc",
+    },
+    {
+      icon: "fa-solid fa-handshake",
+      titleKey: "home_matching_step4_title",
+      descKey: "home_matching_step4_desc",
+    },
+  ];
+
+  return (
+    <section className="py-20 px-5 bg-surface2 relative overflow-hidden">
+      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(#1A1A1A 1px, transparent 1px), linear-gradient(90deg, #1A1A1A 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+      <div className="relative z-10 max-w-7xl mx-auto">
+        <div className="text-center mb-14">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 text-primary rounded-full text-[11px] font-black uppercase tracking-widest mb-5 border border-primary/20">
+            <i className="fa-solid fa-brain text-[10px]" /> {t("home_matching_badge")}
+          </span>
+          <h2 className="font-bricolage text-2xl md:text-3xl font-black text-textMain tracking-normal mb-4">{t("home_matching_title")}</h2>
+          <p className="text-textMuted text-[14px] leading-relaxed max-w-2xl mx-auto tracking-wide">{t("home_matching_desc")}</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {steps.map((s, i) => (
+            <div key={i} className="relative bg-white border border-borda rounded-[24px] p-7 hover:shadow-lg hover:-translate-y-1 transition-all group">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-xl mb-5 group-hover:scale-110 transition-transform">
+                <i className={s.icon} />
+              </div>
+              <h3 className="font-bricolage text-[16px] font-bold text-textMain mb-2">{t(s.titleKey)}</h3>
+              <p className="text-textMuted text-[13px] leading-relaxed">{t(s.descKey)}</p>
+              {i < steps.length - 1 && (
+                <div className="hidden lg:flex absolute top-1/2 -translate-y-1/2 -right-3 z-10 items-center justify-center">
+                  <svg width="24" height="18" viewBox="0 0 24 18" className="text-primary/50">
+                    <line x1="0" y1="9" x2="13" y2="9" stroke="currentColor" strokeWidth="2" strokeDasharray="3 4" strokeLinecap="round" />
+                    <path d="M10 3 L18 9 L10 15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-12 bg-primary/5 border border-primary/10 rounded-[24px] p-6 md:p-8 max-w-3xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center gap-6 mb-7">
+            <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white text-2xl flex-shrink-0 shadow-lg shadow-primary/30">
+              <i className="fa-solid fa-percent" />
+            </div>
+            <div className="flex-1 text-center md:text-left">
+              <h4 className="font-bricolage text-[17px] font-bold text-textMain mb-1">{t("home_matching_score_title")}</h4>
+              <p className="text-textMuted text-[13px] leading-relaxed">{t("home_matching_score_desc")}</p>
+            </div>
+          </div>
+
+          <div className="md:ml-[88px]">
+            <div className="flex h-3 rounded-full overflow-hidden">
+              <div className="bg-borda" style={{ width: "50%" }} title="< 50%" />
+              <div className="bg-green-mid/60" style={{ width: "30%" }} title="50-80%" />
+              <div className="bg-primary" style={{ width: "20%" }} title="≥ 80%" />
+            </div>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 text-[11px] font-bold text-textMuted uppercase tracking-wide">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-green-mid/60 flex-shrink-0" />
+                {t("home_matching_potential")} · ≥50%
+              </span>
+              <span className="flex items-center gap-1.5 text-primary">
+                <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+                {t("home_matching_auto")} · ≥80%
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══ Device Protection Section ═══ */
+
+/* ═══ Illustration: Device Protection (flat, no background) ═══ */
+function DeviceProtectionIllustration() {
+  return (
+    <svg viewBox="0 0 480 420" className="w-full h-auto">
+      <ellipse cx="240" cy="220" rx="190" ry="150" fill="#16412E" opacity="0.07" />
+
+      <g transform="translate(60,140)">
+        <path d="M10 170 L230 170 L246 194 Q248 202 239 202 L1 202 Q-8 202 -6 194 Z" fill="#1A1A1A" />
+        <rect x="18" y="150" width="204" height="18" rx="4" fill="#2E2E2E" />
+        <rect x="30" y="10" width="180" height="140" rx="12" fill="#1A1A1A" />
+        <rect x="40" y="20" width="160" height="120" rx="7" fill="#FFFFFF" />
+        <path d="M120 40 L155 52 V85 C155 108 138 122 120 130 C102 122 85 108 85 85 V52 Z" fill="#16412E" opacity="0.9" />
+        <path d="M107 86 l10 10 l22 -24" fill="none" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
+
+      <g transform="translate(255,90)">
+        <rect x="0" y="0" width="120" height="220" rx="20" fill="#1A1A1A" />
+        <rect x="8" y="14" width="104" height="192" rx="10" fill="#FFFFFF" />
+        <g transform="translate(28,40)">
+          <rect width="64" height="64" rx="4" fill="#F3F4F6" />
+          <rect x="6" y="6" width="14" height="14" fill="#1A1A1A" />
+          <rect x="44" y="6" width="14" height="14" fill="#1A1A1A" />
+          <rect x="6" y="44" width="14" height="14" fill="#1A1A1A" />
+          <rect x="26" y="6" width="6" height="6" fill="#1A1A1A" />
+          <rect x="26" y="26" width="12" height="12" fill="#1A1A1A" />
+          <rect x="44" y="44" width="6" height="6" fill="#1A1A1A" />
+          <rect x="26" y="44" width="6" height="14" fill="#1A1A1A" />
+          <rect x="44" y="26" width="6" height="6" fill="#1A1A1A" />
+        </g>
+        <rect x="34" y="118" width="52" height="8" rx="4" fill="#E5E7EB" />
+        <rect x="34" y="134" width="36" height="6" rx="3" fill="#E5E7EB" />
+      </g>
+
+      <g transform="translate(70,60)">
+        <circle cx="0" cy="0" r="22" fill="#E6F4EC" stroke="#16412E" strokeWidth="2" />
+        <path d="M0 -9 L8 8 H-8 Z" fill="none" stroke="#16412E" strokeWidth="2.5" strokeLinejoin="round" />
+        <circle cx="0" cy="4" r="1.6" fill="#16412E" />
+        <rect x="-1.2" y="-3" width="2.4" height="6" fill="#16412E" />
+      </g>
+
+      <g transform="translate(380,270)">
+        <circle cx="0" cy="0" r="22" fill="#E6F4EC" stroke="#16412E" strokeWidth="2" />
+        <path d="M0 -9 C6 -9 8 -4 8 0 C8 5 10 7 10 7 H-10 C-10 7 -8 5 -8 0 C-8 -4 -6 -9 0 -9 Z" fill="#16412E" />
+        <rect x="-3" y="8" width="6" height="4" rx="2" fill="#16412E" />
+      </g>
+
+      <path d="M92 82 C 130 100, 150 120, 170 150" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeDasharray="5 6" />
+      <path d="M358 270 C 330 250, 310 230, 290 210" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeDasharray="5 6" />
+    </svg>
+  );
+}
+
+function DeviceProtectionSection({ t }) {
+  return (
+    <section className="py-20 px-5 relative overflow-hidden bg-white">
+      <div className="relative z-10 max-w-7xl mx-auto">
+        <div className="p-8 md:p-14 lg:px-0 lg:py-10 overflow-hidden relative">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center relative z-10">
+            <div>
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full mb-6 border border-primary/10 shadow-sm">
+                <span className="flex h-2.5 w-2.5 relative">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-green-dark opacity-75" style={{ animation: "ping 1s cubic-bezier(0, 0, 0.2, 1) infinite" }} />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-dark" />
+                </span>
+                <span className="text-xs font-black text-secondary uppercase tracking-widest">{t("home_device_badge")}</span>
+              </div>
+
+              <h2 className="font-bricolage text-2xl md:text-4xl font-black text-[#1A1A1A] leading-tight mb-8 tracking-normal">
+                {t("home_device_title")}
+              </h2>
+
+              <p className="text-gray-600 text-[15px] leading-loose tracking-wide mb-8">{t("home_device_desc")}</p>
+
+              <ul className="space-y-4 mb-10">
+                <li className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 mt-1">
+                    <i className="fa-solid fa-qrcode" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-[#1A1A1A]">{t("home_device_feature1_title")}</h4>
+                    <p className="text-sm text-gray-500 mt-1">{t("home_device_feature1_desc")}</p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-red-100 text-red-500 flex items-center justify-center flex-shrink-0 mt-1">
+                    <i className="fa-solid fa-triangle-exclamation" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-[#1A1A1A]">{t("home_device_feature2_title")}</h4>
+                    <p className="text-sm text-gray-500 mt-1">{t("home_device_feature2_desc")}</p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-green-100 text-green-700 flex items-center justify-center flex-shrink-0 mt-1">
+                    <i className="fa-solid fa-bell" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-[#1A1A1A]">{t("home_device_feature3_title")}</h4>
+                    <p className="text-sm text-gray-500 mt-1">{t("home_device_feature3_desc")}</p>
+                  </div>
+                </li>
+              </ul>
+
+              <Link to="/login"
+                className="inline-flex items-center gap-3 px-8 py-4 bg-green-dark text-white rounded-2xl font-bold hover:bg-green-mid transition-all shadow-lg hover:-translate-y-1"
+              >
+                <i className="fa-solid fa-shield-halved" /> {t("home_device_btn")}
+              </Link>
+            </div>
+
+            <div className="relative flex justify-center lg:justify-end items-center">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-64 h-64 bg-green-dark/10 rounded-full blur-[60px] animate-pulse" />
+              </div>
+              <div className="relative z-10 w-full max-w-md lg:max-w-lg" style={{ filter: "drop-shadow(0 30px 40px rgba(0,0,0,0.15))" }}>
+                <DeviceProtectionIllustration />
+                <div className="absolute top-4 -left-4 md:-left-8 bg-white border border-borda rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3 z-20">
+                  <div className="w-8 h-8 rounded-full bg-green-light flex items-center justify-center"><i className="fa-solid fa-check text-green-dark text-[10px]" /></div>
+                  <div><p className="text-[10px] font-black text-textMain">{t("home_device_tag_serial")}</p><p className="text-[9px] text-textMuted">{t("home_device_tag_saved")}</p></div>
+                </div>
+                <div className="absolute bottom-10 -right-4 md:-right-8 bg-white border border-borda rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3 z-20">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"><i className="fa-solid fa-shield text-primary text-[10px]" /></div>
+                  <div><p className="text-[10px] font-black text-textMain">{t("home_device_tag_protected")}</p><p className="text-[9px] text-textMuted">{t("home_device_tag_secure")}</p></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══ Wallet / Rewards Section ═══ */
+
+function WalletRewardsSection({ t }) {
+  const rewards = [
+    { icon: "fa-solid fa-hand-holding-heart", color: "text-primary", bg: "bg-primary/10", titleKey: "home_wallet_feature1_title", descKey: "home_wallet_feature1_desc" },
+    { icon: "fa-solid fa-star", color: "text-amber-500", bg: "bg-amber-50", titleKey: "home_wallet_feature2_title", descKey: "home_wallet_feature2_desc" },
+    { icon: "fa-solid fa-coins", color: "text-green-mid", bg: "bg-green-light", titleKey: "home_wallet_feature3_title", descKey: "home_wallet_feature3_desc" },
+    { icon: "fa-solid fa-arrow-right-from-bracket", color: "text-blue-500", bg: "bg-blue-50", titleKey: "home_wallet_feature4_title", descKey: "home_wallet_feature4_desc" },
+  ];
+
+  return (
+    <section className="py-20 px-5 bg-bgMain relative overflow-hidden">
+      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(#1A1A1A 1px, transparent 1px), linear-gradient(90deg, #1A1A1A 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+
+      <div className="relative z-10 max-w-7xl mx-auto">
+        <div className="text-center mb-14">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 text-primary rounded-full text-[11px] font-black uppercase tracking-widest mb-5 border border-primary/20">
+            <i className="fa-solid fa-sack-dollar text-[10px]" /> {t("home_wallet_badge")}
+          </span>
+          <h2 className="font-bricolage text-2xl md:text-3xl font-black text-textMain tracking-normal mb-4">{t("home_wallet_title")}</h2>
+          <p className="text-textMuted text-[14px] leading-relaxed max-w-lg mx-auto tracking-wide">{t("home_wallet_desc")}</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-14">
+          {rewards.map((r, i) => (
+            <div key={i} className="bg-white border border-borda rounded-[24px] p-7 hover:shadow-lg hover:-translate-y-1 transition-all group">
+              <div className={`w-12 h-12 rounded-2xl ${r.bg} ${r.color} flex items-center justify-center text-xl mb-5 group-hover:scale-110 transition-transform`}>
+                <i className={r.icon} />
+              </div>
+              <h3 className="font-bricolage text-[16px] font-bold text-textMain mb-2">{t(r.titleKey)}</h3>
+              <p className="text-textMuted text-[13px] leading-relaxed">{t(r.descKey)}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-green-dark rounded-[24px] p-8 md:p-10 shadow-xl relative overflow-hidden">
+          <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
+          <div className="absolute -left-8 -top-8 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-5">
+              <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-green-dark text-2xl flex-shrink-0 shadow-lg">
+                <i className="fa-solid fa-percent" />
+              </div>
+              <div>
+                <h3 className="font-bricolage text-xl md:text-2xl font-black text-white">{t("home_wallet_bonus_title")}</h3>
+                <p className="text-white/60 text-[13px] mt-1">{t("home_wallet_bonus_desc")}</p>
+              </div>
+            </div>
+            <Link to="/login"
+              className="inline-flex items-center gap-2.5 px-8 py-4 bg-primary text-green-dark rounded-[18px] font-black text-[15px] hover:bg-primary-dark transition-all shadow-xl shadow-primary/20 flex-shrink-0"
+            >
+              {t("home_wallet_btn")} <i className="fa-solid fa-arrow-right text-[11px]" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

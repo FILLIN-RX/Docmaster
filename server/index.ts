@@ -6,7 +6,9 @@
  * ═════════════════════════════════════════════════════════════════
  */
 
-import express, { Application, Request, Response } from "express";
+import express, { Application, Request, Response, NextFunction } from "express";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
@@ -115,6 +117,10 @@ export function createApp(): Application {
     "www.docmaster.net",
     "docmaster.net",
   ];
+
+  // Chiller frontend origins
+  allowedOrigins.push("https://chillers-pi.vercel.app");
+  allowedOrigins.push("http://localhost:4000");
 
   // Add custom domains from environment if set
   if (process.env.FRONTEND_URL) allowedOrigins.push(process.env.FRONTEND_URL);
@@ -258,6 +264,19 @@ export function createApp(): Application {
   app.use("/api/vault-match", vaultMatchRoutes);
 
   // ═════════════════════════════════════════════════════════════════
+  // CHILLER SUB-APPLICATION
+  // ═════════════════════════════════════════════════════════════════
+
+  try {
+    const chillerModule = require("./backend-chillers/src/app.ts");
+    const chillerApp = chillerModule.default || chillerModule;
+    app.use("/chiller", chillerApp);
+    console.log("🎬 [Chiller] API mounted at /chiller");
+  } catch (err: any) {
+    console.warn("⚠️  [Chiller] Could not mount Chiller app:", err.message);
+  }
+
+  // ═════════════════════════════════════════════════════════════════
   // ERROR HANDLING - 404 Handler
   // ═════════════════════════════════════════════════════════════════
 
@@ -269,6 +288,20 @@ export function createApp(): Application {
       success: false,
       message: `Route not found: ${req.method} ${req.originalUrl}`,
       timestamp: new Date().toISOString(),
+    });
+  });
+
+  // ═════════════════════════════════════════════════════════════════
+  // GLOBAL ERROR HANDLER
+  // ═════════════════════════════════════════════════════════════════
+
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    console.error("❌ [Global Error Handler]", err.message || err);
+    const statusCode = err.statusCode || 500;
+    res.status(statusCode).json({
+      success: false,
+      message: err.message || "Internal server error",
+      ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
     });
   });
 

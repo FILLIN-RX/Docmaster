@@ -11,44 +11,58 @@ import { initCronJobs } from './src/utils/cron.utils.ts';
 import { matchingService } from './src/services/matching.service.ts';
 import { SocketService } from './src/services/socket.service.ts';
 
-// Get configuration from environment
-const PORT = process.env.PORT || 3003;
+async function start() {
+  // Get configuration from environment
+  const PORT = process.env.PORT || 5000;
 
-// Create the app (all middlewares and routes are set up in index.ts)
-const app = createApp();
-
-// Start listening on the port
-const server = app.listen(PORT, () => {
-  console.log(`\n🚀 DocMaster Server (TypeScript) started on http://localhost:${PORT}`);
-  
-  // Initialize Socket.io
-  const socketService = SocketService.getInstance();
-  socketService.init(server);
-  console.log(`🔌 Real-time Socket.io initialized`);
-
-  console.log(`📚 API Base: http://localhost:${PORT}/api`);
-  console.log(`💚 Health Check: http://localhost:${PORT}/health`);
-  console.log(`🗄️  DB Test: http://localhost:${PORT}/api/db-test\n`);
-
-  // Start Background Workers via Cron
-  initCronJobs();
-
-  // Run a first cycle after 30 seconds to catch up on startup
-  setTimeout(() => {
-    console.log('🚀 [STARTUP] Running initial matching cycle...');
-    matchingService.runFullMatchingCycle();
-  }, 30 * 1000);
-});
-
-// Handle server errors
-server.on('error', (error: any) => {
-  if (error.code === 'EADDRINUSE') {
-    console.error(`❌ Error: Port ${PORT} is already in use.`);
-  } else {
-    console.error('❌ Server error:', error);
+  // Try connecting to MongoDB for Chiller (non-blocking: server starts even if it fails)
+  try {
+    const { connectDB } = await import('./backend-chillers/src/config/db.ts');
+    await connectDB();
+    console.log('🍃 [Chiller] MongoDB connected');
+  } catch (err: any) {
+    console.warn('⚠️  [Chiller] MongoDB unavailable (server will start without Chiller):', err.message);
   }
-  process.exit(1);
-});
+
+  // Create the app (all middlewares and routes are set up in index.ts)
+  const app = createApp();
+
+  // Start listening on the port
+  const server = app.listen(PORT, () => {
+    console.log(`\n🚀 DocMaster Server started on http://localhost:${PORT}`);
+    
+    // Initialize Socket.io
+    const socketService = SocketService.getInstance();
+    socketService.init(server);
+    console.log(`🔌 Real-time Socket.io initialized`);
+
+    console.log(`📚 API Base: http://localhost:${PORT}/api`);
+    console.log(`💚 Health Check: http://localhost:${PORT}/health`);
+    console.log(`🎬 Chiller API: http://localhost:${PORT}/chiller/api/health`);
+    console.log(`🗄️  DB Test: http://localhost:${PORT}/api/db-test\n`);
+
+    // Start Background Workers via Cron
+    initCronJobs();
+
+    // Run a first cycle after 30 seconds to catch up on startup
+    setTimeout(() => {
+      console.log('🚀 [STARTUP] Running initial matching cycle...');
+      matchingService.runFullMatchingCycle();
+    }, 30 * 1000);
+  });
+
+  // Handle server errors
+  server.on('error', (error: any) => {
+    if (error.code === 'EADDRINUSE') {
+      console.error(`❌ Error: Port ${PORT} is already in use.`);
+    } else {
+      console.error('❌ Server error:', error);
+    }
+    process.exit(1);
+  });
+}
+
+start();
 
 // Keep process alive
 process.on('uncaughtException', (error) => {

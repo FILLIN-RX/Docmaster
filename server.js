@@ -5,7 +5,7 @@ const path = require("path");
 
 const PORT = process.env.PORT || 3003;
 const DIST = path.join(__dirname, "dist");
-const API_TARGET = process.env.API_TARGET || "http://localhost:5001";
+const API_TARGET = process.env.API_TARGET || "http://localhost:5000";
 
 const MIME = {
   ".js": "text/javascript",
@@ -57,28 +57,6 @@ function proxyRequest(targetUrl, req, res) {
   }
 }
 
-/** Proxy WebSocket upgrade requests to the API backend */
-server.on("upgrade", (req, socket, head) => {
-  if (req.url.startsWith("/socket.io/")) {
-    const url = new URL(API_TARGET);
-    const opts = {
-      hostname: url.hostname,
-      port: url.port,
-      path: req.url,
-      headers: req.headers,
-    };
-    const proxyReq = http.request(opts);
-    proxyReq.on("upgrade", (_proxyRes, proxySocket) => {
-      proxySocket.pipe(socket);
-      socket.pipe(proxySocket);
-    });
-    proxyReq.on("error", () => socket.destroy());
-    proxyReq.end();
-  } else {
-    socket.destroy();
-  }
-});
-
 const server = http.createServer((req, res) => {
   if (req.url.startsWith("/api/") || req.url.startsWith("/uploads/") || req.url.startsWith("/socket.io/")) {
     return proxyRequest(API_TARGET + req.url, req, res);
@@ -113,4 +91,26 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, () => {
   console.log(`Docmaster frontend serving dist/ on port ${PORT}`);
   console.log(`Proxy /api/* and /uploads/* -> ${API_TARGET}`);
+});
+
+/* Proxy WebSocket upgrade requests to the API backend */
+server.on("upgrade", (req, socket, head) => {
+  if (req.url.startsWith("/socket.io/")) {
+    const url = new URL(API_TARGET);
+    const opts = {
+      hostname: url.hostname,
+      port: url.port,
+      path: req.url,
+      headers: req.headers,
+    };
+    const proxyReq = http.request(opts);
+    proxyReq.on("upgrade", (_proxyRes, proxySocket) => {
+      proxySocket.pipe(socket);
+      socket.pipe(proxySocket);
+    });
+    proxyReq.on("error", () => socket.destroy());
+    proxyReq.end();
+  } else {
+    socket.destroy();
+  }
 });

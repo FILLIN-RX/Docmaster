@@ -1248,6 +1248,25 @@ function ConvertPointsModal({ points, onClose, onDone, t }: { points: any; onClo
     }).catch(() => {});
   }, []);
 
+  const goToConfirm = async () => {
+    if (!canProceed) return;
+    setError("");
+    try {
+      const res = await apiClient.get("points/rate");
+      const rate = res.data?.rate || 10;
+      setRate(rate);
+      const maxRes = await apiClient.get("auth/earnings-stats");
+      const serverPoints = maxRes.data?.total_points ?? points.totalPoints;
+      if (numAmount > serverPoints) {
+        setError(`Solde insuffisant. Vous avez ${serverPoints.toLocaleString()} pts disponibles.`);
+        return;
+      }
+      setStep("confirm");
+    } catch {
+      setStep("confirm");
+    }
+  };
+
   const handleConfirm = async () => {
     if (!canConfirm) return;
     setLoading(true);
@@ -1256,7 +1275,7 @@ function ConvertPointsModal({ points, onClose, onDone, t }: { points: any; onClo
       const res = await apiClient.post(`points/convert`, { amount: numAmount, password });
       if (res.data.success) {
         setStep("success");
-        setTimeout(() => onDone(), 2500);
+        setTimeout(() => window.location.reload(), 2000);
       } else {
         setError(res.data.message || t("mesgains_convert_error"));
       }
@@ -1313,7 +1332,7 @@ function ConvertPointsModal({ points, onClose, onDone, t }: { points: any; onClo
           )}
 
           <button
-            onClick={() => setStep("confirm")}
+            onClick={goToConfirm}
             disabled={!canProceed}
             className="w-full py-3 bg-primary hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed text-white font-bricolage text-[13.5px] font-bold rounded-[12px] transition-all active:scale-[.98] flex items-center justify-center gap-2"
           >

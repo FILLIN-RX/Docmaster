@@ -178,7 +178,8 @@ export default function Dashboard() {
       }
     } catch (err: any) {
       setProcessingPayment(false);
-      toast.error(err.message || "Erreur lors de l'activation de l'offre");
+      const msg = err.response?.data?.message || err.message || "Erreur lors de l'activation de l'offre";
+      toast.error(msg);
     }
   };
 

@@ -86,7 +86,7 @@ class PaymentReconciliationService {
       const result = await query(
         `SELECT * FROM transactions 
          WHERE status = 'PENDING' 
-           AND type IN ('subscription', 'recovery_fee')
+           AND type IN ('subscription', 'recovery_fee', 'points_purchase')
            AND created_at < NOW() - INTERVAL '15 minutes'
          ORDER BY created_at ASC
          LIMIT 20`
@@ -134,6 +134,14 @@ class PaymentReconciliationService {
               const { docId } = metadata || {};
               if (docId) {
                 await activateRecovery(transaction.user_id, docId, transaction.id);
+              }
+            } else if (transaction.type === 'points_purchase') {
+              const { pointsAmount } = metadata || {};
+              if (pointsAmount) {
+                await query('UPDATE users SET points = COALESCE(points, 0) + $1 WHERE id = $2', [pointsAmount, transaction.user_id]);
+                await query('INSERT INTO wallet_transactions (user_id, type, amount, description) VALUES ($1, $2, $3, $4)',
+                  [transaction.user_id, 'credit', pointsAmount, `Achat de ${pointsAmount} points`]);
+                console.log(`[Reconciliation] Points credited: ${pointsAmount} to user ${transaction.user_id}`);
               }
             }
           } else if (normalized.terminal) {
@@ -188,6 +196,13 @@ class PaymentReconciliationService {
         const { docId } = metadata || {};
         if (docId) {
           await activateRecovery(transaction.user_id, docId, transaction.id);
+        }
+      } else if (transaction.type === 'points_purchase') {
+        const { pointsAmount } = metadata || {};
+        if (pointsAmount) {
+          await query('UPDATE users SET points = COALESCE(points, 0) + $1 WHERE id = $2', [pointsAmount, transaction.user_id]);
+          await query('INSERT INTO wallet_transactions (user_id, type, amount, description) VALUES ($1, $2, $3, $4)',
+            [transaction.user_id, 'credit', pointsAmount, `Achat de ${pointsAmount} points`]);
         }
       }
 

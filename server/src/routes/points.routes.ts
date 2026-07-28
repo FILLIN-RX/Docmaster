@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getPointsRate, convertPoints } from '../controllers/points.controller.ts';
+import { getPointsRate, convertPoints, purchasePoints } from '../controllers/points.controller.ts';
 import { authMiddleware } from '../middleware/auth.middleware.ts';
 
 const router = Router();
@@ -95,5 +95,6 @@ router.get('/rate', getPointsRate);
  *               $ref: '#/components/schemas/Error500'
  */
 router.post('/convert', authMiddleware, convertPoints);
+router.post('/purchase', authMiddleware, purchasePoints);
 
 export default router;

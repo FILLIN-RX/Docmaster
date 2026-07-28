@@ -57,6 +57,20 @@ export const nokashCallback = async (req: Request, res: Response) => {
         await activateRecovery(transaction.user_id, docId, transaction.id);
         console.log(`Recovery activated for doc ${docId} via Nokash ${id}`);
       }
+      else if (transaction.type === 'points_purchase') {
+        const { pointsAmount } = metadata || {};
+        if (pointsAmount) {
+          await query(
+            `UPDATE users SET points = COALESCE(points, 0) + $1 WHERE id = $2`,
+            [pointsAmount, transaction.user_id]
+          );
+          await query(
+            `INSERT INTO wallet_transactions (user_id, type, amount, description) VALUES ($1, 'credit', $2, $3)`,
+            [transaction.user_id, pointsAmount, `Achat de ${pointsAmount} points`]
+          );
+          console.log(`Points credited: ${pointsAmount} to user ${transaction.user_id} via Nokash ${id}`);
+        }
+      }
 
       // Notify Admins
       await notificationService.notifyAdmins(

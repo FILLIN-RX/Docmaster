@@ -135,9 +135,10 @@ export default function Abonnement() {
         toast.success("Félicitations ! Votre abonnement VIP est actif pour 2 mois.");
         loadData();
       }
-    } catch {
+    } catch (e: any) {
       setProcessingPayment(false);
-      toast.error("Erreur lors de l'activation de l'offre");
+      const msg = e.response?.data?.message || e.message || "Erreur lors de l'activation de l'offre";
+      toast.error(msg);
     }
   };
 

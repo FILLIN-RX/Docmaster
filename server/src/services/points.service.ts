@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { pool, query } from '../database/db.ts';
 import { EarningsRepository } from '../repositories/earnings.repository.ts';
 import { UserRepository } from '../repositories/auth.repository.ts';
@@ -206,6 +207,38 @@ export class PointsService {
       try { client.release(); } catch (_) {}
       throw error;
     }
+  }
+
+  /**
+   * Initiate a points purchase via Nokash
+   */
+  async purchasePoints(userId: string, pointsAmount: number, phone: string, method: 'MTN_MOMO' | 'ORANGE_MONEY') {
+    const rate = await this.getExchangeRate();
+    const amountXaf = Math.ceil(pointsAmount / rate);
+    const orderId = `PTS-${uuidv4().substring(0, 8)}`;
+
+    const { nokashService } = await import('./nokash.service.ts');
+
+    const nokashRes = await nokashService.initiatePayment({
+      payment_method: method,
+      amount: amountXaf,
+      order_id: orderId,
+      user_phone: phone,
+      country: 'CM'
+    });
+
+    if (nokashRes.status !== 'REQUEST_OK' && nokashRes.status !== 'SUCCESS') {
+      throw new Error('Le service de paiement est temporairement indisponible. Veuillez réessayer plus tard.');
+    }
+
+    await query(
+      `INSERT INTO transactions (user_id, amount, currency, status, payment_method, type, external_ref, metadata)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [userId, amountXaf, 'XAF', 'PENDING', method, 'points_purchase', nokashRes.data.id,
+       JSON.stringify({ pointsAmount, rate, orderId })]
+    );
+
+    return { transactionId: nokashRes.data.id, amountXaf, pointsAmount };
   }
 }
 

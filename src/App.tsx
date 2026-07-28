@@ -21,6 +21,7 @@ const ValidationRemise = lazy(() => import("./pages/auth/ValidationRemise"));
 const Conditions = lazy(() => import("./pages/public/Conditions"));
 const Confidentialite = lazy(() => import("./pages/public/Confidentialite"));
 const SharedDocument = lazy(() => import("./pages/public/SharedDocument"));
+const TransfertAppareil = lazy(() => import("./pages/public/TransfertAppareil"));
 const Dashboard = lazy(() => import("./pages/auth/Dashboard"));
 const MesDocuments = lazy(() => import("./pages/auth/MesDocuments"));
 const MesAppareils = lazy(() => import("./pages/auth/MesAppareils"));
@@ -28,6 +29,7 @@ const MesDeclarations = lazy(() => import("./pages/auth/MesDeclarations"));
 const Abonnement = lazy(() => import("./pages/auth/Abonnement"));
 const Parrainage = lazy(() => import("./pages/auth/Parrainage"));
 const MesGains = lazy(() => import("./pages/auth/MesGains"));
+const AcheterPoints = lazy(() => import("./pages/auth/AcheterPoints"));
 const InfosProfil = lazy(() => import("./pages/auth/InfosProfil"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -71,6 +73,7 @@ export default function App() {
           <Route path="/conditions" element={<LazyPage Component={Conditions} />} />
           <Route path="/confidentialite" element={<LazyPage Component={Confidentialite} />} />
           <Route path="/partage" element={<LazyPage Component={SharedDocument} />} />
+          <Route path="/transfert-appareil" element={<LazyPage Component={TransfertAppareil} />} />
 
           <Route path="/dashboard" element={<ProtectedRoute><LazyPage Component={Dashboard} /></ProtectedRoute>} />
           <Route path="/mes-documents" element={<ProtectedRoute><LazyPage Component={MesDocuments} /></ProtectedRoute>} />
@@ -80,6 +83,7 @@ export default function App() {
           <Route path="/abonnement" element={<ProtectedRoute><LazyPage Component={Abonnement} /></ProtectedRoute>} />
           <Route path="/parrainage" element={<ProtectedRoute><LazyPage Component={Parrainage} /></ProtectedRoute>} />
           <Route path="/mes-gains" element={<ProtectedRoute><LazyPage Component={MesGains} /></ProtectedRoute>} />
+          <Route path="/acheter-points" element={<ProtectedRoute><LazyPage Component={AcheterPoints} /></ProtectedRoute>} />
           <Route path="/infos-profil" element={<ProtectedRoute><LazyPage Component={InfosProfil} /></ProtectedRoute>} />
         </Route>
 

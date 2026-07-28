@@ -165,14 +165,18 @@ class DeviceService {
     const device = await deviceRepository.findAnyByIdentifier(identifier);
     if (!device) return null;
 
-    // Obfuscate owner name for privacy if needed, or return relevant info
     return {
       id: device.id,
       brand: device.brand,
       model: device.model,
       category: device.category,
+      serial_number_imei: device.serial_number_imei,
+      color: device.color,
+      purchase_date: device.purchase_date,
+      purchase_value: device.purchase_value,
+      currency: device.currency,
       status: device.status,
-      owner: `${device.owner_first_name} ${device.owner_last_name.substring(0, 1)}.`,
+      owner: `${device.owner_first_name} ${device.owner_last_name}`,
       is_reported: ['LOST', 'STOLEN', 'PERDU', 'VOLE'].includes(device.status?.toUpperCase())
     };
   }

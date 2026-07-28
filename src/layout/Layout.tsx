@@ -11,7 +11,7 @@ import PlayStoreBanner from "../components/ui/PlayStoreBanner";
 import PromoBar from "../components/ui/PromoBar";
 import TopProgressBar from "../components/ui/TopProgressBar";
 
-const authPages = ["/dashboard", "/mes-documents", "/mes-appareils", "/mes-declarations", "/abonnement", "/parrainage", "/mes-gains", "/infos-profil", "/declarer", "/trouver", "/rechercher", "/recuperer", "/rendre"];
+const authPages = ["/dashboard", "/mes-documents", "/mes-appareils", "/mes-declarations", "/abonnement", "/parrainage", "/mes-gains", "/acheter-points", "/infos-profil", "/declarer", "/trouver", "/rechercher", "/recuperer", "/rendre"];
 const publicPages = ["/", "/login", "/inscription", "/forgot-password", "/reset-password", "/recherche-publique", "/conditions", "/confidentialite", "/partage", "/partage.html"];
 
 export default function Layout() {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useI18n } from "../../context/I18nContext";
+import { useNavigate } from "react-router-dom";
 import { paymentsService, type SavedPaymentMethod } from "../../services/paymentsService";
 import { settingsService } from "../../services/settingsService";
 import { authService } from "../../services/authService";
@@ -33,6 +34,7 @@ function fmtDate(v?: string | null) {
 export default function MesGains() {
   const { t } = useI18n();
   const { user, updateUser } = useAuth();
+  const navigate = useNavigate();
   const toast = useToast();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [txLoading, setTxLoading] = useState(true);
@@ -219,6 +221,7 @@ export default function MesGains() {
             pointsToNext={pointsToNext}
             nextLevelPoints={nextLevelPoints}
             onConvert={() => setShowConvertModal(true)}
+            onBuy={() => navigate("/acheter-points")}
             fmtAmount={fmtAmount}
             t={t}
           />
@@ -436,7 +439,7 @@ function StatCard({ icon, bg, color, value, label }: any) {
 
 /* ── Points Card ── */
 
-function PointsCard({ totalPoints, pointsBreakdown, levelLabel, pointsToNext, nextLevelPoints, onConvert, fmtAmount, t }: any) {
+function PointsCard({ totalPoints, pointsBreakdown, levelLabel, pointsToNext, nextLevelPoints, onConvert, onBuy, fmtAmount, t }: any) {
   return (
     <Paper p="lg" className="border border-borda" style={{ borderRadius: 18 }}>
       <Group justify="space-between" mb="md">
@@ -504,6 +507,12 @@ function PointsCard({ totalPoints, pointsBreakdown, levelLabel, pointsToNext, ne
           <i className="fa-solid fa-coins text-xs" /> {t("mesgains_convert_points")}
         </button>
       )}
+      <button
+        onClick={onBuy}
+        className="w-full mt-2 py-2.5 bg-green-mid hover:bg-green-dark text-white font-bricolage text-[13px] font-bold rounded-[12px] transition-all flex items-center justify-center gap-2"
+      >
+        <i className="fa-solid fa-cart-shopping text-xs" /> Acheter des points
+      </button>
     </Paper>
   );
 }

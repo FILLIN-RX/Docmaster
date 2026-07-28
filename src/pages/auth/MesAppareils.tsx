@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useI18n } from "../../context/I18nContext";
 import { useToast } from "../../context/ToastContext";
 import { devicesService } from "../../services/devicesService";
+import { deviceTransferService } from "../../services/deviceTransferService";
 import Topbar from "../../layout/Topbar";
 import DatePicker from "../../components/ui/DatePicker";
 import type { Device } from "../../types/api";
@@ -145,6 +146,13 @@ export default function MesAppareils() {
   const [verifyImei, setVerifyImei] = useState("");
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [verifyResult, setVerifyResult] = useState<{ html: string; bg: string; border: string } | null>(null);
+
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
+  const [transferDeviceId, setTransferDeviceId] = useState<string | null>(null);
+  const [transferEmail, setTransferEmail] = useState("");
+  const [transferSending, setTransferSending] = useState(false);
+  const [transferError, setTransferError] = useState("");
+  const [transferSent, setTransferSent] = useState(false);
 
   const [confirmLostOpen, setConfirmLostOpen] = useState(false);
   const [confirmFound, setConfirmFound] = useState(false);
@@ -416,15 +424,16 @@ export default function MesAppareils() {
     setVerifyResult(null);
     try {
       const result = await devicesService.verifyDevice(verifyImei.trim());
-      const resultData = result as { success: boolean; data?: { success: boolean; data: Record<string, unknown> } };
-      if (result.success && resultData.data?.success) {
-        const device = resultData.data.data;
+      const resultData = result as { success: boolean; data?: Record<string, unknown> };
+      if (result.success && resultData.data) {
+        const device = resultData.data;
         const isReported = device.is_reported;
+        const fmtDate = (d: any) => d ? new Date(String(d)).toLocaleDateString("fr-FR") : "—";
         setVerifyResult({
           bg: isReported ? "#fef2f2" : "#f0fdf4",
           border: isReported ? "#fecaca" : "#bbf7d0",
           html: `
-            <div style="display:flex;gap:12px;">
+            <div style="display:flex;gap:12px;margin-bottom:12px;">
               <div style="width:40px;height:40px;border-radius:50%;background:${isReported ? "#ef4444" : "#22c55e"};display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0;">
                 <i class="fa-solid ${isReported ? "fa-triangle-exclamation" : "fa-check"}"></i>
               </div>
@@ -433,8 +442,20 @@ export default function MesAppareils() {
                   ${isReported ? "Attention !" : "Appareil sûr"}
                 </p>
                 <p style="font-size:12px;color:${isReported ? "#b91c1c" : "#15803d"};line-height:1.4;word-break:break-word;">
-                  ${isReported ? `${device.brand} ${device.model} - Signalé ${device.status}` : `${device.brand} ${device.model} - Sûr`}
+                  ${device.brand} ${device.model} ${isReported ? `- Signalé ${device.status}` : ""}
                 </p>
+              </div>
+            </div>
+            <div style="border-top:1px solid #e5e0d8;padding-top:12px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
+                <div style="font-weight:600;color:#1e293b;">Propriétaire</div>
+                <div style="color:#475569;">${device.owner || "—"}</div>
+                <div style="font-weight:600;color:#1e293b;">Catégorie</div>
+                <div style="color:#475569;">${device.category || "—"}</div>
+                <div style="font-weight:600;color:#1e293b;">Date d'achat</div>
+                <div style="color:#475569;">${fmtDate(device.purchase_date)}</div>
+                <div style="font-weight:600;color:#1e293b;">Statut</div>
+                <div style="color:${isReported ? "#ef4444" : "#22c55e"};font-weight:600;">${isReported ? "Signalé perdu/volé" : "En sécurité"}</div>
               </div>
             </div>
           `,
@@ -712,6 +733,9 @@ export default function MesAppareils() {
                       Signaler
                     </Button>
                   )}
+                  <Button fullWidth size="xs" radius="xl" variant="outline" color="gray" mt="xs" leftSection={<i className="fa-solid fa-arrow-right-arrow-left" />} onClick={(e) => { e.stopPropagation(); setTransferDeviceId(d.id); setTransferEmail(""); setTransferError(""); setTransferSent(false); setTransferModalOpen(true); }}>
+                    Transférer
+                  </Button>
                 </div>
               </div>
             );
@@ -785,6 +809,84 @@ export default function MesAppareils() {
             </Button>
           </Group>
         </Stack>
+      </Modal>
+
+      {/* Transfer Modal */}
+      <Modal
+        opened={transferModalOpen}
+        onClose={() => { setTransferModalOpen(false); setTransferDeviceId(null); setTransferSent(false); }}
+        centered
+        radius="xl"
+        size="sm"
+        padding="xl"
+        title={
+          <Stack align="center" gap="md">
+            <ThemeIcon size={70} radius="xl" variant="light" color="primary">
+              <i className="fa-solid fa-arrow-right-arrow-left text-3xl" />
+            </ThemeIcon>
+            <div>
+              <Title order={4} ta="center" ff="Bricolage Grotesque">Transférer l'appareil</Title>
+              <Text size="sm" c="dimmed" ta="center" mt={4}>
+                Transférez la propriété de cet appareil à un autre utilisateur DocMaster.
+              </Text>
+            </div>
+          </Stack>
+        }
+      >
+        {transferSent ? (
+          <Stack align="center" gap="md" py="md">
+            <ThemeIcon size={60} radius="xl" variant="light" color="green">
+              <i className="fa-solid fa-check text-2xl" />
+            </ThemeIcon>
+            <Title order={5} ta="center">Demande envoyée !</Title>
+            <Text size="sm" c="dimmed" ta="center">Le destinataire recevra un email pour accepter ou refuser le transfert.</Text>
+            <Button fullWidth radius="xl" onClick={() => { setTransferModalOpen(false); setTransferDeviceId(null); }}>
+              Fermer
+            </Button>
+          </Stack>
+        ) : (
+          <Stack gap="md">
+            <TextInput
+              label="Email du destinataire"
+              leftSection={<i className="fa-solid fa-envelope" />}
+              placeholder="email@exemple.com"
+              value={transferEmail}
+              onChange={(e) => { setTransferEmail(e.target.value); setTransferError(""); }}
+              radius="xl"
+              error={transferError}
+            />
+            <Group>
+              <Button flex={1} variant="outline" radius="xl" onClick={() => { setTransferModalOpen(false); setTransferDeviceId(null); }}>
+                Annuler
+              </Button>
+              <Button
+                flex={1.5}
+                radius="xl"
+                loading={transferSending}
+                style={{ backgroundColor: "#1E3A2F" }}
+                onClick={async () => {
+                  if (!transferEmail.trim()) { setTransferError("Veuillez saisir un email"); return; }
+                  setTransferSending(true);
+                  setTransferError("");
+                  try {
+                    const res = await deviceTransferService.initiate(transferDeviceId!, transferEmail.trim());
+                    if (res.success) {
+                      setTransferSent(true);
+                    } else {
+                      setTransferError(res.message || "Erreur lors de l'envoi");
+                    }
+                  } catch (e: any) {
+                    setTransferError(e.response?.data?.message || e.message || "Erreur de connexion");
+                  } finally {
+                    setTransferSending(false);
+                  }
+                }}
+              >
+                <i className="fa-solid fa-paper-plane mr-1" /> Envoyer
+              </Button>
+            </Group>
+          </Stack>
+        )}
       </Modal>
 
       {/* Add/Edit Modal */}

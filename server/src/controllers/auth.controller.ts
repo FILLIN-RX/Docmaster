@@ -9,6 +9,23 @@ export class AuthController {
   private userService = new UserService();
 
   /**
+   * Check if email is already used
+   */
+  async checkEmail(req: Request, res: Response): Promise<void> {
+    try {
+      const { email } = req.query;
+      if (!email || typeof email !== 'string') {
+        res.status(400).json({ error: 'Email requis' });
+        return;
+      }
+      const user = await this.userService.getUserByEmail(email);
+      res.status(200).json({ exists: !!user });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message || 'Erreur serveur' });
+    }
+  }
+
+  /**
    * Register user
    */
   async register(req: Request, res: Response): Promise<void> {

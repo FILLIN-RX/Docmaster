@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { Button, Badge, Loader, Modal, Paper, SimpleGrid, Text, Group, Card, RingProgress, Title, Stack } from "@mantine/core";
 import { useAuth } from "../../context/AuthContext";
 import { useDocuments } from "../../hooks/useDocuments";
 import { useNotifications } from "../../hooks/useNotifications";
@@ -194,18 +195,17 @@ export default function Dashboard() {
 
   const perfData = Array.isArray(perfStats) ? perfStats : [];
 
-  const CIRC = 2 * Math.PI * 50;
   const donutTotal = docCount || 1;
   const donutSegments = [
     { count: verifiedCount, color: "#10B981" },
-    { count: lostCount, color: "#F5A64B" },
+    { count: lostCount, color: "#D98A30" },
     { count: newCount, color: "#7C3AED" },
   ].filter((s) => s.count > 0);
 
   if (!skeletonDone && loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] pt-[88px] md:pt-6 px-4">
-        <div className="w-11 h-11 rounded-full border-4 border-borda border-t-primary animate-spin" />
+        <Loader color="gold" size="lg" />
       </div>
     );
   }
@@ -222,22 +222,22 @@ export default function Dashboard() {
       <div className="custom-scroll p-4 sm:p-6 flex flex-col gap-4 sm:gap-5 pb-24 md:pb-6 max-md:h-[calc(100vh-134px)] md:h-[calc(100vh-64px)] overflow-y-auto">
 
         {/* Greeting */}
-        <div className="flex items-start justify-between gap-3 flex-wrap">
+        <Group justify="space-between" wrap="wrap" gap="sm">
           <div>
-            <h1 className="font-bricolage text-xl sm:text-2xl font-extrabold text-textMain tracking-tight leading-tight">
+            <Title order={1} fz={{ base: 20, sm: 24 }} className="font-bricolage">
               {greeting(t)}, <span>{user?.prenom || t("dashboard_user")}</span>
-            </h1>
-            <p className="text-[12.5px] sm:text-[13.5px] text-textMuted/70 font-medium mt-0.5 italic">
+            </Title>
+            <Text size="sm" c="dimmed" mt={2} fs="italic">
               {t("dashboard_activity_overview")}
-            </p>
+            </Text>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="text-[11.5px] text-textMuted font-medium bg-white border border-borda px-3 py-1.5 rounded-[9px] flex items-center gap-2 whitespace-nowrap">
-              <i className="fa-regular fa-calendar text-primary" />
-              <span>{today}</span>
-            </div>
-          </div>
-        </div>
+          <Group gap="xs">
+            <Paper withBorder p="xs" radius="md" style={{ display: "flex", alignItems: "center", gap: 8, whiteSpace: "nowrap" }}>
+              <i className="fa-regular fa-calendar text-primary text-sm" />
+              <Text size="sm" c="dimmed">{today}</Text>
+            </Paper>
+          </Group>
+        </Group>
 
         {promo && !isDismissed && (
           <div className="min-w-0">
@@ -252,19 +252,40 @@ export default function Dashboard() {
         )}
 
         {/* Stat cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatCard icon="fa-solid fa-file-circle-xmark" iconBg="bg-amber-50" iconColor="text-amber-500" badge={t("dashboard_badge_my_docs")} badgeColor="bg-amber-100 text-amber-700" value={lostCount} label={t("dashboard_label_declared_docs")}  />
-          <div onClick={() => navigate("/mes-appareils")} className="col-span-1 bg-white border border-borda rounded-[16px] sm:rounded-[18px] p-4 flex flex-col gap-2.5 hover:border-primary/50 transition-all cursor-pointer">
-            <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-[10px] bg-blue-50 flex items-center justify-center text-base"><i className="fa-solid fa-mobile-screen-button text-blue-600" /></div>
-              <span className="text-[10px] font-bold py-0.5 px-2 rounded-[7px] bg-blue-100 text-blue-700">{t("sidebar_devices")}</span>
-            </div>
-            <div className="font-bricolage text-[24px] sm:text-[28px] font-extrabold text-textMain leading-none">{devices.length}</div>
-            <div className="text-[11px] sm:text-[12.5px] text-textMuted font-medium leading-tight">{t("dashboard_label_devices")}</div>
-          </div>
-          <StatCard icon="fa-solid fa-triangle-exclamation" iconBg="bg-red-50" iconColor="text-red-500" badge={t("dashboard_badge_platform")} badgeColor="bg-red-100 text-red-700" value={globalStats?.total_lost ?? "—"} label={t("dashboard_label_global_lost")} />
-          <StatCard icon="fa-solid fa-hand-holding-heart" iconBg="bg-purple-50" iconColor="text-purple-600" badge={t("dashboard_badge_platform")} badgeColor="bg-purple-100 text-purple-700" value={globalStats?.total_recovered ?? "—"} label={t("dashboard_label_global_recovered")} />
-        </div>
+        <SimpleGrid cols={{ base: 2, md: 4 }} spacing="sm">
+          <Paper withBorder p="md" radius="md">
+            <Group justify="space-between">
+              <Text size="xs" c="dimmed">{t("dashboard_badge_my_docs")}</Text>
+              <i className="fa-solid fa-file-circle-xmark text-amber-500 text-xl" />
+            </Group>
+            <Text fz={28} fw={800} mt="sm" className="font-bricolage">{lostCount}</Text>
+            <Text size="xs" c="dimmed" mt={4}>{t("dashboard_label_declared_docs")}</Text>
+          </Paper>
+          <Paper withBorder p="md" radius="md" onClick={() => navigate("/mes-appareils")} style={{ cursor: "pointer" }}>
+            <Group justify="space-between">
+              <Badge size="sm" variant="light">{t("sidebar_devices")}</Badge>
+              <i className="fa-solid fa-mobile-screen-button text-blue-600 text-xl" />
+            </Group>
+            <Text fz={28} fw={800} mt="sm" className="font-bricolage">{devices.length}</Text>
+            <Text size="xs" c="dimmed" mt={4}>{t("dashboard_label_devices")}</Text>
+          </Paper>
+          <Paper withBorder p="md" radius="md">
+            <Group justify="space-between">
+              <Text size="xs" c="dimmed">{t("dashboard_badge_platform")}</Text>
+              <i className="fa-solid fa-triangle-exclamation text-red-500 text-xl" />
+            </Group>
+            <Text fz={28} fw={800} mt="sm" className="font-bricolage">{globalStats?.total_lost ?? "—"}</Text>
+            <Text size="xs" c="dimmed" mt={4}>{t("dashboard_label_global_lost")}</Text>
+          </Paper>
+          <Paper withBorder p="md" radius="md">
+            <Group justify="space-between">
+              <Text size="xs" c="dimmed">{t("dashboard_badge_platform")}</Text>
+              <i className="fa-solid fa-hand-holding-heart text-purple-600 text-xl" />
+            </Group>
+            <Text fz={28} fw={800} mt="sm" className="font-bricolage">{globalStats?.total_recovered ?? "—"}</Text>
+            <Text size="xs" c="dimmed" mt={4}>{t("dashboard_label_global_recovered")}</Text>
+          </Paper>
+        </SimpleGrid>
 
         {/* Main grid */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_340px] gap-4 sm:gap-5 items-start">
@@ -273,17 +294,17 @@ export default function Dashboard() {
             {/* Tracking */}
             <div className="flex flex-col gap-4" id="trackingContainer">
               {activeDecls.length === 0 ? (
-                <div className="bg-white border border-dashed border-borda rounded-[18px] p-8 text-center">
+                <Paper withBorder p="xl" ta="center" style={{ borderStyle: "dashed" }}>
                   <div className="w-16 h-16 bg-surface2 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i className="fa-solid fa-folder-open text-textMuted text-2xl" />
                   </div>
-                  <h3 className="font-bricolage text-lg font-bold text-textMain">{t("dashboard_no_activity")}</h3>
-                  <p className="text-textMuted text-sm mt-1">{t("dashboard_no_activity_desc")}</p>
-                  <div className="mt-6 flex justify-center gap-3">
-                    <button onClick={() => navigate("/declarer")} className="px-4 py-2 bg-primary text-white rounded-[10px] text-xs font-bold shadow-lg shadow-primary/20">{t("dashboard_declare_loss")}</button>
-                    <button onClick={() => navigate("/trouver")} className="px-4 py-2 border border-borda rounded-[10px] text-xs font-bold text-textMain hover:bg-surface2">{t("dashboard_report_found")}</button>
-                  </div>
-                </div>
+                  <Title order={3} className="font-bricolage">{t("dashboard_no_activity")}</Title>
+                  <Text size="sm" c="dimmed" mt="xs">{t("dashboard_no_activity_desc")}</Text>
+                  <Group justify="center" mt="lg">
+                    <Button onClick={() => navigate("/declarer")} color="gold" size="sm">{t("dashboard_declare_loss")}</Button>
+                    <Button onClick={() => navigate("/trouver")} variant="default" size="sm">{t("dashboard_report_found")}</Button>
+                  </Group>
+                </Paper>
               ) : (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   {activeDecls.map((decl: Declaration) =>
@@ -298,58 +319,57 @@ export default function Dashboard() {
             </div>
 
             {/* Recent activities */}
-            <div className="bg-white border border-borda rounded-[18px] overflow-hidden">
-              <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-borda">
-                <div className="font-bricolage text-[14px] sm:text-[14.5px] font-bold text-textMain flex items-center gap-2">
-                  <i className="fa-solid fa-clock-rotate-left text-primary text-[12px] sm:text-[13px]" /> {t("dashboard_recent_activities")}
-                </div>
-                <span className="text-[11.5px] sm:text-[12px] font-semibold text-primary flex items-center gap-1 hover:gap-2 transition-all cursor-pointer">
+            <Card withBorder radius="md" padding={0}>
+              <Group justify="space-between" px="md" py="sm" style={{ borderBottom: "1px solid var(--mantine-color-default-border)" }}>
+                <Group gap="xs">
+                  <i className="fa-solid fa-clock-rotate-left text-primary text-sm" />
+                  <Text fw={700} className="font-bricolage">{t("dashboard_recent_activities")}</Text>
+                </Group>
+                <Text size="xs" fw={600} c="gold" style={{ cursor: "pointer" }}>
                   {t("dashboard_see_all")} <i className="fa-solid fa-arrow-right text-[9px]" />
-                </span>
-              </div>
-              <div className="flex flex-col divide-y divide-borda">
+                </Text>
+              </Group>
+              <div>
                 {activeDecls.slice(0, 5).map((decl: any) => {
                   const dateStr = decl.created_at ? new Date(decl.created_at).toLocaleDateString("fr-FR") : "—";
                   const isLost = decl.declaration_type === "LOST";
-                  const iconBg = isLost ? "bg-primary-light" : "bg-blue-50";
-                  const iconCls = isLost ? "text-primary-dark" : "text-blue-500";
                   return (
-                    <div key={decl.id} className="flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-surface2 transition-colors cursor-pointer">
-                      <div className={`w-9 h-9 sm:w-[38px] sm:h-[38px] rounded-[10px] sm:rounded-[11px] ${iconBg} flex items-center justify-center text-sm sm:text-[15px] flex-shrink-0`}>
-                        <i className={`fa-solid ${getIconForType(decl.doc_type)} ${iconCls}`} />
+                    <Group key={decl.id} gap="sm" px="md" py="sm" style={{ cursor: "pointer" }}>
+                      <div className={`w-9 h-9 rounded-[10px] ${isLost ? "bg-primary-light" : "bg-blue-50"} flex items-center justify-center text-sm flex-shrink-0`}>
+                        <i className={`fa-solid ${getIconForType(decl.doc_type)} ${isLost ? "text-primary-dark" : "text-blue-500"}`} />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[13px] sm:text-[13.5px] font-semibold text-textMain truncate">
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <Text size="sm" fw={600} truncate>
                           {decl.docTypeInfo?.nom || decl.doc_type || t("dashboard_document")} {isLost ? t("dashboard_lost") : t("dashboard_found")}
-                        </div>
-                        <div className="text-[10.5px] sm:text-[11.5px] text-textMuted flex items-center gap-1 italic">
-                          <i className="fa-solid fa-location-dot text-[9px]" /> {decl.ville || t("dashboard_not_specified")} · <i className="fa-regular fa-clock text-[9px]" /> {dateStr}
-                        </div>
+                        </Text>
+                        <Text size="xs" c="dimmed" fs="italic">
+                          <i className="fa-solid fa-location-dot" style={{ fontSize: 9 }} /> {decl.ville || t("dashboard_not_specified")} · <i className="fa-regular fa-clock" style={{ fontSize: 9 }} /> {dateStr}
+                        </Text>
                       </div>
-                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${statusBadgeCls(decl.status, decl.declaration_type)} whitespace-nowrap`}>
+                      <Badge color={decl.status === "MATCHED" ? "green" : decl.status === "RETURNED" ? "gray" : decl.declaration_type === "LOST" ? "orange" : "blue"} size="sm" variant="light">
                         {t(statusText(decl.status))}
-                      </span>
-                    </div>
+                      </Badge>
+                    </Group>
                   );
                 })}
                 {activeDecls.length === 0 && (
-                  <div className="p-5 text-center text-textMuted text-xs italic">{t("dashboard_no_recent_activity")}</div>
+                  <Text ta="center" p="md" size="xs" c="dimmed" fs="italic">{t("dashboard_no_recent_activity")}</Text>
                 )}
               </div>
-            </div>
+            </Card>
 
             {/* Global doc stats */}
             <div className="mt-2">
-              <div className="flex items-center justify-between mb-4 px-1">
+              <Group justify="space-between" mb="md" px={4}>
                 <div>
-                  <h2 className="font-bricolage text-base sm:text-lg font-extrabold text-textMain tracking-tight">{t("dashboard_performance_title")}</h2>
-                  <p className="text-[11px] sm:text-[12px] text-textMuted/70 font-medium italic">{t("dashboard_performance_desc")}</p>
+                  <Title order={2} className="font-bricolage" fz={{ base: 16, sm: 18 }}>{t("dashboard_performance_title")}</Title>
+                  <Text size="xs" c="dimmed" fs="italic">{t("dashboard_performance_desc")}</Text>
                 </div>
-                <span className="text-primary text-[11px] font-bold hover:underline flex items-center gap-1 cursor-pointer">
-                  {t("dashboard_full_catalog")} <i className="fa-solid fa-chevron-right text-[9px]" />
-                </span>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                <Text size="xs" fw={700} c="gold" style={{ cursor: "pointer" }}>
+                  {t("dashboard_full_catalog")} <i className="fa-solid fa-chevron-right" style={{ fontSize: 9 }} />
+                </Text>
+              </Group>
+              <SimpleGrid cols={{ base: 2, md: 3, xl: 4 }} spacing="sm">
                 {Array.isArray(perfData) && perfData.length > 0 ? (
                   perfData.slice(0, 8).map((doc: any, idx: number) => (
                     <PerfCard key={doc.name || idx} doc={doc} onClick={() => setSelectedPerfDoc(doc)} />
@@ -361,99 +381,96 @@ export default function Dashboard() {
                     <SkeletonCard />
                   </>
                 )}
-              </div>
+              </SimpleGrid>
             </div>
           </div>
 
           {/* Right column */}
           <div className="flex flex-col gap-4 sm:gap-5">
             {/* Donut */}
-            <div className="bg-white border border-borda rounded-[18px] overflow-hidden">
-              <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-borda font-bricolage text-[14px] sm:text-[14.5px] font-bold text-textMain flex items-center gap-2">
-                <i className="fa-solid fa-chart-pie text-primary text-[12px] sm:text-[13px]" /> {t("dashboard_doc_stats")}
-              </div>
-              <div className="p-5 flex flex-col items-center gap-4">
-                <div className="donut-wrap relative w-32 h-32">
-                  <svg width="128" height="128" viewBox="0 0 128 128">
-                    <circle cx="64" cy="64" r="50" fill="none" stroke="#EAE3D8" strokeWidth="13" />
-                    {donutSegments.map((seg, i) => {
-                      const prevArcs = donutSegments.slice(0, i).reduce((sum, s) => sum + (s.count / donutTotal) * CIRC, 0);
-                      const arc = (seg.count / donutTotal) * CIRC;
-                      return (
-                        <circle key={seg.color} cx="64" cy="64" r="50" fill="none" stroke={seg.color} strokeWidth="13"
-                          strokeDasharray={`${arc} ${CIRC - arc}`} strokeDashoffset={-prevArcs} />
-                      );
-                    })}
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="font-bricolage text-[26px] font-extrabold text-textMain leading-none">{docCount}</div>
-                    <div className="text-[10.5px] text-textMuted mt-0.5">{t("dashboard_total")}</div>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2 w-full">
-                  {verifiedCount > 0 && <DonutRow color="bg-[#10B981]" label={t("dashboard_donut_recovered")} value={verifiedCount} />}
-                  {lostCount > 0 && <DonutRow color="bg-primary" label={t("dashboard_donut_in_progress")} value={lostCount} />}
-                  {newCount > 0 && <DonutRow color="bg-[#7C3AED]" label={t("dashboard_donut_new")} value={newCount} />}
-                </div>
-              </div>
-            </div>
+            <Card withBorder radius="md" padding={0}>
+              <Group px="md" py="sm" style={{ borderBottom: "1px solid var(--mantine-color-default-border)" }} gap="xs">
+                <i className="fa-solid fa-chart-pie text-primary text-sm" />
+                <Text fw={700} className="font-bricolage">{t("dashboard_doc_stats")}</Text>
+              </Group>
+              <Stack align="center" p="md" gap="md">
+                <RingProgress
+                  size={140}
+                  thickness={14}
+                  roundCaps
+                  sections={[
+                    { value: (verifiedCount / donutTotal) * 100, color: "#10B981" },
+                    { value: (lostCount / donutTotal) * 100, color: "#D98A30" },
+                    { value: (newCount / donutTotal) * 100, color: "#7C3AED" },
+                  ]}
+                  label={
+                    <Text ta="center" fz={26} fw={800} className="font-bricolage">
+                      {docCount}
+                    </Text>
+                  }
+                />
+                <Stack gap="xs" w="100%">
+                  {verifiedCount > 0 && <DonutRow color="#10B981" label={t("dashboard_donut_recovered")} value={verifiedCount} />}
+                  {lostCount > 0 && <DonutRow color="#D98A30" label={t("dashboard_donut_in_progress")} value={lostCount} />}
+                  {newCount > 0 && <DonutRow color="#7C3AED" label={t("dashboard_donut_new")} value={newCount} />}
+                </Stack>
+              </Stack>
+            </Card>
 
             {/* Notifications */}
-            <div className="bg-white border border-borda rounded-[18px] overflow-hidden">
-              <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-borda">
-                <div className="font-bricolage text-[14px] sm:text-[14.5px] font-bold text-textMain flex items-center gap-2">
-                  <i className="fa-solid fa-bell text-primary text-[12px] sm:text-[13px]" /> {t("dashboard_notifications")}
-                </div>
-                <button onClick={() => (window as any).__openNotifModal?.()} className="text-[11.5px] font-semibold text-primary flex items-center gap-1 hover:gap-2 transition-all">
-                  {t("dashboard_see_all")} <i className="fa-solid fa-arrow-right text-[9px]" />
-                </button>
-              </div>
-              <div className="flex flex-col divide-y divide-borda">
+            <Card withBorder radius="md" padding={0}>
+              <Group justify="space-between" px="md" py="sm" style={{ borderBottom: "1px solid var(--mantine-color-default-border)" }}>
+                <Group gap="xs">
+                  <i className="fa-solid fa-bell text-primary text-sm" />
+                  <Text fw={700} className="font-bricolage">{t("dashboard_notifications")}</Text>
+                </Group>
+                <Button onClick={() => (window as any).__openNotifModal?.()} variant="subtle" color="gold" size="compact-sm" rightSection={<i className="fa-solid fa-arrow-right text-[9px]" />}>
+                  {t("dashboard_see_all")}
+                </Button>
+              </Group>
+              <div>
                 {notifs.length > 0 ? notifs.slice(0, 3).map((n, i) => (
-                  <div key={n.id || i} className="flex gap-3 px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-surface2 transition-colors cursor-pointer relative">
-                    {!n.is_read && !n.lue && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary" />}
+                  <Group key={n.id || i} gap="sm" px="md" py="sm" style={{ borderBottom: i < Math.min(notifs.length, 3) - 1 ? "1px solid var(--mantine-color-default-border)" : "none" }}>
+                    {!n.is_read && !n.lue && <div style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", width: 6, height: 6, borderRadius: "50%", background: "#D98A30" }} />}
                     <div className="w-9 h-9 rounded-[9px] bg-green-100 flex items-center justify-center text-sm flex-shrink-0"><i className={`fa-solid ${n.icon || "fa-bell"} text-green-700`} /></div>
-                    <div>
-                      <div className="text-[12px] sm:text-[12.5px] text-textMain leading-snug italic"><strong>{n.titre || ""}</strong> {n.message}</div>
-                      <div className="text-[10px] sm:text-[10.5px] text-textMuted font-medium italic mt-0.5">{timeAgo(n.created_at, t)}</div>
+                    <div style={{ flex: 1 }}>
+                      <Text size="sm" fs="italic"><strong>{n.titre || ""}</strong> {n.message}</Text>
+                      <Text size="xs" c="dimmed" fs="italic" mt={2}>{timeAgo(n.created_at, t)}</Text>
                     </div>
-                  </div>
+                  </Group>
                 )) : (
-                  <div className="p-5 text-center text-textMuted text-xs italic">{t("dashboard_no_notifications")}</div>
+                  <Text ta="center" p="md" size="xs" c="dimmed" fs="italic">{t("dashboard_no_notifications")}</Text>
                 )}
               </div>
-            </div>
+            </Card>
 
             {/* Plan card */}
-            <div className="bg-green-dark rounded-[18px] p-5 relative overflow-hidden">
-              <div className="absolute w-[200px] h-[200px] rounded-full bg-primary/6 -bottom-12 -right-10 pointer-events-none" />
-              <div className="inline-flex items-center gap-1.5 bg-primary/15 border border-primary/25 rounded-full px-2.5 py-1 mb-3">
-                <i className="fa-solid fa-star text-primary text-[9px]" />
-                <span className="text-[10.5px] font-bold text-primary uppercase tracking-wide">{t("dashboard_current_plan")}</span>
-              </div>
-              <div className="font-bricolage text-[18px] font-extrabold text-white mb-0.5">{planName}</div>
-              <div className="text-[12px] text-white/50 mb-3.5">{docLimit} {t("dashboard_plan_details")}</div>
-              <div className="mb-3.5">
-                <div className="flex justify-between text-[11.5px] mb-1.5">
-                  <span className="text-white/60">{t("dashboard_quota_used")}</span>
-                  <span className="text-primary font-bold">{docCountSub} / {docLimit}</span>
+            <Card withBorder radius="md" p="lg" style={{ background: "#1E3A2F", borderColor: "#2A4A3A", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", width: 200, height: 200, borderRadius: "50%", background: "rgba(217,138,48,0.06)", bottom: -48, right: -40, pointerEvents: "none" }} />
+              <Group gap="xs" style={{ background: "rgba(217,138,48,0.15)", border: "1px solid rgba(217,138,48,0.25)", borderRadius: 999, padding: "4px 10px", display: "inline-flex", marginBottom: 12 }}>
+                <i className="fa-solid fa-star text-primary" style={{ fontSize: 9 }} />
+                <Text size="xs" fw={700} c="gold" tt="uppercase" style={{ letterSpacing: "0.05em" }}>{t("dashboard_current_plan")}</Text>
+              </Group>
+              <Text fz={18} fw={800} c="white" mb={4} className="font-bricolage">{planName}</Text>
+              <Text size="sm" c="dimmed" mb="md">{docLimit} {t("dashboard_plan_details")}</Text>
+              <div style={{ marginBottom: 14 }}>
+                <Group justify="space-between" mb={6}>
+                  <Text size="sm" c="white" opacity={0.6}>{t("dashboard_quota_used")}</Text>
+                  <Text size="sm" fw={700} c="gold">{docCountSub} / {docLimit}</Text>
+                </Group>
+                <div style={{ height: 5, background: "rgba(255,255,255,0.1)", borderRadius: 999, overflow: "hidden" }}>
+                  <div style={{ height: "100%", background: "#D98A30", borderRadius: 999, boxShadow: "0 0 8px rgba(217,138,48,0.4)", width: `${quotaPct}%` }} />
                 </div>
-                <div className="h-[5px] bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full shadow-[0_0_8px_rgba(245,166,75,0.4)]" style={{ width: `${quotaPct}%` }} />
-                </div>
               </div>
-              <div className="flex flex-col gap-1.5 mb-4 relative z-10">
+              <Stack gap="xs" mb="md" style={{ position: "relative", zIndex: 10 }}>
                 <FeatureRow icon="fa-solid fa-check" text={t("dashboard_feature_sms")} color="text-primary" />
                 <FeatureRow icon="fa-solid fa-check" text={t("dashboard_feature_tracking")} color="text-primary" />
                 <FeatureRow icon="fa-solid fa-lock" text={t("dashboard_feature_geo")} color="text-white/30" muted />
-              </div>
-              <button
-                onClick={() => navigate("/abonnement")}
-                className="w-full py-2.5 rounded-[11px] bg-primary text-white font-bricolage text-[13.5px] font-bold flex items-center justify-center gap-2 transition-all hover:bg-primary-dark active:scale-[.98] shadow-lg shadow-primary/20 relative z-10"
-              >
-                <i className="fa-solid fa-rocket" /> {t("dashboard_upgrade_plan")}
-              </button>
-            </div>
+              </Stack>
+              <Button onClick={() => navigate("/abonnement")} color="gold" fullWidth leftSection={<i className="fa-solid fa-rocket" />}>
+                {t("dashboard_upgrade_plan")}
+              </Button>
+            </Card>
           </div>
         </div>
       </div>
@@ -485,72 +502,62 @@ export default function Dashboard() {
 
 /* ── Sub-components ── */
 
-function StatCard({ icon, iconBg, iconColor, badge, badgeColor, value, label, className = "" }: any) {
-  return (
-    <div className={`col-span-1 bg-white border border-borda rounded-[16px] sm:rounded-[18px] p-4 flex flex-col gap-2.5 hover:border-primary/50 transition-all ${className}`}>
-      <div className="flex items-center justify-between">
-        <div className={`w-9 h-9 rounded-[10px] ${iconBg} flex items-center justify-center text-base flex-shrink-0`}>
-          <i className={`${icon} ${iconColor}`} />
-        </div>
-        <span className={`text-[10px] font-bold py-0.5 px-2 rounded-[7px] ${badgeColor}`}>{badge}</span>
-      </div>
-      <div className="font-bricolage text-[24px] sm:text-[28px] font-extrabold text-textMain leading-none">{value}</div>
-      <div className="text-[11px] sm:text-[12.5px] text-textMuted font-medium leading-tight">{label}</div>
-    </div>
-  );
-}
-
 function DonutRow({ color, label, value }: any) {
   return (
-    <div className="flex items-center justify-between text-[13px]">
-      <div className="flex items-center gap-2 text-textMain font-medium">
-        <div className={`w-2.5 h-2.5 rounded-[3px] ${color} flex-shrink-0`} />
-        {label}
-      </div>
-      <span className="font-bricolage font-bold text-textMain">{value}</span>
-    </div>
+    <Group justify="space-between" style={{ fontSize: 13 }}>
+      <Group gap="sm">
+        <div style={{ width: 10, height: 10, borderRadius: 3, background: color, flexShrink: 0 }} />
+        <Text fw={500}>{label}</Text>
+      </Group>
+      <Text fw={700} className="font-bricolage">{value}</Text>
+    </Group>
   );
 }
 
 function FeatureRow({ icon, text, color, muted }: any) {
   return (
-    <div className={`flex items-center gap-2 text-[12.5px] ${muted ? "text-white/30 italic" : "text-white/70"}`}>
-      <i className={`${icon} ${muted ? "" : color} text-[11px]`} />{text}
-    </div>
+    <Group gap="sm" style={{ fontSize: 12.5, color: muted ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.7)", fontStyle: muted ? "italic" : "normal" }}>
+      <i className={`${icon} ${muted ? "" : color}`} style={{ fontSize: 11 }} />{text}
+    </Group>
   );
 }
 
-const stepColors: Record<string, { bg: string; border: string; light: string; text: string; faded: string; bFaded: string; line: string; fill: string }> = {
-  red:    { bg: "bg-red-500", border: "border-red-500", light: "bg-red-100", text: "text-red-600", faded: "text-red-300", bFaded: "border-red-200", line: "#FECACA", fill: "#EF4444" },
-  blue:   { bg: "bg-blue-500", border: "border-blue-500", light: "bg-blue-100", text: "text-blue-600", faded: "text-blue-300", bFaded: "border-blue-200", line: "#BFDBFE", fill: "#3B82F6" },
-  green:  { bg: "bg-green-500", border: "border-green-500", light: "bg-green-100", text: "text-green-600", faded: "text-green-300", bFaded: "border-green-200", line: "#BBF7D0", fill: "#22C55E" },
-  orange: { bg: "bg-orange-500", border: "border-orange-500", light: "bg-orange-100", text: "text-orange-600", faded: "text-orange-300", bFaded: "border-orange-200", line: "#FED7AA", fill: "#F97316" },
+const stepColors: Record<string, { bg: string; border: string; text: string; faded: string; line: string; fill: string; headerBg: string; iconBg: string }> = {
+  red:    { bg: "#EF4444", border: "#EF4444", text: "#DC2626", faded: "#FCA5A5", line: "#FECACA", fill: "#EF4444", headerBg: "rgba(239,68,68,0.05)", iconBg: "rgba(239,68,68,0.1)" },
+  blue:   { bg: "#3B82F6", border: "#3B82F6", text: "#2563EB", faded: "#93C5FD", line: "#BFDBFE", fill: "#3B82F6", headerBg: "rgba(59,130,246,0.05)", iconBg: "rgba(59,130,246,0.1)" },
+  green:  { bg: "#22C55E", border: "#22C55E", text: "#16A34A", faded: "#86EFAC", line: "#BBF7D0", fill: "#22C55E", headerBg: "rgba(34,197,94,0.05)", iconBg: "rgba(34,197,94,0.1)" },
+  orange: { bg: "#F97316", border: "#F97316", text: "#EA580C", faded: "#FDBA74", line: "#FED7AA", fill: "#F97316", headerBg: "rgba(249,115,22,0.05)", iconBg: "rgba(249,115,22,0.1)" },
 };
 
 function StepIndicator({ steps, current, color: theme }: { steps: string[]; current: number; color: "red" | "blue" | "green" | "orange" }) {
   const c = stepColors[theme] || stepColors.red;
   return (
-    <div className="relative flex justify-between items-start px-2 mt-4">
-      <div className="absolute top-3 left-[40px] right-[40px] h-[2px]" style={{ backgroundColor: c.line }} />
-      <div className="absolute top-3 left-[40px] h-[2px]" style={{ width: `${(current - 1) / (steps.length - 1) * 100}%`, backgroundColor: c.fill }} />
-      {steps.map((step, i) => (
-        <div key={i} className="relative z-10 flex flex-col items-center gap-1.5 min-w-[60px]">
-          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[8px] shadow-sm ${i < current - 1 ? `${c.bg} text-white` : i === current - 1 ? `bg-white border-2 ${c.border} ${c.text}` : `bg-white border-2 ${c.bFaded} ${c.faded}`}`}>
-            {i < current - 1 ? <i className="fa-solid fa-check" /> : <i className={`fa-solid ${i === 0 ? "fa-check" : i === 1 ? "fa-search" : i === 2 ? "fa-handshake" : "fa-check-double"}`} />}
+    <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "flex-start", paddingLeft: 8, paddingRight: 8, marginTop: 16 }}>
+      <div style={{ position: "absolute", top: 12, left: 40, right: 40, height: 2, backgroundColor: c.line }} />
+      <div style={{ position: "absolute", top: 12, left: 40, height: 2, width: `${(current - 1) / (steps.length - 1) * 100}%`, backgroundColor: c.fill }} />
+      {steps.map((step, i) => {
+        const done = i < current - 1;
+        const active = i === current - 1;
+        return (
+          <div key={i} style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, minWidth: 60 }}>
+            <div style={{
+              width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8,
+              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+              background: done ? c.bg : "white",
+              border: done ? "none" : `2px solid ${active ? c.border : c.line}`,
+              color: done ? "white" : active ? c.text : c.faded,
+            }}>
+              {done ? <i className="fa-solid fa-check" /> : <i className={`fa-solid ${i === 0 ? "fa-check" : i === 1 ? "fa-search" : i === 2 ? "fa-handshake" : "fa-check-double"}`} />}
+            </div>
+            <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: -0.3, color: done || active ? c.text : c.faded }}>{step}</span>
           </div>
-          <span className={`text-[9px] font-bold uppercase tracking-tighter ${i < current - 1 ? c.text : i === current - 1 ? c.text : c.faded}`}>{step}</span>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
 
-const cardPalettes: Record<string, { border: string; headerBg: string; borderB: string; text: string; bg: string; badge: string; iconBg: string; iconText: string }> = {
-  red: { border: "border-red-500", headerBg: "bg-red-50/50", borderB: "border-red-100", text: "text-red-600", bg: "bg-red-500", badge: "bg-red-500", iconBg: "bg-red-50", iconText: "text-red-500" },
-  orange: { border: "border-orange-500", headerBg: "bg-orange-50/50", borderB: "border-orange-100", text: "text-orange-600", bg: "bg-orange-500", badge: "bg-orange-500", iconBg: "bg-orange-50", iconText: "text-orange-500" },
-  green: { border: "border-green-500", headerBg: "bg-green-50/50", borderB: "border-green-100", text: "text-green-600", bg: "bg-green-500", badge: "bg-green-500", iconBg: "bg-green-50", iconText: "text-green-500" },
-  blue: { border: "border-blue-500", headerBg: "bg-blue-50/50", borderB: "border-blue-100", text: "text-blue-600", bg: "bg-blue-500", badge: "bg-blue-500", iconBg: "bg-blue-50", iconText: "text-blue-500" },
-};
+type CardTheme = "red" | "orange" | "green" | "blue";
 
 function TrackingLostCard({ decl, navigate, userName }: { decl: Declaration; navigate: (path: string) => void; userName?: string }) {
   const { t } = useI18n();
@@ -558,7 +565,7 @@ function TrackingLostCard({ decl, navigate, userName }: { decl: Declaration; nav
   const allMatches = (decl.matches as unknown as Array<{ status: string; found_declaration_id: string }> | undefined) || [];
   const hasPotential = !hasMatch && allMatches.some((m) => m.status === "PENDING");
   const colorKey = hasMatch ? "green" : hasPotential ? "orange" : "red";
-  const c = cardPalettes[colorKey];
+  const c = stepColors[colorKey];
 
   let step = 1;
   if (decl.status === "SEARCHING") step = 2;
@@ -571,50 +578,52 @@ function TrackingLostCard({ decl, navigate, userName }: { decl: Declaration; nav
   };
 
   return (
-    <div className={`bg-white border-2 ${c.border} rounded-[18px] overflow-hidden shadow-md`}>
-      <div className={`px-4 sm:px-5 py-3 border-b ${c.borderB} flex items-center justify-between ${c.headerBg}`}>
-        <div className={`font-bricolage text-[13px] font-bold ${c.text} flex items-center gap-2`}>
-          <i className={`fa-solid ${hasMatch ? "fa-check-double animate-bounce" : hasPotential ? "fa-magnifying-glass-chart" : "fa-triangle-exclamation animate-pulse"}`} />
-          {hasMatch ? t("dashboard_card_lost_matched") : hasPotential ? t("dashboard_card_lost_potential") : t("dashboard_card_lost_reported")}
-        </div>
-        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${c.badge} text-white uppercase tracking-wider`}>
+    <Card withBorder padding={0} radius="lg" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
+      <Group justify="space-between" px="md" py="sm" style={{ background: c.headerBg, borderBottom: `1px solid ${c.line}` }}>
+        <Group gap="xs">
+          <i className={`fa-solid ${hasMatch ? "fa-check-double" : hasPotential ? "fa-magnifying-glass-chart" : "fa-triangle-exclamation"}`} style={{ color: c.text }} />
+          <Text size="sm" fw={700} style={{ color: c.text, fontFamily: "'Bricolage Grotesque', sans-serif" }}>
+            {hasMatch ? t("dashboard_card_lost_matched") : hasPotential ? t("dashboard_card_lost_potential") : t("dashboard_card_lost_reported")}
+          </Text>
+        </Group>
+        <Badge color={colorKey === "green" ? "green" : colorKey === "orange" ? "orange" : "red"} size="sm" variant="filled">
           {decl.status === "MATCHED" ? t("dashboard_badge_matched") : decl.status === "RETURNED" ? t("dashboard_badge_returned") : hasPotential ? t("dashboard_badge_potential") : t("dashboard_badge_lost")}
-        </span>
-      </div>
-      <div className="p-4 sm:p-5">
-        <div className="flex items-center gap-3 mb-4">
-          <div className={`w-10 h-10 rounded-[12px] ${c.iconBg} flex items-center justify-center ${c.iconText}`}>
-            <i className={`fa-solid ${getIconForType(decl.doc_type)} text-lg`} />
+        </Badge>
+      </Group>
+      <div style={{ padding: "16px 20px" }}>
+        <Group gap="sm" mb="md">
+          <div className={`w-10 h-10 rounded-[12px] flex items-center justify-center`} style={{ background: c.iconBg, color: c.text }}>
+            <i className={`fa-solid ${getIconForType(decl.doc_type)}`} style={{ fontSize: 18 }} />
           </div>
           <div>
-            <div className="text-[13.5px] font-bold text-textMain">{decl.docTypeInfo?.nom || decl.doc_type || t("dashboard_document")} — {decl.nom_complet || decl.owner_name || userName || t("dashboard_user")}</div>
-            <div className="text-[10px] text-textMuted italic">{t("dashboard_ref")}: {decl.identifiant_doc_dm || decl.reference || "---"} · {t(statusText(decl.status))}</div>
+            <Text fz={13.5} fw={700}>{decl.docTypeInfo?.nom || decl.doc_type || t("dashboard_document")} — {decl.nom_complet || decl.owner_name || userName || t("dashboard_user")}</Text>
+            <Text size="xs" c="dimmed" fs="italic">{t("dashboard_ref")}: {decl.identifiant_doc_dm || decl.reference || "---"} · {t(statusText(decl.status))}</Text>
           </div>
-        </div>
+        </Group>
         <StepIndicator steps={[t("dashboard_step_submission"), t("dashboard_step_search"), t("dashboard_step_matching"), t("dashboard_step_recovered")]} current={step} color={colorKey} />
         {hasPotential && (
-          <div className="mt-6 flex justify-end">
-            <button onClick={viewPotentialMatches} className="px-4 py-2 bg-orange-500 text-white rounded-[10px] text-[11px] font-bold hover:bg-orange-600 transition-all flex items-center gap-2 shadow-lg shadow-orange-500/20">
-              <i className="fa-solid fa-magnifying-glass-chart" /> {t("dashboard_view_matches")}
-            </button>
-          </div>
+          <Group justify="flex-end" mt="lg">
+            <Button onClick={viewPotentialMatches} color="orange" size="sm" leftSection={<i className="fa-solid fa-magnifying-glass-chart" />}>
+              {t("dashboard_view_matches")}
+            </Button>
+          </Group>
         )}
         {decl.status === "MATCHED" && (
-          <div className="mt-6 flex justify-end">
-            <button onClick={() => navigate(`/recuperer?id=${decl.id}`)} className="px-4 py-2 bg-green-600 text-white rounded-[10px] text-[11px] font-bold hover:bg-green-700 transition-all flex items-center gap-2 shadow-lg shadow-green-500/20">
-              <i className="fa-solid fa-handshake" /> {t("dashboard_recover_document")}
-            </button>
-          </div>
+          <Group justify="flex-end" mt="lg">
+            <Button onClick={() => navigate(`/recuperer?id=${decl.id}`)} color="green" size="sm" leftSection={<i className="fa-solid fa-handshake" />}>
+              {t("dashboard_recover_document")}
+            </Button>
+          </Group>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 
 function TrackingFoundCard({ decl, navigate }: { decl: Declaration; navigate: (path: string) => void }) {
   const { t } = useI18n();
   const colorKey = decl.status === "RETURNED" || decl.status === "MATCHED" ? "green" : "blue";
-  const c = cardPalettes[colorKey];
+  const c = stepColors[colorKey];
 
   let step = 1;
   if (decl.status === "AVAILABLE") step = 2;
@@ -622,43 +631,46 @@ function TrackingFoundCard({ decl, navigate }: { decl: Declaration; navigate: (p
   if (decl.status === "RETURNED") step = 4;
 
   const headerLabel = decl.status === "RETURNED" ? t("dashboard_card_found_returned") : decl.status === "MATCHED" ? t("dashboard_card_found_matched") : t("dashboard_card_found_reported");
-  const headerIcon = decl.status === "RETURNED" ? "fa-circle-check" : decl.status === "MATCHED" ? "fa-handshake animate-bounce" : "fa-hand-holding-heart";
+  const headerIcon = decl.status === "RETURNED" ? "fa-circle-check" : decl.status === "MATCHED" ? "fa-handshake" : "fa-hand-holding-heart";
   const badgeLabel = decl.status === "RETURNED" ? t("dashboard_badge_returned") : decl.status === "MATCHED" ? t("dashboard_badge_to_return") : t("dashboard_badge_reported");
 
   return (
-    <div className={`bg-white border-2 ${c.border} rounded-[18px] overflow-hidden shadow-md`}>
-      <div className={`px-4 sm:px-5 py-3 border-b ${c.borderB} flex items-center justify-between ${c.headerBg}`}>
-        <div className={`font-bricolage text-[13px] font-bold ${c.text} flex items-center gap-2`}>
-          <i className={`fa-solid ${headerIcon}`} /> {headerLabel}
-        </div>
-        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${c.badge} text-white uppercase tracking-wider`}>{badgeLabel}</span>
-      </div>
-      <div className="p-4 sm:p-5">
-        <div className="flex items-center gap-3 mb-4">
-          <div className={`w-10 h-10 rounded-[12px] ${c.iconBg} flex items-center justify-center ${c.iconText}`}>
-            <i className={`fa-solid ${getIconForType(decl.doc_type)} text-lg`} />
+    <Card withBorder padding={0} radius="lg" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
+      <Group justify="space-between" px="md" py="sm" style={{ background: c.headerBg, borderBottom: `1px solid ${c.line}` }}>
+        <Group gap="xs">
+          <i className={`fa-solid ${headerIcon}`} style={{ color: c.text }} />
+          <Text size="sm" fw={700} style={{ color: c.text, fontFamily: "'Bricolage Grotesque', sans-serif" }}>
+            {headerLabel}
+          </Text>
+        </Group>
+        <Badge color={colorKey === "green" ? "green" : "blue"} size="sm" variant="filled">{badgeLabel}</Badge>
+      </Group>
+      <div style={{ padding: "16px 20px" }}>
+        <Group gap="sm" mb="md">
+          <div className="w-10 h-10 rounded-[12px] flex items-center justify-center" style={{ background: c.iconBg, color: c.text }}>
+            <i className={`fa-solid ${getIconForType(decl.doc_type)}`} style={{ fontSize: 18 }} />
           </div>
           <div>
-            <div className="text-[13.5px] font-bold text-textMain">{decl.docTypeInfo?.nom || decl.doc_type || t("dashboard_document")} — {decl.owner_name || t("dashboard_unknown")}</div>
-            <div className="text-[10px] text-textMuted italic">{t("dashboard_ref")}: {decl.identifiant_doc_dm || decl.reference || "---"} · {t(statusText(decl.status))}</div>
+            <Text fz={13.5} fw={700}>{decl.docTypeInfo?.nom || decl.doc_type || t("dashboard_document")} — {decl.owner_name || t("dashboard_unknown")}</Text>
+            <Text size="xs" c="dimmed" fs="italic">{t("dashboard_ref")}: {decl.identifiant_doc_dm || decl.reference || "---"} · {t(statusText(decl.status))}</Text>
           </div>
-        </div>
+        </Group>
         <StepIndicator steps={[t("dashboard_found_step_found"), t("dashboard_found_step_reported"), t("dashboard_found_step_owner"), t("dashboard_found_step_returned")]} current={step} color={colorKey} />
         {decl.status === "MATCHED" && decl.status !== "RETURNED" && (
-          <div className="mt-6 flex justify-end">
-            <button onClick={() => navigate(`/rendre?id=${decl.id}`)} className="px-4 py-2 bg-green-600 text-white rounded-[10px] text-[11px] font-bold hover:bg-green-700 transition-all flex items-center gap-2 shadow-lg shadow-green-500/20">
-              <i className="fa-solid fa-hand-holding-heart" /> {t("dashboard_return_document")}
-            </button>
-          </div>
+          <Group justify="flex-end" mt="lg">
+            <Button onClick={() => navigate(`/rendre?id=${decl.id}`)} color="green" size="sm" leftSection={<i className="fa-solid fa-hand-holding-heart" />}>
+              {t("dashboard_return_document")}
+            </Button>
+          </Group>
         )}
         {decl.status !== "MATCHED" && decl.status !== "RETURNED" && (
-          <div className="mt-4 text-[11px] text-textMuted italic text-center bg-blue-50 rounded-xl py-2 px-3">
-            <i className="fa-solid fa-clock-rotate-left text-blue-400 mr-1" />
+          <Paper style={{ marginTop: 16, fontSize: 11, color: "var(--mantine-color-dimmed)", fontStyle: "italic", textAlign: "center", background: "rgba(59,130,246,0.1)", borderRadius: 12, padding: "8px 12px" }}>
+            <i className="fa-solid fa-clock-rotate-left" style={{ color: "#3B82F6", marginRight: 4 }} />
             {t("dashboard_waiting_confirmation")}
-          </div>
+          </Paper>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -694,44 +706,48 @@ function PerfCard({ doc, onClick }: { doc: any; onClick?: () => void }) {
   const activityText = latest ? `${latest.type === "LOST" ? t("dashboard_perf_lost") : t("dashboard_perf_found")} ${timeAgo(latest.date, t)}${latest.ville ? ` ${t("dashboard_perf_in")} ${latest.ville}` : ""}` : t("dashboard_perf_no_activity");
 
   return (
-    <div onClick={onClick} className="bg-white border border-borda rounded-2xl overflow-hidden hover:border-primary/50 transition-all group cursor-pointer shadow-sm">
-      <div className="relative h-24 overflow-hidden bg-surface2">
-        <img src={typeImages[name] || "/src/assets/images/devices_docs.png"} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90" alt={doc.name} />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60" />
-        <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded-md bg-white/90 backdrop-blur-sm text-[9px] font-bold flex items-center gap-0.5 ${isUp ? "text-green-600" : "text-red-500"}`}>
-          <i className={`fa-solid ${isUp ? "fa-arrow-up" : "fa-arrow-down"} text-[7px]`} /> {Math.abs(trend)}%
+    <Card withBorder radius="lg" padding={0} onClick={onClick} style={{ cursor: "pointer" }}>
+      <Card.Section>
+        <div style={{ position: "relative", height: 96, overflow: "hidden", background: "var(--mantine-color-surface2)" }}>
+          <img src={typeImages[name] || "/src/assets/images/devices_docs.png"} style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.9 }} alt={doc.name} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.4), transparent)", opacity: 0.6 }} />
+          <Paper style={{ position: "absolute", top: 8, right: 8, padding: "2px 6px", borderRadius: 6, background: "rgba(255,255,255,0.9)", fontSize: 9, fontWeight: 700, color: isUp ? "#16a34a" : "#ef4444", display: "flex", alignItems: "center", gap: 2 }}>
+            <i className={`fa-solid ${isUp ? "fa-arrow-up" : "fa-arrow-down"}`} style={{ fontSize: 7 }} /> {Math.abs(trend)}%
+          </Paper>
         </div>
-      </div>
-      <div className="p-3">
-        <div className="flex items-center gap-2 mb-1">
-          <div className={`w-6 h-6 rounded-md ${cfg.color} flex items-center justify-center text-[10px]`}>
+      </Card.Section>
+      <div style={{ padding: 12 }}>
+        <Group gap="sm" mb={4}>
+          <div className={`w-6 h-6 rounded-md ${cfg.color} flex items-center justify-center`} style={{ fontSize: 10 }}>
             <i className={`fa-solid ${cfg.icon}`} />
           </div>
-          <span className="text-[11px] font-bold text-textMain truncate">{t(cfg.label)}</span>
+          <Text size="xs" fw={700} truncate>{t(cfg.label)}</Text>
+        </Group>
+        <div>
+          <Group gap={4} align="baseline">
+            <Text span fz={13} fw={800} c="gold">{(parseInt(doc.count) || 0).toLocaleString()}</Text>
+            <Text span size="xs" c="dimmed" fs="italic">{t("dashboard_this_month")}</Text>
+          </Group>
+          <Paper style={{ fontSize: 8, color: "var(--mantine-color-dimmed)", marginTop: 4, background: "var(--mantine-color-surface2)", padding: "2px 6px", borderRadius: 6, width: "fit-content" }}>
+            <i className="fa-solid fa-clock-rotate-left" style={{ fontSize: 7, marginRight: 4 }} /> {activityText}
+          </Paper>
         </div>
-        <div className="flex flex-col">
-          <div className="flex items-baseline gap-1">
-            <span className="text-[13px] font-extrabold text-primary">{(parseInt(doc.count) || 0).toLocaleString()}</span>
-            <span className="text-[9px] text-textMuted font-medium italic">{t("dashboard_this_month")}</span>
-          </div>
-          <span className="text-[8px] text-textMuted mt-1 bg-surface2 px-1.5 py-0.5 rounded-md w-fit font-medium">
-            <i className="fa-solid fa-clock-rotate-left text-[7px] mr-1" /> {activityText}
-          </span>
-        </div>
-        <div className="mt-2 w-full h-1 bg-surface2 rounded-full overflow-hidden">
-          <div className="h-full bg-primary/30 rounded-full" style={{ width: `${Math.min(100, ((parseInt(doc.count) || 0) / 1000) * 100)}%` }} />
+        <div style={{ marginTop: 8, width: "100%", height: 4, background: "var(--mantine-color-surface2)", borderRadius: 999, overflow: "hidden" }}>
+          <div style={{ height: "100%", background: "rgba(217,138,48,0.3)", borderRadius: 999, width: `${Math.min(100, ((parseInt(doc.count) || 0) / 1000) * 100)}%` }} />
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
 function SkeletonCard() {
   return (
-    <div className="animate-pulse bg-white border border-borda rounded-2xl p-4 h-32">
-      <div className="h-4 bg-bgMain rounded w-3/4 mb-3" />
-      <div className="h-3 bg-bgMain rounded w-1/2" />
-    </div>
+    <Card withBorder radius="lg" p="md">
+      <div className="animate-pulse">
+        <div style={{ height: 16, background: "var(--mantine-color-bgMain)", borderRadius: 4, width: "75%", marginBottom: 12 }} />
+        <div style={{ height: 12, background: "var(--mantine-color-bgMain)", borderRadius: 4, width: "50%" }} />
+      </div>
+    </Card>
   );
 }
 
@@ -746,7 +762,7 @@ function PerfModal({ doc, onClose, promo, isDismissed, onPromoSubscribe, onPromo
   pollingStatus: string | null;
 }) {
   const { t } = useI18n();
-  const { navigate } = useNavigate();
+  const navigate = useNavigate();
   const name = (doc.name || "").toUpperCase();
   const cfg = typeConfigs[name] || typeConfigs.DEFAULT;
   const image = typeImages[name] || "/src/assets/images/devices_docs.png";
@@ -755,69 +771,67 @@ function PerfModal({ doc, onClose, promo, isDismissed, onPromoSubscribe, onPromo
   const recentItems = doc.recent_items || [];
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end md:items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-t-2xl md:rounded-2xl w-full max-w-lg max-h-[85vh] overflow-hidden shadow-2xl mx-4 flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <div className="relative h-44 overflow-hidden flex-shrink-0">
-          <img src={image} alt={doc.name} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-          <button onClick={onClose} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-colors">
-            <i className="fa-solid fa-xmark text-sm" />
-          </button>
-          <div className="absolute bottom-3 left-4 flex items-center gap-3">
+    <>
+      <Modal opened onClose={onClose} size="lg" padding={0} withCloseButton={false}>
+        <div style={{ position: "relative", height: 176, overflow: "hidden", flexShrink: 0 }}>
+          <img src={image} alt={doc.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0.2), transparent)" }} />
+          <Group style={{ position: "absolute", bottom: 12, left: 16 }} gap="sm">
             <div className={`w-10 h-10 rounded-xl ${cfg.color} flex items-center justify-center`}>
               <i className={`fa-solid ${cfg.icon} text-lg`} />
             </div>
             <div>
-              <div className="text-white font-bricolage text-lg font-extrabold">{t(cfg.label)}</div>
-              <div className={`text-[11px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${isUp ? "bg-green-500/20 text-green-200" : "bg-red-500/20 text-red-200"}`}>
-                <i className={`fa-solid ${isUp ? "fa-arrow-up" : "fa-arrow-down"} text-[8px]"}`} /> {Math.abs(trend)}%
-              </div>
+              <Text c="white" fz={18} fw={800} className="font-bricolage">{t(cfg.label)}</Text>
+              <Badge color={isUp ? "green" : "red"} size="sm" variant="light">
+                <i className={`fa-solid ${isUp ? "fa-arrow-up" : "fa-arrow-down"}`} style={{ fontSize: 8 }} /> {Math.abs(trend)}%
+              </Badge>
             </div>
-          </div>
+          </Group>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-surface2 rounded-xl p-3 text-center">
-              <div className="font-bricolage text-xl font-extrabold text-textMain">{(parseInt(doc.count) || 0).toLocaleString()}</div>
-              <div className="text-[10px] text-textMuted font-medium">{t("dashboard_perf_this_month")}</div>
-            </div>
-            <div className="bg-surface2 rounded-xl p-3 text-center">
-              <div className="font-bricolage text-xl font-extrabold text-textMain">{(parseInt(doc.previous_count) || 0).toLocaleString()}</div>
-              <div className="text-[10px] text-textMuted font-medium">{t("dashboard_perf_last_month")}</div>
-            </div>
-            <div className="bg-surface2 rounded-xl p-3 text-center">
-              <div className={`font-bricolage text-xl font-extrabold ${isUp ? "text-green-600" : trend < 0 ? "text-red-500" : "text-textMain"}`}>
+        <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+          <SimpleGrid cols={3} spacing="sm">
+            <Paper p="md" ta="center" style={{ background: "var(--mantine-color-surface2)" }}>
+              <Text fz={20} fw={800} className="font-bricolage">{(parseInt(doc.count) || 0).toLocaleString()}</Text>
+              <Text size="xs" c="dimmed" fw={500}>{t("dashboard_perf_this_month")}</Text>
+            </Paper>
+            <Paper p="md" ta="center" style={{ background: "var(--mantine-color-surface2)" }}>
+              <Text fz={20} fw={800} className="font-bricolage">{(parseInt(doc.previous_count) || 0).toLocaleString()}</Text>
+              <Text size="xs" c="dimmed" fw={500}>{t("dashboard_perf_last_month")}</Text>
+            </Paper>
+            <Paper p="md" ta="center" style={{ background: "var(--mantine-color-surface2)" }}>
+              <Text fz={20} fw={800} className="font-bricolage" c={isUp ? "green" : trend < 0 ? "red" : undefined}>
                 {isUp ? "+" : ""}{trend}%
-              </div>
-              <div className="text-[10px] text-textMuted font-medium">{t("dashboard_perf_trend")}</div>
-            </div>
-          </div>
+              </Text>
+              <Text size="xs" c="dimmed" fw={500}>{t("dashboard_perf_trend")}</Text>
+            </Paper>
+          </SimpleGrid>
 
           {recentItems.length > 0 && (
             <div>
-              <h4 className="font-bricolage text-[13px] font-bold text-textMain mb-2 flex items-center gap-2">
-                <i className="fa-solid fa-clock-rotate-left text-primary text-[11px]" /> {t("dashboard_perf_recent")}
-              </h4>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
+              <Group gap="xs" mb="sm">
+                <i className="fa-solid fa-clock-rotate-left text-primary" style={{ fontSize: 11 }} />
+                <Text fz={13} fw={700} className="font-bricolage">{t("dashboard_perf_recent")}</Text>
+              </Group>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 192, overflowY: "auto" }}>
                 {recentItems.slice(0, 8).map((item: any, i: number) => {
                   const isLost = item.type === "LOST";
                   const dateStr = item.date ? new Date(item.date).toLocaleDateString("fr-FR") : "";
                   return (
-                    <div key={item.id || i} className="flex items-center gap-3 bg-surface2 rounded-xl px-3 py-2.5">
+                    <Group key={item.id || i} gap="sm" p="sm" style={{ background: "var(--mantine-color-surface2)", borderRadius: 12 }}>
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isLost ? "bg-amber-100" : "bg-green-100"}`}>
                         <i className={`fa-solid ${isLost ? "fa-arrow-down text-amber-600" : "fa-arrow-up text-green-600"} text-xs`} />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[12px] font-semibold text-textMain truncate">
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <Text size="sm" fw={600} truncate>
                           {isLost ? t("dashboard_perf_lost") : t("dashboard_perf_found")}
-                        </div>
-                        <div className="text-[10px] text-textMuted italic flex items-center gap-1">
-                          {item.ville && <><i className="fa-solid fa-location-dot text-[8px]" /> {item.ville} · </>}
-                          <i className="fa-regular fa-clock text-[8px]" /> {dateStr}
-                        </div>
+                        </Text>
+                        <Text size="xs" c="dimmed" fs="italic">
+                          {item.ville && <><i className="fa-solid fa-location-dot" style={{ fontSize: 8 }} /> {item.ville} · </>}
+                          <i className="fa-regular fa-clock" style={{ fontSize: 8 }} /> {dateStr}
+                        </Text>
                       </div>
-                    </div>
+                    </Group>
                   );
                 })}
               </div>
@@ -825,18 +839,18 @@ function PerfModal({ doc, onClose, promo, isDismissed, onPromoSubscribe, onPromo
           )}
 
           {recentItems.length === 0 && (
-            <div className="text-center py-6 text-textMuted text-xs italic">
-              <i className="fa-solid fa-inbox text-2xl text-gray-200 block mb-2" /> {t("dashboard_perf_no_activity")}
-            </div>
+            <Text ta="center" py="lg" size="xs" c="dimmed" fs="italic">
+              <i className="fa-solid fa-inbox text-2xl" style={{ color: "#e5e7eb", display: "block", marginBottom: 8 }} /> {t("dashboard_perf_no_activity")}
+            </Text>
           )}
         </div>
 
-        <div className="flex-shrink-0 border-t border-borda p-4 flex justify-end">
-          <button onClick={() => { onClose(); navigate("/mes-declarations"); }} className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary-dark transition-all flex items-center gap-2">
-            {t("dashboard_perf_view_all")} <i className="fa-solid fa-arrow-right text-[9px]" />
-          </button>
-        </div>
-      </div>
+        <Group justify="flex-end" p="md" style={{ borderTop: "1px solid var(--mantine-color-default-border)", flexShrink: 0 }}>
+          <Button onClick={() => { onClose(); navigate("/mes-declarations"); }} color="gold" size="sm" rightSection={<i className="fa-solid fa-arrow-right text-[9px]" />}>
+            {t("dashboard_perf_view_all")}
+          </Button>
+        </Group>
+      </Modal>
 
       {promo && !isDismissed && (
         <PromoPopup
@@ -847,6 +861,6 @@ function PerfModal({ doc, onClose, promo, isDismissed, onPromoSubscribe, onPromo
           pollingStatus={pollingStatus}
         />
       )}
-    </div>
+    </>
   );
 }

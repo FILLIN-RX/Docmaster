@@ -5,6 +5,20 @@ import { useI18n } from "../context/I18nContext";
 import { useNotifications } from "../hooks/useNotifications";
 import { getPhotoUrl } from "../utils/image";
 import VipAvatar, { isVipUser } from "../components/ui/VipBadge";
+import {
+  Group,
+  Text,
+  Paper,
+  Button,
+  TextInput,
+  Menu,
+  ActionIcon,
+  Burger,
+  Breadcrumbs,
+  Anchor,
+  Avatar,
+  Indicator,
+} from "@mantine/core";
 
 interface Breadcrumb {
   label: string;
@@ -23,9 +37,10 @@ export default function Topbar({ title, breadcrumbs = [], onToggleSidebar }: Top
   const { unreadCount } = useNotifications();
   const navigate = useNavigate();
   const [searchQ, setSearchQ] = useState("");
-  const [langOpen, setLangOpen] = useState(false);
+  const [opened, setOpened] = useState(false);
 
   const handleToggle = () => {
+    setOpened((o) => !o);
     if (onToggleSidebar) {
       onToggleSidebar();
     } else if ((window as any).__sidebarToggle) {
@@ -39,128 +54,182 @@ export default function Topbar({ title, breadcrumbs = [], onToggleSidebar }: Top
     else navigate("/rechercher");
   };
 
+  const languageLabel = lang === "fr" ? "Français" : lang === "ar" ? "العربية" : "English";
+
   return (
-    <header className="flex-shrink-0 bg-white border-b border-[#E0D5C4] px-4 md:px-6 h-16 flex items-center justify-between z-20">
-      <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0, flex: 1 }}>
-        <button
-          id="menuBtn"
+    <Paper
+      component="header"
+      radius={0}
+      px={{ base: "sm", md: "xl" }}
+      h={64}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: "var(--mantine-spacing-md)",
+        borderBottom: "1px solid var(--color-borda)",
+        zIndex: 20,
+        flexShrink: 0,
+      }}
+    >
+      {/* Left: sidebar toggle + breadcrumbs/title + search */}
+      <Group gap="sm" wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
+        <Burger
+          opened={opened}
           onClick={handleToggle}
-          className="flex items-center justify-center bg-none border-none text-[#374151] text-lg cursor-pointer p-1 flex-shrink-0"
-          style={{ background: "none", border: "none" }}
-        >
-          <i className="fa-solid fa-bars" />
-        </button>
-        <div style={{ minWidth: 0 }}>
-          <nav style={{ fontSize: 16.5, color: "#9CA3AF", fontWeight: 500, display: "flex", alignItems: "center", gap: 5 }}>
-            {breadcrumbs.map((crumb, i) => (
-              <span key={i} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                {i > 0 && <i className="fa-solid fa-chevron-right" style={{ fontSize: 12 }} />}
-                {crumb.href ? (
-                  <a href={crumb.href} style={{ color: "#9CA3AF", textDecoration: "none" }}>{crumb.label}</a>
-                ) : (
-                  <span style={{ color: i === breadcrumbs.length - 1 ? "#1E3A2F" : "#9CA3AF", fontWeight: i === breadcrumbs.length - 1 ? 600 : 400 }}>
+          size="sm"
+          aria-label="Basculer le menu"
+        />
+
+        <div style={{ minWidth: 0, flex: 1 }}>
+          {breadcrumbs.length > 0 ? (
+            <Breadcrumbs
+              separator={<i className="fa-solid fa-chevron-right" style={{ fontSize: 10, color: "var(--mantine-color-gray-5)" }} />}
+              visibleFrom="sm"
+            >
+              {breadcrumbs.map((crumb, i) => {
+                const isLast = i === breadcrumbs.length - 1;
+                return crumb.href && !isLast ? (
+                  <Anchor key={i} href={crumb.href} c="dimmed" size="sm" underline="never">
                     {crumb.label}
-                  </span>
-                )}
-              </span>
-            ))}
-          </nav>
+                  </Anchor>
+                ) : (
+                  <Text key={i} size="sm" fw={isLast ? 600 : 400} c={isLast ? "green.9" : "dimmed"} truncate>
+                    {crumb.label}
+                  </Text>
+                );
+              })}
+            </Breadcrumbs>
+          ) : (
+            <Text fw={700} size="md" c="dark.6" visibleFrom="sm" truncate>
+              {title}
+            </Text>
+          )}
         </div>
 
-        {/* Desktop search bar */}
-        <div className="hidden md:flex flex-1 max-w-md ml-6">
-          <div className="relative w-full flex items-center bg-bgMain border border-borderMain rounded-[10px] overflow-hidden focus-within:border-primary transition-all">
-            <i className="fa-solid fa-magnifying-glass pl-3 text-textMuted text-[13px]" />
-            <input
-              type="text"
-              value={searchQ}
-              onChange={(e) => setSearchQ(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && doSearch()}
-              placeholder={t("topbar_search")}
-              className="flex-1 py-2 px-2 bg-transparent outline-none text-[12.5px] text-textMain placeholder:text-textMuted"
-            />
-            <button onClick={doSearch} className="pr-2.5 text-primary hover:text-primary-dark transition-colors text-[13px]">
+        <TextInput
+          visibleFrom="md"
+          value={searchQ}
+          onChange={(e) => setSearchQ(e.currentTarget.value)}
+          onKeyDown={(e) => e.key === "Enter" && doSearch()}
+          placeholder={t("topbar_search")}
+          radius="md"
+          size="sm"
+          w="100%"
+          maw={340}
+          leftSection={<i className="fa-solid fa-magnifying-glass" style={{ fontSize: 13, color: "var(--mantine-color-gray-5)" }} />}
+          rightSection={
+            <ActionIcon variant="subtle" color="yellow" onClick={doSearch} size="sm" aria-label="Rechercher">
               <i className="fa-solid fa-arrow-right" />
-            </button>
-          </div>
-        </div>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-        <Link
+            </ActionIcon>
+          }
+          styles={{
+            input: {
+              backgroundColor: "var(--color-bgMain)",
+              border: "1px solid var(--color-borderMain)",
+            },
+          }}
+        />
+      </Group>
+
+      {/* Right: actions */}
+      <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
+        <Button
+          component={Link}
           to="/declarer"
-          className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500 text-white text-[11px] font-bold hover:bg-blue-600 transition-all"
+          visibleFrom="md"
+          size="xs"
+          radius="md"
+          color="red"
+          leftSection={<i className="fa-solid fa-triangle-exclamation" style={{ fontSize: 10 }} />}
         >
-          <i className="fa-solid fa-triangle-exclamation text-[10px]" /> {t("topbar_declare_lost")}
-        </Link>
-        <Link
+          {t("topbar_declare_lost")}
+        </Button>
+
+        <Button
+          component={Link}
           to="/trouver"
-          className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500 text-white text-[11px] font-bold hover:bg-red-600 transition-all"
+          visibleFrom="md"
+          size="xs"
+          radius="md"
+          color="green"
+          leftSection={<i className="fa-solid fa-hand-holding-hand" style={{ fontSize: 10 }} />}
         >
-          <i className="fa-solid fa-hand-holding-hand text-[10px]" /> {t("topbar_found_doc")}
-        </Link>
-        <div className="relative">
-          <button
-            onClick={() => setLangOpen(!langOpen)}
-            className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-white border border-[#E0D5C4] text-[#374151] text-[11px] font-bold hover:border-primary transition-all"
-          >
-            <i className="fa-solid fa-globe text-primary" />
-            <span className="hidden sm:inline">
-              {lang === "fr" ? "Français" : lang === "ar" ? "العربية" : "English"}
-            </span>
-          </button>
-          {langOpen && (
-            <div
-              className="absolute right-0 mt-2 w-32 bg-white border border-[#E0D5C4] rounded-xl shadow-lg overflow-hidden z-50"
-              onMouseLeave={() => setLangOpen(false)}
+          {t("topbar_found_doc")}
+        </Button>
+
+        <Menu radius="md" width={140} shadow="md" withArrow>
+          <Menu.Target>
+            <Button
+              visibleFrom="sm"
+              variant="default"
+              size="xs"
+              radius="md"
+              leftSection={<i className="fa-solid fa-globe" style={{ color: "var(--color-primary, #D98A30)", fontSize: 11 }} />}
+              rightSection={<i className="fa-solid fa-chevron-down" style={{ fontSize: 9, color: "var(--mantine-color-gray-5)" }} />}
             >
-              <button
-                onClick={() => { setLanguage("fr"); setLangOpen(false); }}
-                className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-50 transition text-[11px] font-bold text-gray-700"
-              >
-                <i className="fa-solid fa-globe text-primary" /> Français
-              </button>
-              <button
-                onClick={() => { setLanguage("en"); setLangOpen(false); }}
-                className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-50 transition text-[11px] font-bold text-gray-700"
-              >
-                <i className="fa-solid fa-globe text-primary" /> English
-              </button>
-              <button
-                onClick={() => { setLanguage("ar"); setLangOpen(false); }}
-                className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-50 transition text-[11px] font-bold text-gray-700"
-              >
-                <i className="fa-solid fa-globe text-primary" /> العربية
-              </button>
-            </div>
-          )}
-        </div>
-        <button
-          onClick={() => (window as any).__openNotifModal?.()}
-          className="relative w-9 h-9 rounded-[10px] border border-[#E0D5C4] bg-white text-[#6B7280] flex items-center justify-center hover:border-primary hover:text-primary transition-all"
+              {languageLabel}
+            </Button>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item onClick={() => setLanguage("fr")} leftSection={<i className="fa-solid fa-globe" style={{ color: "var(--color-primary, #D98A30)" }} />}>
+              Français
+            </Menu.Item>
+            <Menu.Item onClick={() => setLanguage("en")} leftSection={<i className="fa-solid fa-globe" style={{ color: "var(--color-primary, #D98A30)" }} />}>
+              English
+            </Menu.Item>
+            <Menu.Item onClick={() => setLanguage("ar")} leftSection={<i className="fa-solid fa-globe" style={{ color: "var(--color-primary, #D98A30)" }} />}>
+              العربية
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+
+        <Indicator
+          label={unreadCount > 9 ? "9+" : unreadCount}
+          size={16}
+          color="red"
+          disabled={unreadCount === 0}
+          offset={4}
         >
-          <i className="fa-solid fa-bell" />
-          {unreadCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center px-1 shadow-md">
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
-          )}
-        </button>
-        <Link
+          <ActionIcon
+            onClick={() => (window as any).__openNotifModal?.()}
+            variant="default"
+            size="lg"
+            radius="md"
+            aria-label="Notifications"
+          >
+            <i className="fa-solid fa-bell" style={{ color: "var(--mantine-color-gray-6)" }} />
+          </ActionIcon>
+        </Indicator>
+
+        <Button
+          component={Link}
           to="/infos-profil"
-          className="flex items-center gap-2 px-2 py-1 border border-[#E0D5C4] rounded-[10px] bg-white hover:border-primary transition-all"
+          variant="default"
+          size="xs"
+          radius="md"
+          h={40}
+          pl={4}
+          pr="xs"
+          leftSection={
+            <VipAvatar isVip={isVipUser(user)}>
+              {user?.photo_url ? (
+                <Avatar src={getPhotoUrl(user.photo_url)} radius="sm" size={28} />
+              ) : (
+                <Avatar radius="sm" size={28} color="green" variant="gradient" gradient={{ from: "green.9", to: "green.6" }}>
+                  {user?.initial || "DM"}
+                </Avatar>
+              )}
+            </VipAvatar>
+          }
         >
-          <VipAvatar isVip={isVipUser(user)}>
-            {user?.photo_url ? (
-              <img src={getPhotoUrl(user.photo_url)} alt="" className="w-7 h-7 rounded-[8px] object-cover" />
-            ) : (
-              <div className="w-7 h-7 rounded-[8px] bg-gradient-to-br from-green-dark to-green-mid flex items-center justify-center font-bricolage text-xs font-extrabold text-white">
-                {user?.initial || "DM"}
-              </div>
-            )}
-          </VipAvatar>
-          <span className="text-xs font-semibold text-textMain hidden sm:block">{user?.prenom || ""}</span>
-        </Link>
-      </div>
-    </header>
+          {user?.prenom ? (
+            <Text size="xs" fw={600} c="dark.6" visibleFrom="sm">
+              {user.prenom}
+            </Text>
+          ) : null}
+        </Button>
+      </Group>
+    </Paper>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import AdminSidebar from "../components/admin/AdminSidebar";
 import AdminTopbar from "../components/admin/AdminTopbar";
 import NotificationPanel from "../components/admin/NotificationPanel";
@@ -7,6 +8,7 @@ import { notificationsService } from "../services/notificationsService";
 import type { Notification } from "../types/api";
 
 export default function AdminLayout() {
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -81,7 +83,14 @@ export default function AdminLayout() {
         />
 
         <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 custom-scroll">
-          <Outlet />
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <Outlet />
+            </motion.div>
         </main>
       </div>
     </div>

@@ -88,6 +88,28 @@ const server = http.createServer((req, res) => {
   });
 });
 
+/** Proxy WebSocket upgrade requests to the API backend */
+server.on("upgrade", (req, socket, head) => {
+  if (req.url.startsWith("/socket.io/")) {
+    const url = new URL(API_TARGET);
+    const opts = {
+      hostname: url.hostname,
+      port: url.port,
+      path: req.url,
+      headers: req.headers,
+    };
+    const proxyReq = http.request(opts);
+    proxyReq.on("upgrade", (_proxyRes, proxySocket) => {
+      proxySocket.pipe(socket);
+      socket.pipe(proxySocket);
+    });
+    proxyReq.on("error", () => socket.destroy());
+    proxyReq.end();
+  } else {
+    socket.destroy();
+  }
+});
+
 server.listen(PORT, () => {
   console.log(`Docmaster frontend serving dist/ on port ${PORT}`);
   console.log(`Proxy /api/* and /uploads/* -> ${API_TARGET}`);

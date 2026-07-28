@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
+import { Modal, Stepper } from "@mantine/core";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import { useI18n } from "../../context/I18nContext";
 import type { Document } from "../../types/api";
 import { declarationsService } from "../../services/declarationsService";
 import { documentsService } from "../../services/documentsService";
 import { generateDeclarationPDF } from "../../utils/pdf";
 import DatePicker from "./DatePicker";
-import Stepper from "./Stepper";
-
-
 
 interface DocFormData {
   nom_complet: string;
@@ -35,14 +34,6 @@ function addMonths(dateStr: string, months: number): string {
 
 export default function ReportLostModal({ doc, catLabels, onClose }: ReportLostModalProps) {
   const { t } = useI18n();
-
-  const steps = [
-    { label: t("reportlost_step_property"), icon: "fa-user" },
-    { label: t("reportlost_step_type"), icon: "fa-file" },
-    { label: t("reportlost_step_info"), icon: "fa-pen" },
-    { label: t("reportlost_step_location"), icon: "fa-map-pin" },
-    { label: t("reportlost_step_contact"), icon: "fa-phone" },
-  ];
 
   const docTypes = [
     { id: "cni", icon: "fa-solid fa-id-card", label: t("reportlost_doc_cni"), delai_expiration_mois: 120 },
@@ -207,12 +198,9 @@ export default function ReportLostModal({ doc, catLabels, onClose }: ReportLostM
   };
 
   if (successData) {
-    return createPortal(
-      <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}
-        style={{ background: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(12px)", zIndex: 210 }}>
-        <div className="modal-box animate-in text-center" style={{ maxWidth: "420px" }}>
-          {/* Grab handle for mobile */}
-          <div className="w-12 h-1 bg-slate-200 rounded-full mx-auto mb-4 md:hidden" />
+    return (
+      <Modal opened onClose={onClose} size="sm" withCloseButton={false} padding="xl">
+        <div className="text-center">
           <div className="w-20 h-20 rounded-full bg-green-light flex items-center justify-center mx-auto mb-4">
             <i className="fa-solid fa-check text-green-dark text-3xl" />
           </div>
@@ -253,98 +241,83 @@ export default function ReportLostModal({ doc, catLabels, onClose }: ReportLostM
             </button>
           </div>
         </div>
-      </div>,
-      document.body
+      </Modal>
     );
   }
 
-  return createPortal(
-    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && !submitting && onClose()}
-      style={{ background: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(12px)", zIndex: 210 }}>
-      <div className="modal-box animate-in" style={{ maxWidth: "640px", padding: 0, display: "flex", flexDirection: "column", maxHeight: "90vh", overflow: "hidden" }}>
-        {/* Grab handle for mobile */}
-        <div className="w-12 h-1 bg-slate-200 rounded-full mx-auto mt-3 mb-1 md:hidden flex-shrink-0" />
-        <div className="px-6 py-4 pb-0 flex-shrink-0">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bricolage text-lg font-extrabold text-textMain">{t("reportlost_title")}</h2>
-            <button onClick={onClose} disabled={submitting}
-              className="w-8 h-8 rounded-lg border border-borda text-textMuted hover:text-textMain hover:border-textMain flex items-center justify-center transition-all text-sm">
-              <i className="fa-solid fa-xmark" />
-            </button>
-          </div>
-        </div>
+  return (
+    <Modal opened onClose={() => { if (!submitting) onClose(); }} size="xl" withCloseButton={false} padding={0}>
+      <div className="flex items-center justify-between px-6 pt-6 pb-4">
+        <h2 className="font-bricolage text-lg font-extrabold text-textMain">{t("reportlost_title")}</h2>
+      </div>
 
-        <div className="flex gap-4 px-6 overflow-hidden flex-1 min-h-0">
-          <div className="flex-1 overflow-y-auto pb-4">
-          {step === 1 && (
-            <div className="animate-in">
-              <h3 className="font-bricolage text-base font-bold text-textMain mb-1">{t("reportlost_step1_question")}</h3>
-              <p className="text-[12px] text-textMuted mb-4">{t("reportlost_step1_desc")}</p>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { id: true, icon: "fa-user-check", label: t("reportlost_self") },
-                  { id: false, icon: "fa-users", label: t("reportlost_other") },
-                ].map((opt) => (
-                  <button key={String(opt.id)} onClick={() => setPourSoi(opt.id)}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-                      pourSoi === opt.id ? "border-primary bg-primary/5 shadow-sm" : "border-borda bg-white hover:border-primary/50"
-                    }`}>
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${
-                      pourSoi === opt.id ? "bg-primary/20 text-primary" : "bg-bgMain text-textMuted"
-                    }`}><i className={`fa-solid ${opt.icon}`} /></div>
-                    <span className="text-[12px] font-semibold text-textMain">{opt.label}</span>
-                  </button>
-                ))}
-              </div>
-              {!pourSoi && (
-                <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3 mt-4">
-                  <i className="fa-solid fa-info-circle mr-1" /> {t("reportlost_other_hint")}
-                </p>
-              )}
+      <div className="px-6 overflow-y-auto" style={{ maxHeight: "calc(90vh - 160px)", minHeight: "400px" }}>
+        <Stepper active={step - 1} orientation="vertical">
+          <Stepper.Step label={t("reportlost_step_property")}>
+            <h3 className="font-bricolage text-base font-bold text-textMain mb-1">{t("reportlost_step1_question")}</h3>
+            <p className="text-[12px] text-textMuted mb-4">{t("reportlost_step1_desc")}</p>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { id: true, icon: "fa-user-check", label: t("reportlost_self") },
+                { id: false, icon: "fa-users", label: t("reportlost_other") },
+              ].map((opt) => (
+                <button key={String(opt.id)} onClick={() => setPourSoi(opt.id)}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                    pourSoi === opt.id ? "border-primary bg-primary/5 shadow-sm" : "border-borda bg-white hover:border-primary/50"
+                  }`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${
+                    pourSoi === opt.id ? "bg-primary/20 text-primary" : "bg-bgMain text-textMuted"
+                  }`}><i className={`fa-solid ${opt.icon}`} /></div>
+                  <span className="text-[12px] font-semibold text-textMain">{opt.label}</span>
+                </button>
+              ))}
             </div>
-          )}
+            {!pourSoi && (
+              <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3 mt-4">
+                <i className="fa-solid fa-info-circle mr-1" /> {t("reportlost_other_hint")}
+              </p>
+            )}
+          </Stepper.Step>
 
-          {step === 2 && (
-            <div className="animate-in">
-              <h3 className="font-bricolage text-base font-bold text-textMain mb-1">{t("reportlost_step2_question")}</h3>
-              <p className="text-[12px] text-textMuted mb-4">{t("reportlost_step2_desc")}</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {docTypes.map((dt) => {
-                  const sel = selectedTypes.includes(dt.id);
+          <Stepper.Step label={t("reportlost_step_type")}>
+            <h3 className="font-bricolage text-base font-bold text-textMain mb-1">{t("reportlost_step2_question")}</h3>
+            <p className="text-[12px] text-textMuted mb-4">{t("reportlost_step2_desc")}</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {docTypes.map((dt) => {
+                const sel = selectedTypes.includes(dt.id);
+                return (
+                  <button key={dt.id} onClick={() => toggleType(dt.id)}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all relative ${
+                      sel ? "border-primary bg-primary/5 shadow-sm" : "border-borda bg-white hover:border-primary/50"
+                    }`}>
+                    <span className={`exp-badge ${(dt.delai_expiration_mois ?? 0) > 0 ? "has-exp" : "no-exp"}`}>
+                      {(dt.delai_expiration_mois ?? 0) > 0 ? t("has_expiration") : t("no_expiration")}
+                    </span>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${
+                      sel ? "bg-primary/20 text-primary" : "bg-bgMain text-textMuted"
+                    }`}><i className={dt.icon} /></div>
+                    <span className="text-[10px] font-semibold text-textMain text-center leading-tight">{dt.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {selectedTypes.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {selectedTypes.map((id) => {
+                  const dt = docTypes.find((d) => d.id === id);
                   return (
-                    <button key={dt.id} onClick={() => toggleType(dt.id)}
-                      className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all relative ${
-                        sel ? "border-primary bg-primary/5 shadow-sm" : "border-borda bg-white hover:border-primary/50"
-                      }`}>
-                      <span className={`exp-badge ${(dt.delai_expiration_mois ?? 0) > 0 ? "has-exp" : "no-exp"}`}>
-                        {(dt.delai_expiration_mois ?? 0) > 0 ? t("has_expiration") : t("no_expiration")}
-                      </span>
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${
-                        sel ? "bg-primary/20 text-primary" : "bg-bgMain text-textMuted"
-                      }`}><i className={dt.icon} /></div>
-                      <span className="text-[10px] font-semibold text-textMain text-center leading-tight">{dt.label}</span>
-                    </button>
+                    <span key={id} className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-dark text-white rounded-full text-[10px] font-semibold">
+                      <i className={dt?.icon || ""} /> {dt?.label || id}
+                      <button onClick={() => toggleType(id)} className="opacity-70 hover:opacity-100"><i className="fa-solid fa-xmark text-[8px]" /></button>
+                    </span>
                   );
                 })}
               </div>
-              {selectedTypes.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {selectedTypes.map((id) => {
-                    const dt = docTypes.find((d) => d.id === id);
-                    return (
-                      <span key={id} className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-dark text-white rounded-full text-[10px] font-semibold">
-                        <i className={dt?.icon || ""} /> {dt?.label || id}
-                        <button onClick={() => toggleType(id)} className="opacity-70 hover:opacity-100"><i className="fa-solid fa-xmark text-[8px]" /></button>
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
+            )}
+          </Stepper.Step>
 
-          {step === 3 && (
-            <div className="animate-in space-y-5">
+          <Stepper.Step label={t("reportlost_step_info")}>
+            <div className="space-y-5">
               <h3 className="font-bricolage text-base font-bold text-textMain mb-1">{t("reportlost_step3_title")}</h3>
               <p className="text-[12px] text-textMuted mb-2">{t("reportlost_step3_desc")}</p>
               {selectedTypes.map((id) => {
@@ -408,10 +381,10 @@ export default function ReportLostModal({ doc, catLabels, onClose }: ReportLostM
                 );
               })}
             </div>
-          )}
+          </Stepper.Step>
 
-          {step === 4 && (
-            <div className="animate-in space-y-4">
+          <Stepper.Step label={t("reportlost_step_location")}>
+            <div className="space-y-4">
               <h3 className="font-bricolage text-base font-bold text-textMain mb-1">{t("reportlost_step4_title")}</h3>
               <p className="text-[12px] text-textMuted mb-2">{t("reportlost_step4_desc")}</p>
               <div className="grid grid-cols-2 gap-4">
@@ -446,21 +419,45 @@ export default function ReportLostModal({ doc, catLabels, onClose }: ReportLostM
                   className="w-full px-3 py-2.5 bg-white border border-borda rounded-xl text-[13px] outline-none focus:border-primary transition-colors resize-none" placeholder={t("reportlost_circonstances_placeholder")} />
               </div>
             </div>
-          )}
+          </Stepper.Step>
 
-          {step === 5 && (
-            <div className="animate-in space-y-4">
+          <Stepper.Step label={t("reportlost_step_contact")}>
+            <div className="space-y-4">
               <h3 className="font-bricolage text-base font-bold text-textMain mb-1">{t("reportlost_step5_title")}</h3>
               <p className="text-[12px] text-textMuted mb-2">{t("reportlost_step5_desc")}</p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] font-bold text-textMuted uppercase tracking-wider block mb-1">{t("reportlost_telephone")}</label>
-                  <input type="tel" value={telephone} onChange={(e) => setTelephone(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-white border border-borda rounded-xl text-[13px] outline-none focus:border-primary transition-colors" placeholder={t("reportlost_telephone_placeholder")} />
+                  <PhoneInput
+                    country={"cm"}
+                    value={telephone}
+                    onChange={(phone) => setTelephone(phone)}
+                    placeholder={t("reportlost_telephone_placeholder")}
+                    enableSearch
+                    searchPlaceholder="Rechercher un pays..."
+                    containerStyle={{ width: "100%" }}
+                    inputStyle={{
+                      width: "100%",
+                      height: "40px",
+                      fontSize: "13px",
+                      borderRadius: "12px",
+                      border: "1px solid #eae3d8",
+                      background: "#fff",
+                      color: "#1A1A1A",
+                      paddingLeft: "56px",
+                    }}
+                    buttonStyle={{
+                      borderRadius: "12px 0 0 12px",
+                      border: "1px solid #eae3d8",
+                      borderRight: "none",
+                      background: "#fff",
+                    }}
+                  />
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-textMuted uppercase tracking-wider block mb-1">{t("reportlost_email_label")}</label>
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && isValid() && nextStep()}
                     className="w-full px-3 py-2.5 bg-white border border-borda rounded-xl text-[13px] outline-none focus:border-primary transition-colors" placeholder={t("reportlost_email_placeholder")} />
                 </div>
               </div>
@@ -508,38 +505,34 @@ export default function ReportLostModal({ doc, catLabels, onClose }: ReportLostM
               <div>
                 <label className="text-[10px] font-bold text-textMuted uppercase tracking-wider block mb-1">{t("reportlost_password")}</label>
                 <input type="password" value={password} onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                  onKeyDown={(e) => e.key === "Enter" && isValid() && !submitting && password.length >= 4 && handleSubmit()}
                   className="w-full px-3 py-2.5 bg-white border border-borda rounded-xl text-[13px] outline-none focus:border-primary transition-colors" placeholder={t("reportlost_password_placeholder")} />
                 {error && <p className="text-[11px] text-red-500 font-semibold mt-1">{error}</p>}
               </div>
             </div>
-          )}
-        </div>
-          <div className="w-36 flex-shrink-0 pt-1">
-            <Stepper steps={steps} currentStep={step} orientation="vertical" />
-          </div>
-        </div>
-
-        <div className="p-4 bg-bgMain border-t border-borda flex items-center justify-between gap-3 flex-shrink-0">
-          <button onClick={step === 1 ? onClose : prevStep} disabled={submitting}
-            className="px-4 py-2.5 rounded-xl border border-borda bg-white text-textMain text-[12px] font-semibold hover:bg-surface2 transition-all disabled:opacity-40 flex items-center gap-1.5">
-            <i className="fa-solid fa-arrow-left text-[10px]" /> {step === 1 ? t("reportlost_cancel") : t("reportlost_previous")}
-          </button>
-          <p className="text-[11px] font-bold text-textMuted">{step} / 5</p>
-          {step < 5 ? (
-            <button onClick={nextStep} disabled={!isValid()}
-              className="px-4 py-2.5 rounded-xl bg-green-dark text-white text-[12px] font-bold hover:bg-green-mid transition-all disabled:opacity-40 flex items-center gap-1.5">
-              {t("reportlost_next")} <i className="fa-solid fa-arrow-right text-[10px]" />
-            </button>
-          ) : (
-            <button onClick={handleSubmit} disabled={!isValid() || submitting || password.length < 4}
-              className="px-4 py-2.5 rounded-xl bg-red-500 text-white text-[12px] font-bold hover:bg-red-600 transition-all disabled:opacity-40 flex items-center gap-1.5 shadow-lg shadow-red-500/25">
-              {submitting ? <i className="fa-solid fa-spinner fa-spin" /> : <i className="fa-solid fa-paper-plane text-[10px]" />}
-              {submitting ? t("reportlost_sending") : t("reportlost_submit")}
-            </button>
-          )}
-        </div>
+          </Stepper.Step>
+        </Stepper>
       </div>
-    </div>,
-    document.body
+
+      <div className="p-4 bg-bgMain border-t border-borda flex items-center justify-between gap-3">
+        <button onClick={step === 1 ? onClose : prevStep} disabled={submitting}
+          className="px-4 py-2.5 rounded-xl border border-borda bg-white text-textMain text-[12px] font-semibold hover:bg-surface2 transition-all disabled:opacity-40 flex items-center gap-1.5">
+          <i className="fa-solid fa-arrow-left text-[10px]" /> {step === 1 ? t("reportlost_cancel") : t("reportlost_previous")}
+        </button>
+        <p className="text-[11px] font-bold text-textMuted">{step} / 5</p>
+        {step < 5 ? (
+          <button onClick={nextStep} disabled={!isValid()}
+            className="px-4 py-2.5 rounded-xl bg-green-dark text-white text-[12px] font-bold hover:bg-green-mid transition-all disabled:opacity-40 flex items-center gap-1.5">
+            {t("reportlost_next")} <i className="fa-solid fa-arrow-right text-[10px]" />
+          </button>
+        ) : (
+          <button onClick={handleSubmit} disabled={!isValid() || submitting || password.length < 4}
+            className="px-4 py-2.5 rounded-xl bg-red-500 text-white text-[12px] font-bold hover:bg-red-600 transition-all disabled:opacity-40 flex items-center gap-1.5">
+            {submitting ? <i className="fa-solid fa-spinner fa-spin" /> : <i className="fa-solid fa-paper-plane text-[10px]" />}
+            {submitting ? t("reportlost_sending") : t("reportlost_submit")}
+          </button>
+        )}
+      </div>
+    </Modal>
   );
 }

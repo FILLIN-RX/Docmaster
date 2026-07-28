@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Card, Text, Group, Badge, Menu, ActionIcon } from "@mantine/core";
 import { useI18n } from "../../context/I18nContext";
 import type { Document } from "../../types/api";
 
@@ -13,21 +14,6 @@ interface DocumentCardProps {
 
 export default function DocumentCard({ doc, catLabels, onView, onShare, onDelete, onReportLost }: DocumentCardProps) {
   const { t } = useI18n();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-    if (menuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [menuOpen]);
-
   const getPhotoUrl = (url?: string) => {
     if (!url) return "";
     if (url.startsWith("http") || url.startsWith("data:")) return url;
@@ -37,83 +23,83 @@ export default function DocumentCard({ doc, catLabels, onView, onShare, onDelete
   const isExpired = doc.date_expiration && doc.validity_option === 'EXPIRING' && new Date(doc.date_expiration) < new Date();
 
   return (
-    <div className={`doc-card ${doc.is_lost ? "is-lost" : ""} ${doc.is_archived ? "opacity-60" : ""}`}>
-      <div className="card-thumb relative cursor-pointer" onClick={() => onView(doc)}>
+    <Card withBorder radius="lg" padding={0} opacity={doc.is_archived ? 0.6 : 1}>
+      <Card.Section style={{ position: "relative", height: 140, cursor: "pointer" }} onClick={() => onView(doc)}>
         {doc.photo_recto ? (
-          <img src={getPhotoUrl(doc.photo_recto)} alt="" className="w-full h-full object-cover" />
+          <img src={getPhotoUrl(doc.photo_recto)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-slate-100">
-            <i className="fa-regular fa-file text-3xl text-slate-300" />
+          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#f1f5f9" }}>
+            <i className="fa-regular fa-file" style={{ fontSize: 30, color: "#cbd5e1" }} />
           </div>
         )}
         {doc.is_archived && (
-          <span className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-700 text-white text-[9px] font-bold">
-            <i className="fa-solid fa-box-archive text-[7px]" /> {t("doccard_archived")}
-          </span>
+          <Badge style={{ position: "absolute", top: 8, right: 8 }} size="sm" color="gray">
+            <i className="fa-solid fa-box-archive" style={{ fontSize: 7 }} /> {t("doccard_archived")}
+          </Badge>
         )}
         {doc.is_lost && (
-          <span className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-[9px] font-bold">
-            <i className="fa-solid fa-triangle-exclamation text-[7px]" /> {t("doccard_lost")}
-          </span>
+          <Badge style={{ position: "absolute", top: 8, right: 8 }} size="sm" color="red" variant="light">
+            <i className="fa-solid fa-triangle-exclamation" style={{ fontSize: 7 }} /> {t("doccard_lost")}
+          </Badge>
         )}
         {doc.is_verified && (
-          <span className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[9px] font-bold">
-            <i className="fa-solid fa-check text-[7px]" /> {t("doccard_verified")}
-          </span>
+          <Badge style={{ position: "absolute", top: 8, left: 8 }} size="sm" color="green" variant="light">
+            <i className="fa-solid fa-check" style={{ fontSize: 7 }} /> {t("doccard_verified")}
+          </Badge>
         )}
         {doc.validity_option === 'PERMANENT' && (
-          <span className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[9px] font-bold">
-            <i className="fa-solid fa-infinity text-[7px]" /> {t("doccard_permanent")}
-          </span>
+          <Badge style={{ position: "absolute", bottom: 8, left: 8 }} size="sm" color="blue" variant="light">
+            <i className="fa-solid fa-infinity" style={{ fontSize: 7 }} /> {t("doccard_permanent")}
+          </Badge>
         )}
         {isExpired && (
-          <span className="absolute bottom-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 text-[9px] font-bold">
-            <i className="fa-solid fa-clock text-[7px]" /> {t("doccard_expired")}
-          </span>
+          <Badge style={{ position: "absolute", bottom: 8, right: 8 }} size="sm" color="orange" variant="light">
+            <i className="fa-solid fa-clock" style={{ fontSize: 7 }} /> {t("doccard_expired")}
+          </Badge>
         )}
-      </div>
-      <div className="p-4">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-bold text-textMain truncate">{doc.nom_sur_doc || t("doccard_no_name")}</p>
-            <p className="text-[11px] text-textMuted truncate">{catLabels[doc.type_doc ?? ""] || doc.type_doc} — N° {doc.numero_doc || "---"}</p>
+      </Card.Section>
+      <div style={{ padding: 12 }}>
+        <Group justify="space-between" align="flex-start" mb="xs">
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Text fz={14} fw={700} truncate>{doc.nom_sur_doc || t("doccard_no_name")}</Text>
+            <Text size="xs" c="dimmed" truncate>{catLabels[doc.type_doc ?? ""] || doc.type_doc} — N° {doc.numero_doc || "---"}</Text>
           </div>
-          <div className="relative" ref={menuRef}>
-            <button onClick={() => setMenuOpen(!menuOpen)} className="text-primary text-sm hover:bg-primary/10 p-1.5 rounded-lg transition-colors flex-shrink-0">
-              <i className="fa-solid fa-ellipsis-vertical" />
-            </button>
-            {menuOpen && (
-            <div className="absolute right-0 top-full mt-1 bg-white border border-borda rounded-xl shadow-lg py-1 min-w-[160px] z-20">
-              <button onClick={() => { setMenuOpen(false); onView(doc); }} className="w-full text-left px-3 py-2 text-[12px] font-medium text-textMain hover:bg-bgMain flex items-center gap-2">
-                <i className="fa-solid fa-eye text-primary text-[10px]" /> {t("doccard_view")}
-              </button>
-              <button onClick={() => { setMenuOpen(false); onShare(doc); }} className="w-full text-left px-3 py-2 text-[12px] font-medium text-textMain hover:bg-bgMain flex items-center gap-2">
-                <i className="fa-solid fa-share-nodes text-primary text-[10px]" /> {t("doccard_share")}
-              </button>
+          <Menu shadow="md" width={160}>
+            <Menu.Target>
+              <ActionIcon variant="subtle" color="gold">
+                <i className="fa-solid fa-ellipsis-vertical" />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item leftSection={<i className="fa-solid fa-eye" style={{ fontSize: 10 }} />} onClick={() => onView(doc)}>
+                {t("doccard_view")}
+              </Menu.Item>
+              <Menu.Item leftSection={<i className="fa-solid fa-share-nodes" style={{ fontSize: 10 }} />} onClick={() => onShare(doc)}>
+                {t("doccard_share")}
+              </Menu.Item>
               {!doc.is_lost && (
-                <button onClick={() => { setMenuOpen(false); onReportLost(doc); }} className="w-full text-left px-3 py-2 text-[12px] font-medium text-red-600 hover:bg-red-50 flex items-center gap-2">
-                  <i className="fa-solid fa-triangle-exclamation text-[10px]" /> {t("doccard_report_lost")}
-                </button>
+                <Menu.Item leftSection={<i className="fa-solid fa-triangle-exclamation" style={{ fontSize: 10 }} />} color="red" onClick={() => onReportLost(doc)}>
+                  {t("doccard_report_lost")}
+                </Menu.Item>
               )}
-              <button onClick={() => { setMenuOpen(false); onDelete(doc); }} className="w-full text-left px-3 py-2 text-[12px] font-medium text-textMuted hover:bg-bgMain flex items-center gap-2">
-                <i className="fa-solid fa-trash text-[10px]" /> {t("doccard_delete")}
-              </button>
-            </div>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center justify-between pt-2 border-t border-borda">
-          <span className="text-[10px] text-textMuted">
-            <i className="fa-regular fa-calendar mr-1" />
+              <Menu.Item leftSection={<i className="fa-solid fa-trash" style={{ fontSize: 10 }} />} onClick={() => onDelete(doc)}>
+                {t("doccard_delete")}
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </Group>
+        <Group justify="space-between" pt="sm" style={{ borderTop: "1px solid var(--mantine-color-default-border)" }}>
+          <Text size="xs" c="dimmed">
+            <i className="fa-regular fa-calendar" style={{ marginRight: 4 }} />
             {new Date(doc.created_at).toLocaleDateString("fr-FR")}
-          </span>
+          </Text>
           {!doc.is_lost && (
-            <button onClick={() => onReportLost(doc)} className="text-[9px] font-bold text-red-500 hover:text-red-700 transition-colors">
-              <i className="fa-solid fa-flag mr-0.5" /> {t("doccard_lost_question")}
-            </button>
+            <Text size="xs" fw={700} c="red" style={{ cursor: "pointer" }} onClick={() => onReportLost(doc)}>
+              <i className="fa-solid fa-flag" style={{ marginRight: 2 }} /> {t("doccard_lost_question")}
+            </Text>
           )}
-        </div>
+        </Group>
       </div>
-    </div>
+    </Card>
   );
 }

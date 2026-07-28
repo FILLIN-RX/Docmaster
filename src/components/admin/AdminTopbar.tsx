@@ -131,7 +131,7 @@ export default function AdminTopbar({ onToggleSidebar, unreadCount, onNotifToggl
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => { if (searchResults && (searchResults.users.length > 0 || searchResults.declarations.length > 0)) setSearchOpen(true); }}
               placeholder={t("admin_search_placeholder") || "Rechercher..."}
-              className="w-full pl-10 pr-10 py-2.5 bg-[#F9F6F0] border-2 border-[#EAE3D8] rounded-2xl text-[13px] font-medium text-gray-700 outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(245,166,75,0.1)] transition-all placeholder:text-gray-400"
+              className="w-full pl-10 pr-10 py-2.5 bg-[#F9F6F0] border-2 border-[#EAE3D8] rounded-2xl text-[13px] font-medium text-gray-700 outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(217,138,48,0.1)] transition-all placeholder:text-gray-400"
             />
             {searching ? (
               <i className="fa-solid fa-spinner fa-spin absolute right-3.5 top-1/2 -translate-y-1/2 text-primary text-xs" />
@@ -225,7 +225,7 @@ export default function AdminTopbar({ onToggleSidebar, unreadCount, onNotifToggl
           )}
         </button>
 
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#F5A64B] to-[#D98A30] flex items-center justify-center text-white font-bold text-sm uppercase shadow-sm">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#D98A30] to-[#D98A30] flex items-center justify-center text-white font-bold text-sm uppercase shadow-sm">
           {adminInitial[0]}
         </div>
       </div>

@@ -1,0 +1,23 @@
+=== DIAGNOSTIC CRASH DOCMASTER API V2 ===
+Date: 22/07/2026
+
+1. Symptôme :
+   [nodemon] app crashed - waiting for file changes before starting...
+   → Le serveur est lancé avec nodemon au lieu de tsx direct
+
+2. Cause probable :
+   L'ancienne config PM2 utilisait "nodemon --exec tsx server.ts"
+   Ou le script "dev" a été utilisé par erreur en production
+
+3. Solution sur le VPS :
+   ssh root@217.154.126.24
+   pm2 delete DOCMASTER-API_V2
+   cd /var/www/vhosts/docmaster.net/app/Docmaster_Backend_V2
+   pm2 start --interpreter tsx server.ts --name "DOCMASTER-API_V2"
+   pm2 save
+
+4. Voir l'erreur réelle du crash :
+   pm2 logs DOCMASTER-API_V2 --err --lines 30
+
+5. Vérifier si le fix cron-manager est bien déployé :
+   grep "detached" /var/www/vhosts/docmaster.net/app/Docmaster_Backend_V2/backend-chillers/src/cron-manager.ts

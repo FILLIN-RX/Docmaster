@@ -1,0 +1,31 @@
+=== FIX SCRAPER CHILLER SUR LE VPS ===
+
+Le scraper fonctionne en LOCAL mais pas sur le VPS.
+3 problèmes corrigés, reste une étape manuelle.
+
+--------------------------------------------------------------
+1. Correctifs déjà dans deploy.sh (prochain ./deploy.sh full)
+--------------------------------------------------------------
+   • cron-manager.ts : detached:true + process.kill(-pid, SIGKILL)
+   • Playwright libs : npx playwright install-deps chromium ajouté
+   • PM2 commande  : pm2 delete + pm2 start au lieu de pm2 restart
+
+--------------------------------------------------------------
+2. Étape manuelle IMMÉDIATE sur le VPS
+--------------------------------------------------------------
+   ssh root@217.154.126.24
+   cd /var/www/vhosts/docmaster.net/app/Docmaster_Backend_V2
+   pm2 delete DOCMASTER-API_V2
+   pm2 start --interpreter tsx server.ts --name "DOCMASTER-API_V2"
+   pm2 save
+   exit
+
+--------------------------------------------------------------
+3. Vérification du fix
+--------------------------------------------------------------
+   ssh root@217.154.126.24
+   grep "detached" /var/www/vhosts/docmaster.net/app/Docmaster_Backend_V2/backend-chillers/src/cron-manager.ts
+   # Doit afficher : detached: true
+
+   pm2 logs DOCMASTER-API_V2 --lines 10
+   # Plus aucun message "[nodemon]"

@@ -1,0 +1,947 @@
+.container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  font-family: "Poppins", sans-serif;
+}
+
+/* ── Language selection screen (bg image + blurred overlay + photo + form) ── */
+.langWrapper {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: row;
+  min-height: 100vh;
+  background-image: url(https://images.unsplash.com/photo-1484242857719-4b9144542727?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1280&q=80);
+  background-size: cover;
+  background-position: center;
+}
+
+.langImage {
+  width: 25%;
+  margin: 60px 0 60px 60px;
+  border-radius: 16px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  border: 2px solid rgba(255,255,255,0.08);
+  z-index: 1;
+  position: relative;
+}
+
+.langForm {
+  width: 450px;
+  min-height: 100vh;
+  padding: 60px 40px 40px;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-7));
+  position: relative;
+  z-index: 1;
+  background: #fff;
+  margin-left: auto;
+}
+
+.langFormLogo {
+  height: 44px;
+  width: auto;
+  align-self: center;
+  margin-bottom: 32px;
+}
+
+.langTitle {
+  font-family: Outfit, var(--mantine-font-family);
+  font-weight: 600;
+  text-align: center;
+}
+
+.langOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .langImage {
+    display: none;
+  }
+  .langForm {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    padding: 60px 24px 24px;
+  }
+}
+
+/* ── Step wrapper (steps 2-6 centered card layout) ── */
+.stepWrapper {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  overflow-y: auto;
+  animation: slideInRight 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.stepWrapper.prev {
+  animation: slideInLeft 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ── Step 1 split layout ── */
+.step1Split {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: row;
+  animation: slideInRight 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.step1Split.prev {
+  animation: slideInLeft 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.step1Brand {
+  flex: 1;
+  background: linear-gradient(145deg, #1E3A2F 0%, #2D5A42 50%, #1E3A2F 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 56px 48px;
+  position: relative;
+  overflow: hidden;
+  gap: 16px;
+}
+
+.step1Form {
+  flex: 1;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px 56px;
+  overflow-y: auto;
+}
+
+.step1FormInner {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.step1BrandDecor {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+}
+.step1BrandDecorTop {
+  width: 300px; height: 300px;
+  background: rgba(255,255,255,0.04);
+  top: -80px; right: -80px;
+}
+.step1BrandDecorBottom {
+  width: 200px; height: 200px;
+  background: rgba(217,138,48,0.08);
+  bottom: -60px; left: -60px;
+}
+
+.step1Logo {
+  height: 48px;
+  width: auto;
+  margin-bottom: 8px;
+}
+.step1BrandTitle {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 800;
+  font-size: 28px;
+  color: #fff;
+  text-align: center;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  max-width: 320px;
+}
+.step1BrandText {
+  font-size: 14px;
+  color: rgba(255,255,255,0.60);
+  text-align: center;
+  font-weight: 500;
+  line-height: 1.6;
+  max-width: 300px;
+}
+.step1BrandProofs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  width: 100%;
+  max-width: 280px;
+}
+.step1ProofItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.75);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.step1ProofItem i {
+  font-size: 13px;
+  color: #D98A30;
+  width: 14px;
+  text-align: center;
+}
+
+.step1FormTitle {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  color: #1E3A2F;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 2px;
+}
+.step1FormSubtitle {
+  font-size: 13px;
+  color: rgba(30,58,47,0.55);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.btnRow {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.btnPrimary {
+  flex: 1;
+  padding: 16px 24px;
+  border-radius: 16px;
+  border: none;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btnPrimary:active {
+  transform: scale(0.97);
+}
+.btnPrimary:disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btnPrimaryGold {
+  background: #D98A30;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(217,138,48,0.30);
+}
+.btnPrimaryGold:hover:not(:disabled) {
+  background: #D98A30;
+  box-shadow: 0 8px 32px rgba(217,138,48,0.40);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 8px 0 4px;
+  color: rgba(30,58,47,0.30);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(30,58,47,0.08);
+}
+
+.socialBtns {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+.socialBtn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 14px;
+  background: #faf8f5;
+  border: 1.5px solid rgba(30,58,47,0.08);
+  color: rgba(30,58,47,0.55);
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.socialBtn:hover {
+  background: #fff;
+  border-color: rgba(30,58,47,0.15);
+  color: #1E3A2F;
+}
+
+.loginLink {
+  text-align: center;
+  font-size: 13px;
+  color: rgba(30,58,47,0.45);
+  font-weight: 500;
+  margin-top: 16px;
+}
+.loginLink a {
+  color: #D98A30;
+  font-weight: 700;
+  text-decoration: none;
+}
+.loginLink a:hover {
+  text-decoration: underline;
+}
+
+/* ── Animations ── */
+@keyframes slideInRight {
+  from { transform: translateX(40px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-40px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* ── Step-specific backgrounds ── */
+.step1 { background: linear-gradient(145deg, #1E3A2F 0%, #2D5A42 50%, #1E3A2F 100%); }
+.step2 { background: linear-gradient(145deg, #D98A30 0%, #D98A30 50%, #C47A28 100%); }
+.step3 { background: linear-gradient(145deg, #FAF8F5 0%, #F4EFE6 50%, #FAF8F5 100%); }
+.step4 {
+  background:
+    linear-gradient(160deg, rgba(12,28,21,0.92) 0%, rgba(26,26,26,0.88) 50%, rgba(12,28,21,0.92) 100%),
+    url("https://images.unsplash.com/photo-1555949963-aa79dcee981c?auto=format&fit=crop&w=1280&q=80");
+  background-size: cover;
+  background-position: center;
+}
+.step5 { background: linear-gradient(145deg, #C47A28 0%, #D98A30 45%, #1E3A2F 100%); }
+.step6 { background: linear-gradient(145deg, #1E3A2F 0%, #2D5A42 50%, #3B7A58 100%); }
+
+/* ── Decorative elements per step ── */
+.decor {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+}
+.decor1a { width: 300px; height: 300px; background: rgba(255,255,255,0.04); top: -80px; right: -80px; }
+.decor1b { width: 200px; height: 200px; background: rgba(217,138,48,0.08); bottom: -60px; left: -60px; }
+.decor2a { width: 280px; height: 280px; background: rgba(255,255,255,0.15); top: -100px; left: -60px; }
+.decor2b { width: 160px; height: 160px; background: rgba(30,58,47,0.10); bottom: -40px; right: -40px; }
+.decor3a { width: 200px; height: 200px; background: rgba(217,138,48,0.06); top: -40px; right: -40px; }
+.decor3b { width: 140px; height: 140px; background: rgba(30,58,47,0.04); bottom: -20px; left: -20px; }
+.decor4a { width: 260px; height: 260px; background: rgba(255,255,255,0.03); top: -60px; left: -60px; }
+.decor4b { width: 180px; height: 180px; background: rgba(217,138,48,0.06); bottom: -80px; right: -40px; }
+.decor5a { width: 300px; height: 300px; background: rgba(255,255,255,0.06); top: -100px; right: -60px; }
+.decor5b { width: 200px; height: 200px; background: rgba(255,255,255,0.04); bottom: -60px; left: -60px; }
+.decor6a { width: 250px; height: 250px; background: rgba(217,138,48,0.08); top: -80px; right: -80px; }
+.decor6b { width: 180px; height: 180px; background: rgba(255,255,255,0.05); bottom: -60px; left: -40px; }
+
+/* ── Content card ── */
+.content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Logo / Brand ── */
+.logo {
+  height: 36px;
+  width: auto;
+  margin-bottom: 4px;
+}
+.logoWrap {
+  background: rgba(255,255,255,0.10);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  padding: 8px 18px;
+  margin-bottom: 12px;
+}
+
+/* ── Mascot illustration (replaces the old icon-in-circle) ── */
+.mascotWrap {
+  width: 132px;
+  height: 132px;
+  margin-bottom: 2px;
+  position: relative;
+  animation: mascotFloat 4.5s ease-in-out infinite;
+}
+.mascotWrap svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.mascotGlow {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  z-index: -1;
+  filter: blur(20px);
+  background: rgba(217,138,48,0.25);
+}
+.mascotGlowLight {
+  background: rgba(255,255,255,0.20);
+}
+
+@keyframes mascotFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascotWrap { animation: none; }
+}
+
+/* ── Text ── */
+.title {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  text-align: center;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.titleLight { color: #fff; }
+.titleDark { color: #1E3A2F; }
+
+.subtitle {
+  font-size: 14px;
+  text-align: center;
+  font-weight: 500;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.subtitleLight { color: rgba(255,255,255,0.70); }
+.subtitleDark { color: rgba(30,58,47,0.60); }
+
+/* ── Native date input (styled to match inputDark) ── */
+.dateInputLight {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px 18px;
+  border-radius: 16px;
+  font-family: "Poppins", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.25s ease;
+  background: rgba(255,255,255,0.20);
+  border: 2px solid rgba(255,255,255,0.25);
+  color: #fff;
+  backdrop-filter: blur(4px);
+}
+.dateInputLight:focus {
+  border-color: rgba(255,255,255,0.55);
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.26);
+}
+.dateInputLight::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+/* ── Fields ── */
+.fields {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+.fieldsRow {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+.fieldGroup {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Custom input styles for dark backgrounds (used with Mantine variant="unstyled") ── */
+.inputDark input {
+  background: rgba(255,255,255,0.08) !important;
+  border: 2px solid rgba(255,255,255,0.12) !important;
+  color: #fff !important;
+  backdrop-filter: blur(4px);
+  border-radius: 16px !important;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 15px !important;
+  height: auto !important;
+  padding: 16px 18px !important;
+  line-height: 1.4 !important;
+}
+.inputDark input::placeholder {
+  color: rgba(255,255,255,0.40) !important;
+}
+.inputDark input:focus {
+  border-color: rgba(217,138,48,0.60) !important;
+  box-shadow: 0 0 0 4px rgba(217,138,48,0.10) !important;
+  background: rgba(255,255,255,0.12) !important;
+}
+.inputDark label {
+  color: rgba(255,255,255,0.70) !important;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  margin-bottom: 4px !important;
+}
+
+/* ── Password strength ── */
+.strengthBars {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.strengthBar {
+  flex: 1;
+  height: 4px;
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+.strengthBarActive1 { background: #ef4444; }
+.strengthBarActive2 { background: #f59e0b; }
+.strengthBarActive3 { background: #D98A30; }
+.strengthBarActive4 { background: #2f9e44; }
+.strengthBarInactive { background: rgba(255,255,255,0.10); }
+
+.pwMatch {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pwMatchOk { color: #D98A30; }
+.pwMatchError { color: #ef4444; }
+
+/* ── PIN ── */
+.pinGrid {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 4px 0 12px;
+}
+.pinInput {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  font-family: "Poppins", sans-serif;
+  border-radius: 14px;
+  outline: none;
+  transition: all 0.2s;
+  background: rgba(255,255,255,0.12);
+  border: 2px solid rgba(255,255,255,0.18);
+  color: #fff;
+}
+.pinInput:focus {
+  border-color: rgba(255,255,255,0.50);
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.18);
+}
+.pinInput.filled {
+  border-color: rgba(34,197,94,0.50);
+  background: rgba(34,197,94,0.12);
+}
+
+.pinInfo {
+  font-size: 13px;
+  text-align: center;
+  color: rgba(255,255,255,0.70);
+  line-height: 1.5;
+}
+.pinTarget {
+  font-weight: 700;
+  color: #fff;
+}
+.pinActions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.pinActionBtn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.60);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  font-family: "Poppins", sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pinActionBtn:hover:not(:disabled) {
+  color: #fff;
+  background: rgba(255,255,255,0.08);
+}
+.pinActionBtn:disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+}
+.pinError {
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: #fca5a5;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.pinSuccess {
+  background: rgba(34,197,94,0.12);
+  border: 1px solid rgba(34,197,94,0.20);
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: #86efac;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* ── Pseudo field ── */
+.pseudoWrap {
+  position: relative;
+  width: 100%;
+}
+.pseudoPrefix {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.40);
+}
+.pseudoInput {
+  width: 100%;
+  padding: 16px 18px 16px 36px;
+  border-radius: 16px;
+  font-family: "Poppins", sans-serif;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.25s ease;
+  box-sizing: border-box;
+  background: rgba(255,255,255,0.08);
+  border: 2px solid rgba(255,255,255,0.12);
+  color: #fff;
+  backdrop-filter: blur(4px);
+}
+.pseudoInput:focus {
+  border-color: rgba(217,138,48,0.60);
+  box-shadow: 0 0 0 4px rgba(217,138,48,0.10);
+  background: rgba(255,255,255,0.12);
+}
+.pseudoInput::placeholder {
+  color: rgba(255,255,255,0.35);
+}
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+  width: 100%;
+}
+.suggestionBtn {
+  padding: 8px 16px;
+  border-radius: 100px;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.80);
+  font-family: "Poppins", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.suggestionBtn:hover {
+  background: rgba(217,138,48,0.20);
+  border-color: rgba(217,138,48,0.40);
+  color: #fff;
+}
+.suggestionsLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255,255,255,0.40);
+  width: 100%;
+  margin-bottom: -4px;
+}
+
+/* ── Referral ── */
+.referralToggle {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.60);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.2s;
+  font-family: "Poppins", sans-serif;
+  margin-top: 4px;
+}
+.referralToggle:hover {
+  color: rgba(217,138,48,0.80);
+}
+.referralToggleIcon {
+  font-size: 10px;
+  transition: transform 0.3s;
+}
+.referralToggleIconOpen {
+  transform: rotate(180deg);
+}
+
+/* ── Buttons (shared) ── */
+.btnBack {
+  padding: 14px 20px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.08);
+  border: 1.5px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.60);
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Poppins", sans-serif;
+}
+.btnBack:hover {
+  background: rgba(255,255,255,0.14);
+  color: #fff;
+}
+.btnBackDark {
+  background: rgba(30,58,47,0.06);
+  border-color: rgba(30,58,47,0.10);
+  color: rgba(30,58,47,0.50);
+}
+.btnBackDark:hover {
+  background: rgba(30,58,47,0.10);
+  color: #1E3A2F;
+}
+
+.btnPrimaryGreen {
+  background: #1E3A2F;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(30,58,47,0.30);
+}
+.btnPrimaryGreen:hover:not(:disabled) {
+  background: #2D5A42;
+  box-shadow: 0 8px 32px rgba(30,58,47,0.40);
+}
+.btnPrimaryWhite {
+  background: #fff;
+  color: #1E3A2F;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+.btnPrimaryWhite:hover:not(:disabled) {
+  background: #FAF8F5;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+}
+
+/* ── Progress dots ── */
+.dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 24px;
+  position: relative;
+  z-index: 2;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: all 0.4s ease;
+}
+.dotInactive { background: rgba(255,255,255,0.18); }
+.dotActive { background: #D98A30; box-shadow: 0 0 8px rgba(217,138,48,0.50); width: 24px; border-radius: 4px; }
+.dotActiveWhite { background: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.30); width: 24px; border-radius: 4px; }
+.dotDone { background: rgba(34,197,94,0.60); }
+
+/* ── Mantine overrides for light background steps ── */
+.mantineOnLight {
+  --mantine-color-body: transparent;
+}
+.mantineOnLight input {
+  border-radius: 16px !important;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 15px !important;
+  height: auto !important;
+  padding: 14px 18px !important;
+}
+
+/* ── Mobile responsive ── */
+@media (max-width: 768px) {
+  .step1Split {
+    flex-direction: column;
+  }
+  .step1Brand {
+    padding: 32px 24px;
+    gap: 12px;
+    flex: none;
+  }
+  .step1BrandTitle {
+    font-size: 22px;
+  }
+  .step1BrandProofs {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    max-width: 100%;
+    margin-top: 8px;
+  }
+  .step1ProofItem {
+    padding: 6px 10px;
+    font-size: 10.5px;
+  }
+  .step1Form {
+    padding: 32px 24px;
+    flex: 1;
+  }
+  .step1Logo {
+    height: 36px;
+  }
+  .step1FormTitle {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 640px) {
+  .stepWrapper {
+    padding: 24px 20px;
+  }
+  .content {
+    max-width: 100%;
+  }
+  .title {
+    font-size: 22px;
+  }
+  .subtitle {
+    font-size: 13px;
+  }
+  .fieldsRow {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .iconWrap {
+    width: 64px;
+    height: 64px;
+    font-size: 26px;
+  }
+  .pinInput {
+    width: 40px;
+    height: 48px;
+    font-size: 18px;
+  }
+  .pinGrid {
+    gap: 8px;
+  }
+  .btnPrimary {
+    padding: 14px 20px;
+    font-size: 15px;
+  }
+}
+
+:global(.react-tel-input) .phoneInputOverride {
+  width: 100%;
+}
+
+:global(.flag-dropdown) :global(.selected-flag) {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-radius: 10px 0 0 10px !important;
+  border: none !important;
+  padding: 0 8px;
+}
+
+:global(.flag-dropdown.open) :global(.selected-flag) {
+  background: rgba(255, 255, 255, 0.35) !important;
+}
+
+:global(.country-list) {
+  border-radius: 12px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18) !important;
+  margin-top: 6px !important;
+}
+
+:global(.country-list) :global(.country) {
+  padding: 10px 12px !important;
+  font-size: 14px !important;
+}
+
+:global(.country-list) :global(.country:hover),
+:global(.country-list) :global(.country.highlight) {
+  background: #f0f0f0 !important;
+}
+
+:global(.phone-input) :global(input) {
+  font-family: "Poppins", sans-serif !important;
+  outline: none !important;
+}
+
+:global(.phone-input) :global(input:focus) {
+  border-color: #D98A30 !important;
+  box-shadow: 0 0 0 3px rgba(217, 138, 48, 0.15) !important;
+}

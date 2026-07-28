@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { notificationsService } from "../services/notificationsService";
 import { useToast } from "../context/ToastContext";
 import { extractApiError } from "../utils/extractApiError";
@@ -9,6 +9,7 @@ export function useNotifications() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const dispatchingRef = useRef(false);
   const toast = useToast();
 
   const fetch = useCallback(async () => {
@@ -30,10 +31,21 @@ export function useNotifications() {
   useEffect(() => { fetch(); }, [fetch]);
 
   useEffect(() => {
-    const handler = () => fetch();
+    const handler = () => {
+      if (dispatchingRef.current) {
+        dispatchingRef.current = false;
+        return;
+      }
+      fetch();
+    };
     window.addEventListener("docmaster:notification-read", handler);
     return () => window.removeEventListener("docmaster:notification-read", handler);
   }, [fetch]);
+
+  const dispatchSync = () => {
+    dispatchingRef.current = true;
+    window.dispatchEvent(new CustomEvent("docmaster:notification-read"));
+  };
 
   const markAsRead = useCallback(async (id: string) => {
     try {
@@ -42,7 +54,7 @@ export function useNotifications() {
         prev.map((n) => (n.id === id ? { ...n, is_read: true, lue: true } : n))
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
-      window.dispatchEvent(new CustomEvent("docmaster:notification-read"));
+      dispatchSync();
       return res;
     } catch (err: any) {
       toast.error(extractApiError(err));
@@ -55,7 +67,7 @@ export function useNotifications() {
       const res = await notificationsService.markAllAsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true, lue: true })));
       setUnreadCount(0);
-      window.dispatchEvent(new CustomEvent("docmaster:notification-read"));
+      dispatchSync();
       toast.success("Toutes les notifications marquées comme lues");
       return res;
     } catch (err: any) {

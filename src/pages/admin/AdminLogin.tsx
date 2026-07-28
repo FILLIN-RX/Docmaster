@@ -76,7 +76,7 @@ export default function AdminLogin() {
               className="w-20 h-20 rounded-[20px] bg-gradient-to-br from-[#1E3A2F] to-[#2D5A42] flex items-center justify-center mx-auto mb-6 shadow-[0_10px_30px_rgba(30,58,47,0.2)]"
               style={{ animation: "rotate 20s linear infinite" }}
             >
-              <i className="fa-solid fa-shield-halved text-4xl text-[#F5A64B]" />
+              <i className="fa-solid fa-shield-halved text-4xl text-[#D98A30]" />
             </div>
             <h1 className="font-bricolage text-[28px] font-extrabold text-[#1A1A1A] mb-2 tracking-tight">
               Admin DocMaster
@@ -96,7 +96,7 @@ export default function AdminLogin() {
 
             <div className="flex flex-col gap-2">
               <label className="text-[12.5px] font-bold text-[#6B7280] uppercase tracking-wider flex items-center gap-1.5">
-                <i className="fa-solid fa-envelope text-[#F5A64B] text-xs" />
+                <i className="fa-solid fa-envelope text-[#D98A30] text-xs" />
                 {t("admin_email")}
               </label>
               <div className="relative">
@@ -104,7 +104,7 @@ export default function AdminLogin() {
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="w-full pl-11 pr-4 py-3 border-[1.5px] border-[#EAE3D8] rounded-xl bg-[#F9F6F1] text-[14px] text-[#1A1A1A] outline-none transition-all focus:border-[#F5A64B] focus:bg-white focus:shadow-[0_0_0_4px_rgba(245,166,75,0.12)] placeholder:text-[#C4BAB0] font-poppins"
+                  className="w-full pl-11 pr-4 py-3 border-[1.5px] border-[#EAE3D8] rounded-xl bg-[#F9F6F1] text-[14px] text-[#1A1A1A] outline-none transition-all focus:border-[#D98A30] focus:bg-white focus:shadow-[0_0_0_4px_rgba(217,138,48,0.12)] placeholder:text-[#C4BAB0] font-poppins"
                   placeholder="admin@docmaster.com"
                   required
                   autoFocus
@@ -115,7 +115,7 @@ export default function AdminLogin() {
 
             <div className="flex flex-col gap-2">
               <label className="text-[12.5px] font-bold text-[#6B7280] uppercase tracking-wider flex items-center gap-1.5">
-                <i className="fa-solid fa-lock text-[#F5A64B] text-xs" />
+                <i className="fa-solid fa-lock text-[#D98A30] text-xs" />
                 {t("admin_password")}
               </label>
               <div className="relative">
@@ -123,7 +123,7 @@ export default function AdminLogin() {
                   type="password"
                   value={form.mot_de_passe}
                   onChange={(e) => setForm({ ...form, mot_de_passe: e.target.value })}
-                  className="w-full pl-11 pr-4 py-3 border-[1.5px] border-[#EAE3D8] rounded-xl bg-[#F9F6F1] text-[14px] text-[#1A1A1A] outline-none transition-all focus:border-[#F5A64B] focus:bg-white focus:shadow-[0_0_0_4px_rgba(245,166,75,0.12)] placeholder:text-[#C4BAB0] font-poppins"
+                  className="w-full pl-11 pr-4 py-3 border-[1.5px] border-[#EAE3D8] rounded-xl bg-[#F9F6F1] text-[14px] text-[#1A1A1A] outline-none transition-all focus:border-[#D98A30] focus:bg-white focus:shadow-[0_0_0_4px_rgba(217,138,48,0.12)] placeholder:text-[#C4BAB0] font-poppins"
                   placeholder="••••••••"
                   required
                 />
@@ -133,10 +133,10 @@ export default function AdminLogin() {
 
             <div className="flex items-center justify-between text-[13px] mt-1">
               <label className="flex items-center gap-1.5 cursor-pointer text-[#6B7280] font-medium">
-                <input type="checkbox" className="w-4 h-4 cursor-pointer accent-[#F5A64B]" />
+                <input type="checkbox" className="w-4 h-4 cursor-pointer accent-[#D98A30]" />
                 {t("admin_remember")}
               </label>
-              <a href="/forgot-password" className="text-[#F5A64B] font-semibold hover:text-[#D98A30] transition-colors no-underline">
+              <a href="/forgot-password" className="text-[#D98A30] font-semibold hover:text-[#D98A30] transition-colors no-underline">
                 {t("admin_forgot_password")}
               </a>
             </div>
@@ -165,11 +165,11 @@ export default function AdminLogin() {
 
           {/* Footer */}
           <div className="pt-5 border-t border-[#EAE3D8] text-center flex flex-col gap-3">
-            <a href="/login" className="text-[#F5A64B] no-underline text-[13px] font-semibold inline-flex items-center justify-center gap-1.5 hover:gap-3 transition-all">
+            <a href="/login" className="text-[#D98A30] no-underline text-[13px] font-semibold inline-flex items-center justify-center gap-1.5 hover:gap-3 transition-all">
               <i className="fa-solid fa-arrow-left text-xs" />
               {t("admin_back_user_login")}
             </a>
-            <a href="https://docmaster.com/contact" target="_blank" rel="noopener noreferrer" className="text-[#F5A64B] no-underline text-[13px] font-semibold inline-flex items-center justify-center gap-1.5 hover:gap-3 transition-all">
+            <a href="https://docmaster.com/contact" target="_blank" rel="noopener noreferrer" className="text-[#D98A30] no-underline text-[13px] font-semibold inline-flex items-center justify-center gap-1.5 hover:gap-3 transition-all">
               {t("admin_contact_support")}
               <i className="fa-solid fa-arrow-up-right-from-square text-xs" />
             </a>

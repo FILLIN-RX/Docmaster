@@ -22,7 +22,7 @@ export default defineConfig({
     allowedHosts: ["docmaster.net", "www.docmaster.net"],
     proxy: {
       "/api": {
-        target: "http://localhost:5000",
+        target: "https://api-v2.docmaster.net/",
         changeOrigin: true,
       },
       "/uploads": {

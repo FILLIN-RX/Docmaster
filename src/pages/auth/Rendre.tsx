@@ -201,10 +201,10 @@ export default function Rendre() {
 
   // ── Render ───────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-bgMain flex flex-col">
-      <Topbar />
-      <div className="flex-1 p-4 sm:p-6 lg:p-8 custom-scrollbar pt-8">
-        <div className="max-w-6xl mx-auto space-y-8">
+    <div className="w-full min-h-screen bg-bgMain flex flex-col">
+      <Topbar title={t("rendre_title")} />
+      <div className="flex-1 w-full p-4 sm:p-6 lg:p-8 custom-scrollbar pt-8">
+        <div className="max-w-6xl w-full mx-auto space-y-8">
 
           {/* ═══ Status Banner ═══ */}
           <div className="bg-green-dark rounded-[28px] p-6 text-white flex flex-col sm:flex-row items-center gap-6 shadow-2xl relative overflow-hidden group">

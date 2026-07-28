@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useI18n } from "../context/I18nContext";
 import { useAuth } from "../context/AuthContext";
@@ -19,9 +19,10 @@ export default function Navbar({ promoBarVisible = false }: { promoBarVisible?: 
     setScrolled(window.scrollY > 40);
   }, []);
 
-  if (typeof window !== "undefined") {
+  useEffect(() => {
     window.addEventListener("scroll", handleScroll, { passive: true });
-  }
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
   return (
     <nav

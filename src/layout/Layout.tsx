@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
@@ -8,9 +9,10 @@ import Footer from "./Footer";
 import NotificationModal from "../components/ui/NotificationModal";
 import PlayStoreBanner from "../components/ui/PlayStoreBanner";
 import PromoBar from "../components/ui/PromoBar";
+import TopProgressBar from "../components/ui/TopProgressBar";
 
 const authPages = ["/dashboard", "/mes-documents", "/mes-appareils", "/mes-declarations", "/abonnement", "/parrainage", "/mes-gains", "/infos-profil", "/declarer", "/trouver", "/rechercher", "/recuperer", "/rendre"];
-const publicPages = ["/", "/login", "/forgot-password", "/reset-password", "/recherche-publique", "/conditions", "/confidentialite", "/partage", "/partage.html"];
+const publicPages = ["/", "/login", "/inscription", "/forgot-password", "/reset-password", "/recherche-publique", "/conditions", "/confidentialite", "/partage", "/partage.html"];
 
 export default function Layout() {
   const { user } = useAuth();
@@ -54,9 +56,10 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-bgMain">
+      <TopProgressBar />
       {isAuthPage && user ? (
         <Sidebar />
-      ) : (path !== "/login" && path !== "/forgot-password" && path !== "/reset-password" && !path.startsWith("/partage")) ? (
+      ) : (path !== "/login" && path !== "/inscription" && path !== "/forgot-password" && path !== "/reset-password" && !path.startsWith("/partage")) ? (
         <>
           <PromoBar onVisibilityChange={setPromoBarVisible} />
           <Navbar promoBarVisible={promoBarVisible} />
@@ -64,9 +67,14 @@ export default function Layout() {
       ) : null}
 
       <main className={(isAuthPage && user ? " ml-[var(--sidebar)] max-md:ml-0 pb-[70px] md:pb-0 transition-all duration-300" : "")}>
-        <div className="page-fade-in">
-          <Outlet />
-        </div>
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            <Outlet />
+          </motion.div>
       </main>
 
       {isAuthPage && <MobileNav />}

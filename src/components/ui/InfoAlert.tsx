@@ -1,5 +1,4 @@
-import React from "react";
-import { createPortal } from "react-dom";
+import { Modal } from "@mantine/core";
 import { useI18n } from "../../context/I18nContext";
 
 interface InfoAlertProps {
@@ -10,16 +9,9 @@ interface InfoAlertProps {
 export default function InfoAlert({ message, onClose }: InfoAlertProps) {
   const { t } = useI18n();
 
-  return createPortal(
-    <div
-      className="modal-overlay"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-      style={{ zIndex: 210 }}
-    >
-      <div className="bg-white rounded-[24px] shadow-2xl max-w-[360px] w-full p-8 text-center animate-in zoom-in-95 duration-200 modal-box">
-        {/* Grab handle for mobile */}
-        <div className="w-12 h-1 bg-slate-300 rounded-full mx-auto mb-5 md:hidden" />
-
+  return (
+    <Modal opened onClose={onClose} size="xs" withCloseButton={false} padding="xl">
+      <div className="text-center">
         <div className="w-16 h-16 rounded-full bg-orange-50 flex items-center justify-center mx-auto mb-5">
           <i className="fa-solid fa-circle-info text-primary text-2xl"></i>
         </div>
@@ -33,7 +25,6 @@ export default function InfoAlert({ message, onClose }: InfoAlertProps) {
           {t("confirm_ok" as any) || "OK"}
         </button>
       </div>
-    </div>,
-    document.body
+    </Modal>
   );
 }

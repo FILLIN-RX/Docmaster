@@ -66,6 +66,30 @@ router.post('/register', (req, res) => authController.register(req, res));
 
 /**
  * @swagger
+ * /auth/check-email:
+ *   get:
+ *     summary: Vérifier si un email est déjà utilisé
+ *     tags: [Authentication]
+ *     parameters:
+ *       - in: query
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: "jean@example.com"
+ *     responses:
+ *       200:
+ *         description: Résultat de la vérification
+ *         content:
+ *           application/json:
+ *             example: { exists: true }
+ *       400:
+ *         description: Email requis
+ */
+router.get('/check-email', (req, res) => authController.checkEmail(req, res));
+
+/**
+ * @swagger
  * /auth/login:
  *   post:
  *     summary: Connecter un utilisateur

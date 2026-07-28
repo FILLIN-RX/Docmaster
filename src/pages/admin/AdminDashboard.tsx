@@ -89,7 +89,7 @@ export default function AdminDashboard() {
       {
         label: t("admin_dashboard_chart_revenue"),
         data: stats?.graphs.monthly.map((m) => m.revenue) || [],
-        backgroundColor: "#F5A64B",
+        backgroundColor: "#D98A30",
         borderRadius: 4,
         yAxisID: "y",
       },
@@ -110,7 +110,7 @@ export default function AdminDashboard() {
     datasets: [
       {
         data: stats?.graphs.plans.map((p) => p.count) || [],
-        backgroundColor: ["#1E3A2F", "#F5A64B", "#639922", "#e5e7eb"],
+        backgroundColor: ["#1E3A2F", "#D98A30", "#639922", "#e5e7eb"],
         borderWidth: 0,
       },
     ],

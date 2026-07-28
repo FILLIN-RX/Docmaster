@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import { declarationsService, documentTypesService } from "../../services/declarationsService";
 import Topbar from "../../layout/Topbar";
 import { useI18n } from "../../context/I18nContext";
@@ -474,7 +476,7 @@ export default function Trouver() {
                 const circleCls = isDone
                   ? "bg-green-500 text-white shadow-[0_0_0_3px_rgba(16,185,129,0.15)]"
                   : isActive
-                    ? "bg-primary text-white shadow-[0_0_0_4px_rgba(245,166,75,0.2)]"
+                    ? "bg-primary text-white shadow-[0_0_0_4px_rgba(217,138,48,0.2)]"
                     : "bg-[#f4efe6] border-2 border-[#eae3d8] text-[#9ca3af]";
                 const labelCls = isDone
                   ? "text-green-500 font-bold"
@@ -532,9 +534,9 @@ export default function Trouver() {
                           setSelectedType(d.id);
                           setAutreType("");
                         }}
-                        className={`doc-type-card border-2 rounded-[12px] p-[10px_6px] cursor-pointer text-center bg-white relative transition-all duration-180 hover:border-primary hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(245,166,75,0.12)] ${
+                        className={`doc-type-card border-2 rounded-[12px] p-[10px_6px] cursor-pointer text-center bg-white relative transition-all duration-180 hover:border-primary hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(217,138,48,0.12)] ${
                           selectedType === d.id
-                            ? "!border-primary !bg-[#fef0dc] !shadow-[0_0_0_3px_rgba(245,166,75,0.12)]"
+                            ? "!border-primary !bg-[#fef0dc] !shadow-[0_0_0_3px_rgba(217,138,48,0.12)]"
                             : "border-[#eae3d8]"
                         }`}
                       >
@@ -559,7 +561,7 @@ export default function Trouver() {
                   type="text"
                   value={autreType}
                   onChange={(e) => setAutreType(e.target.value)}
-                  className="w-full p-[10px_13px] border-[1.5px] border-[#eae3d8] rounded-[11px] text-[13px] text-textMain bg-[#faf7f2] outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(245,166,75,0.1)]"
+                  className="w-full p-[10px_13px] border-[1.5px] border-[#eae3d8] rounded-[11px] text-[13px] text-textMain bg-[#faf7f2] outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(217,138,48,0.1)]"
                   placeholder={t("trouver_specify_type_placeholder")}
                 />
               </div>
@@ -601,7 +603,7 @@ export default function Trouver() {
                       type="text"
                       value={ownerName}
                       onChange={(e) => setOwnerName(e.target.value)}
-                      className="w-full p-[10px_13px] border-[1.5px] border-[#eae3d8] rounded-[11px] text-[13px] text-textMain bg-[#faf7f2] outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(245,166,75,0.1)]"
+                      className="w-full p-[10px_13px] border-[1.5px] border-[#eae3d8] rounded-[11px] text-[13px] text-textMain bg-[#faf7f2] outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(217,138,48,0.1)]"
                       placeholder={t("trouver_owner_name_placeholder")}
                     />
                     <p className="text-[10.5px] text-[#9ca3af] mt-1">
@@ -616,7 +618,7 @@ export default function Trouver() {
                       type="text"
                       value={docNum}
                       onChange={(e) => setDocNum(e.target.value)}
-                      className="w-full p-[10px_13px] border-[1.5px] border-[#eae3d8] rounded-[11px] text-[13px] text-textMain bg-[#faf7f2] outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(245,166,75,0.1)]"
+                      className="w-full p-[10px_13px] border-[1.5px] border-[#eae3d8] rounded-[11px] text-[13px] text-textMain bg-[#faf7f2] outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(217,138,48,0.1)]"
                       placeholder={t("trouver_doc_number_placeholder")}
                     />
                   </div>
@@ -633,7 +635,7 @@ export default function Trouver() {
                         value={dateExpirationTrouve}
                         onChange={(v) => setDateExpirationTrouve(v)}
                         placeholder="AAAA-MM-JJ"
-                        className="w-full p-[10px_13px] border-[1.5px] border-[#eae3d8] rounded-[11px] text-[13px] text-textMain bg-[#faf7f2] outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(245,166,75,0.1)]"
+                        className="w-full p-[10px_13px] border-[1.5px] border-[#eae3d8] rounded-[11px] text-[13px] text-textMain bg-[#faf7f2] outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(217,138,48,0.1)]"
                       />
                     </div>
                   ) : null;
@@ -683,7 +685,7 @@ export default function Trouver() {
                     rows={2}
                     value={details}
                     onChange={(e) => setDetails(e.target.value)}
-                    className="w-full p-[10px_13px] border-[1.5px] border-[#eae3d8] rounded-[11px] text-[13px] text-textMain bg-[#faf7f2] outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(245,166,75,0.1)] resize-none"
+                    className="w-full p-[10px_13px] border-[1.5px] border-[#eae3d8] rounded-[11px] text-[13px] text-textMain bg-[#faf7f2] outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(217,138,48,0.1)] resize-none"
                     placeholder={t("trouver_details_placeholder")}
                   />
                   <p className="text-[10.5px] text-[#9ca3af] mt-1">
@@ -823,7 +825,7 @@ export default function Trouver() {
                     type="text"
                     value={ville}
                     onChange={(e) => setVille(e.target.value)}
-                    className="w-full p-[10px_13px] border-[1.5px] border-[#eae3d8] rounded-[11px] text-[13px] text-textMain bg-[#faf7f2] outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(245,166,75,0.1)]"
+                    className="w-full p-[10px_13px] border-[1.5px] border-[#eae3d8] rounded-[11px] text-[13px] text-textMain bg-[#faf7f2] outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(217,138,48,0.1)]"
                     placeholder={t("trouver_city_placeholder")}
                   />
                 </div>
@@ -835,7 +837,7 @@ export default function Trouver() {
                     value={dateFound}
                     onChange={(v) => setDateFound(v)}
                     placeholder="AAAA-MM-JJ"
-                    className="w-full p-[10px_13px] border-[1.5px] border-[#eae3d8] rounded-[11px] text-[13px] text-textMain bg-[#faf7f2] outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(245,166,75,0.1)]"
+                    className="w-full p-[10px_13px] border-[1.5px] border-[#eae3d8] rounded-[11px] text-[13px] text-textMain bg-[#faf7f2] outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(217,138,48,0.1)]"
                   />
                 </div>
               </div>
@@ -992,12 +994,30 @@ export default function Trouver() {
               </div>
 
               <div className="flex flex-col gap-3 mb-4">
-                <input
-                  type="tel"
+                <PhoneInput
+                  country={"cm"}
                   value={contactTel}
-                  onChange={(e) => setContactTel(e.target.value)}
-                  className="w-full p-[10px_13px] border-[1.5px] border-[#eae3d8] rounded-[11px] text-[13px] text-textMain bg-[#faf7f2] outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(245,166,75,0.1)]"
+                  onChange={(phone) => setContactTel(phone)}
                   placeholder={t("trouver_phone_placeholder")}
+                  enableSearch
+                  searchPlaceholder="Rechercher un pays..."
+                  containerStyle={{ width: "100%" }}
+                  inputStyle={{
+                    width: "100%",
+                    height: "42px",
+                    fontSize: "13px",
+                    borderRadius: "11px",
+                    border: "1.5px solid #eae3d8",
+                    background: "#faf7f2",
+                    color: "#1A1A1A",
+                    paddingLeft: "56px",
+                  }}
+                  buttonStyle={{
+                    borderRadius: "11px 0 0 11px",
+                    border: "1.5px solid #eae3d8",
+                    borderRight: "none",
+                    background: "#faf7f2",
+                  }}
                 />
 
                 <div>

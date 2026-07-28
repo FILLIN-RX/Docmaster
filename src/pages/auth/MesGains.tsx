@@ -1230,13 +1230,17 @@ function AddPaymentMethodModal({ methodType, onClose, onDone, t }: any) {
 /* ── Convert Points Modal ── */
 
 function ConvertPointsModal({ points, onClose, onDone, t }: { points: any; onClose: () => void; onDone: () => void; t: (key: string) => string }) {
+  const [step, setStep] = useState<"amount" | "confirm" | "success">("amount");
   const [amount, setAmount] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [rate, setRate] = useState(10);
   const numAmount = parseInt(amount || "0", 10);
   const xafValue = Math.round(numAmount / rate);
-  const canConvert = numAmount > 0 && numAmount <= points.totalPoints;
+  const canProceed = numAmount > 0 && numAmount <= points.totalPoints;
+  const canConfirm = password.length > 0;
 
   useEffect(() => {
     apiClient.get("points/rate").then((res) => {
@@ -1244,14 +1248,15 @@ function ConvertPointsModal({ points, onClose, onDone, t }: { points: any; onClo
     }).catch(() => {});
   }, []);
 
-  const handleConvert = async () => {
-    if (!canConvert) return;
+  const handleConfirm = async () => {
+    if (!canConfirm) return;
     setLoading(true);
     setError("");
     try {
-      const res = await apiClient.post(`points/convert`, { amount: numAmount });
+      const res = await apiClient.post(`points/convert`, { amount: numAmount, password });
       if (res.data.success) {
-        onDone();
+        setStep("success");
+        setTimeout(() => onDone(), 2500);
       } else {
         setError(res.data.message || t("mesgains_convert_error"));
       }
@@ -1263,58 +1268,134 @@ function ConvertPointsModal({ points, onClose, onDone, t }: { points: any; onClo
   };
 
   return (
-    <Modal opened onClose={onClose} title={t("mesgains_convert_title")} size="sm">
+    <Modal opened onClose={onClose} title={step === "success" ? "Conversion réussie" : t("mesgains_convert_title")} size="sm">
       <Stack align="center" gap="md" mb="md">
-        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-          <i className="fa-solid fa-coins text-primary text-2xl" />
+        <div className={`w-16 h-16 ${step === "success" ? "bg-green-100" : "bg-primary/10"} rounded-full flex items-center justify-center`}>
+          <i className={`${step === "success" ? "fa-solid fa-check-circle text-green-600" : "fa-solid fa-coins text-primary"} text-2xl`} />
         </div>
         <Text size="sm" c="dimmed">{t("mesgains_convert_balance")}</Text>
         <Text fw={800} className="font-bricolage" size="xl" c="gold">{points.totalPoints.toLocaleString()} pts</Text>
       </Stack>
 
-      <div className="mb-4">
-        <Text size="xs" fw={600} c="dimmed" mb={6}>{t("mesgains_convert_amount")}</Text>
-        <input
-          type="number"
-          value={amount}
-          onChange={(e) => { setAmount(e.target.value); setError(""); }}
-          placeholder="0"
-          min={1}
-          max={points.totalPoints}
-          className="w-full px-4 py-3 bg-gray-50 border border-borda rounded-[12px] text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-        />
-        <Group justify="space-between" mt={6}>
-          <Text size="xs" c="dimmed">{t("mesgains_convert_rate")}: {rate} pt = 1 XAF</Text>
-          <button onClick={() => setAmount(String(points.totalPoints))} className="text-[11px] text-primary font-semibold hover:underline">{t("mesgains_convert_max")}</button>
-        </Group>
-      </div>
+      {/* Étape 1 : choix du montant */}
+      {step === "amount" && (
+        <>
+          <div className="mb-4">
+            <Text size="xs" fw={600} c="dimmed" mb={6}>{t("mesgains_convert_amount")}</Text>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => { setAmount(e.target.value); setError(""); }}
+              placeholder="0"
+              min={1}
+              max={points.totalPoints}
+              className="w-full px-4 py-3 bg-gray-50 border border-borda rounded-[12px] text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+            />
+            <Group justify="space-between" mt={6}>
+              <Text size="xs" c="dimmed">{t("mesgains_convert_rate")}: {rate} pt = 1 XAF</Text>
+              <button onClick={() => setAmount(String(points.totalPoints))} className="text-[11px] text-primary font-semibold hover:underline">{t("mesgains_convert_max")}</button>
+            </Group>
+          </div>
 
-      {numAmount > 0 && (
-        <Paper p="sm" className="bg-primary/5 border border-primary/15 mb-md" style={{ borderRadius: 12 }}>
-          <Group justify="space-between">
-            <Text size="sm" c="dimmed">{t("mesgains_convert_receive")}</Text>
-            <Text fw={800} className="font-bricolage" size="md" c="gold">{xafValue.toLocaleString()} XAF</Text>
+          {numAmount > 0 && (
+            <Paper p="sm" className="bg-primary/5 border border-primary/15 mb-md" style={{ borderRadius: 12 }}>
+              <Group justify="space-between">
+                <Text size="sm" c="dimmed">{t("mesgains_convert_receive")}</Text>
+                <Text fw={800} className="font-bricolage" size="md" c="gold">{xafValue.toLocaleString()} XAF</Text>
+              </Group>
+            </Paper>
+          )}
+
+          {error && (
+            <Paper p="sm" className="bg-red-50 border border-red-200 mb-md" style={{ borderRadius: 10 }}>
+              <Text size="xs" c="red.6" ta="center">{error}</Text>
+            </Paper>
+          )}
+
+          <button
+            onClick={() => setStep("confirm")}
+            disabled={!canProceed}
+            className="w-full py-3 bg-primary hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed text-white font-bricolage text-[13.5px] font-bold rounded-[12px] transition-all active:scale-[.98] flex items-center justify-center gap-2"
+          >
+            <i className="fa-solid fa-arrow-right" /> {t("mesgains_convert_button") || "Convertir"}
+          </button>
+        </>
+      )}
+
+      {/* Étape 2 : confirmation mot de passe */}
+      {step === "confirm" && (
+        <>
+          <Paper p="sm" className="bg-primary/5 border border-primary/15 mb-md" style={{ borderRadius: 12 }}>
+            <Group justify="space-between">
+              <Text size="sm" c="dimmed">{t("mesgains_convert_receive")}</Text>
+              <Text fw={800} className="font-bricolage" size="md" c="gold">{xafValue.toLocaleString()} XAF</Text>
+            </Group>
+            <Group justify="space-between" mt={4}>
+              <Text size="xs" c="dimmed">{t("mesgains_convert_amount")}</Text>
+              <Text size="sm" fw={600}>{numAmount.toLocaleString()} pts</Text>
+            </Group>
+          </Paper>
+
+          <div className="mb-4">
+            <Text size="xs" fw={600} c="dimmed" mb={6}>Confirmez votre mot de passe</Text>
+            <div className="relative">
+              <input
+                type={showPw ? "text" : "password"}
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                placeholder="••••••••"
+                className="w-full px-4 py-3 bg-gray-50 border border-borda rounded-[12px] text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw(!showPw)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <i className={`fa-solid ${showPw ? "fa-eye-slash" : "fa-eye"}`} />
+              </button>
+            </div>
+          </div>
+
+          {error && (
+            <Paper p="sm" className="bg-red-50 border border-red-200 mb-md" style={{ borderRadius: 10 }}>
+              <Text size="xs" c="red.6" ta="center">{error}</Text>
+            </Paper>
+          )}
+
+          <Group grow>
+            <button
+              onClick={() => { setStep("amount"); setPassword(""); setError(""); }}
+              className="py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bricolage text-[13.5px] font-bold rounded-[12px] transition-all"
+            >
+              Retour
+            </button>
+            <button
+              onClick={handleConfirm}
+              disabled={!canConfirm || loading}
+              className="py-3 bg-primary hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed text-white font-bricolage text-[13.5px] font-bold rounded-[12px] transition-all active:scale-[.98] flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <><i className="fa-solid fa-spinner fa-spin" /> {t("mesgains_convert_loading")}</>
+              ) : (
+                <><i className="fa-solid fa-lock" /> Confirmer la conversion</>
+              )}
+            </button>
           </Group>
-        </Paper>
+        </>
       )}
 
-      {error && (
-        <Paper p="sm" className="bg-red-50 border border-red-200 mb-md" style={{ borderRadius: 10 }}>
-          <Text size="xs" c="red.6" ta="center">{error}</Text>
-        </Paper>
+      {/* Étape 3 : succès */}
+      {step === "success" && (
+        <>
+          <Paper p="sm" className="bg-green-50 border border-green-200 mb-md" style={{ borderRadius: 10 }}>
+            <Group justify="center" gap="xs">
+              <i className="fa-solid fa-check-circle text-green-600" />
+              <Text size="sm" c="green.7" fw={600}>{xafValue.toLocaleString()} XAF ajoutés à votre portefeuille</Text>
+            </Group>
+          </Paper>
+          <Text size="xs" c="dimmed" ta="center">Redirection dans un instant...</Text>
+        </>
       )}
-
-      <button
-        onClick={handleConvert}
-        disabled={!canConvert || loading}
-        className="w-full py-3 bg-primary hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed text-white font-bricolage text-[13.5px] font-bold rounded-[12px] transition-all active:scale-[.98] flex items-center justify-center gap-2"
-      >
-        {loading ? (
-          <><i className="fa-solid fa-spinner fa-spin" /> {t("mesgains_convert_loading")}</>
-        ) : (
-          <><i className="fa-solid fa-coins" /> {t("mesgains_convert_button")}</>
-        )}
-      </button>
     </Modal>
   );
 }

@@ -100,8 +100,12 @@ export class NotificationService {
             matchType as any
           );
         } else {
-          // General notification email (optional, can be implemented if needed)
-          console.log(`[EMAIL-PROVIDER] General email not implemented yet for type: ${type}`);
+          await this.mailService.sendNotificationEmail(
+            user.email,
+            `${user.prenom} ${user.nom}`,
+            title,
+            message
+          );
         }
       } catch (err) {
         console.error('Error sending notification Email:', err);
@@ -293,17 +297,18 @@ export class NotificationService {
   /**
    * Admin Notifications
    */
-  async notifyAdmins(title: string, message: string, type: 'ALERT' | 'INFO' = 'INFO') {
+  async notifyAdmins(title: string, message: string, type: 'ALERT' | 'INFO' = 'INFO', metadata: any = {}) {
     try {
       const { pool } = await import('../database/db.ts');
-      const admins = await pool.query("SELECT id FROM users WHERE role = 'ADMIN'");
+      const admins = await pool.query("SELECT id, email, prenom, nom FROM users WHERE role = 'ADMIN'");
       
       const promises = admins.rows.map((admin: any) => {
         return this.createNotification({
           user_id: admin.id,
           title,
           message,
-          type
+          type,
+          metadata: { ...metadata, adminEmail: admin.email, adminName: `${admin.prenom} ${admin.nom}` }
         });
       });
       

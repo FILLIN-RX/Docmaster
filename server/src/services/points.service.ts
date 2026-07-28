@@ -1,7 +1,8 @@
-import { query } from '../database/db.ts';
+import { pool, query } from '../database/db.ts';
 import { EarningsRepository } from '../repositories/earnings.repository.ts';
 import { UserRepository } from '../repositories/auth.repository.ts';
 import { notificationService } from './notification.service.ts';
+import argon2 from 'argon2';
 
 export class PointsService {
   private earningsRepository: EarningsRepository;
@@ -77,36 +78,90 @@ export class PointsService {
   /**
    * Convert points to wallet balance
    */
-  async convertPointsToWallet(userId: string, amountPoints: number) {
+  async convertPointsToWallet(userId: string, amountPoints: number, password?: string) {
     const rate = await this.getExchangeRate();
     const amountXaf = amountPoints / rate;
 
-    // Use a transaction for safety
-    const client = await query('BEGIN');
+    // Verify password if provided
+    if (password) {
+      const userPwRes = await query('SELECT mot_de_passe FROM users WHERE id = $1', [userId]);
+      if (userPwRes.rows.length === 0) throw new Error('Utilisateur non trouvé');
+      const valid = await argon2.verify(userPwRes.rows[0].mot_de_passe, password);
+      if (!valid) {
+        const error = new Error('Mot de passe incorrect');
+        (error as any).status = 403;
+        throw error;
+      }
+    }
+
+    const client = await pool.connect();
     try {
-      // Deduct points
-      await this.redeemPoints(userId, amountPoints, 'POINTS_CONVERSION', 'Conversion de points en solde portefeuille', { rate, amountXaf });
+      await client.query('BEGIN');
 
-      // Add to wallet
-      const { walletService } = await import('./wallet.service.ts');
-      await walletService.credit(userId, amountXaf, 'POINTS_CONVERSION', {
-        metadata: { amountPoints, rate }
-      });
+      // 1. Check & deduct points
+      const userRes = await client.query('SELECT points FROM users WHERE id = $1', [userId]);
+      if (userRes.rows.length === 0) throw new Error('Utilisateur non trouvé');
+      const currentPoints = userRes.rows[0].points || 0;
+      if (currentPoints < amountPoints) {
+        const error = new Error(`Solde de points insuffisant (${currentPoints} pts disponibles, ${amountPoints} pts requis)`);
+        (error as any).status = 400;
+        throw error;
+      }
+      await client.query(
+        'UPDATE users SET points = points - $1, updated_at = NOW() WHERE id = $2',
+        [amountPoints, userId]
+      );
 
-      // Record monetary earning
-      await this.earningsRepository.create({
+      // 2. Credit wallet
+      const balRes = await client.query('SELECT wallet_balance FROM users WHERE id = $1', [userId]);
+      const balanceBefore = parseFloat(balRes.rows[0]?.wallet_balance || 0);
+      const updRes = await client.query(
+        'UPDATE users SET wallet_balance = COALESCE(wallet_balance, 0) + $1, updated_at = NOW() WHERE id = $2 RETURNING wallet_balance',
+        [amountXaf, userId]
+      );
+      const balanceAfter = parseFloat(updRes.rows[0]?.wallet_balance || 0);
+      await client.query(
+        `INSERT INTO wallet_transactions (user_id, amount, balance_before, balance_after, type, reason, metadata)
+         VALUES ($1, $2, $3, $4, 'CREDIT', 'POINTS_CONVERSION', $5)`,
+        [userId, amountXaf, balanceBefore, balanceAfter, JSON.stringify({ amountPoints, rate })]
+      );
+
+      // 3. Record earnings
+      await client.query(
+        `INSERT INTO earnings_history (user_id, type, amount, currency, description, metadata)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [userId, 'POINTS_CONVERSION', -amountPoints, 'POINTS', 'Conversion de points en solde portefeuille', JSON.stringify({ rate, amountXaf })]
+      );
+      await client.query(
+        `INSERT INTO earnings_history (user_id, type, amount, currency, description, metadata)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [userId, 'wallet_credit', amountXaf, 'XAF', 'Crédit par conversion de points', JSON.stringify({ amountPoints, rate })]
+      );
+
+      await client.query('COMMIT');
+      client.release();
+
+      // In-app + email notification for the user
+      await notificationService.createNotification({
         user_id: userId,
-        type: 'wallet_credit',
-        amount: amountXaf,
-        currency: 'XAF',
-        description: 'Crédit par conversion de points',
-        metadata: { amountPoints, rate }
+        type: 'POINTS_CONVERSION',
+        title: 'Points convertis avec succès',
+        message: `Vous avez converti ${amountPoints} points en ${amountXaf} XAF. Votre nouveau solde portefeuille est de ${balanceAfter} XAF.`,
+        metadata: { amount: amountPoints, amountXaf, rate, balanceAfter }
       });
 
-      await query('COMMIT');
-      return { success: true, amountXaf };
+      // Notify all admins (in-app + email)
+      await notificationService.notifyAdmins(
+        'Conversion de points',
+        `Un utilisateur a converti ${amountPoints} points en ${amountXaf} XAF. Type: POINTS_CONVERSION.`,
+        'INFO',
+        { paymentType: 'POINTS_CONVERSION', amount: amountXaf, currency: 'XAF', pointsUsed: amountPoints }
+      );
+
+      return { success: true, amountXaf, balanceAfter };
     } catch (error) {
-      await query('ROLLBACK');
+      await client.query('ROLLBACK');
+      client.release();
       throw error;
     }
   }

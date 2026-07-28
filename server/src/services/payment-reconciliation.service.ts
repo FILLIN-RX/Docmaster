@@ -54,7 +54,32 @@ async function activateRecovery(userId: string, docId: string, transactionId: st
 }
 
 class PaymentReconciliationService {
+  /**
+   * Clean up PENDING transactions older than 2 days
+   */
+  async cleanupStaleTransactions() {
+    try {
+      const result = await query(
+        `DELETE FROM transactions
+         WHERE status = 'PENDING'
+           AND created_at < NOW() - INTERVAL '2 days'
+         RETURNING id, type, amount, user_id`
+      );
+      if (result.rows.length > 0) {
+        console.log(`[Reconciliation] Nettoyé ${result.rows.length} transaction(s) PENDING de +2 jours :`);
+        result.rows.forEach(tx => {
+          console.log(`  - ${tx.id} | ${tx.type} | ${tx.amount} XAF | user: ${tx.user_id}`);
+        });
+      }
+      return result.rows.length;
+    } catch (err) {
+      console.error('[Reconciliation] Error cleaning stale transactions:', err);
+      return 0;
+    }
+  }
+
   async reconcileStuckTransactions() {
+    await this.cleanupStaleTransactions();
     console.log('[Reconciliation] Checking stuck PENDING transactions...');
 
     try {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Paper, Text, Title, Badge, Button, Group, ActionIcon } from "@mantine/core";
 import PaymentModal from "../modals/PaymentModal";
 
 interface PromoBannerProps {
@@ -35,7 +36,7 @@ export default function PromoBanner({ plan, onSubscribe, onDismiss, processing, 
 
   return (
     <>
-      <div className="relative bg-sky-600 rounded-[20px] p-4 sm:p-5 shadow-2xl shadow-sky-700/30">
+      <Paper radius={20} p={{ base: "sm", sm: "md" }} style={{ background: "#0284c7", position: "relative", overflow: "hidden" }} shadow="xl">
         <div className="absolute top-2 right-2 w-20 sm:w-24 h-20 sm:h-24 bg-white/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-2 left-2 w-16 sm:w-20 h-16 sm:h-20 bg-blue-200/20 rounded-full blur-2xl pointer-events-none" />
 
@@ -46,39 +47,47 @@ export default function PromoBanner({ plan, onSubscribe, onDismiss, processing, 
         />
 
         {onDismiss && (
-        <button
-          onClick={onDismiss}
-          className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-black/20 text-white/70 hover:bg-black/40 hover:text-white transition-all z-20"
-          aria-label="Fermer"
-        >
-          <i className="fa-solid fa-xmark text-sm" />
-        </button>
+          <ActionIcon
+            onClick={onDismiss}
+            variant="subtle"
+            color="gray"
+            size="sm"
+            radius="xl"
+            className="absolute top-3 right-3 z-20"
+            style={{ background: "rgba(0,0,0,0.2)", color: "rgba(255,255,255,0.7)" }}
+            aria-label="Fermer"
+          >
+            <i className="fa-solid fa-xmark text-sm" />
+          </ActionIcon>
         )}
 
         <div className="relative z-10 max-w-[60%] sm:max-w-[65%]">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+          <Group gap={8} mb={8}>
+            <Badge color="red" variant="filled" size="sm" radius="xl" className="uppercase" styles={{ label: { fontSize: 10, fontWeight: 700, letterSpacing: "0.05em" } }}>
               -{discountPct}%
-            </span>
-            <span className="text-white/70 text-[11px] font-medium uppercase tracking-wider">
+            </Badge>
+            <Text c="white.6" fw={500} size="xs" className="uppercase" style={{ fontSize: 11, letterSpacing: "0.05em" }}>
               Offre limitée
-            </span>
-          </div>
-          <h3 className="font-bricolage text-lg sm:text-xl font-extrabold text-white mb-1">
+            </Text>
+          </Group>
+
+          <Title order={3} fw={900} c="white" ff="Bricolage Grotesque" mb={4}>
             VIP {plan.duration_months} mois
-          </h3>
-          <p className="text-white/60 text-[11px] sm:text-[12px] mb-3">
+          </Title>
+          <Text c="white.6" size="xs" mb="sm" style={{ fontSize: 11 }}>
             Accès à toutes les fonctionnalités VIP
-          </p>
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-white/40 text-[14px] sm:text-[16px] line-through font-bold">
+          </Text>
+
+          <Group gap="sm" mb="sm">
+            <Text c="white.4" fw={700} td="line-through" style={{ fontSize: 14 }}>
               {originalPrice.toLocaleString("fr-FR")} XAF
-            </span>
-            <span className="text-white text-xl sm:text-2xl font-extrabold">
-              {plan.price.toLocaleString("fr-FR")} <span className="text-sm sm:text-base font-bold text-white/70">XAF</span>
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-1.5 mb-3 sm:mb-4">
+            </Text>
+            <Text c="white" fw={900} style={{ fontSize: 22 }}>
+              {plan.price.toLocaleString("fr-FR")} <Text component="span" c="white.6" fw={700} size="sm">XAF</Text>
+            </Text>
+          </Group>
+
+          <Group gap={6} mb="sm" wrap="wrap">
             {[
               { icon: "fa-file-circle-check", label: "5 types doc" },
               { icon: "fa-box-open", label: "7 objets" },
@@ -86,24 +95,28 @@ export default function PromoBanner({ plan, onSubscribe, onDismiss, processing, 
               { icon: "fa-location-dot", label: "Géo-tracking" },
               { icon: "fa-circle-check", label: "Badge vérifié" },
             ].map((f) => (
-              <span key={f.label} className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-white/10 text-white/80 text-[9px] sm:text-[10px] font-medium">
-                <i className={`fa-solid ${f.icon} text-[7px] sm:text-[8px]`} /> {f.label}
-              </span>
+              <Badge key={f.label} variant="filled" size="sm" radius="xl" p={0} style={{ background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.8)", fontSize: 9, fontWeight: 500 }}>
+                <Group gap={4}>
+                  <i className={`fa-solid ${f.icon} text-[7px] sm:text-[8px]`} /> {f.label}
+                </Group>
+              </Badge>
             ))}
-          </div>
-          <button
+          </Group>
+
+          <Button
             onClick={() => setShowPayment(true)}
             disabled={processing}
-            className="px-6 sm:px-8 py-2.5 sm:py-3 bg-white hover:bg-blue-50 text-sky-700 font-extrabold text-[13px] sm:text-[14px] rounded-xl transition-all active:scale-[0.97] shadow-lg shadow-white/30 flex items-center justify-center gap-2 disabled:opacity-50"
+            variant="filled"
+            radius="lg"
+            size="md"
+            fw={900}
+            style={{ background: "white", color: "#0284c7" }}
+            leftSection={processing ? <i className="fa-solid fa-spinner fa-spin" /> : <i className="fa-solid fa-crown" />}
           >
-            {processing ? (
-              <><i className="fa-solid fa-spinner fa-spin" /> Activation...</>
-            ) : (
-              <><i className="fa-solid fa-crown" /> Activer mon VIP</>
-            )}
-          </button>
+            {processing ? "Activation..." : "Activer mon VIP"}
+          </Button>
         </div>
-      </div>
+      </Paper>
 
       {showPayment && (
         <PaymentModal

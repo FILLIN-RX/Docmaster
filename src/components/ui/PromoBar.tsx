@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Group, Text, Badge } from "@mantine/core";
 import { useI18n } from "../../context/I18nContext";
 import { promoService, type PromoPlan } from "../../services/promoService";
 
@@ -28,23 +29,34 @@ export default function PromoBar({ onVisibilityChange }: PromoBarProps) {
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-[60] bg-sky-600 cursor-pointer group"
+      style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 99998 }}
+      className="bg-sky-600 cursor-pointer group"
       onClick={() => navigate("/abonnement")}
     >
-      <div className="max-w-7xl mx-auto px-4 h-9 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <span className="inline-flex items-center gap-1 bg-red-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0">
-            <i className="fa-solid fa-tag text-[8px]" />
-            -{discountPct}%
-          </span>
-          <span className="text-white text-[11px] sm:text-xs font-bold truncate">
+      <Group justify="space-between" gap={3} px="md" h={36} maw="80rem" mx="auto">
+        <Group gap={8} style={{ minWidth: 0, flex: 1 }}>
+          <Badge
+            color="red"
+            variant="filled"
+            size="sm"
+            radius="xl"
+            p={0}
+            className="flex-shrink-0 uppercase"
+            styles={{ label: { fontSize: 10, fontWeight: 800, letterSpacing: "0.05em" } }}
+          >
+            <Group gap={4}>
+              <i className="fa-solid fa-tag text-[8px]" />
+              -{discountPct}%
+            </Group>
+          </Badge>
+          <Text c="white" fw={700} size="xs" truncate style={{ fontSize: 11 }}>
             {t("promo_bar_limited")} · VIP {promo.duration_months} {t("promo_bar_months")} · {promo.price.toLocaleString("fr-FR")} XAF
-          </span>
-          <span className="hidden sm:inline-flex items-center gap-1 text-white/70 text-[11px] font-semibold group-hover:text-white transition-colors flex-shrink-0">
+          </Text>
+          <Text c="white.6" fw={600} visibleFrom="sm" size="xs" className="group-hover:!text-white transition-colors flex-shrink-0" style={{ fontSize: 11 }}>
             {t("promo_bar_cta")} <i className="fa-solid fa-arrow-right text-[9px]" />
-          </span>
-        </div>
-      </div>
+          </Text>
+        </Group>
+      </Group>
     </div>
   );
 }

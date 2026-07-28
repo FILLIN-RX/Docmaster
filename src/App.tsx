@@ -8,6 +8,7 @@ import LazyPage from "./components/LazyPage";
 
 const Home = lazy(() => import("./pages/public/Home"));
 const Login = lazy(() => import("./pages/auth/Login"));
+const Inscription = lazy(() => import("./pages/auth/Inscription"));
 const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
 const RechercherPublic = lazy(() => import("./pages/public/Rechercher"));
@@ -57,6 +58,7 @@ export default function App() {
         <Route element={<Layout />}>
           <Route path="/" element={<LazyPage Component={Home} />} />
           <Route path="/login" element={<LazyPage Component={Login} />} />
+          <Route path="/inscription" element={<LazyPage Component={Inscription} />} />
           <Route path="/forgot-password" element={<LazyPage Component={ForgotPassword} />} />
           <Route path="/reset-password" element={<LazyPage Component={ResetPassword} />} />
           <Route path="/rechercher" element={<ProtectedRoute><LazyPage Component={RechercherAuth} /></ProtectedRoute>} />

@@ -96,8 +96,7 @@ export default function Home() {
       <HowItWorksSection t={t} />
       <MatchingSection t={t} />
       <WhyDocmasterSection t={t} />
-      <DigitalVaultSection t={t} />
-      <DeviceProtectionSection t={t} />
+      <VaultDeviceSection t={t} />
       <StatsSection t={t} statCounters={statCounters} />
       <WalletRewardsSection t={t} />
       <ReferralSection t={t} />
@@ -153,7 +152,7 @@ function HeroSection({ t }) {
               {t("hero_title_1")}<br />
               {t("hero_title_2")}<br />
               <span className="gradient-text" style={{
-                background: "linear-gradient(90deg, #F5A64B, #FFD580, #F5A64B)",
+                background: "linear-gradient(90deg, #D98A30, #FFD580, #D98A30)",
                 backgroundSize: "200% auto",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
@@ -448,20 +447,20 @@ function WhyDocmasterSection({ t }) {
 function VaultIllustration() {
   return (
     <svg viewBox="0 0 480 420" className="w-full h-auto">
-      <ellipse cx="240" cy="215" rx="190" ry="150" fill="#F5A64B" opacity="0.08" />
+      <ellipse cx="240" cy="215" rx="190" ry="150" fill="#D98A30" opacity="0.08" />
 
       <g transform="translate(40,40) rotate(-8)">
-        <rect x="0" y="0" width="86" height="110" rx="10" fill="#FFFFFF" stroke="#F5A64B" strokeWidth="2" />
-        <rect x="14" y="20" width="58" height="8" rx="4" fill="#F5A64B" opacity="0.5" />
+        <rect x="0" y="0" width="86" height="110" rx="10" fill="#FFFFFF" stroke="#D98A30" strokeWidth="2" />
+        <rect x="14" y="20" width="58" height="8" rx="4" fill="#D98A30" opacity="0.5" />
         <rect x="14" y="38" width="42" height="6" rx="3" fill="#E5E7EB" />
         <rect x="14" y="52" width="50" height="6" rx="3" fill="#E5E7EB" />
-        <circle cx="43" cy="82" r="14" fill="#FFF3E4" stroke="#F5A64B" strokeWidth="2" />
-        <path d="M37 82 l4 5 l8 -10" fill="none" stroke="#F5A64B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="43" cy="82" r="14" fill="#FFF3E4" stroke="#D98A30" strokeWidth="2" />
+        <path d="M37 82 l4 5 l8 -10" fill="none" stroke="#D98A30" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
       </g>
 
       <g transform="translate(350,30) rotate(10)">
-        <rect x="0" y="0" width="80" height="102" rx="10" fill="#FFFFFF" stroke="#F5A64B" strokeWidth="2" />
-        <rect x="12" y="18" width="50" height="7" rx="3.5" fill="#F5A64B" opacity="0.45" />
+        <rect x="0" y="0" width="80" height="102" rx="10" fill="#FFFFFF" stroke="#D98A30" strokeWidth="2" />
+        <rect x="12" y="18" width="50" height="7" rx="3.5" fill="#D98A30" opacity="0.45" />
         <rect x="12" y="34" width="38" height="6" rx="3" fill="#E5E7EB" />
         <rect x="12" y="47" width="44" height="6" rx="3" fill="#E5E7EB" />
         <rect x="12" y="70" width="56" height="18" rx="6" fill="#FFF3E4" />
@@ -476,13 +475,13 @@ function VaultIllustration() {
       <rect x="140" y="150" width="200" height="160" rx="14" fill="#1A1A1A" />
       <rect x="152" y="162" width="176" height="136" rx="8" fill="#FFFFFF" />
 
-      <circle cx="240" cy="230" r="52" fill="#F5A64B" opacity="0.12" />
-      <circle cx="240" cy="230" r="40" fill="none" stroke="#F5A64B" strokeWidth="6" />
-      <circle cx="240" cy="230" r="8" fill="#F5A64B" />
-      <rect x="236" y="230" width="18" height="4" rx="2" fill="#F5A64B" transform="rotate(35 240 230)" />
+      <circle cx="240" cy="230" r="52" fill="#D98A30" opacity="0.12" />
+      <circle cx="240" cy="230" r="40" fill="none" stroke="#D98A30" strokeWidth="6" />
+      <circle cx="240" cy="230" r="8" fill="#D98A30" />
+      <rect x="236" y="230" width="18" height="4" rx="2" fill="#D98A30" transform="rotate(35 240 230)" />
 
       <g transform="translate(295,268)">
-        <circle cx="0" cy="0" r="16" fill="#F5A64B" />
+        <circle cx="0" cy="0" r="16" fill="#D98A30" />
         <rect x="-6" y="-2" width="12" height="9" rx="2" fill="#FFFFFF" />
         <path d="M-4 -2 v-3 a4 4 0 0 1 8 0 v3" fill="none" stroke="#FFFFFF" strokeWidth="2" />
       </g>
@@ -490,7 +489,7 @@ function VaultIllustration() {
   );
 }
 
-function DigitalVaultSection({ t }) {
+function VaultDeviceSection({ t }) {
   return (
     <section className="py-20 px-5 relative overflow-hidden bg-white">
       <div className="relative z-10 max-w-7xl mx-auto">
@@ -530,6 +529,33 @@ function DigitalVaultSection({ t }) {
                     <p className="text-sm text-gray-500 mt-1">{t("home_vault_feature2_desc")}</p>
                   </div>
                 </li>
+                <li className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 mt-1">
+                    <i className="fa-solid fa-qrcode" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-[#1A1A1A]">{t("home_device_feature1_title")}</h4>
+                    <p className="text-sm text-gray-500 mt-1">{t("home_device_feature1_desc")}</p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-red-100 text-red-500 flex items-center justify-center flex-shrink-0 mt-1">
+                    <i className="fa-solid fa-triangle-exclamation" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-[#1A1A1A]">{t("home_device_feature2_title")}</h4>
+                    <p className="text-sm text-gray-500 mt-1">{t("home_device_feature2_desc")}</p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-green-100 text-green-700 flex items-center justify-center flex-shrink-0 mt-1">
+                    <i className="fa-solid fa-bell" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-[#1A1A1A]">{t("home_device_feature3_title")}</h4>
+                    <p className="text-sm text-gray-500 mt-1">{t("home_device_feature3_desc")}</p>
+                  </div>
+                </li>
               </ul>
 
               <Link to="/login"
@@ -561,7 +587,6 @@ function DigitalVaultSection({ t }) {
     </section>
   );
 }
-
 function StatsSection({ t, statCounters }) {
   const secRef = useRef(null);
   const counterRefs = [
@@ -581,15 +606,15 @@ function StatsSection({ t, statCounters }) {
     const nodes = document.querySelectorAll(".stat-node");
     const angles = [0, 90, 180, 270];
     let step = 0;
-    let timer: ReturnType<typeof setTimeout>;
-    let animId: number;
+    let timer;
+    let animId;
 
-    function animateCounter(el: Element, target: number) {
+    function animateCounter(el, target) {
       const start = performance.now();
       const duration = 1200;
       const init = parseInt(el.textContent?.replace(/\s/g, "") || "0", 10);
 
-      function tick(now: number) {
+      function tick(now) {
         const t = Math.min((now - start) / duration, 1);
         const ease = 1 - Math.pow(1 - t, 3);
         const val = Math.round(init + (target - init) * ease);
@@ -599,33 +624,33 @@ function StatsSection({ t, statCounters }) {
       animId = requestAnimationFrame(tick);
     }
 
-    function rotateTo(angle: number, si: number) {
+    function rotateTo(angle, si) {
       if (!needle || !sweep) return;
       const startTime = performance.now();
       const duration = 1100;
-      const startAngle = needle.getAttribute("data-current") ? parseFloat(needle.getAttribute("data-current")!) : -45;
-      const startSweepAngle = sweep.getAttribute("data-current") ? parseFloat(sweep.getAttribute("data-current")!) : -45;
+      const startAngle = needle.getAttribute("data-current") ? parseFloat(needle.getAttribute("data-current")) : -45;
+      const startSweepAngle = sweep.getAttribute("data-current") ? parseFloat(sweep.getAttribute("data-current")) : -45;
       const startOpacity = parseFloat(sweep.style.opacity || "0");
 
-      function tick(now: number) {
+      function tick(now) {
         const t = Math.min((now - startTime) / duration, 1);
         const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
         const currentAngle = startAngle + (angle - startAngle) * ease;
         const currentSweepAngle = startSweepAngle + (angle - startSweepAngle) * ease;
         const currentOpacity = startOpacity + (1 - startOpacity) * Math.min(t * 5, 1);
-        needle!.style.transform = `rotate(${currentAngle}deg)`;
-        needle!.setAttribute("data-current", String(currentAngle));
-        sweep!.style.transform = `rotate(${currentSweepAngle}deg)`;
-        sweep!.setAttribute("data-current", String(currentSweepAngle));
-        sweep!.style.opacity = String(currentOpacity);
+        needle.style.transform = `rotate(${currentAngle}deg)`;
+        needle.setAttribute("data-current", String(currentAngle));
+        sweep.style.transform = `rotate(${currentSweepAngle}deg)`;
+        sweep.setAttribute("data-current", String(currentSweepAngle));
+        sweep.style.opacity = String(currentOpacity);
 
         if (t >= 1) {
-          sweep!.style.opacity = "1";
+          sweep.style.opacity = "1";
           nodes.forEach((n, i) => {
             if (i === si % 4) {
               n.classList.add("active");
               n.style.opacity = "1";
-              const c = n.querySelector<HTMLElement>(".counter-radar");
+              const c = n.querySelector(".counter-radar");
               if (c && c.dataset.target) animateCounter(c, +c.dataset.target);
             } else {
               n.classList.remove("active");
@@ -667,7 +692,7 @@ function StatsSection({ t, statCounters }) {
 
   return (
     <section ref={secRef} className="py-24 px-5 bg-[#FAF7F2] relative overflow-hidden" id="stats-section">
-      <div className="absolute inset-0 opacity-[0.035]" style={{ backgroundImage: "linear-gradient(#F5A64B 1px,transparent 1px),linear-gradient(90deg,#F5A64B 1px,transparent 1px)", backgroundSize: "48px 48px" }} />
+      <div className="absolute inset-0 opacity-[0.035]" style={{ backgroundImage: "linear-gradient(#D98A30 1px,transparent 1px),linear-gradient(90deg,#D98A30 1px,transparent 1px)", backgroundSize: "48px 48px" }} />
 
       <div className="relative z-10 max-w-7xl mx-auto">
         <div className="text-center mb-16">
@@ -689,12 +714,12 @@ function StatsSection({ t, statCounters }) {
             <div className="absolute bottom-1/2 left-1/2 -translate-x-1/2 z-30" style={{ height: "42%" }}>
               <div id="radar-needle" className="w-[2px] h-full origin-bottom">
                 <div className="w-full h-full bg-gradient-to-t from-primary to-transparent" />
-                <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-5 h-5 bg-primary rounded-full shadow-[0_0_20px_#F5A64B]" style={{ animation: "pulse-dot 1.5s ease-in-out infinite" }} />
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-5 h-5 bg-primary rounded-full shadow-[0_0_20px_#D98A30]" style={{ animation: "pulse-dot 1.5s ease-in-out infinite" }} />
               </div>
             </div>
 
             <div id="radar-sweep" className="absolute inset-0 rounded-full overflow-hidden origin-center pointer-events-none">
-              <div id="sweep-arc" className="absolute inset-0 origin-center opacity-0" style={{ background: "conic-gradient(from -45deg, transparent, rgba(245,166,75,0.15) 45deg, transparent 90deg)" }} />
+              <div id="sweep-arc" className="absolute inset-0 origin-center opacity-0" style={{ background: "conic-gradient(from -45deg, transparent, rgba(217,138,48,0.15) 45deg, transparent 90deg)" }} />
             </div>
 
             <div className="w-8 h-8 bg-white border-4 border-primary rounded-full z-40 shadow-lg flex items-center justify-center">
@@ -744,6 +769,67 @@ function StatsSection({ t, statCounters }) {
               <div className="font-bricolage text-3xl font-black text-white mb-1">75%</div>
               <p className="text-white/70 text-[10px] font-bold uppercase tracking-wider">{t("stat_rate")}</p>
             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══ Wallet / Rewards Section ═══ */
+
+function WalletRewardsSection({ t }) {
+  const rewards = [
+    { icon: "fa-solid fa-hand-holding-heart", color: "text-primary", bg: "bg-primary/10", titleKey: "home_wallet_feature1_title", descKey: "home_wallet_feature1_desc" },
+    { icon: "fa-solid fa-star", color: "text-amber-500", bg: "bg-amber-50", titleKey: "home_wallet_feature2_title", descKey: "home_wallet_feature2_desc" },
+    { icon: "fa-solid fa-coins", color: "text-green-mid", bg: "bg-green-light", titleKey: "home_wallet_feature3_title", descKey: "home_wallet_feature3_desc" },
+    { icon: "fa-solid fa-arrow-right-from-bracket", color: "text-blue-500", bg: "bg-blue-50", titleKey: "home_wallet_feature4_title", descKey: "home_wallet_feature4_desc" },
+  ];
+
+  return (
+    <section className="py-20 px-5 bg-bgMain relative overflow-hidden">
+      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(#1A1A1A 1px, transparent 1px), linear-gradient(90deg, #1A1A1A 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+
+      <div className="relative z-10 max-w-7xl mx-auto">
+        <div className="text-center mb-14">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 text-primary rounded-full text-[11px] font-black uppercase tracking-widest mb-5 border border-primary/20">
+            <i className="fa-solid fa-sack-dollar text-[10px]" /> {t("home_wallet_badge")}
+          </span>
+          <h2 className="font-bricolage text-2xl md:text-3xl font-black text-textMain tracking-normal mb-4">{t("home_wallet_title")}</h2>
+          <p className="text-textMuted text-[14px] leading-relaxed max-w-lg mx-auto tracking-wide">{t("home_wallet_desc")}</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-14">
+          {rewards.map((r, i) => (
+            <div key={i} className="bg-white border border-borda rounded-[24px] p-7 hover:shadow-lg hover:-translate-y-1 transition-all group">
+              <div className={`w-12 h-12 rounded-2xl ${r.bg} ${r.color} flex items-center justify-center text-xl mb-5 group-hover:scale-110 transition-transform`}>
+                <i className={r.icon} />
+              </div>
+              <h3 className="font-bricolage text-[16px] font-bold text-textMain mb-2">{t(r.titleKey)}</h3>
+              <p className="text-textMuted text-[13px] leading-relaxed">{t(r.descKey)}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-green-dark rounded-[24px] p-8 md:p-10 shadow-xl relative overflow-hidden">
+          <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
+          <div className="absolute -left-8 -top-8 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-5">
+              <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-green-dark text-2xl flex-shrink-0 shadow-lg">
+                <i className="fa-solid fa-percent" />
+              </div>
+              <div>
+                <h3 className="font-bricolage text-xl md:text-2xl font-black text-white">{t("home_wallet_bonus_title")}</h3>
+                <p className="text-white/60 text-[13px] mt-1">{t("home_wallet_bonus_desc")}</p>
+              </div>
+            </div>
+            <Link to="/login"
+              className="inline-flex items-center gap-2.5 px-8 py-4 bg-primary text-green-dark rounded-[18px] font-black text-[15px] hover:bg-primary-dark transition-all shadow-xl shadow-primary/20 flex-shrink-0"
+            >
+              {t("home_wallet_btn")} <i className="fa-solid fa-arrow-right text-[11px]" />
+            </Link>
           </div>
         </div>
       </div>
@@ -807,7 +893,7 @@ function ReferralSection({ t }) {
 function SubscriptionsTeaser({ t, plans }: { t: any; plans: Plan[] }) {
   return (
     <section className="py-24 px-5 bg-green-dark relative overflow-hidden">
-      <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(#F5A64B 1px, transparent 1px), linear-gradient(90deg, #F5A64B 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+      <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(#D98A30 1px, transparent 1px), linear-gradient(90deg, #D98A30 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
       <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px]" />
       <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-white/5 rounded-full blur-[80px]" />
 
@@ -1377,67 +1463,6 @@ function DeviceProtectionSection({ t }) {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ═══ Wallet / Rewards Section ═══ */
-
-function WalletRewardsSection({ t }) {
-  const rewards = [
-    { icon: "fa-solid fa-hand-holding-heart", color: "text-primary", bg: "bg-primary/10", titleKey: "home_wallet_feature1_title", descKey: "home_wallet_feature1_desc" },
-    { icon: "fa-solid fa-star", color: "text-amber-500", bg: "bg-amber-50", titleKey: "home_wallet_feature2_title", descKey: "home_wallet_feature2_desc" },
-    { icon: "fa-solid fa-coins", color: "text-green-mid", bg: "bg-green-light", titleKey: "home_wallet_feature3_title", descKey: "home_wallet_feature3_desc" },
-    { icon: "fa-solid fa-arrow-right-from-bracket", color: "text-blue-500", bg: "bg-blue-50", titleKey: "home_wallet_feature4_title", descKey: "home_wallet_feature4_desc" },
-  ];
-
-  return (
-    <section className="py-20 px-5 bg-bgMain relative overflow-hidden">
-      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(#1A1A1A 1px, transparent 1px), linear-gradient(90deg, #1A1A1A 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
-      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
-
-      <div className="relative z-10 max-w-7xl mx-auto">
-        <div className="text-center mb-14">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 text-primary rounded-full text-[11px] font-black uppercase tracking-widest mb-5 border border-primary/20">
-            <i className="fa-solid fa-sack-dollar text-[10px]" /> {t("home_wallet_badge")}
-          </span>
-          <h2 className="font-bricolage text-2xl md:text-3xl font-black text-textMain tracking-normal mb-4">{t("home_wallet_title")}</h2>
-          <p className="text-textMuted text-[14px] leading-relaxed max-w-lg mx-auto tracking-wide">{t("home_wallet_desc")}</p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-14">
-          {rewards.map((r, i) => (
-            <div key={i} className="bg-white border border-borda rounded-[24px] p-7 hover:shadow-lg hover:-translate-y-1 transition-all group">
-              <div className={`w-12 h-12 rounded-2xl ${r.bg} ${r.color} flex items-center justify-center text-xl mb-5 group-hover:scale-110 transition-transform`}>
-                <i className={r.icon} />
-              </div>
-              <h3 className="font-bricolage text-[16px] font-bold text-textMain mb-2">{t(r.titleKey)}</h3>
-              <p className="text-textMuted text-[13px] leading-relaxed">{t(r.descKey)}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="bg-green-dark rounded-[24px] p-8 md:p-10 shadow-xl relative overflow-hidden">
-          <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
-          <div className="absolute -left-8 -top-8 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-5">
-              <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-green-dark text-2xl flex-shrink-0 shadow-lg">
-                <i className="fa-solid fa-percent" />
-              </div>
-              <div>
-                <h3 className="font-bricolage text-xl md:text-2xl font-black text-white">{t("home_wallet_bonus_title")}</h3>
-                <p className="text-white/60 text-[13px] mt-1">{t("home_wallet_bonus_desc")}</p>
-              </div>
-            </div>
-            <Link to="/login"
-              className="inline-flex items-center gap-2.5 px-8 py-4 bg-primary text-green-dark rounded-[18px] font-black text-[15px] hover:bg-primary-dark transition-all shadow-xl shadow-primary/20 flex-shrink-0"
-            >
-              {t("home_wallet_btn")} <i className="fa-solid fa-arrow-right text-[11px]" />
-            </Link>
           </div>
         </div>
       </div>

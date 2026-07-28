@@ -9,6 +9,11 @@ import { declarationsService } from "../../services/declarationsService";
 import { useToast } from "../../context/ToastContext";
 import Topbar from "../../layout/Topbar";
 import type { Transaction, EarningsRecord, Declaration } from "../../types/api";
+import {
+  Paper, Title, Text, Group, Stack, SimpleGrid,
+  Progress, Badge, Loader, Modal,
+} from "@mantine/core";
+import apiClient from "../../services/api";
 
 function fmtAmount(n: number) {
   return n.toLocaleString("fr-FR");
@@ -146,7 +151,7 @@ export default function MesGains() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-screen w-full">
       <Topbar
         title={t("mesgains_title")}
         breadcrumbs={[
@@ -155,8 +160,8 @@ export default function MesGains() {
         ]}
       />
 
-      <div className="custom-scroll p-4 sm:p-6 flex flex-col gap-5 pb-24 md:pb-8 max-md:h-[calc(100vh-134px)] md:h-[calc(100vh-64px)] overflow-y-auto">
-        <div className="max-w-7xl mx-auto w-full flex flex-col gap-5">
+      <div className="custom-scroll flex-1 p-4 sm:p-6 flex flex-col gap-5 pb-24 md:pb-8 overflow-y-auto">
+        <Stack gap="lg" className="max-w-7xl mx-auto w-full">
           <WalletCard
             balance={balance}
             minWithdrawal={minWithdrawal}
@@ -280,7 +285,7 @@ export default function MesGains() {
               {t("mesgains_min_withdrawal_delay").replace("{amount}", fmtAmount(minWithdrawal))}
             </p>
           </div>
-        </div>
+        </Stack>
       </div>
 
       {showWithdrawModal && (
@@ -346,10 +351,12 @@ export default function MesGains() {
 
 function WalletCard({ balance, minWithdrawal, progressPct, onWithdraw, onHistory, fmtAmount, t }: any) {
   return (
-    <div
-      className="rounded-[20px] p-5 sm:p-6 text-white relative z-0"
+    <Paper
+      p="lg"
+      className="text-white relative z-0"
       style={{
         background: "linear-gradient(135deg, #1E3A2F 0%, #2D5A42 55%, #3B7A58 100%)",
+        borderRadius: 20,
       }}
     >
       <div className="absolute w-[260px] h-[260px] rounded-full bg-white/[0.04] -top-[80px] -right-[60px] pointer-events-none" />
@@ -357,13 +364,15 @@ function WalletCard({ balance, minWithdrawal, progressPct, onWithdraw, onHistory
 
       <div className="flex items-start justify-between mb-5 relative z-10">
         <div>
-          <p className="text-white/60 text-[12px] font-medium uppercase tracking-widest mb-1">
+          <Text size="xs" fw={500} tt="uppercase" className="tracking-widest" c="white.4">
             {t("mesgains_balance")}
-          </p>
-          <p className="font-bricolage text-4xl font-extrabold tracking-tight">
+          </Text>
+          <Text fw={800} className="font-bricolage" style={{ fontSize: 36, lineHeight: 1 }}>
             {fmtAmount(balance)}{" "}
-            <span className="text-2xl font-bold text-white/70">XAF</span>
-          </p>
+            <Text component="span" fw={700} c="white.6" style={{ fontSize: 24 }}>
+              XAF
+            </Text>
+          </Text>
         </div>
         <div className="w-11 h-11 rounded-[13px] bg-white/10 border border-white/15 flex items-center justify-center">
           <i className="fa-solid fa-sack-dollar text-primary text-lg" />
@@ -371,25 +380,22 @@ function WalletCard({ balance, minWithdrawal, progressPct, onWithdraw, onHistory
       </div>
 
       <div className="relative z-10 mb-5">
-        <div className="flex justify-between text-[11.5px] mb-1.5">
-          <span className="text-white/60 font-medium">{t("mesgains_progress")}</span>
-          <span className="text-white font-bold">{fmtAmount(balance)} / {fmtAmount(minWithdrawal)} XAF</span>
-        </div>
-        <div className="bg-white/15 rounded-[99px] overflow-hidden h-[6px]">
-          <div
-            className="h-full rounded-[99px] transition-all duration-700"
-            style={{
-              width: `${progressPct}%`,
-              background: "linear-gradient(to right, #F5A64B, #D98A30)",
-            }}
-          />
-        </div>
-        <p className="text-[11px] text-white/40 mt-1.5">
+        <Group justify="space-between" mb={6}>
+          <Text size="xs" fw={500} c="white.4">{t("mesgains_progress")}</Text>
+          <Text fw={700} c="white" size="xs">{fmtAmount(balance)} / {fmtAmount(minWithdrawal)} XAF</Text>
+        </Group>
+        <Progress
+          value={progressPct}
+          size="sm"
+          radius="xl"
+          color="gold"
+        />
+        <Text size="xs" c="white.4" mt={6}>
           {t("mesgains_min_withdrawal")} {fmtAmount(minWithdrawal)} XAF
-        </p>
+        </Text>
       </div>
 
-      <div className="relative z-10 flex gap-2.5">
+      <Group gap="sm" className="relative z-10">
         <button
           onClick={onWithdraw}
           className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-primary hover:bg-primary-dark text-white font-bricolage text-[13.5px] font-bold rounded-[12px] transition-all active:scale-[.98]"
@@ -402,8 +408,8 @@ function WalletCard({ balance, minWithdrawal, progressPct, onWithdraw, onHistory
         >
           <i className="fa-solid fa-clock-rotate-left text-xs" /> {t("mesgains_history")}
         </button>
-      </div>
-    </div>
+      </Group>
+    </Paper>
   );
 }
 
@@ -411,13 +417,15 @@ function WalletCard({ balance, minWithdrawal, progressPct, onWithdraw, onHistory
 
 function StatCard({ icon, bg, color, value, label }: any) {
   return (
-    <div className="bg-white border border-borda rounded-[16px] p-4 hover:translate-y-[-2px] hover:shadow-[0_8px_24px_rgba(0,0,0,.07)] transition-all">
+    <Paper p="md" className="border border-borda hover:-translate-y-0.5 hover:shadow-lg transition-all" style={{ borderRadius: 16 }}>
       <div className={`w-9 h-9 rounded-[10px] ${bg} flex items-center justify-center mb-3`}>
         <i className={`fa-solid ${icon} ${color} text-sm`} />
       </div>
-      <p className="font-bricolage text-2xl font-extrabold text-textMain leading-none mb-1">{value}</p>
-      <p className="text-[11.5px] text-textMuted font-medium leading-snug">{label}</p>
-    </div>
+      <Text fw={800} className="font-bricolage" style={{ fontSize: 24, lineHeight: 1 }} mb={4}>
+        {value}
+      </Text>
+      <Text size="xs" fw={500} c="dimmed">{label}</Text>
+    </Paper>
   );
 }
 
@@ -425,21 +433,21 @@ function StatCard({ icon, bg, color, value, label }: any) {
 
 function PointsCard({ totalPoints, pointsBreakdown, levelLabel, pointsToNext, nextLevelPoints, onConvert, fmtAmount, t }: any) {
   return (
-    <div className="bg-white border border-borda rounded-[18px] p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2.5">
+    <Paper p="lg" className="border border-borda" style={{ borderRadius: 18 }}>
+      <Group justify="space-between" mb="md">
+        <Group gap="sm">
           <div className="w-8 h-8 rounded-[9px] bg-primary/10 flex items-center justify-center">
             <i className="fa-solid fa-star text-primary text-sm" />
           </div>
           <div>
-            <h2 className="font-bricolage text-[15px] font-bold text-textMain leading-tight">{t("mesgains_points_title")}</h2>
-            <p className="text-[11px] text-textMuted">{t("mesgains_loyalty_program")}</p>
+            <Title order={3} size={15} style={{ lineHeight: 1.3 }}>{t("mesgains_points_title")}</Title>
+            <Text size="xs" c="dimmed">{t("mesgains_loyalty_program")}</Text>
           </div>
-        </div>
-        <span className="font-bricolage text-xl font-extrabold text-primary">{fmtAmount(totalPoints)} pts</span>
-      </div>
+        </Group>
+        <Text fw={800} className="font-bricolage" size="xl" c="gold">{fmtAmount(totalPoints)} pts</Text>
+      </Group>
 
-      <div className="flex flex-col gap-2 mb-4">
+      <Stack gap="xs" mb="md">
         <PointsRow
           label={t("mesgains_declared_docs")}
           detail={`(+${pointsBreakdown.declarations.pts_per_unit || 5} pts × ${pointsBreakdown.declarations.count})`}
@@ -461,25 +469,27 @@ function PointsCard({ totalPoints, pointsBreakdown, levelLabel, pointsToNext, ne
           color="bg-amber-400"
           max={5}
         />
-      </div>
+      </Stack>
 
-      <div className="flex items-center justify-between p-3 bg-primary/5 border border-primary/15 rounded-[12px]">
-        <div className="flex items-center gap-2">
-          <i className="fa-solid fa-trophy text-primary text-sm" />
-          <div>
-            <p className="text-[12.5px] font-bold text-textMain">{levelLabel}</p>
-            <p className="text-[11px] text-textMuted">
-              {pointsToNext > 0
-                ? `${pointsToNext} ${t("mesgains_points_to_gold")}`
-                : t("mesgains_congrats_gold")}
-            </p>
+      <Paper p="sm" className="bg-primary/5 border border-primary/15" style={{ borderRadius: 12 }}>
+        <Group gap="sm">
+          <Group gap="xs">
+            <i className="fa-solid fa-trophy text-primary text-sm" />
+            <div>
+              <Text size="sm" fw={700}>{levelLabel}</Text>
+              <Text size="xs" c="dimmed">
+                {pointsToNext > 0
+                  ? `${pointsToNext} ${t("mesgains_points_to_gold")}`
+                  : t("mesgains_congrats_gold")}
+              </Text>
+            </div>
+          </Group>
+          <div className="text-right">
+            <Text size="xs" c="dimmed">{t("mesgains_next_level")}</Text>
+            <Text size="sm" fw={700} c="gold">{fmtAmount(nextLevelPoints)} pts</Text>
           </div>
-        </div>
-        <div className="text-right">
-          <p className="text-[11px] text-textMuted">{t("mesgains_next_level")}</p>
-          <p className="text-[13px] font-bold text-primary">{fmtAmount(nextLevelPoints)} pts</p>
-        </div>
-      </div>
+        </Group>
+      </Paper>
 
       {totalPoints > 0 && (
         <button
@@ -489,7 +499,7 @@ function PointsCard({ totalPoints, pointsBreakdown, levelLabel, pointsToNext, ne
           <i className="fa-solid fa-coins text-xs" /> {t("mesgains_convert_points")}
         </button>
       )}
-    </div>
+    </Paper>
   );
 }
 
@@ -516,96 +526,95 @@ function PotentialEarningsCard({ declarations, totalXaf, totalPts, fmtAmount, t 
   if (declarations.length === 0) return null;
 
   return (
-    <div className="bg-white border border-borda rounded-[18px] overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-borda">
-        <div className="flex items-center gap-2.5">
+    <Paper className="border border-borda" style={{ borderRadius: 18, overflow: "hidden" }}>
+      <Group px="lg" py="md" className="border-b border-borda">
+        <Group gap="sm">
           <div className="w-8 h-8 rounded-[9px] bg-amber-50 flex items-center justify-center">
             <i className="fa-solid fa-sack-dollar text-amber-500 text-sm" />
           </div>
           <div>
-            <h2 className="font-bricolage text-[15px] font-bold text-textMain">
-              {t("mesgains_potential_title")}
-            </h2>
-            <p className="text-[11px] text-textMuted">{t("mesgains_potential_desc")}</p>
+            <Title order={3} size={15}>{t("mesgains_potential_title")}</Title>
+            <Text size="xs" c="dimmed">{t("mesgains_potential_desc")}</Text>
           </div>
-        </div>
-      </div>
+        </Group>
+      </Group>
 
-      {/* Totals */}
-      <div className="px-5 py-4 bg-amber-50/50 border-b border-borda">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex items-center gap-3">
+      <Paper px="lg" py="md" className="bg-amber-50/50 border-b border-borda" style={{ borderRadius: 0 }}>
+        <SimpleGrid cols={2} spacing="md">
+          <Group gap="sm">
             <div className="w-10 h-10 rounded-[11px] bg-amber-100 flex items-center justify-center">
               <i className="fa-solid fa-coins text-amber-500 text-lg" />
             </div>
             <div>
-              <p className="font-bricolage text-xl font-extrabold text-textMain leading-none">
-                {fmtAmount(totalXaf)} <span className="text-sm font-bold text-textMuted">XAF</span>
-              </p>
-              <p className="text-[11px] text-textMuted mt-0.5">{t("mesgains_potential_xaf")}</p>
+              <Text fw={800} className="font-bricolage" size="xl" lh={1}>
+                {fmtAmount(totalXaf)} <Text component="span" fw={700} size="sm" c="dimmed">XAF</Text>
+              </Text>
+              <Text size="xs" c="dimmed" mt={2}>{t("mesgains_potential_xaf")}</Text>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
+          </Group>
+          <Group gap="sm">
             <div className="w-10 h-10 rounded-[11px] bg-primary/10 flex items-center justify-center">
               <i className="fa-solid fa-star text-primary text-lg" />
             </div>
             <div>
-              <p className="font-bricolage text-xl font-extrabold text-textMain leading-none">
-                {fmtAmount(totalPts)} <span className="text-sm font-bold text-textMuted">pts</span>
-              </p>
-              <p className="text-[11px] text-textMuted mt-0.5">{t("mesgains_potential_pts")}</p>
+              <Text fw={800} className="font-bricolage" size="xl" lh={1}>
+                {fmtAmount(totalPts)} <Text component="span" fw={700} size="sm" c="dimmed">pts</Text>
+              </Text>
+              <Text size="xs" c="dimmed" mt={2}>{t("mesgains_potential_pts")}</Text>
             </div>
-          </div>
-        </div>
-      </div>
+          </Group>
+        </SimpleGrid>
+      </Paper>
 
-      {/* Per-declaration breakdown */}
-      <div className="divide-y divide-borda">
+      <Stack gap={0} className="divide-y divide-borda">
         {declarations.map((decl: Declaration) => {
           const prix = decl.docTypeInfo?.prix_retrouvaille ?? 0;
           const pct = decl.docTypeInfo?.finder_percent ?? 80;
           const xafGain = (prix * pct) / 100;
           const ptsGain = decl.docTypeInfo?.points_recompense ?? 0;
           const icon = decl.docTypeInfo?.icone || "file";
-          const statusColor = decl.status === "MATCHED" ? "bg-green-light text-green-mid" : "bg-primary/10 text-primary";
 
           return (
-            <div key={decl.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-surface2 transition-colors">
+            <Group key={decl.id} px="lg" py="sm" gap="md" className="hover:bg-surface2 transition-colors">
               <div className="w-9 h-9 rounded-[10px] bg-amber-50 flex items-center justify-center flex-shrink-0">
                 <i className={`fa-solid fa-${icon} text-amber-500 text-sm`} />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-textMain truncate leading-tight">
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <Text size="sm" fw={600} truncate lh="tight">
                   {decl.docTypeInfo?.nom || decl.doc_type || "Document"}
-                </p>
-                <p className="text-[11px] text-textMuted mt-0.5">
+                </Text>
+                <Text size="xs" c="dimmed" mt={2}>
                   {decl.identifiant_doc_dm || decl.id.slice(0, 8)}
                   {decl.ville ? ` · ${decl.ville}` : ""}
-                </p>
+                </Text>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColor}`}>
+              <Group gap="sm" wrap="nowrap" style={{ flexShrink: 0 }}>
+                <Badge
+                  size="xs"
+                  variant={decl.status === "MATCHED" ? "light" : "light"}
+                  color={decl.status === "MATCHED" ? "green" : "gold"}
+                >
                   {decl.status === "MATCHED" ? t("mesgains_potential_matched") : t("mesgains_potential_available")}
-                </span>
+                </Badge>
                 <div className="text-right">
-                  <p className="font-bricolage text-[13px] font-extrabold text-amber-500">
+                  <Text fw={800} size="sm" c="amber.5" className="font-bricolage">
                     +{fmtAmount(xafGain)} XAF
-                  </p>
-                  <p className="text-[10px] font-bold text-primary">+{ptsGain} pts</p>
+                  </Text>
+                  <Text size={10} fw={700} c="gold">+{ptsGain} pts</Text>
                 </div>
-              </div>
-            </div>
+              </Group>
+            </Group>
           );
         })}
-      </div>
+      </Stack>
 
-      <div className="px-5 py-3 bg-amber-50/30 border-t border-borda">
-        <p className="text-[11px] text-textMuted text-center">
+      <Paper px="lg" py="sm" className="bg-amber-50/30 border-t border-borda" style={{ borderRadius: 0 }}>
+        <Text size="xs" c="dimmed" ta="center">
           <i className="fa-solid fa-circle-info text-amber-400 mr-1" />
           {t("mesgains_potential_note")}
-        </p>
-      </div>
-    </div>
+        </Text>
+      </Paper>
+    </Paper>
   );
 }
 
@@ -613,51 +622,51 @@ function PotentialEarningsCard({ declarations, totalXaf, totalPts, fmtAmount, t 
 
 function TransactionsCard({ transactions, loading, fmtAmount, fmtDate, t }: any) {
   return (
-    <div className="bg-white border border-borda rounded-[18px] overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-borda">
-        <div className="flex items-center gap-2.5">
+    <Paper className="border border-borda" style={{ borderRadius: 18, overflow: "hidden" }}>
+      <Group px="lg" py="md" className="border-b border-borda">
+        <Group gap="sm">
           <div className="w-8 h-8 rounded-[9px] bg-green-light flex items-center justify-center">
             <i className="fa-solid fa-clock-rotate-left text-green-mid text-sm" />
           </div>
-          <h2 className="font-bricolage text-[15px] font-bold text-textMain">{t("mesgains_recent_transactions")}</h2>
-        </div>
-      </div>
+          <Title order={3} size={15}>{t("mesgains_recent_transactions")}</Title>
+        </Group>
+      </Group>
 
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="w-8 h-8 rounded-full border-4 border-borda border-t-primary animate-spin" />
-        </div>
+        <Group justify="center" py="xl">
+          <Loader size="sm" color="gold" />
+        </Group>
       ) : transactions.length === 0 ? (
-        <div className="p-10 text-center text-textMuted">
-          <i className="fa-solid fa-receipt text-3xl opacity-20 mb-3" />
-          <p className="text-sm">{t("mesgains_no_transactions")}</p>
-        </div>
+        <Stack align="center" py="xl" gap="sm">
+          <i className="fa-solid fa-receipt text-3xl opacity-20" />
+          <Text size="sm" c="dimmed">{t("mesgains_no_transactions")}</Text>
+        </Stack>
       ) : (
-        <div className="divide-y divide-borda">
+        <Stack gap={0} className="divide-y divide-borda">
           {transactions.map((tx: Transaction) => {
             const isPositive = tx.amount > 0 && tx.type !== "recovery_fee";
             const meta = getTxMeta(tx.type || "", t);
             return (
-              <div key={tx.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-surface2 transition-colors">
+              <Group key={tx.id} px="lg" py="sm" gap="md" className="hover:bg-surface2 transition-colors">
                 <div className={`w-9 h-9 rounded-[10px] ${meta.bg} flex items-center justify-center flex-shrink-0`}>
                   <i className={`fa-solid ${meta.icon} ${meta.color} text-sm`} />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-textMain truncate leading-tight">{meta.label}</p>
-                  <p className="text-[11px] text-textMuted mt-0.5">{meta.sub} · {fmtDate(tx.created_at)}</p>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <Text size="sm" fw={600} truncate>{meta.label}</Text>
+                  <Text size="xs" c="dimmed" mt={2}>{meta.sub} · {fmtDate(tx.created_at)}</Text>
                 </div>
-                <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  <span className={`font-bricolage text-[14px] font-extrabold ${isPositive ? "text-green-mid" : "text-textMuted"}`}>
+                <Stack gap={4} align="flex-end" style={{ flexShrink: 0 }}>
+                  <Text fw={800} className="font-bricolage" size="sm" c={isPositive ? "green.6" : "dimmed"}>
                     {isPositive ? "+" : "-"}{fmtAmount(Math.abs(tx.amount))} XAF
-                  </span>
+                  </Text>
                   <TxStatusBadge status={tx.status} t={t} />
-                </div>
-              </div>
+                </Stack>
+              </Group>
             );
           })}
-        </div>
+        </Stack>
       )}
-    </div>
+    </Paper>
   );
 }
 
@@ -665,55 +674,53 @@ function TransactionsCard({ transactions, loading, fmtAmount, fmtDate, t }: any)
 
 function EarningsHistoryCard({ earningsHistory, loading, fmtAmount, fmtDate, t }: any) {
   return (
-    <div className="bg-white border border-borda rounded-[18px] overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-borda">
-        <div className="flex items-center gap-2.5">
+    <Paper className="border border-borda" style={{ borderRadius: 18, overflow: "hidden" }}>
+      <Group px="lg" py="md" className="border-b border-borda" justify="space-between">
+        <Group gap="sm">
           <div className="w-8 h-8 rounded-[9px] bg-primary/10 flex items-center justify-center">
             <i className="fa-solid fa-clock-rotate-left text-primary text-sm" />
           </div>
-          <h2 className="font-bricolage text-[15px] font-bold text-textMain">
-            {t("mesgains_earnings_history") || "Historique des gains"}
-          </h2>
-        </div>
-        <span className="text-[11px] text-textMuted font-medium">
+          <Title order={3} size={15}>{t("mesgains_earnings_history") || "Historique des gains"}</Title>
+        </Group>
+        <Text size="xs" fw={500} c="dimmed">
           {earningsHistory.length} {t("mesgains_entries") || "entrées"}
-        </span>
-      </div>
+        </Text>
+      </Group>
 
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="w-8 h-8 rounded-full border-4 border-borda border-t-primary animate-spin" />
-        </div>
+        <Group justify="center" py="xl">
+          <Loader size="sm" color="gold" />
+        </Group>
       ) : earningsHistory.length === 0 ? (
-        <div className="p-10 text-center text-textMuted">
-          <i className="fa-solid fa-coins text-3xl opacity-20 mb-3" />
-          <p className="text-sm">{t("mesgains_no_earnings") || "Aucun gain pour le moment"}</p>
-        </div>
+        <Stack align="center" py="xl" gap="sm">
+          <i className="fa-solid fa-coins text-3xl opacity-20" />
+          <Text size="sm" c="dimmed">{t("mesgains_no_earnings") || "Aucun gain pour le moment"}</Text>
+        </Stack>
       ) : (
-        <div className="divide-y divide-borda">
+        <Stack gap={0} className="divide-y divide-borda">
           {earningsHistory.map((entry: EarningsRecord) => {
             const isPoints = entry.currency === "POINTS";
             const meta = getEarningMeta(entry.type, t);
             return (
-              <div key={entry.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-surface2 transition-colors">
+              <Group key={entry.id} px="lg" py="sm" gap="md" className="hover:bg-surface2 transition-colors">
                 <div className={`w-9 h-9 rounded-[10px] ${meta.bg} flex items-center justify-center flex-shrink-0`}>
                   <i className={`fa-solid ${meta.icon} ${meta.color} text-sm`} />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-textMain truncate leading-tight">{entry.description || meta.label}</p>
-                  <p className="text-[11px] text-textMuted mt-0.5">{fmtDate(entry.created_at)}</p>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <Text size="sm" fw={600} truncate>{entry.description || meta.label}</Text>
+                  <Text size="xs" c="dimmed" mt={2}>{fmtDate(entry.created_at)}</Text>
                 </div>
-                <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  <span className={`font-bricolage text-[14px] font-extrabold ${isPoints ? "text-primary" : "text-green-mid"}`}>
+                <Stack gap={4} align="flex-end" style={{ flexShrink: 0 }}>
+                  <Text fw={800} className="font-bricolage" size="sm" c={isPoints ? "gold" : "green.6"}>
                     +{fmtAmount(entry.amount)} {isPoints ? "pts" : "XAF"}
-                  </span>
-                </div>
-              </div>
+                  </Text>
+                </Stack>
+              </Group>
             );
           })}
-        </div>
+        </Stack>
       )}
-    </div>
+    </Paper>
   );
 }
 
@@ -722,23 +729,24 @@ function EarningsHistoryCard({ earningsHistory, loading, fmtAmount, fmtDate, t }
 function PaymentMethodCard({ icon, name, color, bg, saved, onAdd, onManage, t }: any) {
   const hasMethod = !!saved;
   return (
-    <div
+    <Paper
       onClick={hasMethod ? onManage : onAdd}
-      className={`flex items-center gap-3 p-3.5 border-2 rounded-[13px] cursor-pointer hover:border-primary transition-all group ${
+      className={`border-2 cursor-pointer hover:border-primary transition-all group ${
         hasMethod ? "border-primary bg-primary/5" : "border-borda bg-surface2"
       }`}
+      style={{ borderRadius: 13, display: "flex", alignItems: "center", gap: 12, padding: 14 }}
     >
       <div className={`w-9 h-9 rounded-[10px] ${bg} flex items-center justify-center flex-shrink-0`}>
         <i className={`fa-solid ${icon} ${color} text-sm`} />
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[12.5px] font-bold text-textMain leading-tight truncate">{name}</p>
-        <p className={`text-[10.5px] ${hasMethod ? "text-green-mid font-semibold" : "text-textMuted"}`}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <Text size="sm" fw={700} truncate>{name}</Text>
+        <Text size={10.5} c={hasMethod ? "green.6" : "dimmed"} fw={hasMethod ? 600 : 400}>
           {hasMethod ? `\u2713 ${t("mesgains_connected")}` : t("mesgains_add")}
-        </p>
+        </Text>
       </div>
       <i className={`fa-solid ${hasMethod ? "fa-circle-check text-primary" : "fa-plus text-textMuted group-hover:text-primary"} text-sm transition-colors`} />
-    </div>
+    </Paper>
   );
 }
 
@@ -815,24 +823,16 @@ function WithdrawModal({ balance, minWithdrawal, savedMethods, onClose, onDone, 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-[20px] w-[440px] max-w-[94vw] max-h-[90vh] overflow-y-auto custom-scroll shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-5 border-b border-borda">
-          <h3 className="font-bricolage text-[16px] font-bold text-textMain">{t("mesgains_withdraw_modal_title")}</h3>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
-            <i className="fa-solid fa-xmark text-textMuted" />
-          </button>
-        </div>
-
-        {success ? (
-          <div className="p-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-green-light flex items-center justify-center mx-auto mb-4">
-              <i className="fa-solid fa-check-circle text-green-mid text-3xl" />
-            </div>
-            <p className="font-bricolage text-[16px] font-bold text-textMain">{t("mesgains_withdraw_modal_success")}</p>
+    <Modal opened onClose={onClose} title={t("mesgains_withdraw_modal_title")} size="sm">
+      {success ? (
+        <Stack align="center" py="xl" gap="md">
+          <div className="w-16 h-16 rounded-full bg-green-light flex items-center justify-center">
+            <i className="fa-solid fa-check-circle text-green-mid text-3xl" />
           </div>
-        ) : (
-          <div className="p-5 space-y-4">
+          <Text fw={700} size="md" className="font-bricolage">{t("mesgains_withdraw_modal_success")}</Text>
+        </Stack>
+      ) : (
+        <Stack gap="md">
             {(error || validationErr) && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-[12px] text-red-600 text-[12px] font-semibold flex items-center gap-2">
                 <i className="fa-solid fa-circle-exclamation" /> {error || validationErr}
@@ -980,10 +980,9 @@ function WithdrawModal({ balance, minWithdrawal, savedMethods, onClose, onDone, 
                 <>{t("mesgains_withdraw_modal_confirm")}</>
               )}
             </button>
-          </div>
+          </Stack>
         )}
-      </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -1009,45 +1008,36 @@ function WithdrawHistoryModal({ onClose, fmtAmount, fmtDate, t }: any) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-[20px] w-[440px] max-w-[94vw] max-h-[90vh] overflow-y-auto custom-scroll shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-5 border-b border-borda">
-          <h3 className="font-bricolage text-[16px] font-bold text-textMain">{t("mesgains_withdraw_history_modal_title")}</h3>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
-            <i className="fa-solid fa-xmark text-textMuted" />
-          </button>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="w-8 h-8 rounded-full border-4 border-borda border-t-primary animate-spin" />
-          </div>
-        ) : withdrawals.length === 0 ? (
-          <div className="p-10 text-center text-textMuted">
-            <i className="fa-solid fa-arrow-right-from-bracket text-3xl opacity-20 mb-3" />
-            <p className="text-sm">{t("mesgains_withdraw_history_empty")}</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-borda">
-            {withdrawals.map((w: any) => (
-              <div key={w.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-surface2 transition-colors">
-                <div className="w-9 h-9 rounded-[10px] bg-blue-50 flex items-center justify-center">
-                  <i className="fa-solid fa-arrow-right-from-bracket text-blue-400 text-sm" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-textMain truncate">{fmtAmount(w.amount)} XAF</p>
-                  <p className="text-[11px] text-textMuted mt-0.5">{w.payment_method} · {fmtDate(w.created_at)}</p>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  {statusBadge(w.status)}
-                  {w.admin_note && <p className="text-[10px] text-textMuted max-w-[120px] truncate">{w.admin_note}</p>}
-                </div>
+    <Modal opened onClose={onClose} title={t("mesgains_withdraw_history_modal_title")} size="sm">
+      {loading ? (
+        <Group justify="center" py="xl">
+          <Loader size="sm" color="gold" />
+        </Group>
+      ) : withdrawals.length === 0 ? (
+        <Stack align="center" py="xl" gap="sm">
+          <i className="fa-solid fa-arrow-right-from-bracket text-3xl opacity-20" />
+          <Text size="sm" c="dimmed">{t("mesgains_withdraw_history_empty")}</Text>
+        </Stack>
+      ) : (
+        <Stack gap={0} className="divide-y divide-borda">
+          {withdrawals.map((w: any) => (
+            <Group key={w.id} px="lg" py="sm" gap="md" className="hover:bg-surface2 transition-colors">
+              <div className="w-9 h-9 rounded-[10px] bg-blue-50 flex items-center justify-center">
+                <i className="fa-solid fa-arrow-right-from-bracket text-blue-400 text-sm" />
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <Text size="sm" fw={600} truncate>{fmtAmount(w.amount)} XAF</Text>
+                <Text size="xs" c="dimmed" mt={2}>{w.payment_method} · {fmtDate(w.created_at)}</Text>
+              </div>
+              <Stack gap={4} align="flex-end">
+                {statusBadge(w.status)}
+                {w.admin_note && <Text size={10} c="dimmed" className="max-w-[120px] truncate">{w.admin_note}</Text>}
+              </Stack>
+            </Group>
+          ))}
+        </Stack>
+      )}
+    </Modal>
   );
 }
 
@@ -1081,50 +1071,41 @@ function SavedMethodsModal({ methods, onClose, onRefresh, t }: any) {
   const typeBg = (type: string) => type === "MTN" ? "bg-yellow-50" : type === "ORANGE" ? "bg-orange-50" : "bg-blue-50";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-[20px] w-[440px] max-w-[94vw] max-h-[90vh] overflow-y-auto custom-scroll shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-5 border-b border-borda">
-          <h3 className="font-bricolage text-[16px] font-bold text-textMain">{t("mesgains_withdrawal_methods")}</h3>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
-            <i className="fa-solid fa-xmark text-textMuted" />
-          </button>
-        </div>
-
-        {methods.length === 0 ? (
-          <div className="p-10 text-center text-textMuted">
-            <i className="fa-solid fa-credit-card text-3xl opacity-20 mb-3" />
-            <p className="text-sm">{t("mesgains_withdraw_modal_no_methods")}</p>
-          </div>
-        ) : (
-          <div className="p-4 space-y-3">
-            {methods.map((m: SavedPaymentMethod) => (
-              <div key={m.id} className="flex items-center gap-3 p-3.5 border border-borda rounded-[14px]">
-                <div className={`w-9 h-9 rounded-[10px] ${typeBg(m.method_type)} flex items-center justify-center`}>
-                  <i className={`fa-solid ${typeIcon(m.method_type)} ${typeColor(m.method_type)} text-sm`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[12.5px] font-bold text-textMain truncate">{m.account_name || `${m.method_type} - ${m.account_number}`}</p>
-                  <p className="text-[11px] text-textMuted">{m.account_number}</p>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  {!m.is_default && (
-                    <button onClick={() => handleSetDefault(m.id)} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-primary/10 flex items-center justify-center transition-colors group" title={t("mesgains_withdraw_set_default")}>
-                      <i className="fa-solid fa-star text-[11px] text-textMuted group-hover:text-primary transition-colors" />
-                    </button>
-                  )}
-                  {m.is_default && (
-                    <span className="text-[10px] font-bold text-primary bg-primary/5 px-2 py-1 rounded-full">{t("mesgains_withdraw_default_method")}</span>
-                  )}
-                  <button onClick={() => handleDelete(m.id)} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50 flex items-center justify-center transition-colors group">
-                    <i className="fa-solid fa-trash-can text-[11px] text-textMuted group-hover:text-red-500 transition-colors" />
-                  </button>
-                </div>
+    <Modal opened onClose={onClose} title={t("mesgains_withdrawal_methods")} size="sm">
+      {methods.length === 0 ? (
+        <Stack align="center" py="xl" gap="sm">
+          <i className="fa-solid fa-credit-card text-3xl opacity-20" />
+          <Text size="sm" c="dimmed">{t("mesgains_withdraw_modal_no_methods")}</Text>
+        </Stack>
+      ) : (
+        <Stack gap="sm">
+          {methods.map((m: SavedPaymentMethod) => (
+            <Group key={m.id} p="sm" className="border border-borda" style={{ borderRadius: 14 }} gap="md">
+              <div className={`w-9 h-9 rounded-[10px] ${typeBg(m.method_type)} flex items-center justify-center`}>
+                <i className={`fa-solid ${typeIcon(m.method_type)} ${typeColor(m.method_type)} text-sm`} />
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <Text size="sm" fw={700} truncate>{m.account_name || `${m.method_type} - ${m.account_number}`}</Text>
+                <Text size="xs" c="dimmed">{m.account_number}</Text>
+              </div>
+              <Group gap="xs">
+                {!m.is_default && (
+                  <button onClick={() => handleSetDefault(m.id)} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-primary/10 flex items-center justify-center transition-colors group" title={t("mesgains_withdraw_set_default")}>
+                    <i className="fa-solid fa-star text-[11px] text-textMuted group-hover:text-primary transition-colors" />
+                  </button>
+                )}
+                {m.is_default && (
+                  <Badge size="xs" variant="light" color="gold">{t("mesgains_withdraw_default_method")}</Badge>
+                )}
+                <button onClick={() => handleDelete(m.id)} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50 flex items-center justify-center transition-colors group">
+                  <i className="fa-solid fa-trash-can text-[11px] text-textMuted group-hover:text-red-500 transition-colors" />
+                </button>
+              </Group>
+            </Group>
+          ))}
+        </Stack>
+      )}
+    </Modal>
   );
 }
 
@@ -1173,19 +1154,12 @@ function AddPaymentMethodModal({ methodType, onClose, onDone, t }: any) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-[20px] w-[420px] max-w-[94vw] shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-5 border-b border-borda">
-          <div className="flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-[10px] ${typeBg} flex items-center justify-center`}>
-              <i className={`fa-solid ${typeIcon} ${typeColor} text-sm`} />
-            </div>
-            <h3 className="font-bricolage text-[16px] font-bold text-textMain">{typeLabel}</h3>
-          </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
-            <i className="fa-solid fa-xmark text-textMuted" />
-          </button>
+    <Modal opened onClose={onClose} title={typeLabel} size="sm">
+      <Group gap="sm" mb="md">
+        <div className={`w-9 h-9 rounded-[10px] ${typeBg} flex items-center justify-center`}>
+          <i className={`fa-solid ${typeIcon} ${typeColor} text-sm`} />
         </div>
+      </Group>
 
         {success ? (
           <div className="p-8 text-center">
@@ -1249,8 +1223,7 @@ function AddPaymentMethodModal({ methodType, onClose, onDone, t }: any) {
             </button>
           </div>
         )}
-      </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -1290,68 +1263,59 @@ function ConvertPointsModal({ points, onClose, onDone, t }: { points: any; onClo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-[20px] p-6 w-full max-w-[380px] shadow-xl border border-borda">
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-[16px] font-bricolage font-bold text-textMain">{t("mesgains_convert_title")}</h3>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-textMuted hover:bg-gray-200 transition-all">
-            <i className="fa-solid fa-xmark text-sm" />
-          </button>
+    <Modal opened onClose={onClose} title={t("mesgains_convert_title")} size="sm">
+      <Stack align="center" gap="md" mb="md">
+        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+          <i className="fa-solid fa-coins text-primary text-2xl" />
         </div>
+        <Text size="sm" c="dimmed">{t("mesgains_convert_balance")}</Text>
+        <Text fw={800} className="font-bricolage" size="xl" c="gold">{points.totalPoints.toLocaleString()} pts</Text>
+      </Stack>
 
-        <div className="text-center mb-5">
-          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-            <i className="fa-solid fa-coins text-primary text-2xl" />
-          </div>
-          <p className="text-[13px] text-textMuted">{t("mesgains_convert_balance")}</p>
-          <p className="text-[22px] font-bricolage font-bold text-primary">{points.totalPoints.toLocaleString()} pts</p>
-        </div>
-
-        <div className="mb-4">
-          <label className="text-[12px] font-semibold text-textMuted mb-1.5 block">{t("mesgains_convert_amount")}</label>
-          <input
-            type="number"
-            value={amount}
-            onChange={(e) => { setAmount(e.target.value); setError(""); }}
-            placeholder="0"
-            min={1}
-            max={points.totalPoints}
-            className="w-full px-4 py-3 bg-gray-50 border border-borda rounded-[12px] text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-          />
-          <div className="flex justify-between mt-1.5">
-            <p className="text-[11px] text-textMuted">{t("mesgains_convert_rate")}: {rate} pt = 1 XAF</p>
-            <button onClick={() => setAmount(String(points.totalPoints))} className="text-[11px] text-primary font-semibold hover:underline">{t("mesgains_convert_max")}</button>
-          </div>
-        </div>
-
-        {numAmount > 0 && (
-          <div className="bg-primary/5 border border-primary/15 rounded-[12px] p-3 mb-4">
-            <div className="flex justify-between items-center">
-              <span className="text-[13px] text-textMuted">{t("mesgains_convert_receive")}</span>
-              <span className="text-[16px] font-bricolage font-bold text-primary">{xafValue.toLocaleString()} XAF</span>
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 text-[12px] rounded-[10px] p-3 mb-4 text-center">
-            {error}
-          </div>
-        )}
-
-        <button
-          onClick={handleConvert}
-          disabled={!canConvert || loading}
-          className="w-full py-3 bg-primary hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed text-white font-bricolage text-[13.5px] font-bold rounded-[12px] transition-all active:scale-[.98] flex items-center justify-center gap-2"
-        >
-          {loading ? (
-            <><i className="fa-solid fa-spinner fa-spin" /> {t("mesgains_convert_loading")}</>
-          ) : (
-            <><i className="fa-solid fa-coins" /> {t("mesgains_convert_button")}</>
-          )}
-        </button>
+      <div className="mb-4">
+        <Text size="xs" fw={600} c="dimmed" mb={6}>{t("mesgains_convert_amount")}</Text>
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => { setAmount(e.target.value); setError(""); }}
+          placeholder="0"
+          min={1}
+          max={points.totalPoints}
+          className="w-full px-4 py-3 bg-gray-50 border border-borda rounded-[12px] text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+        />
+        <Group justify="space-between" mt={6}>
+          <Text size="xs" c="dimmed">{t("mesgains_convert_rate")}: {rate} pt = 1 XAF</Text>
+          <button onClick={() => setAmount(String(points.totalPoints))} className="text-[11px] text-primary font-semibold hover:underline">{t("mesgains_convert_max")}</button>
+        </Group>
       </div>
-    </div>
+
+      {numAmount > 0 && (
+        <Paper p="sm" className="bg-primary/5 border border-primary/15 mb-md" style={{ borderRadius: 12 }}>
+          <Group justify="space-between">
+            <Text size="sm" c="dimmed">{t("mesgains_convert_receive")}</Text>
+            <Text fw={800} className="font-bricolage" size="md" c="gold">{xafValue.toLocaleString()} XAF</Text>
+          </Group>
+        </Paper>
+      )}
+
+      {error && (
+        <Paper p="sm" className="bg-red-50 border border-red-200 mb-md" style={{ borderRadius: 10 }}>
+          <Text size="xs" c="red.6" ta="center">{error}</Text>
+        </Paper>
+      )}
+
+      <button
+        onClick={handleConvert}
+        disabled={!canConvert || loading}
+        className="w-full py-3 bg-primary hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed text-white font-bricolage text-[13.5px] font-bold rounded-[12px] transition-all active:scale-[.98] flex items-center justify-center gap-2"
+      >
+        {loading ? (
+          <><i className="fa-solid fa-spinner fa-spin" /> {t("mesgains_convert_loading")}</>
+        ) : (
+          <><i className="fa-solid fa-coins" /> {t("mesgains_convert_button")}</>
+        )}
+      </button>
+    </Modal>
   );
 }
 

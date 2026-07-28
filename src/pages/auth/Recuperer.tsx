@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { Loader, Button } from "@mantine/core";
 import { declarationsService } from "../../services/declarationsService";
 import type { Declaration } from "../../types/api";
 import Topbar from "../../layout/Topbar";
@@ -922,13 +923,26 @@ export default function Recuperer() {
                     ) : (
                       /* Not paid - show pay button */
                       <div className="space-y-4 pt-2">
-                        <button
+                        <Button
                           onClick={() => setShowPaymentModal(true)}
-                          className="w-full py-5 bg-primary text-white rounded-[24px] font-bricolage font-extrabold text-[18px] shadow-xl shadow-primary/40 hover:bg-primary-dark transition-all transform active:scale-[0.98] flex items-center justify-center gap-3"
+                          fullWidth
+                          size="xl"
+                          radius="xl"
+                          color="var(--primary)"
+                          styles={{
+                            root: { 
+                              height: 'auto',
+                              padding: '20px',
+                              fontFamily: 'Bricolage Grotesque, sans-serif',
+                              fontWeight: 800,
+                              fontSize: '18px',
+                              boxShadow: '0 10px 15px -3px rgba(var(--primary-rgb), 0.4)'
+                            }
+                          }}
+                          rightSection={<i className="fa-solid fa-arrow-right text-sm" />}
                         >
                           {t("Payer & Récupérer")}
-                          <i className="fa-solid fa-arrow-right text-sm" />
-                        </button>
+                        </Button>
                         <p className="text-[11px] text-textMuted text-center leading-relaxed">
                           {t("Veuillez vérifier les informations du document avant de confirmer le paiement. Tout paiement est irréversible.")}
                         </p>
@@ -968,12 +982,24 @@ export default function Recuperer() {
                   {t("Besoin d'assistance ?")}
                 </p>
                 <div className="flex items-center gap-3">
-                  <button className="flex-1 py-3 bg-surface2 border border-borderMain rounded-xl text-[12px] font-bold text-textMain hover:border-primary transition-all">
+                  <Button
+                    variant="light"
+                    color="gray"
+                    fullWidth
+                    radius="md"
+                    styles={{ root: { padding: '12px', fontSize: '12px', fontWeight: 700 } }}
+                  >
                     Signaler
-                  </button>
-                  <button className="flex-1 py-3 bg-surface2 border border-borderMain rounded-xl text-[12px] font-bold text-textMain hover:border-primary transition-all">
+                  </Button>
+                  <Button
+                    variant="light"
+                    color="gray"
+                    fullWidth
+                    radius="md"
+                    styles={{ root: { padding: '12px', fontSize: '12px', fontWeight: 700 } }}
+                  >
                     Aide
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -984,7 +1010,7 @@ export default function Recuperer() {
             <div className="fixed bottom-20 left-4 right-4 lg:bottom-24 lg:left-auto lg:right-6 lg:w-80 z-30">
               <div className="bg-white border border-primary/30 rounded-[16px] p-4 shadow-xl">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+                  <Loader size="md" color="var(--primary)" />
                   <div>
                     <p className="text-[12px] font-bold text-textMain">
                       Confirmation en cours...
@@ -1015,12 +1041,16 @@ export default function Recuperer() {
                 <i className="fa-solid fa-circle-check" /> Paiement confirmé
               </div>
             ) : (
-              <button
+              <Button
                 onClick={() => setShowPaymentModal(true)}
-                className="px-6 py-3 bg-primary text-white rounded-xl text-[13px] font-bold hover:bg-primary-dark transition-all active:scale-[.98]"
+                fullWidth
+                size="md"
+                radius="xl"
+                color="var(--primary)"
+                styles={{ root: { padding: '10px 24px', fontWeight: 700 } }}
               >
                 Payer
-              </button>
+              </Button>
             )}
           </div>
         </div>

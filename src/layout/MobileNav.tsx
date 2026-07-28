@@ -2,12 +2,37 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useI18n } from "../context/I18nContext";
+import {
+  Text,
+  Stack,
+  Group,
+  Modal,
+  Affix,
+  UnstyledButton,
+  ThemeIcon,
+  Paper,
+  Button,
+  Divider,
+  useMantineTheme,
+} from "@mantine/core";
+import {
+  IconHome,
+  IconCirclePlus,
+  IconFolderOpen,
+  IconDeviceMobile,
+  IconAlertTriangle,
+  IconFileCheck,
+  IconFile,
+  IconSearch,
+  IconChevronRight,
+} from "@tabler/icons-react";
 
 export default function MobileNav() {
   const { user } = useAuth();
   const { t } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
+  const theme = useMantineTheme();
   const [declModalOpen, setDeclModalOpen] = useState(false);
 
   if (!user) return null;
@@ -15,132 +40,138 @@ export default function MobileNav() {
   const current = location.pathname;
 
   const items = [
-    { to: "/dashboard", icon: "fa-solid fa-house", label: t("nav_home") },
-    { to: "#decl", icon: "fa-solid fa-circle-plus", label: t("mobile_declaration"), isPlus: true },
-    { to: "/mes-documents", icon: "fa-solid fa-folder-open", label: t("mobile_documents") },
-    { to: "/mes-appareils", icon: "fa-solid fa-mobile-screen-button", label: t("mobile_objects") },
+    { to: "/dashboard", Icon: IconHome, label: t("nav_home") },
+    { to: "#decl", Icon: IconCirclePlus, label: t("mobile_declaration"), isPlus: true },
+    { to: "/mes-documents", Icon: IconFolderOpen, label: t("mobile_documents") },
+    { to: "/mes-appareils", Icon: IconDeviceMobile, label: t("mobile_objects") },
   ];
 
-  const isActive = (to) => current === to;
+  const declOptions = [
+    {
+      Icon: IconAlertTriangle,
+      color: "red",
+      title: t("mobile_declare_lost"),
+      desc: t("mobile_lost_document_desc"),
+      onClick: () => { setDeclModalOpen(false); navigate("/declarer"); },
+    },
+    {
+      Icon: IconFileCheck,
+      color: "blue",
+      title: t("mobile_declare_found"),
+      desc: t("mobile_found_something_desc"),
+      onClick: () => { setDeclModalOpen(false); navigate("/trouver"); },
+    },
+    {
+      Icon: IconFile,
+      color: "orange",
+      title: t("mobile_my_declarations"),
+      desc: t("mobile_view_declarations"),
+      onClick: () => { setDeclModalOpen(false); navigate("/mes-declarations"); },
+    },
+    {
+      Icon: IconSearch,
+      color: "orange",
+      title: t("mobile_search"),
+      desc: t("mobile_search_document"),
+      onClick: () => { setDeclModalOpen(false); navigate("/rechercher"); },
+    },
+  ];
 
   return (
     <>
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-borda pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-2 shadow-[0_-10px_30px_rgba(0,0,0,0.08)]">
-        <div className="flex items-end justify-between max-w-lg mx-auto px-2">
-          {items.map((item) =>
-            item.isPlus ? (
-              <button
-                key={item.to}
-                onClick={() => setDeclModalOpen(true)}
-                className="flex flex-col items-center gap-1 py-1 transition-all text-textMuted hover:text-primary active:scale-90 flex-1 min-w-0"
-              >
-                <i className={`${item.icon} text-sm sm:text-lg`} />
-                <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-tight truncate max-w-full">
-                  {item.label}
-                </span>
-              </button>
-            ) : (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={`flex flex-col items-center gap-1 py-1 transition-all flex-1 min-w-0 ${isActive(item.to)
-                    ? "text-primary"
-                    : "text-textMuted hover:text-primary active:scale-90"
-                  }`}
-              >
-                <i
-                  className={`${item.icon} text-sm sm:text-lg ${isActive(item.to)
-                      ? "text-primary"
-                      : ""
-                    }`}
-                  style={isActive(item.to) ? { filter: "drop-shadow(0 0 8px rgba(245,166,75,0.6))", transform: "scale(1.1)" } : undefined}
-                />
-                <span className={`text-[9px] sm:text-[11px] font-bold uppercase tracking-tight truncate max-w-full ${isActive(item.to) ? "text-primary" : ""}`}>
-                  {item.label}
-                </span>
-              </Link>
-            )
-          )}
-        </div>
-      </nav>
-
-      {/* Overlay */}
-      <div
-        className={`fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm transition-opacity duration-300 md:hidden ${declModalOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-          }`}
-        onClick={() => setDeclModalOpen(false)}
-      />
-
-      {/* Bottom sheet */}
-      <div
-        className={`fixed bottom-0 left-0 right-0 z-[110] bg-white rounded-t-[24px] sm:rounded-t-[32px] p-4 sm:p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.2)] transition-transform duration-300 ease-out md:hidden max-h-[85vh] overflow-y-auto ${declModalOpen ? "translate-y-0" : "translate-y-full"
-          }`}
-      >
-        <div className="w-10 sm:w-12 h-1 bg-gray-200 rounded-full mx-auto mb-4 sm:mb-6" />
-        <h3 className="font-bricolage text-lg sm:text-xl font-extrabold text-textMain text-center mb-4 sm:mb-6">
-          {t("mobile_make_declaration")}
-        </h3>
-        <div className="grid grid-cols-1 gap-2 sm:gap-4">
-          <button
-            onClick={() => { setDeclModalOpen(false); navigate("/declarer"); }}
-            className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-red-50 border border-red-100 active:scale-[0.98] transition-all text-left"
-          >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-red-500 flex items-center justify-center text-white text-base sm:text-xl shrink-0">
-              <i className="fa-solid fa-triangle-exclamation" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-textMain text-[13px] sm:text-[15px] truncate">{t("mobile_declare_lost")}</p>
-              <p className="text-[10px] sm:text-[11px] text-red-600/70 font-medium truncate">{t("mobile_lost_document_desc")}</p>
-            </div>
-            <i className="fa-solid fa-chevron-right text-red-300 shrink-0 text-xs sm:text-sm" />
-          </button>
-          <button
-            onClick={() => { setDeclModalOpen(false); navigate("/trouver"); }}
-            className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-blue-50 border border-blue-100 active:scale-[0.98] transition-all text-left"
-          >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-blue-600 flex items-center justify-center text-white text-base sm:text-xl shrink-0">
-              <i className="fa-solid fa-file-circle-check" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-textMain text-[13px] sm:text-[15px] truncate">{t("mobile_declare_found")}</p>
-              <p className="text-[10px] sm:text-[11px] text-blue-600/70 font-medium truncate">{t("mobile_found_something_desc")}</p>
-            </div>
-            <i className="fa-solid fa-chevron-right text-blue-300 shrink-0 text-xs sm:text-sm" />
-          </button>
-          <button
-            onClick={() => { setDeclModalOpen(false); navigate("/mes-declarations"); }}
-            className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-orange-50 border border-orange-100 active:scale-[0.98] transition-all text-left"
-          >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-orange-500 flex items-center justify-center text-white text-base sm:text-xl shrink-0">
-              <i className="fa-solid fa-file" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-textMain text-[13px] sm:text-[15px] truncate">{t("mobile_my_declarations")}</p>
-              <p className="text-[10px] sm:text-[11px] text-red-600/70 font-medium truncate">{t("mobile_view_declarations")}</p>
-            </div>
-            <i className="fa-solid fa-chevron-right text-red-300 shrink-0 text-xs sm:text-sm" />
-          </button>
-          <button
-            onClick={() => { setDeclModalOpen(false); navigate("/rechercher"); }}
-            className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-orange-50 border border-orange-100 active:scale-[0.98] transition-all text-left"
-          >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-orange-500 flex items-center justify-center text-white text-base sm:text-xl shrink-0">
-              <i className="fa-solid fa-magnifying-glass" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-textMain text-[13px] sm:text-[15px] truncate">{t("mobile_search")}</p>
-              <p className="text-[10px] sm:text-[11px] text-red-600/70 font-medium truncate">{t("mobile_search_document")}</p>
-            </div>
-            <i className="fa-solid fa-chevron-right text-red-300 shrink-0 text-xs sm:text-sm" />
-          </button>
-        </div>
-        <button
-          onClick={() => setDeclModalOpen(false)}
-          className="w-full mt-4 sm:mt-6 py-3 sm:py-4 text-sm font-bold text-textMuted uppercase tracking-widest"
+      <Affix position={{ bottom: 0, left: 0, right: 0 }} zIndex={50} hiddenFrom="md">
+        <Paper
+          component="nav"
+          radius={0}
+          shadow="md"
+          withBorder
+          style={{
+            borderLeft: "none",
+            borderRight: "none",
+            borderBottom: "none",
+            backgroundColor: "var(--mantine-color-body)",
+            backdropFilter: "blur(20px)",
+            paddingBottom: "max(env(safe-area-inset-bottom), 0.75rem)",
+            paddingTop: "0.5rem",
+          }}
         >
-          {t("mobile_cancel")}
-        </button>
-      </div>
+          <Group justify="space-between" wrap="nowrap" px="xs" style={{ maxWidth: 480, margin: "0 auto" }}>
+            {items.map((item) => {
+              const isActive = current === item.to;
+              return (
+                <UnstyledButton
+                  key={item.to}
+                  component={item.isPlus ? "button" : Link}
+                  to={item.isPlus ? undefined : item.to}
+                  onClick={item.isPlus ? () => setDeclModalOpen(true) : undefined}
+                  style={{ flex: 1, minWidth: 0 }}
+                >
+                  <Stack align="center" gap={4} py={4}>
+                    <item.Icon
+                      size={20}
+                      stroke={2}
+                      color={isActive ? theme.colors.orange[5] : "var(--mantine-color-gray-5)"}
+                      style={isActive ? { filter: `drop-shadow(0 0 8px ${theme.colors.orange[5]}99)`, transform: "scale(1.1)" } : undefined}
+                    />
+                    <Text
+                      size="9px"
+                      fw={700}
+                      tt="uppercase"
+                      truncate
+                      c={isActive ? "orange.5" : "dimmed"}
+                      style={{ letterSpacing: -0.2 }}
+                    >
+                      {item.label}
+                    </Text>
+                  </Stack>
+                </UnstyledButton>
+              );
+            })}
+          </Group>
+        </Paper>
+      </Affix>
+
+      {/* Declaration options bottom sheet */}
+      <Modal
+        opened={declModalOpen}
+        onClose={() => setDeclModalOpen(false)}
+        padding="lg"
+        radius="lg"
+        withCloseButton={false}
+      >
+        <Stack align="center" gap="lg">
+          <Divider w={40} size="md" radius="xl" color="gray.3" style={{ alignSelf: "center" }} />
+          <Text fw={700} size="lg" ta="center" className="font-bricolage">{t("mobile_make_declaration")}</Text>
+          <Stack gap="sm" w="100%">
+            {declOptions.map((opt) => (
+              <Paper
+                key={opt.title}
+                component="button"
+                onClick={opt.onClick}
+                withBorder
+                radius="md"
+                p="sm"
+                bg={`${opt.color}.0`}
+                style={{ borderColor: `var(--mantine-color-${opt.color}-1)`, textAlign: "left", cursor: "pointer" }}
+              >
+                <Group gap="sm" wrap="nowrap">
+                  <ThemeIcon size={40} radius="md" color={opt.color} variant="filled">
+                    <opt.Icon size={18} stroke={2} />
+                  </ThemeIcon>
+                  <Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
+                    <Text fw={700} size="sm" truncate>{opt.title}</Text>
+                    <Text size="xs" c={`${opt.color}.7`} truncate>{opt.desc}</Text>
+                  </Stack>
+                  <IconChevronRight size={14} color={`var(--mantine-color-${opt.color}-3)`} style={{ flexShrink: 0 }} />
+                </Group>
+              </Paper>
+            ))}
+          </Stack>
+          <Button onClick={() => setDeclModalOpen(false)} variant="subtle" color="gray" fullWidth tt="uppercase" fw={700} styles={{ label: { letterSpacing: 1.5 } }}>
+            {t("mobile_cancel")}
+          </Button>
+        </Stack>
+      </Modal>
     </>
   );
 }

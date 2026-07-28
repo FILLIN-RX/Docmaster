@@ -5,6 +5,7 @@ import { useI18n } from "../context/I18nContext";
 import { usePromo } from "../hooks/usePromo";
 import { getPhotoUrl } from "../utils/image";
 import VipAvatar, { isVipUser } from "../components/ui/VipBadge";
+import { Avatar, Group, Text, UnstyledButton, Modal, Stack, Title, Button } from "@mantine/core";
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
@@ -155,48 +156,71 @@ export default function Sidebar() {
 
         {/* User footer */}
         <div className="px-2 py-3 border-t border-white/10">
-          <Link to="/infos-profil" className="flex items-center gap-2.5 px-3 py-2 rounded-[10px] hover:bg-white/5 transition-colors">
-            <VipAvatar isVip={isVipUser(user)}>
-              {user?.photo_url ? (
-                <img src={getPhotoUrl(user.photo_url)} alt="" className="w-[30px] h-[30px] rounded-[8px] object-cover" />
-              ) : (
-                <div className="w-[30px] h-[30px] rounded-[8px] bg-primary flex items-center justify-center font-bricolage text-[10px] font-extrabold text-white">
-                  <span>{user?.initial || "DM"}</span>
-                </div>
-              )}
-            </VipAvatar>
-            <div>
-              <div className="text-[12.5px] font-semibold text-white leading-tight">
-                {user?.prenom || ""} {user?.nom || ""}
+          <UnstyledButton
+            component={Link}
+            to="/infos-profil"
+            className="flex items-center w-full px-3 py-2 rounded-[10px] hover:bg-white/5 transition-colors"
+          >
+            <Group gap="sm" wrap="nowrap" style={{ flex: 1 }}>
+              <VipAvatar isVip={isVipUser(user)}>
+                {user?.photo_url ? (
+                  <Avatar src={getPhotoUrl(user.photo_url)} size={30} radius="md" />
+                ) : (
+                  <Avatar size={30} radius="md" color="gold">
+                    {user?.initial || "DM"}
+                  </Avatar>
+                )}
+              </VipAvatar>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <Text size="sm" fw={600} c="white" truncate>
+                  {user?.prenom || ""} {user?.nom || ""}
+                </Text>
+                <Group gap={6} mt={2}>
+                  <div className={`w-1.5 h-1.5 rounded-full ${user?.subscription?.status === 'active' ? 'bg-green-400' : 'bg-red-400'}`} />
+                  <Text size="xs" c="white.4" truncate>
+                    {user?.subscription?.plan_name || t("sidebar_plan_standard")}
+                  </Text>
+                </Group>
               </div>
-              <div className="text-[10.5px] text-white/40 flex items-center gap-1.5">
-                {user?.subscription?.plan_name ? (
-                  <>
-                    <span className={`w-1.5 h-1.5 rounded-full ${user?.subscription?.status === 'active' ? 'bg-green-400' : 'bg-red-400'}`} />
-                    {user.subscription.plan_name}
-                  </>
-                ) : t("sidebar_plan_standard")}
-              </div>
-            </div>
-          </Link>
+              <i className="fa-solid fa-chevron-right" style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }} />
+            </Group>
+          </UnstyledButton>
         </div>
       </aside>
 
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60]" onClick={() => setShowLogoutConfirm(false)}>
-          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl mx-4" onClick={(e) => e.stopPropagation()}>
-            <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
-              <i className="fa-solid fa-right-from-bracket text-red-500 text-xl" />
-            </div>
-            <h3 className="font-bricolage text-lg font-bold text-textMain text-center mb-2">{t("logout_confirm_title")}</h3>
-            <p className="text-[13px] text-textMuted text-center mb-6">{t("logout_confirm_desc")}</p>
-            <div className="flex gap-3">
-              <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 py-2.5 border border-borda rounded-xl text-[13px] font-bold text-textMain hover:bg-surface2 transition-colors">{t("logout_confirm_cancel")}</button>
-              <button onClick={confirmLogout} className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-[13px] font-bold hover:bg-red-600 transition-all shadow-lg shadow-red-500/20">{t("logout_confirm_yes")}</button>
-            </div>
+      <Modal
+        opened={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        withCloseButton={false}
+        size="sm"
+        padding="lg"
+      >
+        <Stack align="center" gap="md">
+          <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
+            <i className="fa-solid fa-right-from-bracket text-red-500 text-xl" />
           </div>
-        </div>
-      )}
+          <Title order={3} size="lg" ta="center">{t("logout_confirm_title")}</Title>
+          <Text size="sm" c="dimmed" ta="center">{t("logout_confirm_desc")}</Text>
+          <Group gap="sm" className="w-full">
+            <Button
+              onClick={() => setShowLogoutConfirm(false)}
+              variant="default"
+              className="flex-1"
+              radius="lg"
+            >
+              {t("logout_confirm_cancel")}
+            </Button>
+            <Button
+              onClick={confirmLogout}
+              color="red"
+              className="flex-1 shadow-lg shadow-red-500/20"
+              radius="lg"
+            >
+              {t("logout_confirm_yes")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </>
   );
 }

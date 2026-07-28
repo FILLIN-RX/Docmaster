@@ -449,6 +449,7 @@ export const ar = {
   login_pw_medium: "متوسط",
   login_pw_strong: "قوي",
   login_pw_very_strong: "قوي جدًا",
+  login_no_account: "ليس لديك حساب؟",
 
   // ── Forgot Password ──
   forgot_back_to_login: "العودة إلى تسجيل الدخول",

@@ -217,7 +217,7 @@ export default function Rechercher() {
           className="absolute inset-0 opacity-[0.04]"
           style={{
             backgroundImage:
-              "linear-gradient(#F5A64B 1px,transparent 1px),linear-gradient(90deg,#F5A64B 1px,transparent 1px)",
+              "linear-gradient(#D98A30 1px,transparent 1px),linear-gradient(90deg,#D98A30 1px,transparent 1px)",
             backgroundSize: "48px 48px",
           }}
         />
@@ -571,14 +571,14 @@ export default function Rechercher() {
       {/* Flatpickr styles */}
        <style>{`
          .filter-chip { cursor: pointer; transition: all 0.2s ease; }
-         .filter-chip:hover:not(.bg-primary\\/80) { border-color: #F5A64B; color: #F5A64B; }
+         .filter-chip:hover:not(.bg-primary\\/80) { border-color: #D98A30; color: #D98A30; }
          .doc-card { transition: transform 0.25s, box-shadow 0.25s; }
          .doc-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px -12px rgba(30,58,47,0.15); }
          .skeleton { background: linear-gradient(90deg, #EAE3D8 25%, #F4EFE6 50%, #EAE3D8 75%); background-size: 200% 100%; animation: skeleton-shimmer 1.4s infinite; }
          @keyframes skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
          @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
          .animate-fade-in { animation: fadeIn 0.5s ease forwards; }
-         .match-score-badge { box-shadow: 0 4px 10px rgba(245,166,75,0.3); }
+         .match-score-badge { box-shadow: 0 4px 10px rgba(217,138,48,0.3); }
         `}</style>
         <Footer></Footer>
       </div>

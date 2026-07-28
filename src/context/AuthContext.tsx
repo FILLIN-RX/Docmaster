@@ -72,8 +72,9 @@ export function AuthProvider({ children }) {
       setLoading(false);
       return;
     }
+    const controller = new AbortController();
     apiClient
-      .get("auth/profile")
+      .get("auth/profile", { signal: controller.signal })
       .then((res) => {
         const u = res.data;
         saveSession(u, token);
@@ -89,12 +90,15 @@ export function AuthProvider({ children }) {
           });
         }).catch(() => {});
       })
-      .catch(() => {
-        deleteToken();
-        localStorage.removeItem(AUTH_KEY);
-        setUser(null);
+      .catch((err) => {
+        if (err?.name !== "CanceledError") {
+          deleteToken();
+          localStorage.removeItem(AUTH_KEY);
+          setUser(null);
+        }
       })
       .finally(() => setLoading(false));
+    return () => controller.abort();
   }, []);
 
   const login = useCallback(async (email, motDePasse) => {
@@ -160,6 +164,7 @@ export function AuthProvider({ children }) {
         email: userData.email,
         mot_de_passe: userData.mot_de_passe,
         telephone: userData.telephone || null,
+        date_naissance: userData.date_naissance || null,
         pays: userData.pays || "Cameroun",
         ville: userData.ville || "Yaoundé",
         code_parrainage: userData.code_parrainage || null,

@@ -82,6 +82,11 @@ export const authService = {
     return res.data;
   },
 
+  async checkEmail(email: string) {
+    const res = await apiClient.get<{ exists: boolean }>("auth/check-email", { params: { email } });
+    return res.data;
+  },
+
   async deleteAccount() {
     const res = await apiClient.delete<ApiResponse & { success: boolean }>("auth/account");
     return res.data;

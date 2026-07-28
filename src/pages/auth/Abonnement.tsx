@@ -12,10 +12,33 @@ import { usePromo } from "../../hooks/usePromo";
 import { useToast } from "../../context/ToastContext";
 import PromoBanner from "../../components/ui/PromoBanner";
 import PollingModal from "../../components/modals/PollingModal";
+import {
+  SegmentedControl,
+  Card,
+  Badge,
+  Button,
+  Paper,
+  Text,
+  Title,
+  Group,
+  Stack,
+  Table,
+  SimpleGrid,
+  Modal,
+  TextInput,
+  Select,
+  Loader,
+  Overlay,
+  RingProgress,
+  Skeleton,
+  Divider,
+  Box,
+  Alert,
+} from "@mantine/core";
 
 const METHOD_ICONS: Record<string, { icon: string; color: string; bg: string }> = {
-  MTN: { icon: "fa-mobile-screen-button", color: "text-yellow-500", bg: "bg-yellow-50" },
-  ORANGE: { icon: "fa-mobile-screen-button", color: "text-orange-500", bg: "bg-orange-50" },
+  MTN: { icon: "fa-mobile-screen-button", color: "text-[#D98A30]", bg: "bg-[#D98A30]/10" },
+  ORANGE: { icon: "fa-mobile-screen-button", color: "text-[#D98A30]", bg: "bg-[#D98A30]/10" },
   BANK: { icon: "fa-university", color: "text-blue-400", bg: "bg-blue-50" },
 };
 
@@ -25,22 +48,14 @@ export default function Abonnement() {
   const { promo, loading: promoLoading, subscribing, subscribe: promoSubscribe, dismiss: dismissPromo, isDismissed } = usePromo();
   const toast = useToast();
 
-  // Plans
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loadingPlans, setLoadingPlans] = useState(true);
-
-  // Usage
   const [usage, setUsage] = useState<Record<string, unknown> | null>(null);
   const [loadingUsage, setLoadingUsage] = useState(true);
-
-  // Transactions
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
-
-  // Billing toggle
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("monthly");
 
-  // Subscription modal
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [processing, setProcessing] = useState(false);
@@ -51,12 +66,9 @@ export default function Abonnement() {
   const [manualChecking, setManualChecking] = useState(false);
   const [pollingElapsed, setPollingElapsed] = useState(0);
 
-  // Cancel modal
   const [cancelOpen, setCancelOpen] = useState(false);
 
-  // Payment methods
   const [savedMethods, setSavedMethods] = useState<SavedPaymentMethod[]>([]);
-  const [showMethodsModal, setShowMethodsModal] = useState(false);
   const [showAddMethodModal, setShowAddMethodModal] = useState(false);
   const [addMethodType, setAddMethodType] = useState<"MTN" | "ORANGE" | "BANK">("MTN");
 
@@ -129,7 +141,6 @@ export default function Abonnement() {
     }
   };
 
-  // ── Subscribe ──
   const openSubscribeModal = (plan: Plan) => {
     setSelectedPlan(plan);
     setPollingStatus(null);
@@ -150,7 +161,6 @@ export default function Abonnement() {
   };
 
   const handlePay = async (method: "orange" | "mtn" | "points", phone: string) => {
-    // 1. Set processing
     setProcessing(true);
     setPayError("");
     try {
@@ -158,7 +168,7 @@ export default function Abonnement() {
       if (method === "orange") paymentMethod = "ORANGE_MONEY";
       else if (method === "mtn") paymentMethod = "MTN_MOMO";
       else paymentMethod = "POINTS";
-      
+
       const months = billingPeriod === "annual" ? 12 : 1;
       const result = await subscriptionsService.subscribe({
         planId: selectedPlan!.id,
@@ -166,20 +176,15 @@ export default function Abonnement() {
         paymentMethod,
         phone,
       });
-      
-      // Stop global processing overlay
+
       setProcessing(false);
 
       if (result.success) {
         if (paymentMethod === 'POINTS') {
-            // Success for points: Close modal, show success modal
             closeSubscribeModal();
             setPaySuccess(true);
             loadData();
         } else {
-            // Success for mobile money: DO NOT close modal. Set polling state instead.
-            // This allows the "polling status" modal (which appears based on pollingStatus)
-            // to show the pending state.
             const transactionId = (result as any).data?.transactionId || null;
             setNokashTransactionId(transactionId);
             setPollingStatus(t("abonnement_payment_pending"));
@@ -187,7 +192,6 @@ export default function Abonnement() {
             startPolling();
         }
       } else {
-        // 3. Keep modal open to show error
         setPayError(result.message || t("abonnement_subscribe_error"));
       }
     } catch (e: any) {
@@ -204,7 +208,6 @@ export default function Abonnement() {
       setPollingElapsed(elapsed);
 
       try {
-        // Check if subscription is now active
         const res = await subscriptionsService.getUsage();
         if (res.success && res.data?.subscription_id) {
           clearInterval(interval);
@@ -216,15 +219,10 @@ export default function Abonnement() {
           return;
         }
 
-        // If we have a transaction ID and more than 30s have passed,
-        // try a direct force-check with Nokash
         if (nokashTransactionId && elapsed > 30) {
-          try {
-            await apiClient.get(`payments/check/${nokashTransactionId}`);
-          } catch {}
+          try { await apiClient.get(`payments/check/${nokashTransactionId}`); } catch {}
         }
 
-        // Update status message based on elapsed time
         if (elapsed > 120) {
           setPollingStatus("Le paiement est en cours de traitement. Vous recevrez une notification dès confirmation. Vous pouvez fermer cette page.");
         } else if (elapsed > 60) {
@@ -259,7 +257,6 @@ export default function Abonnement() {
     }
   };
 
-  // ── Helpers ──
   const currentPlan = usage?.plan_name || t("abonnement_plan_free");
   const currentPlanObj = plans.find((p) => p.name?.toLowerCase() === currentPlan.toLowerCase());
   const percentage = usage?.percentage || 0;
@@ -272,8 +269,7 @@ export default function Abonnement() {
 
   function normalizeFeatures(raw: any): { label: string; value: string; icon?: string }[] {
     if (!raw) return [];
-    
-    // If it's the standard features object from DB
+
     if (typeof raw === "object" && !Array.isArray(raw)) {
       const featureMap: Record<string, { label: string; icon: string }> = {
         objects: { label: "Objets personnels (coffre)", icon: "fa-mobile-screen" },
@@ -292,7 +288,7 @@ export default function Abonnement() {
         if (val === true) value = "Inclus";
         if (val === false) value = "Non inclus";
         if (key === "matching_speed") value = val === "high" ? "Instantané" : val === "normal" ? "Standard" : String(val);
-        
+
         return {
           label: meta?.label || key,
           value,
@@ -304,8 +300,8 @@ export default function Abonnement() {
     if (Array.isArray(raw)) {
       return raw.map((f: any) => {
         if (typeof f === "string") return { label: "", value: f, icon: "fa-check" };
-        return { 
-          label: f?.label || "", 
+        return {
+          label: f?.label || "",
           value: f?.valeur || f?.name || "",
           icon: f?.icon || "fa-check"
         };
@@ -332,13 +328,15 @@ export default function Abonnement() {
     <div className="flex flex-col h-full">
       {/* Loading Overlay */}
       {processing && (
-        <div className="fixed inset-0 z-[10001] bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4">
-            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-            <p className="font-bold text-primary font-bricolage">Traitement du paiement...</p>
-        </div>
+        <>
+          <Overlay zIndex={10001} color="white" opacity={0.8} />
+          <div className="fixed inset-0 z-[10002] flex flex-col items-center justify-center gap-4">
+            <Loader color="#D98A30" size="lg" />
+            <Title order={5} c="gray" ff="Bricolage Grotesque">Traitement du paiement...</Title>
+          </div>
+        </>
       )}
 
-      {/* Success Modal */}
       {paySuccess && (
         <SuccessModal
           refNumber="Paiement réussi"
@@ -347,19 +345,6 @@ export default function Abonnement() {
           onMyDeclarations={() => { setPaySuccess(false); }}
         />
       )}
-      <style>{`
-        .plan-card { transition: all .4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .plan-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 20px 50px rgba(0,0,0,.15); }
-        .plan-card.featured { box-shadow: 0 10px 40px rgba(245,166,75,.3); }
-        .plan-card.featured:hover { box-shadow: 0 25px 60px rgba(245,166,75,.45); }
-        .tab-btn { transition: all .3s ease; }
-        .tab-btn.active { background: #1E3A2F; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .feature-item { transition: transform 0.2s ease; }
-        .plan-card:hover .feature-item { transform: translateX(4px); }
-      `}</style>
 
       <Topbar
         title={t("abonnement_title")}
@@ -373,89 +358,76 @@ export default function Abonnement() {
 
         {/* Current plan card */}
         <div className="bg-green-dark rounded-[20px] p-5 md:p-6 relative overflow-hidden shadow-2xl shadow-green-950/40 w-full">
-          <div className="absolute w-40 h-40 md:w-80 md:h-80 rounded-full bg-primary/10 -top-12 -right-12 md:-top-24 md:-right-24 blur-3xl pointer-events-none" />
+          <div className="absolute w-40 h-40 md:w-80 md:h-80 rounded-full bg-[#D98A30]/10 -top-12 -right-12 md:-top-24 md:-right-24 blur-3xl pointer-events-none" />
           <div className="absolute w-20 h-20 md:w-40 md:h-40 rounded-full bg-white/5 bottom-0 left-12 md:left-24 blur-2xl pointer-events-none" />
 
           <div className="relative z-10 w-full flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-8">
             <div className="flex-1 w-full">
-              <div className="inline-flex items-center gap-2 bg-primary/20 border border-primary/30 rounded-full px-4 py-1.5 mb-5">
-                <i className="fa-solid fa-bolt text-primary text-[10px] animate-pulse" />
-                <span className="text-[11px] font-bold text-primary uppercase tracking-widest">{t("abonnement_current_plan")}</span>
-              </div>
-              <h1 className="font-bricolage text-2xl md:text-4xl font-extrabold text-white leading-tight mb-2">
-                {loadingUsage ? (
-                  <span className="inline-block w-40 h-8 bg-white/10 rounded animate-pulse" />
-                ) : (
-                    `${t("abonnement_plan")} ${currentPlan}`
-                )}
-              </h1>
-              <p className="text-white/60 text-[13px] md:text-[14px] mb-5 max-w-lg">
-                {loadingUsage ? (
-                  <span className="inline-block w-60 h-4 bg-white/10 rounded animate-pulse" />
-                ) : (
-                  <>
-                    Quota utilisé : <strong className="text-white/90">{usage?.usage?.objects || 0}</strong> / {usage?.limits?.objects || 0} objets
-                  </>
-                )}
-              </p>
+              <span className="inline-flex items-center gap-1.5 bg-[#D98A30]/15 text-[#D98A30] text-xs font-semibold px-3 py-1 rounded-full mb-4">
+                <i className="fa-solid fa-bolt text-[10px]" />
+                {t("abonnement_current_plan").toUpperCase()}
+              </span>
 
-              <div className="flex flex-wrap gap-3">
-                <div className="flex items-center gap-3 bg-white/10 border border-white/10 backdrop-blur-xl rounded-2xl px-4 py-2 transition-transform hover:scale-105">
-                  <i className="fa-solid fa-file-circle-check text-primary text-lg" />
-                  <div className="flex flex-col">
-                    <span className="text-white/90 text-[12px] font-bold leading-none">
-                      {usage?.limits?.docs_per_type || 0} Déclaration{(usage?.limits?.docs_per_type || 0) > 1 ? "s" : ""}
-                    </span>
-                    <span className="text-white/40 text-[10px] uppercase font-bold mt-1">Active(s) par type</span>
+              <Text component="div" size="xl" c="white" ff="Bricolage Grotesque" fw={700} mb="xs">
+                {loadingUsage ? <Skeleton width={160} height={28} /> : `${t("abonnement_plan")} ${currentPlan}`}
+              </Text>
+
+              <Text component="div" size="sm" c="white.6" mb="md">
+                {loadingUsage ? <Skeleton width={200} height={16} /> : <>Quota utilisé : {usage?.usage?.objects || 0} / {usage?.limits?.objects || 0} objets</>}
+              </Text>
+
+              <Group gap="sm">
+                <div className="flex items-center gap-2.5 bg-white/10 backdrop-blur-md rounded-2xl px-3 py-2">
+                  <div className="w-8 h-8 rounded-lg bg-[#D98A30]/20 flex items-center justify-center">
+                    <i className="fa-solid fa-file-circle-check text-[#D98A30] text-sm" />
+                  </div>
+                  <div>
+                    <Text size="sm" fw={700}  c="white">{usage?.limits?.docs_per_type || 0} Déclarations</Text>
+                    <Text size="9px" c="gray-500" tt="uppercase" fw={600}>Active(s) / type</Text>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 bg-white/10 border border-white/10 backdrop-blur-xl rounded-2xl px-4 py-2 transition-transform hover:scale-105">
-                  <i className="fa-solid fa-box-open text-primary text-lg" />
-                  <div className="flex flex-col">
-                    <span className="text-white/90 text-[12px] font-bold leading-none">{usage?.usage?.objects || 0} Objet{(usage?.usage?.objects || 0) > 1 ? "s" : ""}</span>
-                    <span className="text-white/40 text-[10px] uppercase font-bold mt-1">Sur {usage?.limits?.objects || 0}</span>
+                <div className="flex items-center gap-2.5 bg-white/10 backdrop-blur-md rounded-2xl px-3 py-2">
+                  <div className="w-8 h-8 rounded-lg bg-[#D98A30]/20 flex items-center justify-center">
+                    <i className="fa-solid fa-box-open text-[#D98A30] text-sm" />
+                  </div>
+                  <div>
+                    <Text size="sm" fw={700} c="white">{usage?.usage?.objects || 0} Objets</Text>
+                    <Text size="9px" c="white.4" tt="uppercase" fw={600}>Sur {usage?.limits?.objects || 0}</Text>
                   </div>
                 </div>
-              </div>
+              </Group>
             </div>
 
-            <div className="w-full md:w-auto bg-white/5 border border-white/10 rounded-3xl p-5 flex flex-col items-center min-w-[180px] backdrop-blur-md">
-              <div className="relative w-24 h-24 mb-3">
-                <svg className="w-24 h-24 -rotate-90" viewBox="0 0 80 80">
-                  <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,.05)" strokeWidth="6" />
-                  <circle cx="40" cy="40" r="34" fill="none" stroke="#F5A64B" strokeWidth="6" strokeDasharray="213.6"
-                    strokeDashoffset={213.6 - (percentage / 100) * 213.6} strokeLinecap="round" className="transition-all duration-1000" />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="font-bricolage text-xl font-black text-white leading-none">{percentage}%</span>
-                  <span className="text-white/40 text-[9px] font-bold uppercase mt-1">Quota</span>
-                </div>
-              </div>
-              <div className="text-white/50 text-[11px] font-bold uppercase tracking-widest mb-3">Capacité utilisée</div>
+            <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 flex flex-col items-center gap-2" style={{ minWidth: 160 }}>
+              <RingProgress
+                size={100}
+                thickness={8}
+                sections={[{ value: Math.min(percentage as number, 100), color: "#D98A30" }]}
+                label={
+                  <div className="text-center">
+                    <Text fw={700} ff="Bricolage Grotesque" c="white" size="lg" ta="center">{percentage}%</Text>
+                    <Text size="8px" c="white.5" tt="uppercase" ta="center" fw={600}>Quota</Text>
+                  </div>
+                }
+              />
+              <Text size="10px" c="white.5" tt="uppercase" ta="center" fw={700}>Capacité utilisée</Text>
               <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-primary to-orange-400 rounded-full transition-all duration-1000" style={{ width: `${percentage}%` }} />
+                <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${Math.min(percentage as number, 100)}%`, background: "#D98A30" }} />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Active subscription warning (when promo already used) */}
+        {/* Active subscription warning */}
         {hasActiveSub && !promo && (
-          <div className="bg-amber-50 border border-amber-200 rounded-[16px] p-4 flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <i className="fa-solid fa-circle-info text-amber-500" />
-            </div>
-            <div>
-              <p className="text-[13px] font-bold text-amber-800">
-                {t("abonnement_active_sub_warning_title")}
-              </p>
-              <p className="text-[12px] text-amber-600/80 mt-0.5">
-                {isPromoUser
-                  ? t("abonnement_active_sub_warning_promo")
-                  : t("abonnement_active_sub_warning")}
-              </p>
-            </div>
-          </div>
+          <Alert color="#D98A30" variant="light" radius="md" icon={<i className="fa-solid fa-circle-info" />}>
+            <Text fw={700} size="sm">{t("abonnement_active_sub_warning_title")}</Text>
+            <Text size="xs" c="dimmed" mt={2}>
+              {isPromoUser
+                ? t("abonnement_active_sub_warning_promo")
+                : t("abonnement_active_sub_warning")}
+            </Text>
+          </Alert>
         )}
 
         {/* Promo VIP banner */}
@@ -470,43 +442,37 @@ export default function Abonnement() {
 
         {/* Plans */}
         <div>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
-            <h2 className="font-bricolage text-xl font-bold text-textMain">Choisir un plan</h2>
-            <div className="flex items-center gap-1 self-start sm:self-auto bg-white border border-borderMain rounded-[12px] p-1">
-              <button
-                className={`tab-btn px-4 py-2 rounded-[9px] text-[12.5px] font-bold ${billingPeriod === "monthly" ? "active" : "text-textMuted"}`}
-                onClick={() => setBillingPeriod("monthly")}
-              >
-                Mensuel
-              </button>
-              <button
-                className={`tab-btn px-4 py-2 rounded-[9px] text-[12.5px] font-bold ${billingPeriod === "annual" ? "active" : "text-textMuted"}`}
-                onClick={() => setBillingPeriod("annual")}
-              >
-                Annuel
-                <span className="ml-1.5 text-[10px] font-bold text-green-mid bg-green-light px-1.5 py-0.5 rounded-full">-20%</span>
-              </button>
-            </div>
-          </div>
+          <Group justify="space-between" mb="md">
+            <Title order={4} ff="Bricolage Grotesque">Choisir un plan</Title>
+            <SegmentedControl
+              value={billingPeriod}
+              onChange={(val) => setBillingPeriod(val as "monthly" | "annual")}
+              data={[
+                { label: "Mensuel", value: "monthly" },
+                { label: "Annuel -20%", value: "annual" },
+              ]}
+              radius="xl"
+              size="sm"
+              color="dark"
+            />
+          </Group>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-auto">
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
             {loadingPlans ? (
-              <>
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="bg-white border border-borderMain rounded-[20px] p-5 flex flex-col animate-pulse">
-                    <div className="w-10 h-10 bg-gray-200 rounded-[12px] mb-3" />
-                    <div className="h-6 bg-gray-200 rounded-md w-3/4 mb-2" />
-                    <div className="h-4 bg-gray-200 rounded-md w-1/2 mb-6" />
-                    <div className="h-8 bg-gray-200 rounded-md w-full mb-4" />
-                    <div className="space-y-2 mb-6">
-                      <div className="h-3 bg-gray-100 rounded w-full" />
-                      <div className="h-3 bg-gray-100 rounded w-full" />
-                      <div className="h-3 bg-gray-100 rounded w-3/4" />
-                    </div>
-                    <div className="h-10 bg-gray-200 rounded-xl w-full" />
-                  </div>
-                ))}
-              </>
+              Array.from({ length: 4 }).map((_, i) => (
+                <Card key={i} radius="xl" p="md" className="border border-gray-200">
+                  <Skeleton height={40} width={40} radius="md" mb="sm" />
+                  <Skeleton height={20} width="70%" mb="xs" />
+                  <Skeleton height={14} width="40%" mb="md" />
+                  <Skeleton height={36} radius="md" mb="md" />
+                  <Stack gap={8}>
+                    <Skeleton height={10} />
+                    <Skeleton height={10} />
+                    <Skeleton height={10} width="75%" />
+                  </Stack>
+                  <Skeleton height={40} radius="md" mt="md" />
+                </Card>
+              ))
             ) : (
               displayedPlans.map((plan, idx) => {
                 const isFeatured = plan.popular || plan.id === currentPlan.toLowerCase() || idx === 1;
@@ -515,214 +481,263 @@ export default function Abonnement() {
                 const displayPrice = plan.price || 0;
 
                 return (
-                  <div
+                  <Card
                     key={plan.id || idx}
-                    className={`plan-card rounded-[20px] p-5 flex flex-col h-full ${isFeatured ? "featured bg-green-dark relative overflow-hidden" : "bg-white border border-borderMain"}`}
-                    style={isFeatured ? { background: "#1E3A2F" } : {}}
+                    radius="xl"
+                    p="md"
+                    style={{
+                      background: isFeatured ? "#1E3A2F" : undefined,
+                      transition: "all .4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                    }}
+                    className={isFeatured ? "shadow-lg" : ""}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-8px) scale(1.02)";
+                      e.currentTarget.style.boxShadow = isFeatured
+                        ? "0 25px 60px rgba(217,138,48,.45)"
+                        : "0 20px 50px rgba(0,0,0,.15)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "";
+                      e.currentTarget.style.boxShadow = "";
+                    }}
+                    className={!isFeatured ? "border border-gray-200" : ""}
                   >
-                    {isFeatured && <div className="absolute w-40 h-40 rounded-full bg-primary/8 -bottom-10 -right-10 pointer-events-none" />}
-                    <div className="mb-4 relative z-10">
-                      <div className="w-10 h-10 rounded-[12px] flex items-center justify-center mb-3" style={{ background: isFeatured ? "rgba(245,166,75,.15)" : "rgba(245,166,75,.1)" }}>
-                        <i className={`fa-solid ${isFeatured ? "fa-rocket" : "fa-star"} text-primary text-base`} />
+                    {isFeatured && (
+                      <div className="absolute w-40 h-40 rounded-full bg-[#D98A30]/8 -bottom-10 -right-10 pointer-events-none" />
+                    )}
+                    <div className="relative z-10">
+                      <div className="w-10 h-10 rounded-[12px] flex items-center justify-center mb-3" style={{ background: isFeatured ? "rgba(217,138,48,.15)" : "rgba(217,138,48,.1)" }}>
+                        <i className={`fa-solid ${isFeatured ? "fa-rocket" : "fa-star"} text-[#D98A30] text-base`} />
                       </div>
-                      <div className={`font-bricolage text-lg font-bold ${isFeatured ? "text-white" : "text-textMain"}`}>{plan.name}</div>
-                      <div className={`text-[12.5px] font-medium ${isFeatured ? "text-white/50" : "text-textMuted"}`}>{isFeatured ? "Recommandé" : "Populaire"}</div>
+                      <Text fw={700} ff="Bricolage Grotesque" size="lg" c={isFeatured ? "white" : "gray.7"}>
+                        {plan.name}
+                      </Text>
+                      <Text size="xs" c={isFeatured ? "white.5" : "dimmed"}>
+                        {isFeatured ? "Recommandé" : "Populaire"}
+                      </Text>
                     </div>
-                    <div className="mb-5 relative z-10">
-                      <div className={`font-bricolage text-3xl font-extrabold leading-none ${isFeatured ? "text-white" : "text-textMain"}`}>
-                        {displayPrice.toLocaleString("fr-FR")} <span className={`text-base font-bold ${isFeatured ? "text-white/50" : "text-textMuted"}`}>XAF</span>
-                      </div>
-                      <div className={`text-[12px] ${isFeatured ? "text-white/50" : "text-textMuted"} mt-0.5`}>{billingPeriod === "annual" ? "/an" : "/mois"}</div>
+                    <div className="relative z-10" style={{ margin: "20px 0" }}>
+                      <Group align="baseline" gap={4}>
+                        <Text fw={900} ff="Bricolage Grotesque" size="xl" c={isFeatured ? "white" : "gray.7"}>
+                          {displayPrice.toLocaleString("fr-FR")}
+                        </Text>
+                        <Text size="sm" fw={700} c={isFeatured ? "white.5" : "dimmed"}>XAF</Text>
+                      </Group>
+                      <Text size="xs" c={isFeatured ? "white.5" : "dimmed"}>
+                        {billingPeriod === "annual" ? "/an" : "/mois"}
+                      </Text>
                     </div>
-                    <div className="flex flex-col gap-2.5 flex-1 mb-5 relative z-10">
+                    <Stack gap="sm" className="relative z-10" style={{ flex: 1 }}>
                       {features.map((f, fi) => (
-                        <div key={fi} className="flex items-center gap-2.5 text-[13px]">
-                          <i className={`${featureIcon(f)} w-4 flex-shrink-0 text-[11px] ${isFeatured ? "text-primary" : "text-primary"}`} />
-                          <span className={`${isFeatured ? "text-white" : "text-textMain"} font-medium`}>
-                            {f.label ? <><span className={isFeatured ? "text-white/60" : "text-textMuted/70"}>{f.label} : </span></> : null}
-                            <span className={f.value === "Non inclus" ? "opacity-40" : ""}>{f.value}</span>
-                          </span>
-                        </div>
+                        <Group key={fi} gap="xs" wrap="nowrap">
+                           <i className={`${featureIcon(f)} w-4 flex-shrink-0 text-[11px] text-[#D98A30]`} />
+                          <Text size="sm" fw={500} c={isFeatured ? "white" : "dark"} style={{ opacity: f.value === "Non inclus" ? 0.4 : 1 }}>
+                            {f.label ? (
+                              <><span style={{ color: isFeatured ? "rgba(255,255,255,.6)" : undefined, opacity: 0.7 }}>{f.label} : </span></>
+                            ) : null}
+                            {f.value}
+                          </Text>
+                        </Group>
                       ))}
-                    </div>
-                    <button
-                      onClick={() => isCurrent ? null : openSubscribeModal(plan)}
+                    </Stack>
+                    <Button
+                      fullWidth
+                      radius="xl"
+                      size="md"
+                      mt="md"
+                      className="relative z-10"
+                      variant={isCurrent ? "outline" : isFeatured ? "filled" : "outline"}
+                      color={isFeatured ? "#D98A30" : isCurrent ? "gray" : "dark"}
                       disabled={isCurrent}
-                      className={`relative z-10 w-full py-2.5 rounded-[12px] text-[13.5px] font-bold transition-all active:scale-[.98] ${
-                        isCurrent
-                          ? "bg-white/20 text-white/60 cursor-default"
-                          : isFeatured
-                            ? "bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20"
-                            : "bg-white border border-borderMain text-textMain hover:border-primary hover:text-primary"
-                      }`}
+                      onClick={() => isCurrent ? null : openSubscribeModal(plan)}
                     >
                       {isCurrent ? "Plan actuel" : `Passer au ${plan.name}`}
-                    </button>
-                  </div>
+                    </Button>
+                  </Card>
                 );
               })
             )}
-          </div>
+          </SimpleGrid>
         </div>
 
         {/* Invoices */}
-        <div className="bg-white border border-borderMain rounded-[20px] overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-borderMain">
-            <h2 className="font-bricolage text-base font-bold text-textMain flex items-center gap-2">
-              <i className="fa-solid fa-receipt text-primary text-sm" /> Historique de facturation
-            </h2>
-          </div>
-          <div className="divide-y divide-borderMain">
-            {loadingTransactions ? (
-              <div className="p-8 text-center">
-                <i className="fa-solid fa-circle-notch fa-spin text-primary text-xl mb-2" />
-                <p className="text-xs text-textMuted font-medium">Chargement de vos transactions...</p>
-              </div>
-            ) : transactions.length === 0 ? (
-              <div className="px-5 py-8 text-center text-textMuted text-[13.5px]">Aucune transaction trouvée.</div>
-            ) : (
-              transactions.map((t: any, i: number) => {
-                const date = t.created_at ? new Date(t.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "";
-                const statusClass = t.status === "SUCCESS" ? "bg-green-100 text-green-700" : t.status === "PENDING" ? "bg-orange-100 text-orange-700" : "bg-red-100 text-red-700";
-                const statusText = t.status === "SUCCESS" ? "Payé" : t.status === "PENDING" ? "En cours" : "Échoué";
-                return (
-                  <div key={i} className="flex items-center gap-3 px-5 py-3.5 hover:bg-surface2 transition-colors">
-                    <div className="w-9 h-9 rounded-[10px] bg-green-light flex items-center justify-center flex-shrink-0">
-                      <i className={`fa-solid ${t.type === "subscription" ? "fa-bolt" : "fa-file-invoice"} text-green-mid text-sm`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[13.5px] font-semibold text-textMain">{t.description || "Abonnement"}</div>
-                      <div className="text-[11.5px] text-textMuted italic">{date} · {t.payment_method || t.method || "-"}</div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="text-[13.5px] font-bold text-textMain">{t.amount || 0} XAF</div>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusClass}`}>{statusText}</span>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
+        <Paper radius="xl">
+          <Group justify="space-between" px="md" py="sm" className="border-b border-gray-200">
+            <Text fw={700} ff="Bricolage Grotesque" size="sm">
+              <i className="fa-solid fa-receipt text-[#D98A30] text-sm mr-2" /> Historique de facturation
+            </Text>
+          </Group>
+          {loadingTransactions ? (
+            <Group justify="center" py="xl">
+              <Loader size="sm" />
+              <Text size="xs" c="dimmed">Chargement de vos transactions...</Text>
+            </Group>
+          ) : transactions.length === 0 ? (
+            <Text size="sm" c="dimmed" ta="center" py="xl">Aucune transaction trouvée.</Text>
+          ) : (
+            <Table striped highlightOnHover>
+              <Table.Tbody>
+                {transactions.map((tx: any, i: number) => {
+                  const date = tx.created_at ? new Date(tx.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "";
+                  const statusColor = tx.status === "SUCCESS" ? "green" : tx.status === "PENDING" ? "orange" : "red";
+                  const statusText = tx.status === "SUCCESS" ? "Payé" : tx.status === "PENDING" ? "En cours" : "Échoué";
+                  return (
+                    <Table.Tr key={i}>
+                      <Table.Td w={40}>
+                        <div className="w-9 h-9 rounded-[10px] bg-green-light flex items-center justify-center">
+                          <i className={`fa-solid ${tx.type === "subscription" ? "fa-bolt" : "fa-file-invoice"} text-green-mid text-sm`} />
+                        </div>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm" fw={600}>{tx.description || "Abonnement"}</Text>
+                        <Text size="xs" c="dimmed" fs="italic">{date} · {tx.payment_method || tx.method || "-"}</Text>
+                      </Table.Td>
+                      <Table.Td ta="right">
+                        <Text size="sm" fw={700}>{tx.amount || 0} XAF</Text>
+                        <Badge color={statusColor} size="xs" radius="xl" variant="light">{statusText}</Badge>
+                      </Table.Td>
+                    </Table.Tr>
+                  );
+                })}
+              </Table.Tbody>
+            </Table>
+          )}
+        </Paper>
 
         {/* Payment method + Cancel */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-white border border-borderMain rounded-[18px] p-5">
-            <h3 className="font-bricolage text-base font-bold text-textMain mb-4 flex items-center gap-2">
-              <i className="fa-solid fa-credit-card text-primary text-sm" /> Moyen de paiement
-            </h3>
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+          <Paper radius="xl" className="border border-gray-200" p="md">
+            <Text fw={700} ff="Bricolage Grotesque" size="sm" mb="md">
+              <i className="fa-solid fa-credit-card text-[#D98A30] text-sm mr-2" /> Moyen de paiement
+            </Text>
             {savedMethods.length === 0 ? (
-              <div className="p-4 text-center text-textMuted text-[12px] border border-dashed border-borderMain rounded-[12px] mb-3">
-                <i className="fa-solid fa-credit-card text-xl opacity-30 mb-2" />
-                <p>Aucun moyen de paiement enregistré</p>
-              </div>
+              <Paper p="md" radius="md" className="border border-dashed border-gray-200" ta="center">
+                <i className="fa-solid fa-credit-card text-2xl text-textMuted/30 mb-2 block" />
+                <Text size="xs" c="dimmed">Aucun moyen de paiement enregistré</Text>
+              </Paper>
             ) : (
-              <div className="space-y-2 mb-3">
+              <Stack gap="sm" mb="md">
                 {savedMethods.map((m) => {
                   const mi = METHOD_ICONS[m.method_type] || METHOD_ICONS.MTN;
                   return (
-                    <div key={m.id} className="flex items-center gap-3 p-3 bg-bgMain border border-borderMain rounded-[12px]">
-                      <div className={`w-9 h-9 rounded-[10px] ${mi.bg} flex items-center justify-center`}>
-                        <i className={`fa-solid ${mi.icon} ${mi.color} text-sm`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold text-textMain truncate">{m.account_name || `${m.method_type} - ${m.account_number}`}</p>
-                        <p className="text-[11px] text-textMuted">{m.account_number}{m.is_default ? " · Défaut" : ""}</p>
-                      </div>
-                      {m.is_default && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Actif</span>}
-                    </div>
+                    <Paper key={m.id} bg="gray.0" p="sm" radius="md" className="border border-gray-200">
+                      <Group gap="sm">
+                        <div className={`w-9 h-9 rounded-[10px] ${mi.bg} flex items-center justify-center`}>
+                          <i className={`fa-solid ${mi.icon} ${mi.color} text-sm`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <Text size="sm" fw={600} truncate>{m.account_name || `${m.method_type} - ${m.account_number}`}</Text>
+                          <Text size="xs" c="dimmed">{m.account_number}{m.is_default ? " · Défaut" : ""}</Text>
+                        </div>
+                        {m.is_default && <Badge color="green" size="xs" variant="light">Actif</Badge>}
+                      </Group>
+                    </Paper>
                   );
                 })}
-              </div>
+              </Stack>
             )}
-            <button
+            <Button
+              fullWidth
+              variant="outline"
+              radius="xl"
+              size="sm"
+              leftSection={<i className="fa-solid fa-plus text-[11px]" />}
               onClick={() => { setAddMethodType("MTN"); setShowAddMethodModal(true); }}
-              className="w-full py-2.5 rounded-[12px] bg-bgMain border border-borderMain text-textMain text-[13px] font-bold hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
             >
-              <i className="fa-solid fa-plus text-[11px]" /> Ajouter un moyen de paiement
-            </button>
-          </div>
+              Ajouter un moyen de paiement
+            </Button>
+          </Paper>
 
-          <div className="bg-white border border-borderMain rounded-[18px] p-5 flex flex-col justify-between">
+          <Paper radius="xl" className="border border-gray-200" p="md">
             <div>
-              <h3 className="font-bricolage text-base font-bold text-textMain mb-2 flex items-center gap-2">
-                <i className="fa-solid fa-circle-xmark text-red-400 text-sm" /> Gestion de l'abonnement
-              </h3>
-              <p className="text-[12.5px] text-textMuted leading-relaxed mb-4">
+              <Text fw={700} ff="Bricolage Grotesque" size="sm" mb="xs">
+                <i className="fa-solid fa-circle-xmark text-red-400 text-sm mr-2" /> Gestion de l'abonnement
+              </Text>
+              <Text size="xs" c="dimmed" mb="md">
                 Votre abonnement se renouvelle automatiquement. Vous pouvez l'annuler à tout moment sans frais supplémentaires.
-              </p>
+              </Text>
             </div>
-            <div className="flex flex-col gap-2">
-              <button className="w-full py-2.5 rounded-[12px] bg-bgMain border border-borderMain text-textMain text-[13px] font-bold hover:border-textMain transition-colors">
+            <Stack gap="sm">
+              <Button fullWidth variant="outline" radius="xl" size="sm">
                 Mettre en pause
-              </button>
-              <button
+              </Button>
+              <Button
+                fullWidth
+                variant="light"
+                color="red"
+                radius="xl"
+                size="sm"
                 onClick={() => setCancelOpen(true)}
-                className="w-full py-2.5 rounded-[12px] bg-red-50 border border-red-100 text-red-600 text-[13px] font-bold hover:bg-red-100 transition-colors"
               >
                 Annuler l'abonnement
-              </button>
-            </div>
-          </div>
-        </div>
+              </Button>
+            </Stack>
+          </Paper>
+        </SimpleGrid>
 
         {/* Comparison table */}
-        <div className="bg-white border border-borderMain rounded-[20px] overflow-hidden">
-          <div className="px-5 py-4 border-b border-borderMain">
-            <h2 className="font-bricolage text-base font-bold text-textMain flex items-center gap-2">
-              <i className="fa-solid fa-table-columns text-primary text-sm" /> Comparatif complet des plans
-            </h2>
-          </div>
+        <Paper radius="xl">
+          <Group px="md" py="sm" className="border-b border-gray-200">
+            <Text fw={700} ff="Bricolage Grotesque" size="sm">
+                <i className="fa-solid fa-table-columns text-[#D98A30] text-sm mr-2" /> Comparatif complet des plans
+            </Text>
+          </Group>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[520px]">
-              <thead>
-                <tr className="border-b border-borderMain">
-                  <th className="text-left px-5 py-3 text-[12px] font-bold text-textMuted uppercase tracking-wide w-2/5">Fonctionnalité</th>
+            <Table>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Fonctionnalité</Table.Th>
                   {plans.map((p, i) => (
-                    <th key={i} className={`px-3 py-3 text-center text-[12.5px] font-bold ${p.popular ? "text-primary bg-primary/5" : "text-textMuted"}`}>
+                    <Table.Th key={i} ta="center" style={p.popular ? { color: "#D98A30", backgroundColor: "rgba(217,138,48,.05)" } : {}}>
                       {p.name}
-                    </th>
+                    </Table.Th>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-borderMain">
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
                 {plans.length > 0 && (() => {
                   const allFeatures = plans.map((p) => normalizeFeatures(p.features));
-                  
-                  // Get unique labels across all plans
                   const labelSet = new Set<string>();
                   allFeatures.forEach(feats => feats.forEach(f => { if(f.label) labelSet.add(f.label); }));
                   const labels = Array.from(labelSet);
 
                   return labels.map((label, fi) => (
-                    <tr key={fi} className="hover:bg-surface2 transition-colors">
-                      <td className="px-5 py-3 text-[13px] font-medium text-textMain">{label}</td>
+                    <Table.Tr key={fi}>
+                      <Table.Td fw={500}>{label}</Table.Td>
                       {plans.map((plan, pi) => {
                         const feats = allFeatures[pi];
                         const f = feats.find(feat => feat.label === label);
                         const val = f ? f.value : "—";
-                        const tClass = plan.popular ? "text-primary" : "text-textMuted";
                         const isSuccess = val === "Inclus" || val === "Instantané" || (typeof val === "string" && !isNaN(Number(val)) && Number(val) > 0);
                         const isFailure = val === "Non inclus";
-                        
-                        const icon = val === "Inclus" ? "fa-solid fa-check text-green-500" : val === "Non inclus" ? "fa-solid fa-xmark text-gray-300" : "";
-                        
+
                         return (
-                          <td key={pi} className={`px-3 py-3 text-center text-[13px] font-semibold ${tClass} ${plan.popular ? "bg-primary/5" : ""}`}>
-                            {icon ? <i className={icon} /> : <span className={isFailure ? "opacity-30" : ""}>{val}</span>}
-                          </td>
+                          <Table.Td
+                            key={pi}
+                            ta="center"
+                            fw={600}
+                             style={plan.popular ? { color: "#D98A30", backgroundColor: "rgba(217,138,48,.05)" } : {}}
+                          >
+                            {val === "Inclus" ? (
+                              <i className="fa-solid fa-check text-green-500" />
+                            ) : val === "Non inclus" ? (
+                              <i className="fa-solid fa-xmark text-gray-300" />
+                            ) : (
+                              <span style={{ opacity: isFailure ? 0.3 : 1 }}>{val}</span>
+                            )}
+                          </Table.Td>
                         );
                       })}
-                    </tr>
+                    </Table.Tr>
                   ));
                 })()}
-              </tbody>
-            </table>
+              </Table.Tbody>
+            </Table>
           </div>
-        </div>
+        </Paper>
       </div>
 
-      {/* ─── Subscription Modal ─── */}
+      {/* Subscription Modal */}
       {modalOpen && !pollingStatus && (
         <PaymentModal
           isOpen={modalOpen && !pollingStatus}
@@ -735,7 +750,6 @@ export default function Abonnement() {
           error={payError}
           submitLabel="Confirmer le paiement"
         >
-          {/* Invoice summary */}
           <div className="p-6 bg-slate-50 rounded-[24px] border border-slate-100 relative overflow-hidden mb-5">
             <div className="absolute -top-6 -right-6 w-24 h-24 bg-blue-600/5 rounded-full blur-2xl" />
             <div className="flex items-start justify-between relative z-10">
@@ -744,41 +758,41 @@ export default function Abonnement() {
                   <i className="fa-solid fa-shield-halved" />
                 </div>
                 <div>
-                  <h4 className="font-bricolage text-lg font-black text-slate-900 leading-none">{selectedPlan?.name || "-"}</h4>
-                  <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mt-1">Plan sélectionné</p>
+                  <Title order={4} fw={900}>{selectedPlan?.name || "-"}</Title>
+                  <Text size="10px" c="dimmed" fw={700} tt="uppercase" tracking="widest" mt={4}>Plan sélectionné</Text>
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-bricolage text-2xl font-black text-primary leading-none">
+                <Title order={3} fw={900} style={{ color: "#D98A30" }}>
                   {(selectedPlan?.price || 0).toLocaleString("fr-FR")} FCFA
-                </div>
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mt-1">Montant Total</p>
+                </Title>
+                <Text size="10px" c="dimmed" fw={700} tt="uppercase" mt={4}>Montant Total</Text>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-6 mt-6 pt-6 border-t border-slate-200/60 relative z-10">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-slate-400 text-xs">
-                  <i className="fa-solid fa-calendar-check" />
-                </div>
+            <SimpleGrid cols={2} mt="md" pt="md" style={{ borderTop: "1px solid #E2E8F0" }}>
+              <Group gap="sm">
+                <Paper p="xs" radius="md" className="border border-gray-200">
+                  <i className="fa-solid fa-calendar-check text-xs text-gray-400" />
+                </Paper>
                 <div>
-                  <p className="text-[10px] text-slate-400 uppercase font-black">Validité</p>
-                  <span className="text-slate-800 text-[13px] font-bold uppercase tracking-tight">
+                  <Text size="10px" c="dimmed" fw={900} tt="uppercase">Validité</Text>
+                  <Text size="sm" fw={700} tt="uppercase">
                     {billingPeriod === "annual" ? "12 MOIS" : "30 JOURS"}
-                  </span>
+                  </Text>
                 </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-slate-400 text-xs">
-                  <i className="fa-solid fa-file-shield" />
-                </div>
+              </Group>
+              <Group gap="sm">
+                <Paper p="xs" radius="md" className="border border-gray-200">
+                  <i className="fa-solid fa-file-shield text-xs text-gray-400" />
+                </Paper>
                 <div>
-                  <p className="text-[10px] text-slate-400 uppercase font-black">Quota Docs</p>
-                  <span className="text-slate-800 text-[13px] font-bold uppercase tracking-tight">
+                  <Text size="10px" c="dimmed" fw={900} tt="uppercase">Quota Docs</Text>
+                  <Text size="sm" fw={700} tt="uppercase">
                     {(normalizeFeatures(selectedPlan?.features)[0]?.value ?? "-").replace(/^(\d+).*/, "$1") || "-"}
-                  </span>
+                  </Text>
                 </div>
-              </div>
-            </div>
+              </Group>
+            </SimpleGrid>
           </div>
         </PaymentModal>
       )}
@@ -793,46 +807,49 @@ export default function Abonnement() {
         isManualChecking={manualChecking}
       />
 
-      {/* ─── Cancel Confirmation Modal ─── */}
-      {cancelOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-green-dark/40 backdrop-blur-sm" onClick={() => setCancelOpen(false)} />
-          <div className="relative bg-white rounded-[24px] p-6 max-w-sm w-full shadow-2xl">
-            <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
-              <i className="fa-solid fa-triangle-exclamation text-red-500 text-xl" />
-            </div>
-            <h3 className="font-bricolage text-xl font-bold text-textMain text-center mb-2">Annuler l'abonnement ?</h3>
-            <p className="text-[13.5px] text-textMuted text-center mb-5 leading-relaxed">
-              Vous conserverez votre plan actuel jusqu'à la fin de la période en cours. Aucun remboursement ne sera effectué.
-            </p>
-            <div className="flex gap-3">
-              <button onClick={() => setCancelOpen(false)} className="flex-1 py-2.5 rounded-[12px] bg-bgMain border border-borderMain text-textMain font-bold hover:border-textMain transition-colors">
-                Annuler
-              </button>
-              <button className="flex-1 py-2.5 rounded-[12px] bg-red-500 text-white font-bold hover:bg-red-600 transition-colors">
-                Confirmer
-              </button>
-            </div>
+      {/* Cancel Confirmation Modal */}
+      <Modal
+        opened={cancelOpen}
+        onClose={() => setCancelOpen(false)}
+        centered
+        radius="xl"
+        size="sm"
+        padding="xl"
+      >
+        <Stack align="center" gap="md">
+          <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center">
+            <i className="fa-solid fa-triangle-exclamation text-red-500 text-xl" />
           </div>
-        </div>
-      )}
+          <Title order={4} ta="center">Annuler l'abonnement ?</Title>
+          <Text size="sm" c="dimmed" ta="center">
+            Vous conserverez votre plan actuel jusqu'à la fin de la période en cours. Aucun remboursement ne sera effectué.
+          </Text>
+          <Group grow w="100%">
+            <Button variant="outline" radius="xl" onClick={() => setCancelOpen(false)}>
+              Annuler
+            </Button>
+            <Button color="red" radius="xl">
+              Confirmer
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
 
-      {/* ─── Add Payment Method Modal ─── */}
-      {showAddMethodModal && (
-        <SubscriptionAddMethodModal
-          methodType={addMethodType}
-          onClose={() => setShowAddMethodModal(false)}
-          onDone={() => { setShowAddMethodModal(false); fetchMethods(); }}
-          t={t}
-        />
-      )}
+      {/* Add Payment Method Modal */}
+      <SubscriptionAddMethodModal
+        opened={showAddMethodModal}
+        methodType={addMethodType}
+        onClose={() => setShowAddMethodModal(false)}
+        onDone={() => { setShowAddMethodModal(false); fetchMethods(); }}
+        t={t}
+      />
     </div>
   );
 }
 
 /* ─── Add Payment Method Modal (for Abonnement page) ─── */
 
-function SubscriptionAddMethodModal({ methodType, onClose, onDone, t }: any) {
+function SubscriptionAddMethodModal({ opened, methodType, onClose, onDone, t }: any) {
   const [accountName, setAccountName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [bankName, setBankName] = useState("");
@@ -842,8 +859,8 @@ function SubscriptionAddMethodModal({ methodType, onClose, onDone, t }: any) {
   const [validationErr, setValidationErr] = useState("");
 
   const typeIcon = methodType === "BANK" ? "fa-university" : "fa-mobile-screen-button";
-  const typeColor = methodType === "MTN" ? "text-yellow-500" : methodType === "ORANGE" ? "text-orange-500" : "text-blue-400";
-  const typeBg = methodType === "MTN" ? "bg-yellow-50" : methodType === "ORANGE" ? "bg-orange-50" : "bg-blue-50";
+  const typeColor = methodType === "MTN" ? "text-[#D98A30]" : methodType === "ORANGE" ? "text-[#D98A30]" : "text-blue-400";
+  const typeBg = methodType === "MTN" ? "bg-[#D98A30]/10" : methodType === "ORANGE" ? "bg-[#D98A30]/10" : "bg-blue-50";
   const typeLabel = methodType === "BANK" ? "Virement bancaire" : `${methodType} Mobile Money`;
 
   const handleSave = async () => {
@@ -875,61 +892,78 @@ function SubscriptionAddMethodModal({ methodType, onClose, onDone, t }: any) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-[20px] w-[420px] max-w-[94vw] shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-5 border-b border-borda">
-          <div className="flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-[10px] ${typeBg} flex items-center justify-center`}>
-              <i className={`fa-solid ${typeIcon} ${typeColor} text-sm`} />
-            </div>
-            <h3 className="font-bricolage text-[16px] font-bold text-textMain">{typeLabel}</h3>
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      centered
+      radius="xl"
+      size="sm"
+      padding="lg"
+      title={
+        <Group gap="sm">
+          <div className={`w-9 h-9 rounded-[10px] ${typeBg} flex items-center justify-center`}>
+            <i className={`fa-solid ${typeIcon} ${typeColor} text-sm`} />
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
-            <i className="fa-solid fa-xmark text-textMuted" />
-          </button>
-        </div>
-
-        {success ? (
-          <div className="p-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-green-light flex items-center justify-center mx-auto mb-4">
-              <i className="fa-solid fa-check-circle text-green-mid text-3xl" />
-            </div>
-            <p className="font-bricolage text-[16px] font-bold text-textMain">Moyen de paiement enregistré</p>
+          <Text fw={700} ff="Bricolage Grotesque">{typeLabel}</Text>
+        </Group>
+      }
+    >
+      {success ? (
+        <Stack align="center" py="md" gap="md">
+          <div className="w-16 h-16 rounded-full bg-green-light flex items-center justify-center">
+            <i className="fa-solid fa-check-circle text-green-mid text-3xl" />
           </div>
-        ) : (
-          <div className="p-5 space-y-4">
-            {(error || validationErr) && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-[12px] text-red-600 text-[12px] font-semibold">
-                <i className="fa-solid fa-circle-exclamation mr-1" /> {error || validationErr}
-              </div>
-            )}
-            <div>
-              <label className="text-[12px] font-semibold text-textMuted mb-1.5 block">Nom du compte</label>
-              <input type="text" value={accountName} onChange={(e) => setAccountName(e.target.value)} placeholder="Ex: Jean Dupont"
-                className="w-full px-4 py-3 bg-gray-50 border border-borda rounded-[12px] text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all" />
-            </div>
-            <div>
-              <label className="text-[12px] font-semibold text-textMuted mb-1.5 block">Numéro de compte / mobile</label>
-              <input type="text" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)}
-                placeholder={methodType === "BANK" ? "Numéro de compte" : "+237 XXXXXXXXX"}
-                className="w-full px-4 py-3 bg-gray-50 border border-borda rounded-[12px] text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all" />
-              {methodType === "MTN" && <p className="text-[11px] text-textMuted mt-1">{t("payment_phone_mtn_hint")}</p>}
-              {methodType === "ORANGE" && <p className="text-[11px] text-textMuted mt-1">{t("payment_phone_orange_hint")}</p>}
-            </div>
-            {methodType === "BANK" && (
-              <div>
-                <label className="text-[12px] font-semibold text-textMuted mb-1.5 block">Nom de la banque</label>
-                <input type="text" value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Ex: Société Générale"
-                  className="w-full px-4 py-3 bg-gray-50 border border-borda rounded-[12px] text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all" />
-              </div>
-            )}
-            <button onClick={handleSave} disabled={saving || !accountNumber}
-              className="w-full py-3 bg-primary hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed text-white font-bricolage text-[13.5px] font-bold rounded-[12px] transition-all active:scale-[.98] flex items-center justify-center gap-2">
-              {saving ? <><i className="fa-solid fa-spinner fa-spin" /> Enregistrement...</> : <><i className="fa-solid fa-floppy-disk" /> Enregistrer</>}
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+          <Text fw={700} ff="Bricolage Grotesque">Moyen de paiement enregistré</Text>
+        </Stack>
+      ) : (
+        <Stack gap="md">
+          {(error || validationErr) && (
+            <Alert color="red" icon={<i className="fa-solid fa-circle-exclamation" />} variant="light" size="sm">
+              {error || validationErr}
+            </Alert>
+          )}
+          <TextInput
+            label="Nom du compte"
+            placeholder="Ex: Jean Dupont"
+            value={accountName}
+            onChange={(e) => setAccountName(e.target.value)}
+            radius="xl"
+            size="sm"
+          />
+          <TextInput
+            label="Numéro de compte / mobile"
+            placeholder={methodType === "BANK" ? "Numéro de compte" : "+237 XXXXXXXXX"}
+            value={accountNumber}
+            onChange={(e) => setAccountNumber(e.target.value)}
+            radius="xl"
+            size="sm"
+          />
+          {methodType === "MTN" && <Text size="xs" c="dimmed">{t("payment_phone_mtn_hint")}</Text>}
+          {methodType === "ORANGE" && <Text size="xs" c="dimmed">{t("payment_phone_orange_hint")}</Text>}
+          {methodType === "BANK" && (
+            <TextInput
+              label="Nom de la banque"
+              placeholder="Ex: Société Générale"
+              value={bankName}
+              onChange={(e) => setBankName(e.target.value)}
+              radius="xl"
+              size="sm"
+            />
+          )}
+          <Button
+            fullWidth
+            loading={saving}
+            disabled={!accountNumber}
+            leftSection={<i className="fa-solid fa-floppy-disk" />}
+            onClick={handleSave}
+            radius="xl"
+            size="md"
+            style={{ backgroundColor: "#D98A30" }}
+          >
+            Enregistrer
+          </Button>
+        </Stack>
+      )}
+    </Modal>
   );
 }

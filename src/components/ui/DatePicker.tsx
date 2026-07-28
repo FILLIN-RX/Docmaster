@@ -1,8 +1,7 @@
-import { useRef, useEffect } from "react";
-import flatpickr from "flatpickr";
-import { French } from "flatpickr/dist/l10n/fr.js";
-import "flatpickr/dist/flatpickr.min.css";
-import "./flatpickr-override.css";
+import { DateInput } from "@mantine/dates";
+import { Text } from "@mantine/core";
+import type { ReactNode } from "react";
+import "dayjs/locale/fr";
 
 interface DatePickerProps {
   value: string;
@@ -11,63 +10,51 @@ interface DatePickerProps {
   placeholder?: string;
   icon?: string;
   disabled?: boolean;
+  label?: ReactNode;
 }
 
-function isValidDateString(v: unknown): v is string {
-  return typeof v === "string" && v.trim().length > 0 && !isNaN(new Date(v).getTime());
+function toDate(v: string): Date | null {
+  if (!v) return null;
+  const [y, m, d] = v.split("-").map(Number);
+  if (!y || !m) return null;
+  return new Date(y, m - 1, d || 1);
 }
 
-export default function DatePicker({ value, onChange, className, placeholder, icon, disabled }: DatePickerProps) {
-  const ref = useRef<HTMLInputElement>(null);
-  const fpRef = useRef<flatpickr.Instance | null>(null);
-  const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
-  const safeValue = isValidDateString(value) ? value : "";
+function toDateStr(d: Date | string | null): string {
+  if (!d) return "";
+  if (typeof d === "string") return d;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
-  useEffect(() => {
-    if (disabled) return;
-    fpRef.current = flatpickr(ref.current!, {
-      locale: French,
-      dateFormat: "Y-m-d",
-      defaultDate: safeValue || undefined,
-      onChange: (dates) => {
-        if (dates[0]) {
-          const y = dates[0].getFullYear();
-          const m = String(dates[0].getMonth() + 1).padStart(2, "0");
-          const d = String(dates[0].getDate()).padStart(2, "0");
-          onChangeRef.current(`${y}-${m}-${d}`);
-        } else {
-          onChangeRef.current("");
-        }
-      },
-    });
+export default function DatePicker({ value, onChange, className, placeholder, icon, disabled, label }: DatePickerProps) {
+  const date = toDate(value);
 
-    return () => fpRef.current?.destroy();
-  }, [disabled]);
-
-  useEffect(() => {
-    const fp = fpRef.current;
-    if (!fp) return;
-    if (!safeValue) {
-      fp.clear(false);
-    } else if (fp.selectedDates[0]?.toISOString().split("T")[0] !== safeValue) {
-      fp.setDate(safeValue, false);
-    }
-  }, [safeValue]);
+  const handleChange = (d: Date | string | null) => onChange(toDateStr(d));
 
   return (
-    <div className="relative">
-      {icon && <i className={`${icon} absolute left-[13px] top-0 bottom-0 flex items-center text-textMuted text-[13px] pointer-events-none z-10`} />}
-      <input
-        ref={ref}
-        type="text"
-        placeholder={placeholder}
-        readOnly
-        disabled={disabled}
-        autoComplete="off"
-        inputMode="none"
-        className={className || "w-full px-4 py-3 bg-bgMain border border-borda rounded-xl text-textMain text-[14px] outline-none focus:border-primary transition-colors"}
-      />
+    <div>
+      {label && <Text fw={500} size="sm" mb={4}>{label}</Text>}
+      <div className="relative">
+        {icon && (
+          <i className={`${icon} absolute left-[13px] top-0 bottom-0 flex items-center text-textMuted text-[13px] pointer-events-none z-10`} />
+        )}
+        <DateInput
+          value={date}
+          onChange={handleChange}
+          placeholder={placeholder || "Sélectionner une date"}
+          locale="fr"
+          valueFormat="DD/MM/YYYY"
+          clearable
+          disabled={disabled}
+          className={className}
+          classNames={{
+            input: `bg-bgMain border-borda text-textMain text-[14px] rounded-xl focus:border-primary ${icon ? "pl-[38px]" : ""}`,
+          }}
+        />
+      </div>
     </div>
   );
 }

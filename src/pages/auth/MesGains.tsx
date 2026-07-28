@@ -1229,7 +1229,7 @@ function AddPaymentMethodModal({ methodType, onClose, onDone, t }: any) {
 
 /* ── Convert Points Modal ── */
 
-function ConvertPointsModal({ points, onClose, onDone, t }: { points: any; onClose: () => void; onDone: () => void; t: (key: string) => string }) {
+function ConvertPointsModal({ points, onClose, onDone, onUpdateUser, t }: { points: any; onClose: () => void; onDone: () => void; onUpdateUser?: (data: any) => void; t: (key: string) => string }) {
   const [step, setStep] = useState<"amount" | "confirm" | "success">("amount");
   const [amount, setAmount] = useState("");
   const [password, setPassword] = useState("");
@@ -1275,7 +1275,7 @@ function ConvertPointsModal({ points, onClose, onDone, t }: { points: any; onClo
       const res = await apiClient.post(`points/convert`, { amount: numAmount, password });
       if (res.data.success) {
         setStep("success");
-        setTimeout(() => window.location.reload(), 2000);
+        setTimeout(() => onDone(), 2000);
       } else {
         setError(res.data.message || t("mesgains_convert_error"));
       }

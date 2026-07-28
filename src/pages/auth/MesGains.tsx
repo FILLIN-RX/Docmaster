@@ -164,6 +164,7 @@ export default function MesGains() {
         <Stack gap="lg" className="max-w-7xl mx-auto w-full">
           <WalletCard
             balance={balance}
+            points={points}
             minWithdrawal={minWithdrawal}
             progressPct={progressPct}
             onWithdraw={handleWithdraw}
@@ -349,7 +350,7 @@ export default function MesGains() {
 
 /* ── Wallet Card ── */
 
-function WalletCard({ balance, minWithdrawal, progressPct, onWithdraw, onHistory, fmtAmount, t }: any) {
+function WalletCard({ balance, points, minWithdrawal, progressPct, onWithdraw, onHistory, fmtAmount, t }: any) {
   return (
     <Paper
       p="lg"
@@ -363,7 +364,7 @@ function WalletCard({ balance, minWithdrawal, progressPct, onWithdraw, onHistory
       <div className="absolute w-[180px] h-[180px] rounded-full bg-primary/[0.08] -bottom-[60px] -left-[40px] pointer-events-none" />
 
       <div className="flex items-start justify-between mb-5 relative z-10">
-        <div>
+        <div className="flex-1">
           <Text size="xs" fw={500} tt="uppercase" className="tracking-widest" c="white.4">
             {t("mesgains_balance")}
           </Text>
@@ -373,6 +374,10 @@ function WalletCard({ balance, minWithdrawal, progressPct, onWithdraw, onHistory
               XAF
             </Text>
           </Text>
+          <Group gap={4} mt={4}>
+            <i className="fa-solid fa-star text-[#f5a64b] text-xs" />
+            <Text fw={700} c="white.8" size="sm">{fmtAmount(points)} pts</Text>
+          </Group>
         </div>
         <div className="w-11 h-11 rounded-[13px] bg-white/10 border border-white/15 flex items-center justify-center">
           <i className="fa-solid fa-sack-dollar text-primary text-lg" />

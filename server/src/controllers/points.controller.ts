@@ -21,6 +21,7 @@ export const convertPoints = async (req: Request, res: Response) => {
     const result = await pointsService.convertPointsToWallet(userId, amount, password);
     res.status(200).json({ success: true, data: result });
   } catch (error: any) {
+    console.error('❌ convertPoints error:', error);
     const status = error.status || 500;
     res.status(status).json({ success: false, message: error.message });
   }

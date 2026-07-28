@@ -201,6 +201,7 @@ export class PointsService {
 
       return { success: true, amountXaf, balanceAfter };
     } catch (error) {
+      console.error('❌ convertPointsToWallet transaction error:', error);
       try { await client.query('ROLLBACK'); } catch (_) {}
       try { client.release(); } catch (_) {}
       throw error;

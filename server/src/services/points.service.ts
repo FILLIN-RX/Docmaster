@@ -126,7 +126,7 @@ export class PointsService {
         [userId, amountXaf, balanceBefore, balanceAfter, JSON.stringify({ amountPoints, rate })]
       );
 
-      // 3. Record earnings
+      // 3. Record earnings (dans la transaction)
       await client.query(
         `INSERT INTO earnings_history (user_id, type, amount, currency, description, metadata)
          VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -138,30 +138,71 @@ export class PointsService {
         [userId, 'wallet_credit', amountXaf, 'XAF', 'Crédit par conversion de points', JSON.stringify({ amountPoints, rate })]
       );
 
+      // 4. Notification DB records (dans la transaction)
+
+      // Notification user
+      const userNotif = await client.query(
+        `INSERT INTO notifications (user_id, type, title, message, metadata, channels)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+        [userId, 'POINTS_CONVERSION', 'Points convertis avec succès',
+         `Vous avez converti ${amountPoints} points en ${amountXaf} XAF. Votre nouveau solde portefeuille est de ${balanceAfter} XAF.`,
+         JSON.stringify({ amount: amountPoints, amountXaf, rate, balanceAfter }),
+         JSON.stringify({ in_app: true, email: true, sms: false, push: true })]
+      );
+
+      // Notification admins
+      const adminRes = await client.query("SELECT id, email, prenom, nom FROM users WHERE role = 'ADMIN'");
+      const adminNotifs: { id: string; userId: string; email: string; name: string }[] = [];
+      for (const admin of adminRes.rows) {
+        const n = await client.query(
+          `INSERT INTO notifications (user_id, type, title, message, metadata, channels)
+           VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+          [admin.id, 'POINTS_CONVERSION', 'Conversion de points',
+           `Un utilisateur a converti ${amountPoints} points en ${amountXaf} XAF.`,
+           JSON.stringify({ paymentType: 'POINTS_CONVERSION', amount: amountXaf, currency: 'XAF', pointsUsed: amountPoints }),
+           JSON.stringify({ in_app: true, email: true, sms: false, push: true })]
+        );
+        adminNotifs.push({ id: n.rows[0].id, userId: admin.id, email: admin.email, name: `${admin.prenom} ${admin.nom}` });
+      }
+
       await client.query('COMMIT');
       client.release();
 
-      // In-app + email notification for the user
-      await notificationService.createNotification({
-        user_id: userId,
-        type: 'POINTS_CONVERSION',
-        title: 'Points convertis avec succès',
-        message: `Vous avez converti ${amountPoints} points en ${amountXaf} XAF. Votre nouveau solde portefeuille est de ${balanceAfter} XAF.`,
-        metadata: { amount: amountPoints, amountXaf, rate, balanceAfter }
-      });
+      // ── Après COMMIT : livraison des notifications externes ──
+      try {
+        notificationService.deliverNotification({
+          id: userNotif.rows[0].id,
+          user_id: userId,
+          type: 'POINTS_CONVERSION',
+          title: 'Points convertis avec succès',
+          message: `Vous avez converti ${amountPoints} points en ${amountXaf} XAF. Votre nouveau solde portefeuille est de ${balanceAfter} XAF.`,
+          metadata: { amount: amountPoints, amountXaf, rate, balanceAfter },
+          channels: { in_app: true, email: true, sms: false, push: true }
+        });
+      } catch (e) {
+        console.error('Erreur livraison notification user:', e);
+      }
 
-      // Notify all admins (in-app + email)
-      await notificationService.notifyAdmins(
-        'Conversion de points',
-        `Un utilisateur a converti ${amountPoints} points en ${amountXaf} XAF. Type: POINTS_CONVERSION.`,
-        'INFO',
-        { paymentType: 'POINTS_CONVERSION', amount: amountXaf, currency: 'XAF', pointsUsed: amountPoints }
-      );
+      try {
+        for (const an of adminNotifs) {
+          notificationService.deliverNotification({
+            id: an.id,
+            user_id: an.userId,
+            type: 'POINTS_CONVERSION',
+            title: 'Conversion de points',
+            message: `Un utilisateur a converti ${amountPoints} points en ${amountXaf} XAF.`,
+            metadata: { paymentType: 'POINTS_CONVERSION', amount: amountXaf, currency: 'XAF', pointsUsed: amountPoints },
+            channels: { in_app: true, email: true, sms: false, push: true }
+          });
+        }
+      } catch (e) {
+        console.error('Erreur livraison notification admins:', e);
+      }
 
       return { success: true, amountXaf, balanceAfter };
     } catch (error) {
-      await client.query('ROLLBACK');
-      client.release();
+      try { await client.query('ROLLBACK'); } catch (_) {}
+      try { client.release(); } catch (_) {}
       throw error;
     }
   }

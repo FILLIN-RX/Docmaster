@@ -60,7 +60,7 @@ export class NotificationService {
   /**
    * Actual delivery logic to external providers
    */
-  private async deliverNotification(notification: any) {
+  async deliverNotification(notification: any) {
     const { channels, title, message, user_id, type, metadata } = notification;
     
     // 1. Always send real-time in-app notification if user is connected

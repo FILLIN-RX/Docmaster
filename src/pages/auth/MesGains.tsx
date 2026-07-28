@@ -339,7 +339,7 @@ export default function MesGains() {
         <ConvertPointsModal
           points={{ totalPoints: points }}
           onClose={() => setShowConvertModal(false)}
-          onDone={() => { setShowConvertModal(false); fetchData(); }}
+          onDone={() => { setShowConvertModal(false); fetchData(); authService.getProfile().then(r => { if (r.success && r.data) updateUser(r.data); }).catch(() => {}); }}
           t={t}
         />
       )}

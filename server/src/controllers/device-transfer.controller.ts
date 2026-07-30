@@ -6,11 +6,12 @@ export const initiateTransfer = async (req: Request, res: Response) => {
     const userId = (req as any).user?.id;
     if (!userId) return res.status(401).json({ success: false, message: 'Non autorisé' });
 
-    const { deviceId, email } = req.body;
+    const { deviceId, email, password } = req.body;
     if (!deviceId) return res.status(400).json({ success: false, message: 'ID appareil requis' });
     if (!email) return res.status(400).json({ success: false, message: 'Email du destinataire requis' });
+    if (!password) return res.status(400).json({ success: false, message: 'Mot de passe requis' });
 
-    const result = await deviceTransferService.initiateTransfer(userId, deviceId, email);
+    const result = await deviceTransferService.initiateTransfer(userId, deviceId, email, password);
     res.status(200).json(result);
   } catch (error: any) {
     const status = error.status || 400;

@@ -1,8 +1,8 @@
 import apiClient from "./api";
 
 export const deviceTransferService = {
-  async initiate(deviceId: string, email: string) {
-    const res = await apiClient.post("device-transfers/initiate", { deviceId, email });
+  async initiate(deviceId: string, email: string, password: string) {
+    const res = await apiClient.post("device-transfers/initiate", { deviceId, email, password });
     return res.data;
   },
 

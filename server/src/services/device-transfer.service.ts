@@ -2,9 +2,18 @@ import { pool, query } from '../database/db.ts';
 import { deviceTransferRepository } from '../repositories/device-transfer.repository.ts';
 import { deviceRepository } from '../repositories/device.repository.ts';
 import { mailService } from './mail.service.ts';
+import { UserService } from './auth.service.ts';
+
+const userService = new UserService();
 
 class DeviceTransferService {
-  async initiateTransfer(userId: string, deviceId: string, toEmail: string) {
+  async initiateTransfer(userId: string, deviceId: string, toEmail: string, password: string) {
+    const user = await userService.getUserById(userId);
+    if (!user) throw new Error('Utilisateur non trouvé');
+
+    const isPasswordValid = await userService.verifyPassword(user.mot_de_passe, password);
+    if (!isPasswordValid) throw new Error('Mot de passe incorrect');
+
     const device = await deviceRepository.findById(deviceId);
     if (!device) throw new Error('Appareil non trouvé');
     if (device.user_id !== userId) throw new Error('Vous n\'êtes pas le propriétaire de cet appareil');
@@ -85,7 +94,7 @@ class DeviceTransferService {
     const isLost = ['LOST', 'STOLEN', 'VOLE', 'PERDU'].includes((device.status || '').toUpperCase());
     if (isLost) throw new Error('Cet appareil a été signalé comme perdu ou volé et ne peut pas être transféré.');
 
-    await query('UPDATE my_devices SET user_id = $1, updated_at = NOW() WHERE id = $2', [userId, transfer.device_id]);
+    await query('UPDATE my_devices SET user_id = $1 WHERE id = $2', [userId, transfer.device_id]);
     await deviceTransferRepository.updateStatus(transfer.id, 'ACCEPTED', userId);
 
     const fromUserRes = await query('SELECT email, prenom, nom FROM users WHERE id = $1', [transfer.from_user_id]);

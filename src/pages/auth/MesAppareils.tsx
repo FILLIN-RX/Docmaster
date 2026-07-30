@@ -150,6 +150,7 @@ export default function MesAppareils() {
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [transferDeviceId, setTransferDeviceId] = useState<string | null>(null);
   const [transferEmail, setTransferEmail] = useState("");
+  const [transferPassword, setTransferPassword] = useState("");
   const [transferSending, setTransferSending] = useState(false);
   const [transferError, setTransferError] = useState("");
   const [transferSent, setTransferSent] = useState(false);
@@ -765,6 +766,7 @@ export default function MesAppareils() {
                       }
                       setTransferDeviceId(String(d.id));
                       setTransferEmail("");
+                      setTransferPassword("");
                       setTransferError("");
                       setTransferSent(false);
                       setTransferModalOpen(true);
@@ -850,7 +852,7 @@ export default function MesAppareils() {
       {/* Transfer Modal */}
       <Modal
         opened={transferModalOpen}
-        onClose={() => { setTransferModalOpen(false); setTransferDeviceId(null); setTransferSent(false); }}
+        onClose={() => { setTransferModalOpen(false); setTransferDeviceId(null); setTransferSent(false); setTransferPassword(""); }}
         centered
         radius="xl"
         size="sm"
@@ -876,7 +878,7 @@ export default function MesAppareils() {
             </ThemeIcon>
             <Title order={5} ta="center">Demande envoyée !</Title>
             <Text size="sm" c="dimmed" ta="center">Le destinataire recevra un email pour accepter ou refuser le transfert.</Text>
-            <Button fullWidth radius="xl" onClick={() => { setTransferModalOpen(false); setTransferDeviceId(null); }}>
+            <Button fullWidth radius="xl" onClick={() => { setTransferModalOpen(false); setTransferDeviceId(null); setTransferPassword(""); }}>
               Fermer
             </Button>
           </Stack>
@@ -891,8 +893,16 @@ export default function MesAppareils() {
               radius="xl"
               error={transferError}
             />
+            <PasswordInput
+              label="Votre mot de passe"
+              leftSection={<i className="fa-solid fa-lock" />}
+              placeholder="Confirmez votre mot de passe"
+              value={transferPassword}
+              onChange={(e) => { setTransferPassword(e.target.value); setTransferError(""); }}
+              radius="xl"
+            />
             <Group>
-              <Button flex={1} variant="outline" radius="xl" onClick={() => { setTransferModalOpen(false); setTransferDeviceId(null); }}>
+              <Button flex={1} variant="outline" radius="xl" onClick={() => { setTransferModalOpen(false); setTransferDeviceId(null); setTransferPassword(""); }}>
                 Annuler
               </Button>
               <Button
@@ -902,10 +912,11 @@ export default function MesAppareils() {
                 style={{ backgroundColor: "#1E3A2F" }}
                 onClick={async () => {
                   if (!transferEmail.trim()) { setTransferError("Veuillez saisir un email"); return; }
+                  if (!transferPassword.trim()) { setTransferError("Veuillez saisir votre mot de passe"); return; }
                   setTransferSending(true);
                   setTransferError("");
                   try {
-                    const res = await deviceTransferService.initiate(transferDeviceId!, transferEmail.trim());
+                    const res = await deviceTransferService.initiate(transferDeviceId!, transferEmail.trim(), transferPassword);
                     if (res.success) {
                       setTransferSent(true);
                       await fetchDevices(false);
@@ -919,7 +930,7 @@ export default function MesAppareils() {
                   }
                 }}
               >
-                <i className="fa-solid fa-paper-plane mr-1" /> Envoyer
+                {transferSending ? "En cours de transfert..." : <><i className="fa-solid fa-paper-plane mr-1" /> Envoyer</>}
               </Button>
             </Group>
           </Stack>

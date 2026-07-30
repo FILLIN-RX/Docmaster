@@ -153,7 +153,7 @@ export default function TransfertAppareil() {
         {!user ? (
           <Stack gap="sm">
             <Text size="sm" c="dimmed" ta="center">Connectez-vous pour accepter ou refuser ce transfert.</Text>
-            <Button fullWidth radius="xl" onClick={() => navigate(`/login?redirect=/transfert-appareil?token=${token}`)}>
+            <Button fullWidth radius="xl" onClick={() => navigate(`/login?redirect=${encodeURIComponent(`/transfert-appareil?token=${token}`)}`)}>
               Se connecter
             </Button>
           </Stack>

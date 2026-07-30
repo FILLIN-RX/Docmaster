@@ -40,6 +40,20 @@ export const devicesService = {
     }
   },
 
+  async updateMyDevice(id: string, formData: FormData) {
+    try {
+      const res = await apiClient.put<ApiResponse<Device>>(`devices/${id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return res.data;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw error;
+    }
+  },
+
   async reportLost(serial: string) {
     const res = await apiClient.patch<ApiResponse>(`devices/${serial}/report-lost`);
     return res.data;

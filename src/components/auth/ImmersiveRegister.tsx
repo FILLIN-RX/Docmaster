@@ -10,7 +10,7 @@ import { useI18n } from "../../context/I18nContext";
 import { authService } from "../../services/authService";
 import styles from "./ImmersiveRegister.module.css";
 import DocMascot from "./Docmascot";
-import bgLang from "../../assets/images/cni-poubelle.jpeg";
+import bgLang from "../../assets/images/login.jpg";
 
 const TOTAL_STEPS = 6;
 

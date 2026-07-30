@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Alert } from "@mantine/core";
 import { InputTooltip } from "../../components/auth/InputTooltip";
 import { GoogleButton, FacebookButton } from "../../components/auth/SocialButtons/SocialButtons";
@@ -12,6 +12,8 @@ export default function Login() {
   const { t } = useI18n();
   const { login, loginWithGoogle, user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectUrl = searchParams.get("redirect");
 
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [loginError, setLoginError] = useState("");
@@ -25,9 +27,9 @@ export default function Login() {
 
   useEffect(() => {
     if (user) {
-      navigate("/dashboard", { replace: true });
+      navigate(redirectUrl || "/dashboard", { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, navigate, redirectUrl]);
 
   useEffect(() => {
     if (showForgot && forgotRef.current) {

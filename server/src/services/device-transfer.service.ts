@@ -9,6 +9,9 @@ class DeviceTransferService {
     if (!device) throw new Error('Appareil non trouvé');
     if (device.user_id !== userId) throw new Error('Vous n\'êtes pas le propriétaire de cet appareil');
 
+    const isLost = ['LOST', 'STOLEN', 'VOLE', 'PERDU'].includes((device.status || '').toUpperCase());
+    if (isLost) throw new Error('Impossible de transférer un appareil signalé comme perdu ou volé. Vous devez d\'abord le marquer comme retrouvé.');
+
     const userRes = await query('SELECT id, prenom, nom FROM users WHERE email = $1', [toEmail]);
     if (userRes.rows.length === 0) throw new Error('Aucun utilisateur DocMaster trouvé avec cet email');
 
@@ -79,6 +82,8 @@ class DeviceTransferService {
 
     const device = await deviceRepository.findById(transfer.device_id);
     if (!device) throw new Error('Appareil introuvable');
+    const isLost = ['LOST', 'STOLEN', 'VOLE', 'PERDU'].includes((device.status || '').toUpperCase());
+    if (isLost) throw new Error('Cet appareil a été signalé comme perdu ou volé et ne peut pas être transféré.');
 
     await query('UPDATE my_devices SET user_id = $1, updated_at = NOW() WHERE id = $2', [userId, transfer.device_id]);
     await deviceTransferRepository.updateStatus(transfer.id, 'ACCEPTED', userId);

@@ -174,6 +174,19 @@ export default function MesAppareils() {
 
   const CACHE_KEY = "dm_devices_cache";
 
+  const safeSaveCache = (data: NormalizedDevice[]) => {
+    try {
+      const cleanData = data.map((d) => ({
+        ...d,
+        photo: d.photo?.startsWith("data:") ? null : d.photo,
+        files: (d.files || []).map((f) => ({ ...f, data: f.data?.startsWith("data:") ? "" : f.data })),
+      }));
+      localStorage.setItem(CACHE_KEY, JSON.stringify(cleanData));
+    } catch (e) {
+      console.warn("Impossible de sauvegarder le cache d'appareils", e);
+    }
+  };
+
   const fetchDevices = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
@@ -184,7 +197,7 @@ export default function MesAppareils() {
       if (result.success && Array.isArray(result.data)) {
         const normalized = result.data.map(normalizeDevice);
         setDevices(normalized);
-        localStorage.setItem(CACHE_KEY, JSON.stringify(normalized));
+        safeSaveCache(normalized);
       }
     } catch {
       try {
@@ -192,7 +205,7 @@ export default function MesAppareils() {
         if (result.success && Array.isArray(result.data)) {
           const normalized = result.data.map(normalizeDevice);
           setDevices(normalized);
-          localStorage.setItem(CACHE_KEY, JSON.stringify(normalized));
+          safeSaveCache(normalized);
         }
       } catch { }
     } finally {
@@ -204,15 +217,14 @@ export default function MesAppareils() {
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
       try {
-        setDevices(JSON.parse(cached));
-        setLoading(false);
-        fetchDevices(false);
-      } catch {
-        fetchDevices(true);
-      }
-    } else {
-      fetchDevices(true);
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setDevices(parsed);
+          setLoading(false);
+        }
+      } catch { }
     }
+    fetchDevices(devices.length === 0);
   }, [fetchDevices]);
 
   const filtered = devices.filter((d) => {
@@ -234,7 +246,7 @@ export default function MesAppareils() {
     setPhotoSerialPreview(null);
 
     if (id) {
-      const d = devices.find((x) => x.id === id);
+      const d = devices.find((x) => String(x.id) === String(id));
       if (!d) return;
       setSelectedType(d.type);
       setFNom(d.nom || "");
@@ -299,9 +311,13 @@ export default function MesAppareils() {
     if (selectedFiles.length > 0) formData.append("photo_facture", selectedFiles[0]);
 
     try {
-      const result = await devicesService.registerMyDevice(formData);
+      const result = editingId
+        ? await devicesService.updateMyDevice(editingId, formData)
+        : await devicesService.registerMyDevice(formData);
+
       if (result.success) {
-        await fetchDevices();
+        toast.success(editingId ? "Appareil modifié avec succès" : "Appareil enregistré avec succès");
+        await fetchDevices(false);
         closeAddModal();
       } else {
         toast.error(result.message || "Erreur lors de l'enregistrement");
@@ -330,7 +346,7 @@ export default function MesAppareils() {
 
   const deleteCurrentDevice = async () => {
     if (!detailId) return;
-    const d = devices.find((x) => x.id === detailId);
+    const d = devices.find((x) => String(x.id) === String(detailId));
     if (!d) return;
     if (!confirm(`Supprimer "${d.nom}" ? Cette action est irréversible.`)) return;
 
@@ -733,7 +749,27 @@ export default function MesAppareils() {
                       Signaler
                     </Button>
                   )}
-                  <Button fullWidth size="xs" radius="xl" variant="outline" color="gray" mt="xs" leftSection={<i className="fa-solid fa-arrow-right-arrow-left" />} onClick={(e) => { e.stopPropagation(); setTransferDeviceId(d.id); setTransferEmail(""); setTransferError(""); setTransferSent(false); setTransferModalOpen(true); }}>
+                  <Button
+                    fullWidth
+                    size="xs"
+                    radius="xl"
+                    variant="outline"
+                    color="gray"
+                    mt="xs"
+                    leftSection={<i className="fa-solid fa-arrow-right-arrow-left" />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isReported) {
+                        toast.error("Impossible de transférer un appareil signalé comme perdu ou volé.");
+                        return;
+                      }
+                      setTransferDeviceId(String(d.id));
+                      setTransferEmail("");
+                      setTransferError("");
+                      setTransferSent(false);
+                      setTransferModalOpen(true);
+                    }}
+                  >
                     Transférer
                   </Button>
                 </div>
@@ -872,6 +908,7 @@ export default function MesAppareils() {
                     const res = await deviceTransferService.initiate(transferDeviceId!, transferEmail.trim());
                     if (res.success) {
                       setTransferSent(true);
+                      await fetchDevices(false);
                     } else {
                       setTransferError(res.message || "Erreur lors de l'envoi");
                     }
@@ -1053,10 +1090,10 @@ export default function MesAppareils() {
       <Modal
         opened={detailOpen}
         onClose={closeDetail}
-        radius={0}
-        size="420px"
-        fullScreen
-        transitionProps={{ transition: "slide-from-right" }}
+        radius="xl"
+        size="480px"
+        centered
+        transitionProps={{ transition: "pop" }}
         title={
           <Group justify="space-between" w="100%">
             <Button variant="subtle" size="sm" leftSection={<i className="fa-solid fa-arrow-left" />} onClick={closeDetail}>

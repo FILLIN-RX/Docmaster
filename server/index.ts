@@ -120,7 +120,6 @@ export function createApp(): Application {
   ];
 
   // Chiller frontend origins
-  allowedOrigins.push("https://chillers-pi.vercel.app");
   allowedOrigins.push("http://localhost:4000");
 
   // Add custom domains from environment if set

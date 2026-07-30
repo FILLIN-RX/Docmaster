@@ -15,14 +15,6 @@ async function start() {
   // Get configuration from environment
   const PORT = process.env.PORT || 5000;
 
-  // Try connecting to MongoDB for Chiller (non-blocking: server starts even if it fails)
-  try {
-    const { connectDB } = await import('./backend-chillers/src/config/db.ts');
-    await connectDB();
-    console.log('🍃 [Chiller] MongoDB connected');
-  } catch (err: any) {
-    console.warn('⚠️  [Chiller] MongoDB unavailable (server will start without Chiller):', err.message);
-  }
 
   // Create the app (all middlewares and routes are set up in index.ts)
   const app = createApp();

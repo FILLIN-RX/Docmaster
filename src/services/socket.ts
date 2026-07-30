@@ -44,7 +44,10 @@ class SocketService {
 
     this.socket = io(socketUrl, {
       auth: { token },
-      transports: ["websocket", "polling"],
+      transports: ["polling", "websocket"],
+      reconnectionAttempts: 10,
+      reconnectionDelay: 2000,
+      timeout: 10000,
     });
 
     this.socket.on("connect", () => {
@@ -52,7 +55,7 @@ class SocketService {
     });
 
     this.socket.on("connect_error", (err) => {
-      console.error("[Socket] Connection error:", err.message);
+      console.warn("[Socket] Connection warning:", err.message);
     });
 
     this.socket.on("disconnect", (reason) => {

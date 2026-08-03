@@ -7,6 +7,7 @@ import "react-phone-input-2/lib/style.css";
 import { GoogleButton, FacebookButton } from "./SocialButtons/SocialButtons";
 import { useAuth } from "../../context/AuthContext";
 import { useI18n } from "../../context/I18nContext";
+import { useGoogleOneTap } from "../../hooks/useGoogleOneTap";
 import { authService } from "../../services/authService";
 import styles from "./ImmersiveRegister.module.css";
 import DocMascot from "./Docmascot";
@@ -17,6 +18,7 @@ const TOTAL_STEPS = 6;
 export default function ImmersiveRegister() {
   const { t, lang, setLanguage } = useI18n();
   const { register, loginWithGoogle } = useAuth();
+  useGoogleOneTap();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 

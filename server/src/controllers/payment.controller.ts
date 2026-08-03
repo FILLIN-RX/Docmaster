@@ -117,7 +117,8 @@ export const getMyTransactions = async (req: Request, res: Response) => {
 
     res.status(200).json({ 
       success: true, 
-      transactions: result.rows 
+      transactions: result.rows,
+      data: result.rows
     });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });

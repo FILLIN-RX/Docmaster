@@ -10,6 +10,19 @@ import type { Notification } from "../types/api";
 export default function AdminLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
+
+  // Auto-open on desktop resize, auto-close on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loadingNotifs, setLoadingNotifs] = useState(false);
@@ -61,10 +74,10 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4EFE6] flex">
+    <div className="h-screen bg-[#F5F6F7] flex overflow-hidden">
       <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${sidebarOpen ? "lg:ml-[260px]" : ""}`}>
+      <div className={`flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-200 ${sidebarOpen ? "ml-[260px]" : "ml-0"}`}>
         <AdminTopbar
           onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
           unreadCount={unreadCount}
@@ -82,15 +95,15 @@ export default function AdminLayout() {
           onMarkRead={handleMarkRead}
         />
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 custom-scroll">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-            >
-              <Outlet />
-            </motion.div>
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 admin-scroll">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+          >
+            <Outlet />
+          </motion.div>
         </main>
       </div>
     </div>

@@ -88,13 +88,13 @@ interface RecentMatch {
 const statusBadge = (status: string) => {
   switch (status) {
     case "CONFIRMED":
-      return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700">Haute confiance</span>;
+      return <span className="text-[11px] font-semibold px-2 py-0.5 rounded border bg-green-50 text-green-700 border-green-200">Haute confiance</span>;
     case "PENDING":
-      return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-700">Potentielle</span>;
+      return <span className="text-[11px] font-semibold px-2 py-0.5 rounded border bg-gray-100 text-gray-600 border-gray-200">Potentielle</span>;
     case "REJECTED":
-      return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-red-100 text-red-700">Rejetée</span>;
+      return <span className="text-[11px] font-semibold px-2 py-0.5 rounded border bg-red-50 text-red-700 border-red-200">Rejetée</span>;
     default:
-      return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-gray-100 text-gray-600">{status}</span>;
+      return <span className="text-[11px] font-semibold px-2 py-0.5 rounded border bg-gray-50 text-gray-600 border-gray-200">{status}</span>;
   }
 };
 
@@ -107,12 +107,12 @@ const criterionIcon = (c: MatchCriterion) => {
 
 function EventIcon({ type }: { type: string }) {
   switch (type) {
-    case "CYCLE_START": return <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center"><i className="fa-solid fa-rotate text-xs" /></div>;
-    case "CHECKING": return <div className="w-8 h-8 rounded-lg bg-gray-50 text-gray-400 flex items-center justify-center"><i className="fa-solid fa-search text-xs" /></div>;
-    case "MATCH_FOUND": return <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center"><i className="fa-solid fa-handshake text-xs" /></div>;
-    case "CYCLE_END": return <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-500 flex items-center justify-center"><i className="fa-solid fa-flag-checkered text-xs" /></div>;
-    case "CYCLE_ERROR": return <div className="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center"><i className="fa-solid fa-bug text-xs" /></div>;
-    default: return <div className="w-8 h-8 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center"><i className="fa-solid fa-circle text-xs" /></div>;
+    case "CYCLE_START": return <div className="w-7 h-7 rounded border border-blue-200 bg-blue-50 text-blue-500 flex items-center justify-center shrink-0"><i className="fa-solid fa-rotate text-xs" /></div>;
+    case "CHECKING": return <div className="w-7 h-7 rounded border border-gray-200 bg-gray-50 text-gray-400 flex items-center justify-center shrink-0"><i className="fa-solid fa-magnifying-glass text-xs" /></div>;
+    case "MATCH_FOUND": return <div className="w-7 h-7 rounded border border-green-200 bg-green-50 text-green-600 flex items-center justify-center shrink-0"><i className="fa-solid fa-handshake text-xs" /></div>;
+    case "CYCLE_END": return <div className="w-7 h-7 rounded border border-violet-200 bg-violet-50 text-violet-500 flex items-center justify-center shrink-0"><i className="fa-solid fa-flag-checkered text-xs" /></div>;
+    case "CYCLE_ERROR": return <div className="w-7 h-7 rounded border border-red-200 bg-red-50 text-red-500 flex items-center justify-center shrink-0"><i className="fa-solid fa-bug text-xs" /></div>;
+    default: return <div className="w-7 h-7 rounded border border-gray-200 bg-gray-100 text-gray-400 flex items-center justify-center shrink-0"><i className="fa-solid fa-circle text-xs" /></div>;
   }
 }
 
@@ -244,107 +244,92 @@ export default function AdminMatchingMonitor() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="animate-fade-in space-y-6">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-bricolage text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
-              Correspondances en direct
-            </h1>
-            <InfoTooltip text="Suivi en temps réel du moteur de matching : chaque cycle, chaque correspondance, chaque score." />
+            <h1 className="text-xl font-bold text-gray-900">Correspondances en direct</h1>
+            <InfoTooltip text="Suivi en temps réel du moteur de matching." />
           </div>
-          <p className="text-gray-400 text-sm font-medium mt-1">
-            Surveillance du matching automatique des documents perdus et trouvés
-          </p>
+          <p className="text-gray-500 text-[13px] mt-0.5">Surveillance du matching automatique des documents perdus et trouvés</p>
         </div>
         <div className="flex items-center gap-3">
           {cycleProgress && (
-            <span className="text-[12px] font-bold text-gray-400 tabular-nums">
-              {cycleProgress.current}/{cycleProgress.total}
-            </span>
+            <span className="text-[12px] font-semibold text-gray-500 tabular-nums">{cycleProgress.current}/{cycleProgress.total}</span>
           )}
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-bold ${cycleActive ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
-            <span className={`w-2 h-2 rounded-full ${cycleActive ? "bg-emerald-500 animate-pulse" : "bg-gray-400"}`} />
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded border text-[12px] font-semibold ${cycleActive ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-50 text-gray-500 border-gray-200"}`}>
+            <span className={`w-2 h-2 rounded-full ${cycleActive ? "bg-green-500 animate-pulse" : "bg-gray-400"}`} />
             {cycleActive ? "Cycle en cours" : "En attente"}
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard icon="fa-handshake" label="Correspondances" value={stats.totalMatches.toLocaleString()} color="#1E3A2F" bgColor="#E8F5EE" />
         <StatCard icon="fa-circle-check" label="Haute confiance" value={stats.highConfidence.toLocaleString()} color="#059669" bgColor="#ECFDF5" />
         <StatCard icon="fa-clock" label="Potentielles" value={stats.potential.toLocaleString()} color="#D97706" bgColor="#FFFBEB" />
         <StatCard icon="fa-star" label="Score moyen" value={`${stats.averageScore}/100`} color="#7C3AED" bgColor="#F5F3FF" />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-        <div className="xl:col-span-3 bg-white rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-5">
+        {/* Recent matches table */}
+        <div className="xl:col-span-3 bg-white border border-gray-200 rounded overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h3 className="font-bricolage text-base font-bold text-gray-900">Correspondances récentes</h3>
-              <span className="text-[11px] font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">{matches.length}</span>
+              <h3 className="text-sm font-bold text-gray-800">Correspondances récentes</h3>
+              <span className="text-[11px] font-semibold text-gray-400 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded">{matches.length}</span>
             </div>
           </div>
 
           {matches.length === 0 ? (
             <EmptyState icon="fa-solid fa-handshake" message="Aucune correspondance enregistrée" />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-gray-50">
-                    <th className="py-3 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date</th>
-                    <th className="py-3 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Document perdu</th>
-                    <th className="py-3 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Document trouvé</th>
-                    <th className="py-3 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Score</th>
-                    <th className="py-3 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Statut</th>
-                    <th className="py-3 px-4 text-center w-12"></th>
+            <div className="overflow-auto max-h-[480px] admin-scroll">
+              <table className="w-full text-left border-collapse">
+                <thead className="sticky top-0 bg-gray-50 z-10">
+                  <tr className="border-b border-gray-200">
+                    <th className="py-3 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Date</th>
+                    <th className="py-3 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Document perdu</th>
+                    <th className="py-3 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Document trouvé</th>
+                    <th className="py-3 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Score</th>
+                    <th className="py-3 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Statut</th>
+                    <th className="py-3 px-4 w-10"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-gray-100">
                   {matches.map((m) => {
                     const criteria = expandedMatchDetails[m.id];
                     const isExpanded = expandedRow === m.id && criteria;
                     return (
-                      <tr key={m.id} className="hover:bg-gray-50/40 transition-colors">
-                        <td className="py-3.5 px-4">
-                          <span className="text-[11px] font-bold text-gray-400">
-                            {new Date(m.created_at).toLocaleString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
-                          </span>
+                      <tr key={m.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="py-3 px-4 text-[11px] text-gray-400 whitespace-nowrap">
+                          {new Date(m.created_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
                         </td>
-                        <td className="py-3.5 px-4">
-                          <div className="flex flex-col">
-                            <span className="text-[13px] font-bold text-gray-900">{m.lost_identifiant}</span>
-                            <span className="text-[11px] text-gray-500">{m.lost_owner_name} · {m.lost_doc_type}</span>
-                            <span className="text-[10px] text-gray-400">{m.lost_ville}{m.lost_quartier ? `, ${m.lost_quartier}` : ""}</span>
+                        <td className="py-3 px-4">
+                          <div>
+                            <div className="text-[13px] font-semibold text-gray-900">{m.lost_identifiant}</div>
+                            <div className="text-[11px] text-gray-500">{m.lost_owner_name} · {m.lost_doc_type}</div>
                           </div>
                         </td>
-                        <td className="py-3.5 px-4">
-                          <div className="flex flex-col">
-                            <span className="text-[13px] font-bold text-gray-900">{m.found_identifiant}</span>
-                            <span className="text-[11px] text-gray-500">{m.found_owner_name} · {m.found_doc_type}</span>
-                            <span className="text-[10px] text-gray-400">{m.found_ville}{m.found_quartier ? `, ${m.found_quartier}` : ""}</span>
+                        <td className="py-3 px-4">
+                          <div>
+                            <div className="text-[13px] font-semibold text-gray-900">{m.found_identifiant}</div>
+                            <div className="text-[11px] text-gray-500">{m.found_owner_name} · {m.found_doc_type}</div>
                           </div>
                         </td>
-                        <td className="py-3.5 px-4 text-center">
-                          <div className="flex items-center gap-2 justify-center">
-                            <div className="w-16 h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                              <div
-                                className={`h-full rounded-full ${m.score >= 80 ? "bg-emerald-500" : m.score >= 50 ? "bg-amber-400" : "bg-gray-300"}`}
-                                style={{ width: `${m.score}%` }}
-                              />
+                        <td className="py-3 px-4 text-center">
+                          <div className="flex items-center gap-1.5 justify-center">
+                            <div className="w-12 h-1.5 rounded-full bg-gray-200 overflow-hidden">
+                              <div className={`h-full rounded-full ${m.score >= 80 ? "bg-green-500" : m.score >= 50 ? "bg-amber-400" : "bg-gray-300"}`} style={{ width: `${m.score}%` }} />
                             </div>
-                            <span className="text-[13px] font-black text-gray-900 tabular-nums">{m.score}</span>
+                            <span className="text-[13px] font-bold text-gray-900 tabular-nums">{m.score}</span>
                           </div>
                         </td>
-                        <td className="py-3.5 px-4 text-center">{statusBadge(m.status)}</td>
-                        <td className="py-3.5 px-4 text-center">
-                          <button
-                            onClick={() => toggleRow(m.id)}
-                            className={`w-7 h-7 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-all cursor-pointer ${!criteria ? "opacity-30 cursor-not-allowed" : ""}`}
-                            disabled={!criteria}
-                          >
-                            <i className={`fa-solid fa-chevron-down text-xs transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                        <td className="py-3 px-4 text-center">{statusBadge(m.status)}</td>
+                        <td className="py-3 px-4 text-center">
+                          <button onClick={() => toggleRow(m.id)} disabled={!criteria}
+                            className={`w-6 h-6 rounded border border-gray-200 hover:bg-gray-100 text-gray-400 transition-colors ${!criteria ? "opacity-30 cursor-not-allowed" : ""}`}>
+                            <i className={`fa-solid fa-chevron-down text-[9px] transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                           </button>
                         </td>
                       </tr>
@@ -355,26 +340,13 @@ export default function AdminMatchingMonitor() {
                     if (expandedRow !== m.id || !criteria) return null;
                     return (
                       <tr key={`${m.id}-detail`}>
-                        <td colSpan={6} className="p-0 bg-gray-50/60 border-b border-gray-100">
+                        <td colSpan={6} className="p-0 bg-gray-50 border-b border-gray-200">
                           <div className="py-3">
-                            <div className="flex items-center gap-2 px-4 mb-2">
-                              <i className="fa-solid fa-list-check text-[11px] text-gray-400" />
+                            <div className="px-4 mb-2">
                               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Détail des points attribués</span>
                             </div>
-                            <div className="divide-y divide-gray-100/60">
+                            <div className="divide-y divide-gray-100">
                               {criteria.map((c, i) => renderCriterionRow(c, i))}
-                            </div>
-                            <div className="flex items-center justify-end gap-3 px-4 pt-3 mt-1 border-t border-gray-200/60">
-                              <span className="text-[11px] font-bold text-gray-400 uppercase">Score total</span>
-                              <div className="flex items-center gap-2">
-                                <div className="w-24 h-2 rounded-full bg-gray-200 overflow-hidden">
-                                  <div
-                                    className={`h-full rounded-full ${m.score >= 80 ? "bg-emerald-500" : m.score >= 50 ? "bg-amber-400" : "bg-gray-300"}`}
-                                    style={{ width: `${m.score}%` }}
-                                  />
-                                </div>
-                                <span className="text-sm font-black text-gray-900 tabular-nums">{m.score}/100</span>
-                              </div>
                             </div>
                           </div>
                         </td>
@@ -387,83 +359,54 @@ export default function AdminMatchingMonitor() {
           )}
         </div>
 
-        <div className="xl:col-span-2 bg-white rounded-2xl border border-gray-200/60 shadow-sm flex flex-col overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
-            <h3 className="font-bricolage text-base font-bold text-gray-900">Flux en direct</h3>
-            <button
-              onClick={() => setLiveEvents([])}
-              className="text-[10px] font-bold text-gray-400 hover:text-gray-600 bg-gray-50 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
-            >
-              <i className="fa-solid fa-rotate-right mr-1" />Vider
+        {/* Live feed */}
+        <div className="xl:col-span-2 bg-white border border-gray-200 rounded flex flex-col overflow-hidden">
+          <div className="px-4 py-3.5 border-b border-gray-100 bg-gray-50 flex items-center justify-between shrink-0">
+            <h3 className="text-sm font-bold text-gray-800">Flux en direct</h3>
+            <button onClick={() => setLiveEvents([])} className="text-[11px] font-semibold text-gray-400 hover:text-gray-600 flex items-center gap-1 transition-colors">
+              <i className="fa-solid fa-rotate-right text-[9px]" /> Vider
             </button>
           </div>
-          <div
-            ref={feedRef}
-            className="flex-1 overflow-y-auto custom-scroll min-h-[400px] max-h-[600px]"
-          >
+          <div ref={feedRef} className="flex-1 overflow-y-auto admin-scroll min-h-[400px] max-h-[480px]">
             {liveEvents.length === 0 ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center py-12">
-                  <i className="fa-solid fa-wifi text-3xl text-gray-200 mb-3" />
-                  <p className="text-[13px] text-gray-400 font-medium">En attente d'événements...</p>
+                  <i className="fa-solid fa-wifi text-2xl text-gray-200 mb-3" />
+                  <p className="text-[13px] text-gray-400">En attente d'événements...</p>
                   <p className="text-[11px] text-gray-300 mt-1">Les cycles de matching apparaîtront ici</p>
                 </div>
               </div>
             ) : (
-              <div className="divide-y divide-gray-50">
+              <div className="divide-y divide-gray-100">
                 {liveEvents.map((ev) => (
-                  <div key={ev.id} className="px-4 py-3 hover:bg-gray-50/40 transition-colors">
-                    <div className="flex items-start gap-3">
+                  <div key={ev.id} className="px-4 py-3 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start gap-2.5">
                       <EventIcon type={ev.type} />
                       <div className="flex-1 min-w-0">
-                        {ev.type === "CYCLE_START" && (
-                          <p className="text-[13px] font-bold text-blue-600">Cycle de matching démarré</p>
-                        )}
+                        {ev.type === "CYCLE_START" && <p className="text-[13px] font-semibold text-blue-600">Cycle de matching démarré</p>}
                         {ev.type === "CHECKING" && (
                           <div>
-                            <p className="text-[13px] font-medium text-gray-700">
-                              Vérification <span className="font-bold text-gray-900">{(ev.data as LiveCheckingEvent).identifiant}</span>
-                            </p>
-                            <p className="text-[11px] text-gray-400">
-                              {(ev.data as LiveCheckingEvent).docType} · {(ev.data as LiveCheckingEvent).ownerName} · {(ev.data as LiveCheckingEvent).ville}
-                              <span className="ml-2 text-[10px] font-bold">
-                                {(ev.data as LiveCheckingEvent).progress.current}/{(ev.data as LiveCheckingEvent).progress.total}
-                              </span>
-                            </p>
+                            <p className="text-[13px] text-gray-700">Vérification <span className="font-semibold">{(ev.data as LiveCheckingEvent).identifiant}</span></p>
+                            <p className="text-[11px] text-gray-400">{(ev.data as LiveCheckingEvent).docType} · {(ev.data as LiveCheckingEvent).ownerName}</p>
                           </div>
                         )}
                         {ev.type === "MATCH_FOUND" && (
                           <div>
-                            <p className="text-[13px] font-medium text-gray-700">
-                              Correspondance trouvée
-                            </p>
-                            <p className="text-[11px] text-gray-500 mt-0.5">
-                              <span className="font-semibold text-gray-800">{(ev.data as LiveMatchEvent).lostDeclaration.identifiant_doc_dm}</span>
+                            <p className="text-[13px] font-semibold text-green-700">Correspondance trouvée</p>
+                            <p className="text-[11px] text-gray-500">
+                              <span className="font-semibold">{(ev.data as LiveMatchEvent).lostDeclaration.identifiant_doc_dm}</span>
                               <span className="text-gray-300 mx-1">⇄</span>
-                              <span className="font-semibold text-gray-800">{(ev.data as LiveMatchEvent).foundDeclaration.identifiant_doc_dm}</span>
+                              <span className="font-semibold">{(ev.data as LiveMatchEvent).foundDeclaration.identifiant_doc_dm}</span>
                             </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className={`text-[10px] font-black ${(ev.data as LiveMatchEvent).status === "CONFIRMED" ? "text-emerald-600" : "text-amber-600"}`}>
-                                {(ev.data as LiveMatchEvent).status === "CONFIRMED" ? "Haute confiance" : "Potentielle"}
-                              </span>
-                              <span className="text-gray-200">·</span>
-                              <span className="text-[11px] font-bold text-gray-700">Score: {(ev.data as LiveMatchEvent).totalScore}</span>
-                            </div>
                           </div>
                         )}
                         {ev.type === "CYCLE_END" && (
                           <div>
-                            <p className="text-[13px] font-bold text-purple-600">Cycle terminé</p>
-                            <p className="text-[11px] text-gray-500 mt-0.5">
-                              {(ev.data as LiveCycleEvent).processed} déclaration(s) traitée(s)
-                              {(ev.data as LiveCycleEvent).totalMatches ? ` · ${(ev.data as LiveCycleEvent).totalMatches} correspondance(s)` : ""}
-                              {(ev.data as LiveCycleEvent).durationMs ? ` · ${Math.round((ev.data as LiveCycleEvent).durationMs / 1000)}s` : ""}
-                            </p>
+                            <p className="text-[13px] font-semibold text-violet-600">Cycle terminé</p>
+                            <p className="text-[11px] text-gray-400">{(ev.data as LiveCycleEvent).processed} traitée(s)</p>
                           </div>
                         )}
-                        {ev.type === "CYCLE_ERROR" && (
-                          <p className="text-[13px] font-bold text-red-600">Erreur lors du cycle</p>
-                        )}
+                        {ev.type === "CYCLE_ERROR" && <p className="text-[13px] font-semibold text-red-600">Erreur lors du cycle</p>}
                       </div>
                       <span className="text-[10px] text-gray-400 whitespace-nowrap shrink-0 font-mono">
                         {new Date(ev.timestamp).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}

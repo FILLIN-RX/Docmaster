@@ -18,10 +18,10 @@ export default function ForgotPassword() {
     setError("");
     try {
       const res = await authService.requestPasswordReset({ email });
-      if (res.success) {
-        setSent(true);
-      } else {
+      if (res.success === false) {
         setError(res.message || t("forgot_send_error"));
+      } else {
+        setSent(true);
       }
     } catch {
       setError(t("forgot_send_error_network"));

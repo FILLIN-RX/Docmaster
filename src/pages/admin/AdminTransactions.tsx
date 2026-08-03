@@ -6,6 +6,7 @@ import Pagination from "../../components/ui/Pagination";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import EmptyState from "../../components/ui/EmptyState";
 import { exportCSV } from "../../utils/csv";
+import { statusBadgeClass } from "../../utils/statusBadge";
 
 interface Transaction {
   id: string;
@@ -17,11 +18,12 @@ interface Transaction {
   created_at?: string;
 }
 
-const statusStyles: Record<string, string> = {
-  completed: "bg-emerald-50 text-emerald-600 border-emerald-200/50",
-  success: "bg-emerald-50 text-emerald-600 border-emerald-200/50",
-  pending: "bg-amber-50 text-amber-600 border-amber-200/50",
-  failed: "bg-red-50 text-red-600 border-red-200/50",
+const statusLabel = (status: string | undefined, t: (k: string) => string) => {
+  const s = (status || "").toUpperCase();
+  if (["SUCCESS", "COMPLETED", "PAID"].includes(s)) return t("admin_completed");
+  if (s === "PENDING") return t("admin_pending");
+  if (["FAILED", "CANCELED", "CANCELLED"].includes(s)) return t("admin_failed");
+  return status || "—";
 };
 
 const methodIcons: Record<string, string> = {
@@ -57,7 +59,7 @@ export default function AdminTransactions() {
   const filtered = txns.filter((tx) => {
     const q = search.toLowerCase();
     if (q && !(tx.user_name || "").toLowerCase().includes(q)) return false;
-    if (statusFilter && tx.status !== statusFilter) return false;
+    if (statusFilter && (tx.status || "").toUpperCase() !== statusFilter) return false;
     return true;
   });
 
@@ -77,63 +79,74 @@ export default function AdminTransactions() {
   if (loading) { return <LoadingSpinner />; }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between mb-4 shrink-0">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-bricolage text-2xl font-black text-gray-900">{t("admin_transactions")}</h1>
+            <h1 className="text-xl font-bold text-gray-900">{t("admin_transactions")}</h1>
             <InfoTooltip text="Historique complet des transactions (abonnements, récupérations, récompenses)." />
           </div>
-          <p className="text-gray-400 text-[13px] font-medium mt-1">{t("admin_payment_history")}</p>
+          <p className="text-gray-500 text-[13px] mt-0.5">{t("admin_payment_history")}</p>
         </div>
-        <button onClick={handleExport} className="px-4 py-2 rounded-xl border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 transition-all flex items-center gap-1.5">
+        <button onClick={handleExport} className="flex items-center gap-1.5 px-3 py-2 border border-gray-300 rounded text-[12px] font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
           <i className="fa-solid fa-download text-[10px]" /> CSV
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200/60 overflow-hidden shadow-sm">
-        <div className="p-4 border-b border-gray-100 bg-gray-50/30 flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <i className="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 text-sm" />
+      <div className="bg-white border border-gray-200 rounded flex flex-col min-h-0">
+        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex flex-wrap items-center gap-2 shrink-0">
+          <div className="relative flex-1 min-w-[180px] max-w-xs">
+            <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
             <input type="search" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               placeholder="Rechercher par utilisateur..."
-              className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary transition-colors placeholder:text-gray-300" />
+              className="w-full pl-8 pr-3 py-2 bg-white border border-gray-200 rounded text-[13px] outline-none focus:border-[#D98A30] transition-colors placeholder:text-gray-400" />
           </div>
-          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white">
+          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+            className="px-3 py-2 border border-gray-200 rounded text-[13px] outline-none focus:border-[#D98A30] bg-white text-gray-700">
             <option value="">Tous statuts</option>
-            <option value="completed">Réussi</option>
-            <option value="pending">En attente</option>
-            <option value="failed">Échoué</option>
+            <option value="SUCCESS">Réussi</option>
+            <option value="PENDING">En attente</option>
+            <option value="FAILED">Échoué</option>
           </select>
+          <span className="text-[12px] text-gray-400 ml-auto">{total} transaction{total !== 1 ? "s" : ""}</span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/80">
-                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_user")}</th>
-                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_amount")}</th>
-                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_method")}<InfoTooltip text="Moyen de paiement utilisé" /></th>
-                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_status")}</th>
-                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_date")}</th>
+        <div className="overflow-auto flex-1 min-h-0">
+          <table className="w-full text-sm border-collapse">
+            <thead className="sticky top-0 bg-gray-50 z-10">
+              <tr className="border-b border-gray-200">
+                <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_user")}</th>
+                <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_amount")}</th>
+                <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_method")} <InfoTooltip text="Moyen de paiement" /></th>
+                <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_status")}</th>
+                <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_date")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-gray-100">
               {paginated.length === 0 ? (
                 <EmptyState icon="fa-solid fa-credit-card" message={t("admin_no_transactions")} colSpan={5} />
               ) : (
                 paginated.map((tx) => (
-                  <tr key={tx.id} className="hover:bg-gray-50/60 transition-colors">
-                    <td className="px-4 py-3.5 font-semibold text-gray-900">{tx.user_name || "—"}</td>
-                    <td className="px-4 py-3.5"><span className="font-bricolage font-extrabold text-gray-900">{tx.amount?.toLocaleString("fr-FR")} <span className="text-[11px] text-gray-400">XAF</span></span></td>
-                    <td className="px-4 py-3.5"><span className="flex items-center gap-2 text-gray-600"><i className={`${methodIcons[tx.payment_method || tx.method || ""] || "fa-solid fa-circle"} text-gray-400 text-[11px]`} />{(tx.payment_method || tx.method || "").replace(/_/g, " ") || "—"}</span></td>
-                    <td className="px-4 py-3.5">
-                      <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full border ${statusStyles[tx.status || ""] || "bg-gray-100 text-gray-400 border-gray-200"}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${tx.status === "completed" || tx.status === "success" ? "bg-emerald-500" : tx.status === "pending" ? "bg-amber-500" : tx.status === "failed" ? "bg-red-500" : "bg-gray-400"}`} />
-                        {tx.status === "completed" || tx.status === "success" ? t("admin_completed") : tx.status === "pending" ? t("admin_pending") : tx.status === "failed" ? t("admin_failed") : tx.status || "—"}
+                  <tr key={tx.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 font-semibold text-gray-900 text-[13px]">{tx.user_name || "—"}</td>
+                    <td className="px-4 py-3">
+                      <span className="font-bold text-gray-900">{tx.amount?.toLocaleString("fr-FR")}</span>
+                      <span className="text-[11px] text-gray-400 ml-1">XAF</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="flex items-center gap-1.5 text-[13px] text-gray-600">
+                        <i className={`${methodIcons[tx.payment_method || tx.method || ""] || "fa-solid fa-circle"} text-gray-400 text-[11px]`} />
+                        {(tx.payment_method || tx.method || "").replace(/_/g, " ") || "—"}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 text-gray-400 text-[12px]">{tx.created_at ? new Date(tx.created_at).toLocaleDateString("fr-FR") : "—"}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded border ${statusBadgeClass(tx.status)}`}>
+                        {statusLabel(tx.status, t)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-[11px] text-gray-400">
+                      {tx.created_at ? new Date(tx.created_at).toLocaleDateString("fr-FR") : "—"}
+                    </td>
                   </tr>
                 ))
               )}

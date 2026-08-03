@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { useI18n } from "../../context/I18nContext";
 import { useToast } from "../../context/ToastContext";
 import { subscriptionsService } from "../../services/subscriptionsService";
+import { useAuth } from "../../context/AuthContext";
+import { useGoogleOneTap } from "../../hooks/useGoogleOneTap";
 
 import type { Plan } from "../../types/api";
 
@@ -74,6 +76,8 @@ const tips = [
 export default function Home() {
   const { t, lang } = useI18n();
   const toast = useToast();
+  const { user } = useAuth();
+  useGoogleOneTap();
 
   const [plans, setPlans] = useState<Plan[]>([]);
 
@@ -105,7 +109,7 @@ export default function Home() {
       <TipsSection t={t} />
       <PartnersSection t={t} />
       <AppDownloadSection t={t} />
-      <StickyAppBar t={t} />
+    {/*<StickyAppBar t={t} />*/}
     </>
   );
 }

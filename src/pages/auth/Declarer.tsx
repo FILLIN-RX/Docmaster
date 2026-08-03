@@ -28,10 +28,12 @@ import {
   Paper,
   Switch,
   NumberInput,
+  Autocomplete,
+  Loader,
   rem,
   useMantineTheme,
 } from "@mantine/core";
-import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { useDisclosure, useMediaQuery, useDebouncedValue } from "@mantine/hooks";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { usePageReady } from "../../hooks/usePageReady";
 import SectionCard from "../../components/auth/Declarer/SectionCard";
@@ -95,6 +97,55 @@ export default function Declarer() {
   const [passwordError, setPasswordError] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+
+  // Instant place search (Nominatim / OpenStreetMap, no map)
+  const [placeQuery, setPlaceQuery] = useState("");
+  const [placeOptions, setPlaceOptions] = useState<string[]>([]);
+  const [placeSearching, setPlaceSearching] = useState(false);
+  const placeDetailsRef = useRef<Record<string, any>>({});
+  const [debouncedPlaceQuery] = useDebouncedValue(placeQuery, 300);
+
+  useEffect(() => {
+    const q = debouncedPlaceQuery.trim();
+    if (q.length < 3) {
+      setPlaceOptions([]);
+      return;
+    }
+    const ctrl = new AbortController();
+    setPlaceSearching(true);
+    fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&addressdetails=1&countrycodes=cm&limit=5`,
+      { signal: ctrl.signal }
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        const map: Record<string, any> = {};
+        const options = (Array.isArray(data) ? data : []).map((item: any) => {
+          map[item.display_name] = item;
+          return item.display_name;
+        });
+        placeDetailsRef.current = map;
+        setPlaceOptions(options);
+      })
+      .catch(() => {})
+      .finally(() => setPlaceSearching(false));
+    return () => ctrl.abort();
+  }, [debouncedPlaceQuery]);
+
+  const selectPlaceResult = (value: string) => {
+    setPlaceQuery(value);
+    const item = placeDetailsRef.current[value];
+    if (!item) return;
+    const addr = item.address || {};
+    const city = addr.city || addr.town || addr.village || addr.municipality || "";
+    if (city) {
+      setVille(city);
+      setFieldErrors((prev) => ({ ...prev, ville: "" }));
+    }
+    const quartier = addr.suburb || addr.quarter || addr.neighbourhood || addr.region || "";
+    if (quartier) setQuartier(quartier);
+    if (item.display_name) setLieuPrecis(item.display_name);
+  };
 
   const formLeftRef = useRef<HTMLDivElement>(null);
 
@@ -707,6 +758,34 @@ export default function Declarer() {
                 description={t("declarer_step4_desc")}
               >
                 <Stack gap="md">
+                  <Box>
+                    <FieldLabel icon="fa-magnifying-glass-location" labelKey="declarer_place_search" />
+                    <Autocomplete
+                      value={placeQuery}
+                      onChange={setPlaceQuery}
+                      data={placeOptions}
+                      limit={6}
+                      placeholder={t("declarer_placeholder_place_search")}
+                      onOptionSubmit={selectPlaceResult}
+                      filter={({ options }) => options}
+                      nothingFound={
+                        placeQuery.trim().length >= 3 && !placeSearching
+                          ? t("declarer_place_no_results")
+                          : undefined
+                      }
+                      rightSection={
+                        placeSearching ? (
+                          <Loader size="xs" />
+                        ) : (
+                          <i className="fa-solid fa-magnifying-glass" style={{ fontSize: 13, color: "var(--color-primary)" }} />
+                        )
+                      }
+                    />
+                    <Text size="xs" c="dimmed" mt={4}>
+                      {t("declarer_place_search_hint")}
+                    </Text>
+                  </Box>
+
                   <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
                     <Box>
                       <FieldLabel icon="fa-calendar-days" labelKey="declarer_loss_date" required />
@@ -902,6 +981,8 @@ export default function Declarer() {
                 </Stack>
               </SectionCard>
             )}
+            
+
 
             {/* Step navigation (sticky on mobile) */}
             <Paper
@@ -942,7 +1023,16 @@ export default function Declarer() {
                     {t("declarer_next")}
                   </Button>
                 ) : (
-                  <Box w={100} />
+                  <Button
+                    color="dark"
+                    radius="md"
+                    onClick={confirmHandlers.open}
+                    rightSection={<i className="fa-solid fa-circle-check" style={{ fontSize: 11 }} />}
+                    size="sm"
+                    styles={{ root: { background: "var(--color-green-dark)" } }}
+                  >
+                    {t("declarer_submit")}
+                  </Button>
                 )}
               </Group>
             </Paper>

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import apiClient from "../services/api";
 import { getToken, saveToken, deleteToken } from "../utils/cookie";
 import { auth, googleProvider } from "../services/firebase";
-import { signInWithPopup } from "firebase/auth";
+import { signInWithPopup, signInWithCredential, GoogleAuthProvider } from "firebase/auth";
 import { useToast } from "./ToastContext";
 
 const AuthContext = createContext(null);
@@ -128,33 +128,64 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const finalizeGoogleUser = useCallback(async (firebaseUser) => {
+    console.log("[GoogleAuth] finalizeGoogleUser — email:", firebaseUser?.email, "| displayName:", firebaseUser?.displayName);
+    const idToken = await firebaseUser.getIdToken();
+    console.log("[GoogleAuth] Firebase ID token obtenu (", idToken.length, "chars) — POST /auth/google-oauth");
+    const res = await apiClient.post("auth/google-oauth", {
+      token: idToken,
+      email: firebaseUser.email,
+      displayName: firebaseUser.displayName,
+      photoURL: firebaseUser.photoURL,
+    });
+    console.log("[GoogleAuth] Réponse backend — status:", res.status, "| token présent:", !!res.data?.token, "| user:", res.data?.user?.email);
+
+    if (res.data.token) {
+      saveSession(res.data.user, res.data.token);
+      setUser({ ...res.data.user, initial: getInitials(res.data.user.nom, res.data.user.prenom) });
+      import("../services/webPushService").then((m) => m.registerPushToken()).catch(() => {});
+      const prenom = res.data.user?.prenom || res.data.user?.nom || "";
+      toastSuccess(
+        `Ravi de vous revoir${prenom ? `, ${prenom}` : ""} ! Bienvenue sur DocMaster. 🎉`,
+        "Connexion réussie",
+        5000
+      );
+      console.log("[GoogleAuth] Session sauvegardée — connexion réussie");
+      return { success: true };
+    }
+    console.warn("[GoogleAuth] Aucun token dans la réponse backend");
+    return { success: false, message: "Erreur lors de la connexion Google" };
+  }, [toastSuccess]);
+
   const loginWithGoogle = useCallback(async () => {
     try {
+      console.log("[GoogleAuth] Popup Google ouvert (loginWithGoogle)");
       const result = await signInWithPopup(auth, googleProvider);
-      const idToken = await result.user.getIdToken();
-      
-      const res = await apiClient.post("auth/google-oauth", {
-        token: idToken,
-        email: result.user.email,
-        displayName: result.user.displayName,
-        photoURL: result.user.photoURL
-      });
-
-      if (res.data.token) {
-        saveSession(res.data.user, res.data.token);
-        setUser({ ...res.data.user, initial: getInitials(res.data.user.nom, res.data.user.prenom) });
-        import("../services/webPushService").then((m) => m.registerPushToken()).catch(() => {});
-        return { success: true };
-      }
-      return { success: false, message: "Erreur lors de la connexion Google" };
+      console.log("[GoogleAuth] Popup résolue — user:", result.user?.email);
+      return await finalizeGoogleUser(result.user);
     } catch (err: any) {
-      console.error("Google Login Error:", err);
+      console.error("[GoogleAuth] Erreur popup:", err?.code || err?.message || err);
       return {
         success: false,
         message: err.response?.data?.error || err.message || "Erreur de connexion Google",
       };
     }
-  }, []);
+  }, [finalizeGoogleUser]);
+
+  const loginWithGoogleCredential = useCallback(async (credential: string) => {
+    try {
+      console.log("[GoogleAuth] One Tap — signInWithCredential (credential:", credential.slice(0, 30) + "...)");
+      const result = await signInWithCredential(auth, GoogleAuthProvider.credential(credential));
+      console.log("[GoogleAuth] signInWithCredential réussi — user:", result.user?.email);
+      return await finalizeGoogleUser(result.user);
+    } catch (err: any) {
+      console.error("[GoogleAuth] Erreur One Tap:", err?.code || err?.message || err);
+      return {
+        success: false,
+        message: err.response?.data?.error || err.message || "Erreur de connexion Google",
+      };
+    }
+  }, [finalizeGoogleUser]);
 
   const register = useCallback(async (userData) => {
     try {
@@ -235,7 +266,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, register, logout, updateUser, deleteAccount }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, loginWithGoogleCredential, register, logout, updateUser, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );

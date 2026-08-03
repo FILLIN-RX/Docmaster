@@ -120,12 +120,13 @@ export default function AdminDeclarations() {
 
   const statusBadgeClass = (status: string) => {
     switch (status) {
-      case "MATCHED": return "bg-green-50 text-green-700";
-      case "PENDING": return "bg-yellow-50 text-yellow-700";
-      case "RETURNED": return "bg-blue-50 text-blue-700";
-      case "SEARCHING": return "bg-blue-50 text-blue-600";
-      case "CANCELLED": return "bg-red-50 text-red-600";
-      default: return "bg-gray-100 text-gray-500";
+      case "MATCHED":   return "bg-green-50 text-green-700 border-green-200";
+      case "RETURNED":  return "bg-green-50 text-green-700 border-green-200";
+      case "PENDING":   return "bg-gray-100 text-gray-500 border-gray-200";
+      case "SEARCHING": return "bg-gray-100 text-gray-500 border-gray-200";
+      case "CANCELLED": return "bg-red-50 text-red-700 border-red-200";
+      case "REJECTED":  return "bg-red-50 text-red-700 border-red-200";
+      default:          return "bg-gray-50 text-gray-500 border-gray-200";
     }
   };
 
@@ -157,43 +158,46 @@ export default function AdminDeclarations() {
   }
 
   return (
-    <div>
-      <header className="flex items-center justify-between mb-6">
+    <div className="flex flex-col h-full">
+      <header className="flex items-center justify-between mb-4 shrink-0">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-bricolage text-2xl font-black text-gray-900">{t("admin_declarations")}</h1>
-            <InfoTooltip text="Toutes les déclarations de perte et de trouvaille. Cliquez sur une ligne pour voir les détails complets avec aperçu PDF." />
+            <h1 className="text-xl font-bold text-gray-900">{t("admin_declarations")}</h1>
+            <InfoTooltip text="Toutes les déclarations de perte et de trouvaille. Cliquez sur une ligne pour voir les détails." />
           </div>
-          <p className="text-gray-400 text-[13px] font-medium mt-1">{t("admin_all_declarations")}</p>
+          <p className="text-gray-500 text-[13px] mt-0.5">{t("admin_all_declarations")}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={handleExport} className="px-4 py-2 rounded-xl border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 transition-all flex items-center gap-1.5">
+          <button onClick={handleExport} className="flex items-center gap-1.5 px-3 py-2 border border-gray-300 rounded text-[12px] font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
             <i className="fa-solid fa-download text-[10px]" /> CSV
           </button>
-          <button onClick={loadData} className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-dark transition-colors flex items-center gap-2">
-            <i className="fa-solid fa-rotate-right" /> {t("admin_declarations_refresh")}
+          <button onClick={loadData} className="flex items-center gap-1.5 px-3 py-2 bg-[#1E3A2F] text-white rounded text-[12px] font-semibold hover:bg-[#2D5A42] transition-colors">
+            <i className="fa-solid fa-rotate-right text-[10px]" /> {t("admin_declarations_refresh")}
           </button>
         </div>
       </header>
 
-      <div className="bg-white rounded-2xl border border-gray-200/60 overflow-hidden shadow-sm">
-        <div className="p-4 border-b border-gray-100 bg-gray-50/30 flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <i className="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 text-sm" />
+      <div className="bg-white border border-gray-200 rounded flex flex-col min-h-0">
+        {/* Filters */}
+        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex flex-wrap items-center gap-2 shrink-0">
+          <div className="relative flex-1 min-w-[180px] max-w-xs">
+            <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
             <input
               type="search"
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              placeholder="Rechercher nom, réf, numéro doc..."
-              className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary transition-colors placeholder:text-gray-300"
+              placeholder="Nom, réf, numéro doc..."
+              className="w-full pl-8 pr-3 py-2 bg-white border border-gray-200 rounded text-[13px] outline-none focus:border-[#D98A30] transition-colors placeholder:text-gray-400"
             />
           </div>
-          <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }} className="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white">
+          <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
+            className="px-3 py-2 border border-gray-200 rounded text-[13px] outline-none focus:border-[#D98A30] bg-white text-gray-700">
             <option value="">Tous types</option>
             <option value="LOST">Perte</option>
             <option value="FOUND">Trouvaille</option>
           </select>
-          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white">
+          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+            className="px-3 py-2 border border-gray-200 rounded text-[13px] outline-none focus:border-[#D98A30] bg-white text-gray-700">
             <option value="">Tous statuts</option>
             <option value="AVAILABLE">Disponible</option>
             <option value="MATCHED">Correspondance</option>
@@ -202,54 +206,69 @@ export default function AdminDeclarations() {
             <option value="SEARCHING">Recherche</option>
             <option value="CANCELLED">Annulé</option>
           </select>
+          <span className="text-[12px] text-gray-400 ml-auto">{total} déclaration{total !== 1 ? "s" : ""}</span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100">
-                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_date")}</th>
-                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_declarations_reference")}<InfoTooltip text="Identifiant unique du document déclaré" /></th>
-                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_declarations_photo")}</th>
-                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_declarations_doc_type")}</th>
-                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_declarations_doc_name")}</th>
-                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_declarations_type")}</th>
-                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_status")}</th>
-                <th className="text-right px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_actions")}</th>
+        {/* Table */}
+        <div className="overflow-auto flex-1 min-h-0">
+          <table className="w-full text-sm border-collapse">
+            <thead className="sticky top-0 bg-gray-50 z-10">
+              <tr className="border-b border-gray-200">
+                <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_date")}</th>
+                <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  {t("admin_declarations_reference")} <InfoTooltip text="Identifiant unique" />
+                </th>
+                <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_declarations_photo")}</th>
+                <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_declarations_doc_type")}</th>
+                <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_declarations_doc_name")}</th>
+                <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_declarations_type")}</th>
+                <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_status")}</th>
+                <th className="text-right px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_actions")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
-              {loading ? (
-                <tr><td colSpan={8} className="text-center py-8 text-gray-400">{t("admin_sms_loading")}</td></tr>
-              ) : declarations.length === 0 ? (
+            <tbody className="divide-y divide-gray-100">
+              {declarations.length === 0 ? (
                 <EmptyState icon="fa-solid fa-folder-open" message={t("admin_no_declarations")} colSpan={8} />
               ) : (
                 declarations.map((d) => {
                   const ref = d.identifiant_doc_dm || (d.id ? d.id.substring(0, 8) : "N/A");
                   return (
-                    <tr key={d.id} className={`hover:bg-gray-50/60 transition-colors cursor-pointer relative ${loadingRowId === d.id ? "pointer-events-none opacity-60" : ""}`} onClick={() => openDetail(d)}>
-                      <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-400">{d.created_at ? new Date(d.created_at).toLocaleString("fr-FR") : "—"}</td>
-                      <td className="px-4 py-3 font-mono text-xs font-bold text-primary-dark">{ref}</td>
+                    <tr
+                      key={d.id}
+                      className={`hover:bg-gray-50 transition-colors cursor-pointer ${loadingRowId === d.id ? "pointer-events-none opacity-60" : ""}`}
+                      onClick={() => openDetail(d)}
+                    >
+                      <td className="px-4 py-3 text-[11px] text-gray-400 whitespace-nowrap">
+                        {d.created_at ? new Date(d.created_at).toLocaleDateString("fr-FR") : "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <code className="text-[11px] font-bold text-[#1E3A2F] bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded">{ref}</code>
+                      </td>
                       <td className="px-4 py-3">
                         {photoUrl(d) ? (
-                          <img src={photoUrl(d)!} alt="" className="w-10 h-10 rounded-lg object-cover border border-[#EAE3D8]" onClick={(e) => { e.stopPropagation(); window.open(photoUrl(d)!, "_blank"); }} />
+                          <img src={photoUrl(d)!} alt="" className="w-9 h-9 rounded border border-gray-200 object-cover" onClick={(e) => { e.stopPropagation(); window.open(photoUrl(d)!, "_blank"); }} />
                         ) : (
-                          <div className="w-10 h-10 rounded-lg bg-[#F4EFE6] flex items-center justify-center text-[10px] text-gray-400 italic">N/A</div>
+                          <div className="w-9 h-9 rounded border border-gray-200 bg-gray-100 flex items-center justify-center text-[9px] text-gray-400">N/A</div>
                         )}
                       </td>
-                      <td className="px-4 py-3 font-bold text-sm">{d.docTypeInfo?.nom || d.doc_type || "—"}</td>
-                      <td className="px-4 py-3 text-sm font-medium">{d.owner_name || d.nom_complet || "N/A"}</td>
+                      <td className="px-4 py-3 text-[13px] font-semibold text-gray-800">{d.docTypeInfo?.nom || d.doc_type || "—"}</td>
+                      <td className="px-4 py-3 text-[13px] text-gray-700">{d.owner_name || d.nom_complet || "N/A"}</td>
                       <td className="px-4 py-3">
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${d.declaration_type === "LOST" ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700"}`}>
+                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${d.declaration_type === "LOST" ? "bg-red-50 text-red-700 border-red-200" : "bg-green-50 text-green-700 border-green-200"}`}>
                           {d.declaration_type === "LOST" ? t("admin_lost") : t("admin_found")}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${statusBadgeClass(d.status)}`}>{statusLabel(d.status)}</span>
+                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${statusBadgeClass(d.status)}`}>
+                          {statusLabel(d.status)}
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                        <button onClick={() => handleDownloadPdf(d.id)} className="bg-primary text-white text-xs px-3 py-1.5 rounded-lg font-bold hover:bg-primary-dark transition-colors">
-                          <i className="fa-solid fa-file-pdf mr-1" /> PDF
+                        <button
+                          onClick={() => handleDownloadPdf(d.id)}
+                          className="flex items-center gap-1 px-2.5 py-1.5 border border-gray-300 rounded text-[11px] font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                        >
+                          <i className="fa-solid fa-file-pdf text-red-500 text-[10px]" /> PDF
                         </button>
                       </td>
                     </tr>
@@ -263,24 +282,24 @@ export default function AdminDeclarations() {
       </div>
 
       {selected && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50" onClick={closeDetail}>
-          <div className="bg-white rounded-2xl w-full max-w-4xl p-6 border border-gray-200/60 shadow-xl max-h-[90vh] overflow-y-auto mx-4" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bricolage text-lg font-bold text-gray-900 flex items-center gap-2">
-                {t("admin_declaration_detail_title")}
-                {selected.declaration_type === "LOST" ? (
-                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-red-50 text-red-600">Perte</span>
-                ) : (
-                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-green-50 text-green-700">Trouvaille</span>
-                )}
-                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${statusBadgeClass(selected.status)}`}>{statusLabel(selected.status)}</span>
-              </h3>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={closeDetail}>
+          <div className="bg-white rounded-lg w-full max-w-4xl border border-gray-200 shadow-xl max-h-[90vh] overflow-y-auto mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <div className="flex items-center gap-2">
-                <button onClick={() => handleDownloadPdf(selected.id)} className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 transition-all flex items-center gap-1.5">
-                  <i className="fa-solid fa-download" /> Télécharger PDF
+                <h3 className="font-bold text-base text-gray-900">{t("admin_declaration_detail_title")}</h3>
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${selected.declaration_type === "LOST" ? "bg-red-50 text-red-700 border-red-200" : "bg-green-50 text-green-700 border-green-200"}`}>
+                  {selected.declaration_type === "LOST" ? "Perte" : "Trouvaille"}
+                </span>
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${statusBadgeClass(selected.status)}`}>
+                  {statusLabel(selected.status)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => handleDownloadPdf(selected.id)} className="flex items-center gap-1.5 px-3 py-2 border border-gray-300 rounded text-[12px] font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+                  <i className="fa-solid fa-download text-[10px]" /> Télécharger PDF
                 </button>
-                <button onClick={closeDetail} className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#EAE3D8] text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all">
-                  <i className="fa-solid fa-xmark text-sm" />
+                <button onClick={closeDetail} className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all">
+                  <i className="fa-solid fa-xmark text-xs" />
                 </button>
               </div>
             </div>
@@ -288,236 +307,121 @@ export default function AdminDeclarations() {
             {detailLoading ? (
               <div className="flex items-center justify-center py-16"><LoadingSpinner /></div>
             ) : (
-              <div className="space-y-8">
+              <div className="p-6 space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="font-bricolage text-base font-bold text-gray-800 flex items-center gap-2">
-                      <i className="fa-solid fa-image text-primary" /> Photos du document
+                  {/* Photos */}
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                      <i className="fa-solid fa-image text-gray-400" /> Photos du document
                     </h4>
                     <div className="flex gap-3 flex-wrap">
                       {photoUrl(selected) ? (
-                        <img
-                          src={photoUrl(selected)!}
-                          alt="Recto"
-                          className="w-48 h-36 rounded-xl object-cover border border-[#EAE3D8] cursor-pointer hover:opacity-90 transition-opacity"
-                          onClick={() => window.open(photoUrl(selected)!, "_blank")}
-                        />
+                        <img src={photoUrl(selected)!} alt="Recto" className="w-44 h-32 rounded border border-gray-200 object-cover cursor-pointer hover:opacity-90" onClick={() => window.open(photoUrl(selected)!, "_blank")} />
                       ) : (
-                        <div className="w-48 h-36 rounded-xl bg-[#F4EFE6] flex items-center justify-center text-xs text-gray-400 italic border border-dashed border-gray-300">Pas de photo recto</div>
+                        <div className="w-44 h-32 rounded border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center text-xs text-gray-400">Pas de photo recto</div>
                       )}
                       {detailPhotoUrl(selected.photo_verso) ? (
-                        <img
-                          src={detailPhotoUrl(selected.photo_verso)!}
-                          alt="Verso"
-                          className="w-48 h-36 rounded-xl object-cover border border-[#EAE3D8] cursor-pointer hover:opacity-90 transition-opacity"
-                          onClick={() => window.open(detailPhotoUrl(selected.photo_verso)!, "_blank")}
-                        />
+                        <img src={detailPhotoUrl(selected.photo_verso)!} alt="Verso" className="w-44 h-32 rounded border border-gray-200 object-cover cursor-pointer hover:opacity-90" onClick={() => window.open(detailPhotoUrl(selected.photo_verso)!, "_blank")} />
                       ) : (
-                        <div className="w-48 h-36 rounded-xl bg-[#F4EFE6] flex items-center justify-center text-xs text-gray-400 italic border border-dashed border-gray-300">Pas de photo verso</div>
+                        <div className="w-44 h-32 rounded border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center text-xs text-gray-400">Pas de photo verso</div>
                       )}
                     </div>
                     {selected.counterPartPhotoRecto && (
-                      <div>
-                        <h5 className="font-semibold text-sm text-gray-600 mb-2 flex items-center gap-1.5">
-                          <i className="fa-solid fa-arrows-turn-right text-primary" /> Photos de la contrepartie
-                        </h5>
+                      <div className="mt-4">
+                        <h5 className="text-[12px] font-semibold text-gray-600 mb-2">Photos de la contrepartie</h5>
                         <div className="flex gap-3 flex-wrap">
                           {detailPhotoUrl(selected.counterPartPhotoRecto) && (
-                            <img src={detailPhotoUrl(selected.counterPartPhotoRecto)!} alt="Contrepartie recto" className="w-36 h-28 rounded-xl object-cover border border-[#EAE3D8] cursor-pointer hover:opacity-90" onClick={() => window.open(detailPhotoUrl(selected.counterPartPhotoRecto)!, "_blank")} />
+                            <img src={detailPhotoUrl(selected.counterPartPhotoRecto)!} alt="Contrepartie recto" className="w-32 h-24 rounded border border-gray-200 object-cover cursor-pointer" onClick={() => window.open(detailPhotoUrl(selected.counterPartPhotoRecto)!, "_blank")} />
                           )}
                           {detailPhotoUrl(selected.counterPartPhotoVerso) && (
-                            <img src={detailPhotoUrl(selected.counterPartPhotoVerso)!} alt="Contrepartie verso" className="w-36 h-28 rounded-xl object-cover border border-[#EAE3D8] cursor-pointer hover:opacity-90" onClick={() => window.open(detailPhotoUrl(selected.counterPartPhotoVerso)!, "_blank")} />
+                            <img src={detailPhotoUrl(selected.counterPartPhotoVerso)!} alt="Contrepartie verso" className="w-32 h-24 rounded border border-gray-200 object-cover cursor-pointer" onClick={() => window.open(detailPhotoUrl(selected.counterPartPhotoVerso)!, "_blank")} />
                           )}
                         </div>
                       </div>
                     )}
                   </div>
 
-                  <div className="space-y-4">
-                    <h4 className="font-bricolage text-base font-bold text-gray-800 flex items-center gap-2">
-                      <i className="fa-solid fa-circle-info text-primary" /> Informations
+                  {/* Info grid */}
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                      <i className="fa-solid fa-circle-info text-gray-400" /> Informations
                     </h4>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Référence</span>
-                        <span className="font-mono text-xs font-bold text-primary-dark">{selected.identifiant_doc_dm || selected.id?.substring(0, 8) || "—"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Type de document</span>
-                        <span className="font-semibold">{selected.docTypeInfo?.nom || selected.doc_type || "—"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Propriétaire</span>
-                        <span className="font-semibold">{selected.owner_name || selected.nom_complet || "—"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Numéro de document</span>
-                        <span className="font-mono text-xs">{selected.numero_document || selected.document_number || "—"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Contact</span>
-                        <span>{selected.email_owner || selected.telephone_owner || "—"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Date déclaration</span>
-                        <span>{selected.created_at ? new Date(selected.created_at).toLocaleString("fr-FR") : "—"}</span>
-                      </div>
-                      {selected.date_perte && (
-                        <div>
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Date de perte</span>
-                          <span>{new Date(selected.date_perte).toLocaleDateString("fr-FR")}</span>
+                    <div className="grid grid-cols-2 gap-2 text-[13px]">
+                      {[
+                        { label: "Référence", value: <code className="text-[11px] font-bold text-[#1E3A2F]">{selected.identifiant_doc_dm || selected.id?.substring(0, 8) || "—"}</code> },
+                        { label: "Type de document", value: selected.docTypeInfo?.nom || selected.doc_type || "—" },
+                        { label: "Propriétaire", value: selected.owner_name || selected.nom_complet || "—" },
+                        { label: "N° document", value: <code className="text-[11px]">{selected.numero_document || selected.document_number || "—"}</code> },
+                        { label: "Contact", value: selected.email_owner || selected.telephone_owner || "—" },
+                        { label: "Date déclaration", value: selected.created_at ? new Date(selected.created_at).toLocaleDateString("fr-FR") : "—" },
+                        ...(selected.date_perte ? [{ label: "Date de perte", value: new Date(selected.date_perte).toLocaleDateString("fr-FR") }] : []),
+                        ...(selected.lieu_perte ? [{ label: "Lieu de perte", value: selected.lieu_perte }] : []),
+                        ...(selected.date_trouvee ? [{ label: "Date trouvée", value: new Date(selected.date_trouvee).toLocaleDateString("fr-FR") }] : []),
+                        { label: "Ville", value: selected.ville || "—" },
+                        { label: "Région", value: selected.region || "—" },
+                        ...(selected.urgence != null ? [{ label: "Urgence", value: `${selected.urgence}/5` }] : []),
+                        { label: "Récompense", value: selected.recompense_montant || selected.recompense || "—" },
+                        { label: "État physique", value: selected.etat_physique || "—" },
+                      ].map((row, i) => (
+                        <div key={i} className="p-2.5 bg-gray-50 border border-gray-100 rounded">
+                          <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{row.label}</span>
+                          <span className="text-gray-800 font-medium">{row.value}</span>
                         </div>
-                      )}
-                      {selected.lieu_perte && (
-                        <div>
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Lieu de perte</span>
-                          <span>{selected.lieu_perte}</span>
-                        </div>
-                      )}
-                      {selected.date_trouvee && (
-                        <div>
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Date trouvée</span>
-                          <span>{new Date(selected.date_trouvee).toLocaleDateString("fr-FR")}</span>
-                        </div>
-                      )}
-                      {selected.found_location && (
-                        <div>
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Lieu trouvé</span>
-                          <span>{typeof selected.found_location === 'object' ? (selected.found_location as any).city || JSON.stringify(selected.found_location) : selected.found_location}</span>
-                        </div>
-                      )}
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Ville</span>
-                        <span>{selected.ville || "—"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Région</span>
-                        <span>{selected.region || "—"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Pays</span>
-                        <span>{selected.pays || "—"}</span>
-                      </div>
-                      {selected.urgence != null && (
-                        <div>
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Urgence</span>
-                          <span className="font-semibold">{selected.urgence}/5</span>
-                        </div>
-                      )}
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Récompense</span>
-                        <span className="font-semibold text-primary-dark">{selected.recompense_montant || selected.recompense || "—"}</span>
-                      </div>
-                      {selected.date_expiration && (
-                        <div>
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Expiration</span>
-                          <span>{new Date(selected.date_expiration).toLocaleDateString("fr-FR")}</span>
-                        </div>
-                      )}
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">État physique</span>
-                        <span>{selected.etat_physique || "—"}</span>
-                      </div>
+                      ))}
                     </div>
                     {selected.description && (
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Description</span>
-                        <p className="text-sm text-gray-600 bg-gray-50 rounded-xl p-3">{selected.description}</p>
-                      </div>
-                    )}
-                    {selected.metadata && Object.keys(selected.metadata).length > 0 && (
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Informations complémentaires</span>
-                        <div className="bg-gray-50 rounded-xl p-3 space-y-1.5">
-                          {Object.entries(selected.metadata).map(([label, value]) => (
-                            <div key={label} className="flex items-center gap-2 text-sm">
-                              <span className="font-semibold text-gray-500">{label} :</span>
-                              <span className="text-gray-700">{value || "—"}</span>
-                            </div>
-                          ))}
-                        </div>
+                      <div className="mt-3 p-3 bg-gray-50 border border-gray-100 rounded">
+                        <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Description</span>
+                        <p className="text-[13px] text-gray-700">{selected.description}</p>
                       </div>
                     )}
                   </div>
                 </div>
 
+                {/* Counterpart */}
                 {selected.counterPart && (
-                  <div className="bg-blue-50/40 border border-blue-100 rounded-2xl p-5 space-y-3">
-                    <h4 className="font-bricolage text-base font-bold text-gray-800 flex items-center gap-2">
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded">
+                    <h4 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
                       <i className="fa-solid fa-handshake text-blue-500" /> Correspondance trouvée
                     </h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Nom complet</span>
-                        <span className="font-semibold">{selected.counterPart.prenom} {selected.counterPart.nom}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Téléphone</span>
-                        <span>{selected.counterPart.telephone || "—"}</span>
-                      </div>
-                      {selected.counterPart.photo_url && (
-                        <div>
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Photo</span>
-                          <img src={selected.counterPart.photo_url.startsWith("http") ? selected.counterPart.photo_url : `${window.location.origin}/${selected.counterPart.photo_url.replace(/^\//, "")}`} alt="" className="w-10 h-10 rounded-full object-cover" />
-                        </div>
-                      )}
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-[13px]">
+                      <div><span className="block text-[10px] font-bold text-gray-400 uppercase mb-0.5">Nom complet</span><span className="font-semibold">{selected.counterPart.prenom} {selected.counterPart.nom}</span></div>
+                      <div><span className="block text-[10px] font-bold text-gray-400 uppercase mb-0.5">Téléphone</span><span>{selected.counterPart.telephone || "—"}</span></div>
                     </div>
                   </div>
                 )}
 
+                {/* Claim */}
                 {selected.claim && (
-                  <div className={`rounded-2xl p-5 space-y-3 ${selected.claim.is_validated ? "bg-green-50/40 border border-green-100" : "bg-yellow-50/40 border border-yellow-100"}`}>
-                    <h4 className="font-bricolage text-base font-bold text-gray-800 flex items-center gap-2">
-                      <i className={`fa-solid ${selected.claim.is_validated ? "fa-check-circle text-green-500" : "fa-clock text-yellow-500"}`} />
+                  <div className={`p-4 border rounded ${selected.claim.is_validated ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"}`}>
+                    <h4 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                      <i className={`fa-solid ${selected.claim.is_validated ? "fa-circle-check text-green-600" : "fa-clock text-amber-500"}`} />
                       Réclamation {selected.claim.is_validated ? "validée" : "en attente"}
                     </h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Code validation</span>
-                        <span className="font-mono font-bold">{selected.claim.validation_code || "—"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Statut</span>
-                        <span>{selected.claim.is_validated ? "Validé" : "En attente"}</span>
-                      </div>
-                      {selected.reward_amount != null && (
-                        <div>
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Montant retrouvaille</span>
-                          <span className="font-semibold text-primary-dark">{selected.reward_amount} FCFA</span>
-                        </div>
-                      )}
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-[13px]">
+                      <div><span className="block text-[10px] font-bold text-gray-400 uppercase mb-0.5">Code validation</span><code className="font-bold">{selected.claim.validation_code || "—"}</code></div>
+                      <div><span className="block text-[10px] font-bold text-gray-400 uppercase mb-0.5">Statut</span><span>{selected.claim.is_validated ? "Validé" : "En attente"}</span></div>
+                      {selected.reward_amount != null && <div><span className="block text-[10px] font-bold text-gray-400 uppercase mb-0.5">Récompense</span><span className="font-semibold text-[#D98A30]">{selected.reward_amount} FCFA</span></div>}
                     </div>
                   </div>
                 )}
 
-                <div className="border-t border-gray-200 pt-6">
-                  <h4 className="font-bricolage text-base font-bold text-gray-800 flex items-center gap-2 mb-4">
+                {/* PDF preview */}
+                <div className="border-t border-gray-100 pt-5">
+                  <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
                     <i className="fa-solid fa-file-pdf text-red-500" /> Aperçu PDF
-                    <InfoTooltip text="Prévisualisation directe du PDF généré pour cette déclaration." />
+                    <InfoTooltip text="Prévisualisation du PDF généré pour cette déclaration." />
                   </h4>
                   {pdfLoading ? (
-                    <div className="flex items-center justify-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                      <LoadingSpinner />
-                    </div>
+                    <div className="flex items-center justify-center py-10 bg-gray-50 border border-dashed border-gray-200 rounded"><LoadingSpinner /></div>
                   ) : pdfUrl ? (
-                    <iframe
-                      src={pdfUrl}
-                      className="w-full h-[600px] rounded-2xl border border-gray-200"
-                      title="Aperçu PDF"
-                    />
+                    <iframe src={pdfUrl} className="w-full h-[500px] rounded border border-gray-200" title="Aperçu PDF" />
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200 text-gray-400">
-                      <i className="fa-solid fa-file-pdf text-4xl mb-3" />
-                      <p className="text-sm font-medium">Aperçu non disponible</p>
-                      <p className="text-xs mt-1">Le PDF n'a pas pu être généré pour cette déclaration</p>
+                    <div className="flex flex-col items-center justify-center py-10 bg-gray-50 border border-dashed border-gray-200 rounded text-gray-400">
+                      <i className="fa-solid fa-file-slash text-2xl mb-2" />
+                      <p className="text-[13px]">PDF non disponible</p>
                     </div>
                   )}
-                </div>
-
-                <div className="flex justify-end pt-4 border-t border-gray-100">
-                  <button onClick={closeDetail} className="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary-dark transition-all">
-                    {t("admin_declaration_detail_close")}
-                  </button>
                 </div>
               </div>
             )}

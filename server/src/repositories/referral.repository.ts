@@ -141,7 +141,7 @@ export class ReferralRepository {
   async rewardReferral(id: string): Promise<any> {
     const query = `
       UPDATE referrals 
-      SET recompense_attribuee = true 
+      SET recompense_attribuee = true, status = 'VALIDATED'
       WHERE id = $1 AND recompense_attribuee = false
       RETURNING *
     `;

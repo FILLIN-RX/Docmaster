@@ -28,23 +28,23 @@ export default function AdminBroadcast() {
   return (
     <div>
       <div className="flex items-center gap-2 mb-1">
-        <h1 className="font-bricolage text-2xl font-black text-gray-900">Notification Broadcast</h1>
+        <h1 className="text-xl font-bold text-gray-900">Notification Broadcast</h1>
         <InfoTooltip text="Envoyez une notification push à tous les utilisateurs de l'application." />
       </div>
-      <p className="text-gray-400 text-[13px] font-medium mt-1 mb-8">
+      <p className="text-gray-500 text-[13px] mt-0.5 mb-6">
         Envoyez une notification push à l'ensemble des utilisateurs inscrits.
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm">
-          <h3 className="font-bricolage font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <i className="fa-solid fa-bullhorn text-primary" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="bg-white border border-gray-200 rounded p-5">
+          <h3 className="font-bold text-sm text-gray-800 mb-4 flex items-center gap-2">
+            <i className="fa-solid fa-bullhorn text-[#D98A30]" />
             Nouveau broadcast
             <InfoTooltip text="Le message sera envoyé à tous les utilisateurs possédant un token push valide." />
           </h3>
           <form onSubmit={handleSend} className="space-y-4">
             <div>
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">
+              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                 Titre <span className="text-red-500">*</span>
               </label>
               <input
@@ -52,12 +52,12 @@ export default function AdminBroadcast() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Ex: Nouvelle fonctionnalité disponible"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary transition-all"
+                className="w-full px-3 py-2.5 border border-gray-200 rounded text-[13px] outline-none focus:border-[#D98A30] transition-colors"
                 required
               />
             </div>
             <div>
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">
+              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                 Message <span className="text-red-500">*</span>
               </label>
               <textarea
@@ -66,74 +66,57 @@ export default function AdminBroadcast() {
                 rows={5}
                 placeholder="Contenu de la notification..."
                 required
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary transition-all resize-none"
+                className="w-full px-3 py-2.5 border border-gray-200 rounded text-[13px] outline-none focus:border-[#D98A30] transition-colors resize-none"
               />
             </div>
             {result && (
-              <div
-                className={`px-4 py-3 rounded-xl text-xs font-bold flex items-center gap-2 ${
-                  result.success
-                    ? "bg-green-50 text-green-700"
-                    : "bg-red-50 text-red-700"
-                }`}
-              >
-                <i className={`fa-solid ${result.success ? "fa-check-circle" : "fa-circle-xmark"}`} />
+              <div className={`px-3 py-2.5 rounded border text-[13px] flex items-center gap-2 ${result.success ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200"}`}>
+                <i className={`fa-solid ${result.success ? "fa-circle-check" : "fa-circle-xmark"} text-sm shrink-0`} />
                 {result.message}
               </div>
             )}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <button
                 type="submit"
                 disabled={!title.trim() || !message.trim() || sending}
-                className="bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-primary-dark transition-all disabled:opacity-50 flex items-center gap-2"
+                className="flex items-center gap-1.5 bg-[#1E3A2F] text-white px-5 py-2.5 rounded text-[13px] font-semibold hover:bg-[#2D5A42] transition-colors disabled:opacity-50"
               >
                 {sending ? (
-                  <><i className="fa-solid fa-spinner fa-spin" /> Envoi en cours...</>
+                  <><i className="fa-solid fa-spinner fa-spin text-xs" /> Envoi en cours...</>
                 ) : (
-                  <><i className="fa-solid fa-paper-plane" /> Envoyer la notification</>
+                  <><i className="fa-solid fa-paper-plane text-xs" /> Envoyer la notification</>
                 )}
               </button>
-              <span className="text-[11px] text-gray-400">
-                ~{message.length} caractères
-              </span>
+              <span className="text-[12px] text-gray-400">{message.length} caractères</span>
             </div>
           </form>
         </div>
 
-        <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm">
-          <h3 className="font-bricolage font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <i className="fa-solid fa-circle-info text-primary" />
+        <div className="bg-white border border-gray-200 rounded p-5">
+          <h3 className="font-bold text-sm text-gray-800 mb-4 flex items-center gap-2">
+            <i className="fa-solid fa-circle-info text-gray-400" />
             Informations
           </h3>
-          <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
-            <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-xl">
-              <i className="fa-solid fa-users text-blue-500 mt-0.5" />
+          <div className="space-y-3 text-[13px] text-gray-600">
+            <div className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-200 rounded">
+              <i className="fa-solid fa-users text-blue-500 mt-0.5 shrink-0" />
               <div>
                 <p className="font-bold text-gray-900 mb-0.5">Destinataires</p>
-                <p className="text-[12px]">
-                  La notification sera envoyée à <strong>tous les utilisateurs</strong> disposant d'un token push
-                  FCM enregistré, quel que soit leur statut d'abonnement.
-                </p>
+                <p className="text-[12px]">La notification sera envoyée à <strong>tous les utilisateurs</strong> disposant d'un token push FCM enregistré.</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-xl">
-              <i className="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5" />
+            <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded">
+              <i className="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5 shrink-0" />
               <div>
                 <p className="font-bold text-gray-900 mb-0.5">Attention</p>
-                <p className="text-[12px]">
-                  Le broadcast peut prendre quelques secondes selon le nombre d'utilisateurs.
-                  Les notifications sont envoyées par lots de 500.
-                </p>
+                <p className="text-[12px]">Le broadcast peut prendre quelques secondes. Les notifications sont envoyées par lots de 500.</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 bg-green-50 rounded-xl">
-              <i className="fa-solid fa-shield-check text-green-500 mt-0.5" />
+            <div className="flex items-start gap-3 p-3 bg-green-50 border border-green-200 rounded">
+              <i className="fa-solid fa-shield-halved text-green-600 mt-0.5 shrink-0" />
               <div>
                 <p className="font-bold text-gray-900 mb-0.5">Logging</p>
-                <p className="text-[12px]">
-                  Chaque broadcast est enregistré comme notification de type <code>BROADCAST</code> dans
-                  l'historique de chaque utilisateur.
-                </p>
+                <p className="text-[12px]">Chaque broadcast est enregistré comme notification de type <code className="bg-gray-100 px-1 rounded">BROADCAST</code> dans l'historique.</p>
               </div>
             </div>
           </div>

@@ -5,12 +5,14 @@ import { InputTooltip } from "../../components/auth/InputTooltip";
 import { GoogleButton, FacebookButton } from "../../components/auth/SocialButtons/SocialButtons";
 import { useAuth } from "../../context/AuthContext";
 import { useI18n } from "../../context/I18nContext";
+import { useGoogleOneTap } from "../../hooks/useGoogleOneTap";
 
 const API_BASE = import.meta.env.VITE_API_URL || "/api/";
 
 export default function Login() {
   const { t } = useI18n();
   const { login, loginWithGoogle, user } = useAuth();
+  useGoogleOneTap();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectUrl = searchParams.get("redirect");
@@ -325,8 +327,9 @@ export default function Login() {
       </div>
 
       {/* ═══ FORGOT PASSWORD MODAL ═══ */}
-      <dialog ref={forgotRef} className="fixed inset-0 z-50 w-full h-full bg-transparent open:flex open:items-center open:justify-center">
-        <div className="bg-white rounded-[32px] p-8 max-w-md w-full mx-4 relative overflow-hidden shadow-2xl">
+      <dialog ref={forgotRef} className="forgot-dialog fixed inset-0 z-50 w-full h-full bg-transparent open:flex open:items-end md:open:items-center open:justify-center">
+        <div className="bg-white rounded-t-[32px] md:rounded-[32px] p-8 max-w-md w-full md:max-w-md md:mx-4 md:mb-0 relative overflow-hidden shadow-2xl sheet-up">
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 h-1.5 w-12 rounded-full bg-black/10 md:hidden" />
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
           <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl" />
 
@@ -412,6 +415,8 @@ export default function Login() {
         .blob-5 { width: 100px; height: 90px; background: #E8B89A; top: 50%; left: 10px; transform: translateY(-50%); opacity: 0.45; border-radius: 55% 45% 50% 50%; }
         @keyframes fadeOut { to { opacity: 0; pointer-events: none; } }
         .modal::backdrop { background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
+        @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .forgot-dialog[open] .sheet-up { animation: sheetUp .35s cubic-bezier(.32,.72,0,1); }
       `}</style>
     </div>
   );

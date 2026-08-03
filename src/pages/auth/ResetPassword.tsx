@@ -45,10 +45,10 @@ export default function ResetPassword() {
     setError("");
     try {
       const res = await authService.resetPassword({ token, mot_de_passe: password });
-      if (res.success) {
-        setSuccess(true);
-      } else {
+      if (res.success === false) {
         setError(res.message || t("reset_failed"));
+      } else {
+        setSuccess(true);
       }
     } catch (err: any) {
       const msg = err?.response?.data?.error || err?.message || t("reset_network_error");

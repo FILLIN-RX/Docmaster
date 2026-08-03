@@ -90,25 +90,25 @@ export default function AdminActivityLog() {
   const totalPages = Math.ceil(total / pageSize);
 
   return (
-    <div>
-      <div className="flex items-center gap-2 mb-6">
+    <div className="flex flex-col h-full">
+      <div className="flex items-center gap-2 mb-4 shrink-0">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-bricolage text-2xl font-black text-gray-900">Journal d'activité</h1>
+            <h1 className="text-xl font-bold text-gray-900">Journal d'activité</h1>
             <InfoTooltip text="Toutes les actions des utilisateurs et administrateurs sur la plateforme." />
           </div>
-          <p className="text-gray-400 text-[13px] font-medium mt-1">
+          <p className="text-gray-500 text-[13px] mt-0.5">
             {total} entrée{total !== 1 ? "s" : ""} · Traçabilité complète
           </p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-5">
+      <div className="flex flex-wrap gap-2 mb-4 shrink-0">
         <select
           value={filterAction}
           onChange={(e) => { setFilterAction(e.target.value); setPage(1); }}
-          className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-[12px] font-semibold text-gray-700 outline-none focus:border-primary"
+          className="px-3 py-2 bg-white border border-gray-200 rounded text-[13px] text-gray-700 outline-none focus:border-[#D98A30]"
         >
           <option value="">Toutes les actions</option>
           {actionTypes.map((a) => (
@@ -120,50 +120,50 @@ export default function AdminActivityLog() {
           value={filterUser}
           onChange={(e) => { setFilterUser(e.target.value); setPage(1); }}
           placeholder="Filtrer par ID utilisateur..."
-          className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-[12px] outline-none focus:border-primary w-60"
+          className="px-3 py-2 bg-white border border-gray-200 rounded text-[13px] outline-none focus:border-[#D98A30] w-56"
         />
         {(filterAction || filterUser) && (
           <button
             onClick={() => { setFilterAction(""); setFilterUser(""); setPage(1); }}
-            className="px-4 py-2 bg-gray-100 border border-gray-200 rounded-xl text-[12px] font-semibold text-gray-600 hover:bg-gray-200 transition-colors"
+            className="px-3 py-2 bg-gray-100 border border-gray-200 rounded text-[13px] font-semibold text-gray-600 hover:bg-gray-200 transition-colors flex items-center gap-1"
           >
-            <i className="fa-solid fa-xmark mr-1" /> Effacer
+            <i className="fa-solid fa-xmark text-xs" /> Effacer
           </button>
         )}
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200/60 overflow-hidden shadow-sm">
+      <div className="bg-white border border-gray-200 rounded flex flex-col min-h-0">
         {loading ? (
-          <LoadingSpinner />
+          <div className="py-16"><LoadingSpinner /></div>
         ) : logs.length === 0 ? (
           <EmptyState icon="fa-solid fa-clock-rotate-left" message="Aucune activité enregistrée pour le moment." />
         ) : (
-          <div className="divide-y divide-gray-50">
+          <div className="overflow-auto flex-1 min-h-0 divide-y divide-gray-100">
             {logs.map((log) => {
               const icon = ACTION_ICONS[log.action_type] || "fa-circle-info text-gray-400";
               const bg = ACTION_BG[log.action_type] || "bg-gray-100";
               return (
-                <div key={log.id} className="flex items-start gap-4 px-6 py-4 hover:bg-gray-50/60 transition-colors">
-                  <div className={`w-9 h-9 rounded-full ${bg} flex items-center justify-center flex-shrink-0`}>
+                <div key={log.id} className="flex items-start gap-3 px-5 py-3.5 hover:bg-gray-50 transition-colors">
+                  <div className={`w-8 h-8 rounded border border-gray-200 ${bg} flex items-center justify-center flex-shrink-0`}>
                     <i className={`fa-solid ${icon} text-xs`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[13px] font-bold text-gray-900 capitalize">
+                      <span className="text-[13px] font-semibold text-gray-900 capitalize">
                         {log.action_type.replace(/_/g, " ")}
                       </span>
                       {log.entity_type && (
-                        <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded">
                           {log.entity_type}
                         </span>
                       )}
                     </div>
                     {log.description && (
-                      <p className="text-[12px] text-gray-600 mt-0.5">{log.description}</p>
+                      <p className="text-[12px] text-gray-500 mt-0.5">{log.description}</p>
                     )}
-                    <div className="flex items-center gap-3 mt-1 text-[10px] text-gray-400">
+                    <div className="flex items-center gap-2 mt-0.5 text-[11px] text-gray-400">
                       <span>{log.prenom || log.email || "Admin"} {log.nom || ""}</span>
-                      {log.ip_address && <><span>•</span><span>{log.ip_address}</span></>}
+                      {log.ip_address && <><span>·</span><span>{log.ip_address}</span></>}
                     </div>
                   </div>
                   <span className="text-[11px] text-gray-400 whitespace-nowrap flex-shrink-0">

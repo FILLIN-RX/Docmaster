@@ -1,4 +1,5 @@
 import { useI18n } from "../../context/I18nContext";
+import LoadingSpinner from "../ui/LoadingSpinner";
 import type { Notification } from "../../types/api";
 
 interface NotificationPanelProps {
@@ -18,30 +19,30 @@ export default function NotificationPanel({ open, onClose, notifications, loadin
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed top-0 bottom-0 z-50 w-full max-w-sm bg-white border-l border-[#EAE3D8] shadow-2xl flex flex-col" style={{ right: 0, left: "auto" }}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#EAE3D8]">
-          <h3 className="font-bricolage font-bold text-gray-900">{t("notification_title")}</h3>
+      <div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} />
+      <div className="fixed top-0 bottom-0 right-0 z-50 w-full max-w-sm bg-white border-l border-gray-200 shadow-xl flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+          <h3 className="font-bold text-sm text-gray-900">{t("notification_title")}</h3>
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
-              <button onClick={onMarkAllRead} className="text-[11px] font-bold text-primary hover:text-primary-dark transition-colors">
+              <button onClick={onMarkAllRead} className="text-[12px] font-semibold text-[#D98A30] hover:underline transition-colors">
                 {t("notification_mark_all_read")}
               </button>
             )}
-            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#EAE3D8] text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all">
-              <i className="fa-solid fa-xmark text-sm" />
+            <button onClick={onClose} className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all">
+              <i className="fa-solid fa-xmark text-xs" />
             </button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto custom-scroll">
+        <div className="flex-1 overflow-y-auto admin-scroll">
           {loading ? (
             <div className="flex items-center justify-center py-16">
-              <div className="w-8 h-8 rounded-full border-[3px] border-gray-200 border-t-primary animate-spin" />
+              <LoadingSpinner />
             </div>
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-gray-300">
-              <i className="fa-solid fa-bell-slash text-3xl mb-4" />
+              <i className="fa-solid fa-bell-slash text-2xl mb-3" />
               <p className="text-[13px] font-medium text-gray-400">{t("notification_empty")}</p>
             </div>
           ) : (
@@ -51,20 +52,20 @@ export default function NotificationPanel({ open, onClose, notifications, loadin
                 <button
                   key={n.id}
                   onClick={() => onMarkRead(n.id)}
-                  className={`w-full text-left px-5 py-4 border-b border-[#EAE3D8]/50 hover:bg-[#FEF0DC]/30 transition-colors ${isUnread ? "bg-[#FEF0DC]/10" : ""}`}
+                  className={`w-full text-left px-5 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${isUnread ? "bg-[#FEF9F0]" : ""}`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs shrink-0 ${isUnread ? "bg-primary/10 text-primary" : "bg-gray-100 text-gray-400"}`}>
+                    <div className={`w-7 h-7 rounded border flex items-center justify-center text-xs shrink-0 ${isUnread ? "bg-[#D98A30]/10 border-[#D98A30]/20 text-[#D98A30]" : "bg-gray-100 border-gray-200 text-gray-400"}`}>
                       <i className="fa-solid fa-bell" />
                     </div>
-                    <div className="min-w-0">
-                      <p className={`text-[13px] ${isUnread ? "font-bold text-gray-900" : "font-medium text-gray-500"}`}>{n.titre}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-[13px] ${isUnread ? "font-semibold text-gray-900" : "font-medium text-gray-500"}`}>{n.titre}</p>
                       <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-2">{n.message}</p>
                       <span className="text-[10px] text-gray-300 mt-1 block">
                         {new Date(n.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                       </span>
                     </div>
-                    {isUnread && <span className="w-2 h-2 rounded-full bg-primary shrink-0 mt-2" />}
+                    {isUnread && <span className="w-2 h-2 rounded-full bg-[#D98A30] shrink-0 mt-2" />}
                   </div>
                 </button>
               );

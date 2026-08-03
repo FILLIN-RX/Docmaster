@@ -64,9 +64,9 @@ const FEATURE_ICONS: Record<string, string> = {
 
 const statusBadge = (status: string, t: (k: string) => string) => {
   switch (status) {
-    case "ACTIVE": return <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-green-50 text-green-700">{t("admin_active")}</span>;
-    case "CANCELED": return <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">{t("admin_cancelled")}</span>;
-    default: return <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-red-50 text-red-700">{t("admin_expired")}</span>;
+    case "ACTIVE": return <span className="text-[11px] font-semibold px-2 py-0.5 rounded border bg-green-50 text-green-700 border-green-200">{t("admin_active")}</span>;
+    case "CANCELED": return <span className="text-[11px] font-semibold px-2 py-0.5 rounded border bg-gray-50 text-gray-500 border-gray-200">{t("admin_cancelled")}</span>;
+    default: return <span className="text-[11px] font-semibold px-2 py-0.5 rounded border bg-red-50 text-red-700 border-red-200">{t("admin_expired")}</span>;
   }
 };
 
@@ -189,69 +189,78 @@ export default function AdminSubscriptions() {
   return (
     <div>
       {toast && (
-        <div className={`fixed top-5 right-5 z-[100] px-5 py-3 rounded-xl shadow-lg text-sm font-bold text-white slide-right ${toast.type === "success" ? "bg-green-600" : "bg-red-600"}`}>
-          <i className={`fa-solid ${toast.type === "success" ? "fa-check-circle" : "fa-exclamation-circle"} mr-2`} />
+        <div className={`fixed top-5 right-5 z-[100] px-4 py-3 rounded border shadow-lg text-[13px] font-semibold text-white ${toast.type === "success" ? "bg-green-600 border-green-700" : "bg-red-600 border-red-700"}`}>
+          <i className={`fa-solid ${toast.type === "success" ? "fa-circle-check" : "fa-circle-exclamation"} mr-2`} />
           {toast.message}
         </div>
       )}
-      <header className="flex items-center justify-between mb-8">
+      <header className="flex items-center justify-between mb-6">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-bricolage text-2xl font-black text-gray-900">{t("admin_subscriptions_title")}</h1>
-            <InfoTooltip text="Gérez les offres d'abonnement et consultez les abonnements actifs des utilisateurs." />
+            <h1 className="text-xl font-bold text-gray-900">{t("admin_subscriptions_title")}</h1>
+            <InfoTooltip text="Gérez les offres d'abonnement et consultez les abonnements actifs." />
           </div>
-          <p className="text-gray-400 text-[13px] font-medium mt-1">{t("admin_subscriptions_subtitle")}</p>
+          <p className="text-gray-500 text-[13px] mt-0.5">{t("admin_subscriptions_subtitle")}</p>
         </div>
-        <div className="flex items-center gap-3">
-          <input type="text" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder={t("admin_subscriptions_search")} className="px-4 py-2 border border-[#EAE3D8] rounded-xl text-sm outline-none focus:border-primary bg-white w-64" />
-          <button onClick={openNew} className="bg-primary text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all"><i className="fa-solid fa-plus mr-1" />{t("admin_subscriptions_create")}</button>
+        <div className="flex items-center gap-2">
+          <input type="text" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            placeholder={t("admin_subscriptions_search")}
+            className="px-3 py-2 border border-gray-200 rounded text-[13px] outline-none focus:border-[#D98A30] bg-white w-56" />
+          <button onClick={openNew}
+            className="flex items-center gap-1.5 bg-[#1E3A2F] text-white px-4 py-2 rounded text-[13px] font-semibold hover:bg-[#2D5A42] transition-colors">
+            <i className="fa-solid fa-plus text-xs" />{t("admin_subscriptions_create")}
+          </button>
         </div>
       </header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white border border-gray-200/60 rounded-2xl p-5 shadow-sm">
-          <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">{t("admin_subs_total")}</span>
-          <div className="font-bricolage text-2xl font-extrabold text-gray-900">{stats?.totalUsers?.toLocaleString() || "0"}</div>
-        </div>
-        <div className="bg-white border border-gray-200/60 rounded-2xl p-5 shadow-sm">
-          <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">{t("admin_subs_mrr")}<InfoTooltip text="Revenu mensuel récurrent estimé" /></span>
-          <div className="font-bricolage text-2xl font-extrabold text-gray-900">{stats?.estimatedMonthlyRevenue ? `${stats.estimatedMonthlyRevenue.toLocaleString()} XAF` : "0 XAF"}</div>
-        </div>
-        <div className="bg-white border border-gray-200/60 rounded-2xl p-5 shadow-sm">
-          <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">{t("admin_subs_new")}</span>
-          <div className="font-bricolage text-2xl font-extrabold text-gray-900">{stats?.activeSubscriptions?.toLocaleString() || "0"}</div>
-        </div>
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+        {[
+          { label: t("admin_subs_total"), value: stats?.totalUsers?.toLocaleString() || "0" },
+          { label: t("admin_subs_mrr"), value: stats?.estimatedMonthlyRevenue ? `${stats.estimatedMonthlyRevenue.toLocaleString()} XAF` : "0 XAF", tooltip: "Revenu mensuel récurrent estimé" },
+          { label: t("admin_subs_new"), value: stats?.activeSubscriptions?.toLocaleString() || "0" },
+        ].map((card, i) => (
+          <div key={i} className="bg-white border border-gray-200 rounded p-4">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">
+              {card.label}{card.tooltip && <InfoTooltip text={card.tooltip} />}
+            </span>
+            <div className="text-xl font-bold text-gray-900">{card.value}</div>
+          </div>
+        ))}
       </div>
 
-      <div className="mb-8">
-        <h3 className="font-bricolage font-bold text-gray-900 mb-6">
+      <div className="mb-6">
+        <h3 className="font-bold text-sm text-gray-800 mb-4">
           {t("admin_subscriptions_offers")}
           <InfoTooltip text="Forfaits disponibles à la souscription. Cliquez sur le crayon pour modifier." />
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {plans.length === 0 ? (<EmptyState icon="fa-solid fa-tags" message={t("admin_no_subscriptions")} />
-          ) : (
-            plans.map((plan) => {
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {plans.length === 0 ? (
+            <EmptyState icon="fa-solid fa-tags" message={t("admin_no_subscriptions")} />
+          ) : plans.map((plan) => {
               const featureEntries = Object.entries(plan.features || {});
               return (
-                <div key={plan.id} className={`bg-white border rounded-2xl shadow-sm relative flex flex-col ${plan.is_featured ? "border-primary border-2" : "border-gray-200/60"}`}>
-                  {plan.is_featured && <div className="absolute -top-2.5 right-5 bg-primary text-white text-[10px] font-extrabold px-3 py-1 rounded-full">{t("admin_subscriptions_recommended")}</div>}
-                  <div className="p-6 flex-1">
-                    <div className="flex justify-between items-start mb-4">
+                <div key={plan.id} className={`bg-white border rounded relative flex flex-col ${plan.is_featured ? "border-[#D98A30] border-2" : "border-gray-200"}`}>
+                  {plan.is_featured && (
+                    <div className="absolute -top-2.5 right-4 bg-[#D98A30] text-white text-[10px] font-bold px-2.5 py-0.5 rounded">
+                      {t("admin_subscriptions_recommended")}
+                    </div>
+                  )}
+                  <div className="p-5 flex-1">
+                    <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h3 className="font-bricolage font-bold text-gray-900 text-lg">{plan.name}</h3>
-                        <div className="text-2xl font-bricolage font-extrabold text-primary mt-1">
+                        <h3 className="font-bold text-gray-900">{plan.name}</h3>
+                        <div className="text-xl font-bold text-[#D98A30] mt-0.5">
                           {plan.price === 0 ? "Gratuit" : `${plan.price?.toLocaleString()} XAF`}
-                          <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold ml-1">
-                            {plan.price > 0 ? `/ ${plan.duration_months || 1} mois` : ""}
-                          </span>
+                          {plan.price > 0 && <span className="text-[11px] text-gray-400 font-normal ml-1">/ {plan.duration_months || 1} mois</span>}
                         </div>
                       </div>
-                      <button onClick={() => openEdit(plan.id)} className="text-gray-400 hover:text-primary transition-colors p-1"><i className="fa-solid fa-pen-to-square" /></button>
+                      <button onClick={() => openEdit(plan.id)} className="text-gray-400 hover:text-[#D98A30] transition-colors p-1">
+                        <i className="fa-solid fa-pen-to-square text-sm" />
+                      </button>
                     </div>
-
-                    {featureEntries.length > 0 ? (
-                      <div className="space-y-1.5 mt-5">
+                    {featureEntries.length > 0 && (
+                      <div className="space-y-1 mt-4 border-t border-gray-100 pt-4">
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Avantages inclus</p>
                         {featureEntries.map(([key, val]) => {
                           const def = featMap.get(key);
@@ -261,234 +270,216 @@ export default function AdminSubscriptions() {
                           const formatted = formatFeatureValue(val, type);
                           const isBool = type === "boolean";
                           const enabled = val === true || (typeof val === "number" && val > 0) || (Array.isArray(val) && val.length > 0);
-                          const desc = def?.description || "";
                           return (
-                            <div key={key} className={`flex items-start gap-2.5 py-1.5 px-2 rounded-lg ${enabled ? "bg-green-50/50" : "bg-gray-50"}`}>
-                              <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5 ${enabled ? "bg-primary/10 text-primary" : "bg-gray-100 text-gray-300"}`}>
+                            <div key={key} className={`flex items-center gap-2 py-1.5 px-2 rounded text-[12px] ${enabled ? "bg-green-50" : "bg-gray-50"}`}>
+                              <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 ${enabled ? "bg-[#D98A30]/10 text-[#D98A30]" : "bg-gray-100 text-gray-300"}`}>
                                 <i className={`fa-solid ${icon} text-[10px]`} />
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <span className={`text-[12px] font-medium ${enabled ? "text-gray-800" : "text-gray-400"}`}>{label}</span>
-                                {(key === "docs_per_type" || key === "objects_limit") && desc && (
-                                  <p className="text-[9.5px] text-gray-400 mt-0.5 leading-tight">{desc}</p>
-                                )}
-                              </div>
-                              <span className={`text-[11px] font-bold flex-shrink-0 ${enabled ? "text-gray-900" : "text-gray-300"}`}>
-                                {isBool ? (enabled ? <i className="fa-solid fa-check text-green-500" /> : <i className="fa-solid fa-xmark text-gray-300" />) : formatted}
+                              <span className={`flex-1 ${enabled ? "text-gray-800" : "text-gray-400"}`}>{label}</span>
+                              <span className={`text-[11px] font-semibold ${enabled ? "text-gray-900" : "text-gray-300"}`}>
+                                {isBool ? (enabled ? <i className="fa-solid fa-check text-green-600 text-[10px]" /> : <i className="fa-solid fa-xmark text-gray-300 text-[10px]" />) : formatted}
                               </span>
                             </div>
                           );
                         })}
                       </div>
-                    ) : (
-                      <div className="flex items-center justify-center py-8 text-gray-300 text-xs">Aucun avantage défini</div>
                     )}
                   </div>
-                  <div className="px-6 pb-6">
-                    <button onClick={() => openEdit(plan.id)} className="w-full py-2.5 border border-[#EAE3D8] rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50 hover:border-primary hover:text-primary transition-all">
-                      <i className="fa-solid fa-pen mr-1.5" />Modifier ce plan
+                  <div className="px-5 pb-4">
+                    <button onClick={() => openEdit(plan.id)}
+                      className="w-full py-2 border border-gray-200 rounded text-[12px] font-semibold text-gray-600 hover:bg-gray-50 hover:border-[#D98A30] hover:text-[#D98A30] transition-colors">
+                      <i className="fa-solid fa-pen text-[10px] mr-1" />Modifier ce plan
                     </button>
                   </div>
                 </div>
               );
             })
-          )}
+          }
         </div>
       </div>
 
-      <div className="mb-8">
-        <h3 className="font-bricolage font-bold text-gray-900 mb-6 flex items-center gap-2">
-          <i className="fa-solid fa-tag text-primary" />
+      <div className="mb-6">
+        <h3 className="font-bold text-sm text-gray-800 mb-4 flex items-center gap-2">
+          <i className="fa-solid fa-tag text-[#D98A30]" />
           Promotion VIP
           <InfoTooltip text="Gérez le prix et la durée de l'offre promotionnelle VIP." />
         </h3>
         {promoLoading ? (
           <div className="flex items-center justify-center py-8"><LoadingSpinner /></div>
         ) : promo ? (
-          <div className="bg-gradient-to-r from-sky-50 to-blue-50 border border-sky-200 rounded-2xl p-6 shadow-sm">
+          <div className="bg-white border border-gray-200 rounded p-5">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Prix promo (XAF)</label>
-                <input
-                  type="number"
-                  value={promoForm.price}
-                  onChange={(e) => setPromoForm({ ...promoForm, price: Number(e.target.value) })}
-                  className="px-4 py-2.5 border border-[#EAE3D8] rounded-xl text-sm outline-none focus:border-primary transition-all bg-white"
-                />
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Prix promo (XAF)</label>
+                <input type="number" value={promoForm.price} onChange={(e) => setPromoForm({ ...promoForm, price: Number(e.target.value) })}
+                  className="px-3 py-2 border border-gray-200 rounded text-[13px] outline-none focus:border-[#D98A30] transition-colors bg-white" />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Durée (mois)</label>
-                <input
-                  type="number"
-                  value={promoForm.duration_months}
-                  onChange={(e) => setPromoForm({ ...promoForm, duration_months: Number(e.target.value) })}
-                  className="px-4 py-2.5 border border-[#EAE3D8] rounded-xl text-sm outline-none focus:border-primary transition-all bg-white"
-                />
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Durée (mois)</label>
+                <input type="number" value={promoForm.duration_months} onChange={(e) => setPromoForm({ ...promoForm, duration_months: Number(e.target.value) })}
+                  className="px-3 py-2 border border-gray-200 rounded text-[13px] outline-none focus:border-[#D98A30] transition-colors bg-white" />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Statut</label>
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Statut</label>
                 <label className="relative inline-flex items-center cursor-pointer mt-2">
-                  <input
-                    type="checkbox"
-                    checked={promoForm.is_active}
-                    onChange={(e) => setPromoForm({ ...promoForm, is_active: e.target.checked })}
-                    className="sr-only peer"
-                  />
-                  <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary" />
-                  <span className="ml-3 text-sm font-medium text-gray-700">{promoForm.is_active ? "Active" : "Inactive"}</span>
+                  <input type="checkbox" checked={promoForm.is_active} onChange={(e) => setPromoForm({ ...promoForm, is_active: e.target.checked })} className="sr-only peer" />
+                  <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1E3A2F]" />
+                  <span className="ml-3 text-[13px] font-medium text-gray-700">{promoForm.is_active ? "Active" : "Inactive"}</span>
                 </label>
               </div>
             </div>
             {promo.original_price && (
-              <div className="bg-white/60 rounded-xl px-4 py-2 mb-4 text-sm text-gray-600">
+              <div className="bg-gray-50 border border-gray-200 rounded px-4 py-2 mb-4 text-[13px] text-gray-600">
                 <span className="font-medium">Prix original: </span>
                 <span className="line-through text-gray-400">{promo.original_price.toLocaleString("fr-FR")} XAF</span>
                 <span className="mx-2">→</span>
                 <span className="font-bold text-sky-700">{promoForm.price.toLocaleString("fr-FR")} XAF</span>
-                <span className="ml-2 text-xs text-green-600 font-bold">
-                  (-{Math.round((1 - promoForm.price / promo.original_price) * 100)}%)
-                </span>
+                <span className="ml-2 text-[12px] text-green-700 font-bold">(-{Math.round((1 - promoForm.price / promo.original_price) * 100)}%)</span>
               </div>
             )}
-            <button
-              onClick={async () => {
+            <button onClick={async () => {
                 setPromoSaving(true);
                 try {
-                  await promoService.updateAdminPromo({
-                    price: promoForm.price,
-                    duration_months: promoForm.duration_months,
-                    is_active: promoForm.is_active,
-                  });
+                  await promoService.updateAdminPromo({ price: promoForm.price, duration_months: promoForm.duration_months, is_active: promoForm.is_active });
                   const res = await promoService.getAdminPromo();
-                  if (res.data) {
-                    setPromo(res.data);
-                    setPromoForm({ price: res.data.price, duration_months: res.data.duration_months, is_active: res.data.is_active ?? true });
-                  }
+                  if (res.data) { setPromo(res.data); setPromoForm({ price: res.data.price, duration_months: res.data.duration_months, is_active: res.data.is_active ?? true }); }
                   showToast("Promotion mise à jour avec succès", "success");
-                } catch {
-                  showToast("Erreur lors de la mise à jour de la promotion", "error");
-                } finally { setPromoSaving(false); }
+                } catch { showToast("Erreur lors de la mise à jour de la promotion", "error"); }
+                finally { setPromoSaving(false); }
               }}
               disabled={promoSaving}
-              className="bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-primary-dark transition-all disabled:opacity-60 shadow-lg shadow-primary/20"
-            >
-              {promoSaving ? <><i className="fa-solid fa-spinner fa-spin mr-1" /> Enregistrement...</> : <><i className="fa-solid fa-floppy-disk mr-1" /> Enregistrer la promotion</>}
+              className="flex items-center gap-1.5 bg-[#1E3A2F] text-white px-5 py-2 rounded text-[13px] font-semibold hover:bg-[#2D5A42] transition-colors disabled:opacity-60">
+              {promoSaving ? <><i className="fa-solid fa-spinner fa-spin text-xs" /> Enregistrement...</> : <><i className="fa-solid fa-floppy-disk text-xs" /> Enregistrer la promotion</>}
             </button>
           </div>
         ) : (
-          <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-8 text-center">
-            <i className="fa-solid fa-tag text-3xl text-gray-300 mb-2" />
-            <p className="text-gray-400 text-sm">Aucune promotion configurée</p>
+          <div className="bg-white border border-dashed border-gray-300 rounded p-8 text-center">
+            <i className="fa-solid fa-tag text-2xl text-gray-300 mb-2" />
+            <p className="text-gray-400 text-[13px]">Aucune promotion configurée</p>
           </div>
         )}
       </div>
 
-      <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm">
-        <h3 className="font-bricolage font-bold text-gray-900 mb-6">{t("admin_subscriptions_recent")}</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead>
-              <tr>
-                <th className="py-3 px-4 font-bold text-[11px] text-gray-400 uppercase">{t("admin_subscriptions_client")}</th>
-                <th className="py-3 px-4 font-bold text-[11px] text-gray-400 uppercase">{t("admin_plan")}<InfoTooltip text="Forfait souscrit par l'utilisateur" /></th>
-                <th className="py-3 px-4 font-bold text-[11px] text-gray-400 uppercase">{t("admin_status")}</th>
-                <th className="py-3 px-4 font-bold text-[11px] text-gray-400 uppercase">{t("admin_amount")}</th>
-                <th className="py-3 px-4 font-bold text-[11px] text-gray-400 uppercase">{t("admin_subscriptions_expiration")}</th>
-                <th className="py-3 px-4 font-bold text-[11px] text-gray-400 uppercase text-right">{t("admin_actions")}<InfoTooltip text="Changer le statut de l'abonnement" /></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 text-gray-700">
-              {paginatedSubs.length === 0 ? (
-                <EmptyState icon="fa-solid fa-receipt" message={t("admin_subs_recent_empty")} colSpan={6} />
-              ) : (
-                paginatedSubs.map((s) => {
-                  const dateFin = s.date_fin ? new Date(s.date_fin).toLocaleDateString("fr-FR") : s.expiry_date ? new Date(s.expiry_date).toLocaleDateString("fr-FR") : "—";
-                  return (
-                    <tr key={s.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="py-3 px-4"><div className="flex flex-col"><span className="font-semibold text-sm text-gray-900">{s.user_name || "—"}</span><span className="text-[11px] text-gray-400">{s.user_email || ""}</span></div></td>
-                      <td className="text-sm">{s.plan_name || "—"}</td>
-                      <td>{statusBadge(s.status || "", t)}</td>
-                      <td className="font-bold">{s.price?.toLocaleString() || 0} XAF</td>
-                      <td className="text-xs text-gray-400">{dateFin}</td>
-                      <td className="text-right">
-                        <select
-                          value={s.status || ""}
-                          onChange={(e) => updateStatus(s.id, e.target.value)}
-                          disabled={statusUpdating === s.id}
-                          className="px-2 py-1 border border-gray-200 rounded-lg text-xs outline-none focus:border-primary bg-white disabled:opacity-50"
-                        >
-                          <option value="ACTIVE">Actif</option>
-                          <option value="EXPIRED">Expiré</option>
-                          <option value="CANCELED">Annulé</option>
-                        </select>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+      <div className="bg-white border border-gray-200 rounded">
+        <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50">
+          <h3 className="font-bold text-sm text-gray-800">{t("admin_subscriptions_recent")}</h3>
         </div>
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b border-gray-200 bg-gray-50">
+              <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase">{t("admin_subscriptions_client")}</th>
+              <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase">{t("admin_plan")} <InfoTooltip text="Forfait souscrit" /></th>
+              <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase">{t("admin_status")}</th>
+              <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase">{t("admin_amount")}</th>
+              <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase">{t("admin_subscriptions_expiration")}</th>
+              <th className="text-right px-4 py-3 text-[11px] font-bold text-gray-400 uppercase">{t("admin_actions")} <InfoTooltip text="Changer le statut" /></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {paginatedSubs.length === 0 ? (
+              <EmptyState icon="fa-solid fa-receipt" message={t("admin_subs_recent_empty")} colSpan={6} />
+            ) : paginatedSubs.map((s) => {
+                const dateFin = s.date_fin ? new Date(s.date_fin).toLocaleDateString("fr-FR") : s.expiry_date ? new Date(s.expiry_date).toLocaleDateString("fr-FR") : "—";
+                return (
+                  <tr key={s.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="py-3 px-4">
+                      <div className="font-semibold text-[13px] text-gray-900">{s.user_name || "—"}</div>
+                      <div className="text-[11px] text-gray-400">{s.user_email || ""}</div>
+                    </td>
+                    <td className="py-3 px-4 text-[13px] text-gray-700">{s.plan_name || "—"}</td>
+                    <td className="py-3 px-4">{statusBadge(s.status || "", t)}</td>
+                    <td className="py-3 px-4 font-bold text-[13px] text-gray-900">{s.price?.toLocaleString() || 0} XAF</td>
+                    <td className="py-3 px-4 text-[11px] text-gray-400">{dateFin}</td>
+                    <td className="py-3 px-4 text-right">
+                      <select value={s.status || ""} onChange={(e) => updateStatus(s.id, e.target.value)}
+                        disabled={statusUpdating === s.id}
+                        className="px-2 py-1.5 border border-gray-200 rounded text-[12px] outline-none focus:border-[#D98A30] bg-white disabled:opacity-50">
+                        <option value="ACTIVE">Actif</option>
+                        <option value="EXPIRED">Expiré</option>
+                        <option value="CANCELED">Annulé</option>
+                      </select>
+                    </td>
+                  </tr>
+                );
+              })}
+          </tbody>
+        </table>
         <Pagination current={page} total={total} pageSize={pageSize} onChange={setPage} />
       </div>
 
       {modalOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end md:items-center justify-center z-50" onClick={() => setModalOpen(false)}>
-          <div className="bg-white rounded-2xl w-full max-w-lg p-6 border border-gray-200/60 shadow-xl max-h-[90vh] overflow-y-auto mx-4" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bricolage text-lg font-bold text-gray-900">{editingId ? t("admin_subscriptions_modal_title_edit") : t("admin_subscriptions_modal_title_new")}</h3>
-              <button onClick={() => setModalOpen(false)} className="text-gray-400 hover:text-gray-600"><i className="fa-solid fa-xmark text-xl" /></button>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setModalOpen(false)}>
+          <div className="bg-white rounded-lg w-full max-w-lg border border-gray-200 shadow-xl max-h-[90vh] overflow-y-auto mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h3 className="font-bold text-base text-gray-900">{editingId ? t("admin_subscriptions_modal_title_edit") : t("admin_subscriptions_modal_title_new")}</h3>
+              <button onClick={() => setModalOpen(false)} className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded text-gray-400 hover:bg-gray-50">
+                <i className="fa-solid fa-xmark text-xs" />
+              </button>
             </div>
-            <form onSubmit={handleSave} className="space-y-4">
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">{t("admin_subscriptions_plan_name")}</label>
-                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex: Premium" required className="px-4 py-2.5 border border-[#EAE3D8] rounded-xl text-sm outline-none focus:border-primary transition-all" />
+            <form onSubmit={handleSave} className="p-6 space-y-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">{t("admin_subscriptions_plan_name")}</label>
+                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex: Premium" required
+                  className="px-3 py-2 border border-gray-200 rounded text-[13px] outline-none focus:border-[#D98A30] transition-colors" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-gray-400 uppercase">{t("admin_subscriptions_price")}</label><input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} className="px-4 py-2.5 border border-[#EAE3D8] rounded-xl text-sm outline-none focus:border-primary transition-all" /></div>
-                <div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-gray-400 uppercase">{t("admin_subscriptions_duration")}</label><input type="number" value={form.duration_months} onChange={(e) => setForm({ ...form, duration_months: Number(e.target.value) })} className="px-4 py-2.5 border border-[#EAE3D8] rounded-xl text-sm outline-none focus:border-primary transition-all" /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">{t("admin_subscriptions_price")}</label>
+                  <input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
+                    className="px-3 py-2 border border-gray-200 rounded text-[13px] outline-none focus:border-[#D98A30] transition-colors" />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">{t("admin_subscriptions_duration")}</label>
+                  <input type="number" value={form.duration_months} onChange={(e) => setForm({ ...form, duration_months: Number(e.target.value) })}
+                    className="px-3 py-2 border border-gray-200 rounded text-[13px] outline-none focus:border-[#D98A30] transition-colors" />
+                </div>
               </div>
               {features.length > 0 && (
-                <div className="space-y-1 pt-4 border-t border-[#EAE3D8]">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">Avantages du plan</p>
+                <div className="border-t border-gray-100 pt-4 space-y-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Avantages du plan</p>
                   {features.map((feat) => (
-                    <div key={feat.code} className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <i className={`fa-solid ${featureIcon(feat.code)} text-[10px] text-primary`} />
+                    <div key={feat.code} className="flex items-center justify-between py-2 px-2 rounded hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded border border-gray-200 bg-gray-50 flex items-center justify-center flex-shrink-0">
+                          <i className={`fa-solid ${featureIcon(feat.code)} text-[10px] text-gray-500`} />
                         </div>
-                        <div className="flex flex-col">
-                          <span className="text-xs font-semibold text-gray-700">{feat.label}</span>
-                          {feat.description && <span className="text-[10px] text-gray-400">{feat.description}</span>}
-                        </div>
+                        <span className="text-[12px] font-medium text-gray-700">{feat.label}</span>
                       </div>
                       {feat.type === "boolean" ? (
                         <label className="relative inline-flex items-center cursor-pointer">
-                          <input type="checkbox" checked={form.features[feat.code] || false} onChange={(e) => setForm({ ...form, features: { ...form.features, [feat.code]: e.target.checked } })} className="sr-only peer" />
-                          <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary" />
+                          <input type="checkbox" checked={form.features[feat.code] || false}
+                            onChange={(e) => setForm({ ...form, features: { ...form.features, [feat.code]: e.target.checked } })}
+                            className="sr-only peer" />
+                          <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1E3A2F]" />
                         </label>
                       ) : (
-                        <input type="number" value={form.features[feat.code] ?? ""} onChange={(e) => setForm({ ...form, features: { ...form.features, [feat.code]: e.target.value === "" ? null : Number(e.target.value) } })} className="w-20 px-2 py-1.5 border border-[#EAE3D8] rounded-lg text-xs text-center outline-none focus:border-primary" placeholder="0" />
+                        <input type="number" value={form.features[feat.code] ?? ""}
+                          onChange={(e) => setForm({ ...form, features: { ...form.features, [feat.code]: e.target.value === "" ? null : Number(e.target.value) } })}
+                          className="w-20 px-2 py-1.5 border border-gray-200 rounded text-[12px] text-center outline-none focus:border-[#D98A30]" placeholder="0" />
                       )}
                     </div>
                   ))}
                 </div>
               )}
-              <div className="flex items-center justify-between py-2 px-2 rounded-lg bg-amber-50/50 border border-amber-100/50">
+              <div className="flex items-center justify-between py-2 px-2 rounded bg-amber-50 border border-amber-100">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-md bg-amber-100 flex items-center justify-center">
-                    <i className="fa-solid fa-star text-amber-500 text-[10px]" />
-                  </div>
-                  <span className="text-xs font-semibold text-gray-700">{t("admin_subscriptions_featured")}</span>
+                  <i className="fa-solid fa-star text-amber-500 text-sm" />
+                  <span className="text-[12px] font-medium text-gray-700">{t("admin_subscriptions_featured")}</span>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" checked={form.is_featured} onChange={(e) => setForm({ ...form, is_featured: e.target.checked })} className="sr-only peer" />
-                  <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary" />
+                  <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D98A30]" />
                 </label>
               </div>
-              <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
-                <button type="button" onClick={() => setModalOpen(false)} className="px-5 py-2 text-sm text-gray-500 font-medium hover:text-gray-700 transition-colors">{t("admin_subscriptions_cancel")}</button>
-                <button type="submit" disabled={saving || !form.name.trim()} className="bg-primary text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-primary-dark transition-all disabled:opacity-60">{saving ? t("admin_subscriptions_saving") : t("admin_subscriptions_save")}</button>
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                <button type="button" onClick={() => setModalOpen(false)} className="px-4 py-2 text-[13px] text-gray-500 font-medium hover:text-gray-700">
+                  Annuler
+                </button>
+                <button type="submit" disabled={saving || !form.name.trim()}
+                  className="px-5 py-2 bg-[#1E3A2F] text-white rounded text-[13px] font-semibold hover:bg-[#2D5A42] transition-colors disabled:opacity-60 flex items-center gap-1.5">
+                  {saving && <i className="fa-solid fa-spinner fa-spin text-xs" />}
+                  {editingId ? "Enregistrer" : "Créer"}
+                </button>
               </div>
             </form>
           </div>

@@ -4,6 +4,7 @@ import { adminService } from "../../services/admin";
 import InfoTooltip from "../../components/ui/InfoTooltip";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import EmptyState from "../../components/ui/EmptyState";
+import { statusBadgeClass } from "../../utils/statusBadge";
 
 interface Referral {
   id: string;
@@ -11,6 +12,7 @@ interface Referral {
   referred_name?: string;
   status?: string;
   reward?: number;
+  recompense_attribuee?: boolean;
   created_at?: string;
 }
 
@@ -30,8 +32,13 @@ export default function AdminReferrals() {
   const reward = async (id: string) => {
     try {
       await adminService.rewardReferral(id);
-      setRefs((prev) => prev.map((r) => (r.id === id ? { ...r, status: "rewarded" } : r)));
+      setRefs((prev) => prev.map((r) => (r.id === id ? { ...r, status: "REWARDED" } : r)));
     } catch {}
+  };
+
+  const isRewarded = (r: Referral) => {
+    const s = (r.status || "").toUpperCase();
+    return s === "REWARDED" || s === "VALIDATED" || r.recompense_attribuee === true;
   };
 
   if (loading) {
@@ -39,62 +46,54 @@ export default function AdminReferrals() {
   }
 
   return (
-    <div>
-      <div className="mb-6">
+    <div className="flex flex-col h-full">
+      <div className="mb-4 shrink-0">
         <div className="flex items-center gap-2">
-          <h1 className="font-bricolage text-2xl font-black text-gray-900">{t("admin_referrals")}</h1>
-          <InfoTooltip text="Liste des parrainages : utilisateurs qui ont invité d'autres personnes à rejoindre la plateforme." />
+          <h1 className="text-xl font-bold text-gray-900">{t("admin_referrals")}</h1>
+          <InfoTooltip text="Liste des parrainages : utilisateurs qui ont invité d'autres personnes." />
         </div>
-        <p className="text-gray-400 text-[13px] font-medium mt-1">{t("admin_referrals_subtitle")}</p>
+        <p className="text-gray-500 text-[13px] mt-0.5">{t("admin_referrals_subtitle")}</p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200/60 overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/80">
-                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_sponsor")}</th>
-                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_godchild")}</th>
-                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_status")}</th>
-                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_reward")}</th>
-                <th className="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_date")}</th>
-                <th className="text-right px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_actions")}</th>
+      <div className="bg-white border border-gray-200 rounded flex flex-col min-h-0">
+        <div className="overflow-auto flex-1 min-h-0">
+          <table className="w-full text-sm border-collapse">
+            <thead className="sticky top-0 bg-gray-50 z-10">
+              <tr className="border-b border-gray-200">
+                <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_sponsor")}</th>
+                <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_godchild")}</th>
+                <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_status")}</th>
+                <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_reward")}</th>
+                <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_date")}</th>
+                <th className="text-right px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_actions")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-gray-100">
               {refs.length === 0 ? (
                 <EmptyState icon="fa-solid fa-gift" message={t("admin_no_referrals")} colSpan={6} />
               ) : (
                 refs.map((r) => (
-                  <tr key={r.id} className="hover:bg-gray-50/60 transition-colors">
-                    <td className="px-4 py-3.5 font-semibold text-gray-900">{r.referrer_name || "—"}</td>
-                    <td className="px-4 py-3.5 text-gray-600">{r.referred_name || "—"}</td>
-                    <td className="px-4 py-3.5">
-                      <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full border ${
-                        r.status === "rewarded"
-                          ? "bg-emerald-50 text-emerald-600 border-emerald-200/50"
-                          : r.status === "pending"
-                          ? "bg-amber-50 text-amber-600 border-amber-200/50"
-                          : "bg-gray-100 text-gray-400 border-gray-200"
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${
-                          r.status === "rewarded" ? "bg-emerald-500" :
-                          r.status === "pending" ? "bg-amber-500" : "bg-gray-400"
-                        }`} />
-                        {r.status === "rewarded" ? t("admin_rewarded") : r.status === "pending" ? t("admin_pending") : r.status || t("admin_pending")}
+                  <tr key={r.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 font-semibold text-gray-900 text-[13px]">{r.referrer_name || "—"}</td>
+                    <td className="px-4 py-3 text-[13px] text-gray-600">{r.referred_name || "—"}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex text-[11px] font-semibold px-2 py-0.5 rounded border ${isRewarded(r) ? statusBadgeClass("REWARDED") : statusBadgeClass(r.status)}`}>
+                        {isRewarded(r) ? t("admin_rewarded")
+                          : (r.status || "").toUpperCase() === "PENDING" ? t("admin_pending")
+                          : r.status || t("admin_pending")}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 font-semibold text-gray-700">
+                    <td className="px-4 py-3 text-[13px] font-semibold text-gray-700">
                       {r.reward ? `${r.reward.toLocaleString("fr-FR")} XAF` : "—"}
                     </td>
-                    <td className="px-4 py-3.5 text-gray-400 text-[12px]">
+                    <td className="px-4 py-3 text-[11px] text-gray-400">
                       {r.created_at ? new Date(r.created_at).toLocaleDateString("fr-FR") : "—"}
                     </td>
-                    <td className="px-4 py-3.5 text-right">
-                      {r.status === "pending" && (
+                    <td className="px-4 py-3 text-right">
+                      {!isRewarded(r) && (
                         <button
                           onClick={() => reward(r.id)}
-                          className="text-[11px] px-4 py-1.5 rounded-xl bg-gradient-to-r from-primary to-primary-dark text-white hover:shadow-lg hover:shadow-primary/20 font-bold transition-all"
+                          className="text-[12px] px-3 py-1.5 rounded border border-[#D98A30] bg-[#D98A30]/10 text-[#D98A30] hover:bg-[#D98A30]/20 font-semibold transition-colors"
                         >
                           <i className="fa-solid fa-gift mr-1.5 text-[10px]" />
                           {t("admin_reward_btn")}

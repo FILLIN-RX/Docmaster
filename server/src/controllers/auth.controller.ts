@@ -217,6 +217,7 @@ export class AuthController {
       const token = await this.userService.requestPasswordReset(email);
 
       res.status(200).json({
+        success: true,
         message: 'Password reset email sent',
         token, // In production, send this via email, not in response
       });
@@ -244,6 +245,7 @@ export class AuthController {
       const user = await this.userService.resetPassword(token, newPassword);
 
       res.status(200).json({
+        success: true,
         message: 'Password reset successfully',
         user: { id: user.id, email: user.email },
       });

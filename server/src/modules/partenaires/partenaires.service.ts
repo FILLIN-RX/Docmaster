@@ -8,7 +8,6 @@ import { SmsService } from '../../services/sms.service.ts';
 import { NotificationService } from '../../services/notification.service.ts';
 import { walletService } from '../../services/wallet.service.ts';
 import { DeclarationService } from '../../services/declaration.service.ts';
-import { DocumentDeclaration } from '../../types/database.ts';
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3003';
 
@@ -27,53 +26,34 @@ export class PartenaireService {
   }
 
   /**
-   * Admin creates a new partner (organisation account)
+   * Admin creates a new standalone partner account (like autorites, no user linked)
    */
   async create(data: any, createdBy: string) {
     const existing = await this.repository.findByEmail(data.email);
     if (existing) {
       throw new Error('Un partenaire avec cet email existe déjà');
     }
-    const emailTaken = await pool.query(
-      `SELECT id FROM users WHERE LOWER(email) = LOWER($1)`,
-      [data.email]
-    );
-    if (emailTaken.rows.length > 0) {
-      throw new Error('Cet email est déjà utilisé par un autre compte');
-    }
 
     const tempPassword = this.generateTempPassword();
     const hashedPassword = await argon2.hash(tempPassword);
 
-    // 1. Create the underlying user (role PARTNER)
-    const userRes = await pool.query(
-      `INSERT INTO users (nom, prenom, email, telephone, mot_de_passe, pays, ville, is_verified, role)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, true, 'PARTNER')
-       RETURNING id, nom, prenom, email, telephone, ville, wallet_balance`,
-      [
-        data.nom_contact || data.nom_organisation,
-        data.prenom_contact || 'Organisation',
-        data.email,
-        data.telephone || null,
-        hashedPassword,
-        'Cameroun',
-        data.ville || 'Yaoundé',
-      ]
-    );
-    const user = userRes.rows[0];
-
-    // 2. Create the partenaire profile
     const profile = await this.repository.create({
-      user_id: user.id,
       nom_organisation: data.nom_organisation,
       adresse: data.adresse,
+      email: data.email,
+      mot_de_passe: hashedPassword,
+      telephone: data.telephone || null,
+      nom_contact: data.nom_contact || data.nom_organisation,
+      prenom_contact: data.prenom_contact || 'Organisation',
+      ville: data.ville || null,
+      region: data.region || null,
       created_by: createdBy,
     });
 
-    // 3. Send invitation email with temp password
+    // 1. Send invitation email with temp password
     try {
       await this.mailService.sendPartnerInviteEmail(
-        user.email,
+        profile.email,
         data.nom_organisation,
         tempPassword,
         `${FRONTEND_URL}/partenaire/connexion`
@@ -82,11 +62,11 @@ export class PartenaireService {
       console.error('❌ [Partenaires] Email invitation échoué:', err.message);
     }
 
-    // 4. Send SMS if phone provided
-    if (user.telephone) {
+    // 2. Send SMS if phone provided
+    if (profile.telephone) {
       try {
         await this.smsService.sendSms(
-          user.telephone,
+          profile.telephone,
           `Bonjour, votre compte partenaire DocMaster "${data.nom_organisation}" est créé. Connectez-vous sur ${FRONTEND_URL}/partenaire/connexion avec votre mot de passe temporaire.`
         );
       } catch (err: any) {
@@ -94,11 +74,11 @@ export class PartenaireService {
       }
     }
 
-    // 5. Notify admins
+    // 3. Notify admins
     try {
       await this.notificationService.notifyAdmins(
         'Nouveau partenaire créé',
-        `Nouveau compte organisation : ${data.nom_organisation} (${user.email})`,
+        `Nouveau compte organisation : ${data.nom_organisation} (${profile.email})`,
         'INFO',
         { partenaire_id: profile.id }
       );
@@ -108,17 +88,16 @@ export class PartenaireService {
 
     return {
       id: profile.id,
-      user_id: user.id,
       nom_organisation: profile.nom_organisation,
-      email: user.email,
-      telephone: user.telephone,
+      email: profile.email,
+      telephone: profile.telephone,
       statut: profile.statut,
       temp_password: tempPassword,
     };
   }
 
   /**
-   * Partner login — returns JWT
+   * Partner login — returns JWT (id = partenaire.id)
    */
   async login(email: string, motDePasse: string) {
     const profile = await this.repository.findByEmail(email);
@@ -126,15 +105,7 @@ export class PartenaireService {
       throw new Error('Email ou mot de passe incorrect');
     }
 
-    const pwdRes = await pool.query(
-      `SELECT mot_de_passe FROM users WHERE id = $1`,
-      [profile.user_id]
-    );
-    if (!pwdRes.rows[0]) {
-      throw new Error('Email ou mot de passe incorrect');
-    }
-
-    const valid = await argon2.verify(pwdRes.rows[0].mot_de_passe, motDePasse);
+    const valid = await argon2.verify(profile.mot_de_passe || '', motDePasse);
     if (!valid) {
       throw new Error('Email ou mot de passe incorrect');
     }
@@ -143,51 +114,34 @@ export class PartenaireService {
       throw new Error('Compte partenaire désactivé. Contactez un administrateur.');
     }
 
-    const token = generateToken(profile.user_id, profile.email, 'PARTNER');
-    const { must_change_password, wallet_balance } = profile;
+    const token = generateToken(profile.id, profile.email, 'PARTNER');
+    const { mot_de_passe, ...safe } = profile;
     return {
       token,
-      partenaire: {
-        id: profile.id,
-        user_id: profile.user_id,
-        nom_organisation: profile.nom_organisation,
-        email: profile.email,
-        telephone: profile.telephone,
-        nom_contact: profile.nom_contact,
-        prenom_contact: profile.prenom_contact,
-        ville: profile.ville,
-        region: profile.region,
-        statut: profile.statut,
-        must_change_password,
-        wallet_balance,
-      },
+      partenaire: safe,
     };
   }
 
   /**
    * Change password (mandatory on first login)
    */
-  async changePassword(userId: string, ancienMotDePasse: string, nouveauMotDePasse: string) {
+  async changePassword(partenaireId: string, ancienMotDePasse: string, nouveauMotDePasse: string) {
     if (nouveauMotDePasse.length < 8) {
       throw new Error('Le mot de passe doit contenir au moins 8 caractères');
     }
 
-    const pwdRes = await pool.query(`SELECT mot_de_passe FROM users WHERE id = $1`, [userId]);
-    if (!pwdRes.rows[0]) {
+    const profile = await this.repository.findByIdWithPassword(partenaireId);
+    if (!profile) {
       throw new Error('Compte introuvable');
     }
 
-    const valid = await argon2.verify(pwdRes.rows[0].mot_de_passe, ancienMotDePasse);
+    const valid = await argon2.verify(profile.mot_de_passe || '', ancienMotDePasse);
     if (!valid) {
       throw new Error('Ancien mot de passe incorrect');
     }
 
     const hashed = await argon2.hash(nouveauMotDePasse);
-    await pool.query(
-      `UPDATE users SET mot_de_passe = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
-      [hashed, userId]
-    );
-    await this.repository.markPasswordChanged(userId);
+    await this.repository.updatePassword(partenaireId, hashed);
 
     return { success: true, message: 'Mot de passe changé avec succès' };
   }
@@ -198,11 +152,8 @@ export class PartenaireService {
   async findById(id: string) {
     const profile = await this.repository.findById(id);
     if (!profile) return null;
-    const { nom_contact, prenom_contact, ...safe } = profile;
     return {
-      ...safe,
-      nom_contact,
-      prenom_contact,
+      ...profile,
       wallet_balance: Number(profile.wallet_balance || 0),
     };
   }
@@ -210,25 +161,25 @@ export class PartenaireService {
   /**
    * Partner stats: declaration counts + wallet balance
    */
-  async getStats(userId: string) {
+  async getStats(partenaireId: string) {
     const [total, matched, returned, available] = await Promise.all([
-      this.repository.countDeclarations(userId),
+      this.repository.countDeclarations(partenaireId),
       pool.query(
-        `SELECT COUNT(*)::int AS count FROM declarations WHERE reporter_id = $1 AND declaration_type = 'FOUND' AND status = 'MATCHED'`,
-        [userId]
+        `SELECT COUNT(*)::int AS count FROM declarations WHERE reporter_id = $1 AND reporter_type = 'PARTENAIRE' AND declaration_type = 'FOUND' AND status = 'MATCHED'`,
+        [partenaireId]
       ),
       pool.query(
-        `SELECT COUNT(*)::int AS count FROM declarations WHERE reporter_id = $1 AND declaration_type = 'FOUND' AND status = 'RETURNED'`,
-        [userId]
+        `SELECT COUNT(*)::int AS count FROM declarations WHERE reporter_id = $1 AND reporter_type = 'PARTENAIRE' AND declaration_type = 'FOUND' AND status = 'RETURNED'`,
+        [partenaireId]
       ),
       pool.query(
-        `SELECT COUNT(*)::int AS count FROM declarations WHERE reporter_id = $1 AND declaration_type = 'FOUND' AND status = 'AVAILABLE'`,
-        [userId]
+        `SELECT COUNT(*)::int AS count FROM declarations WHERE reporter_id = $1 AND reporter_type = 'PARTENAIRE' AND declaration_type = 'FOUND' AND status = 'AVAILABLE'`,
+        [partenaireId]
       ),
     ]);
     const balanceRes = await pool.query(
-      `SELECT COALESCE(wallet_balance, 0)::float AS balance FROM users WHERE id = $1`,
-      [userId]
+      `SELECT COALESCE(wallet_balance, 0)::float AS balance FROM partenaires WHERE id = $1`,
+      [partenaireId]
     );
 
     return {
@@ -244,12 +195,13 @@ export class PartenaireService {
   /**
    * List the partner's found declarations (FOUND only)
    */
-  async getDeclarations(userId: string, filters: any = {}) {
+  async getDeclarations(partenaireId: string, filters: any = {}) {
     const conditions = [
       `d.reporter_id = $1`,
+      `d.reporter_type = 'PARTENAIRE'`,
       `d.declaration_type = 'FOUND'`,
     ];
-    const params: any[] = [userId];
+    const params: any[] = [partenaireId];
     let idx = 2;
 
     if (filters.status) {
@@ -295,7 +247,7 @@ export class PartenaireService {
   /**
    * Create a found declaration (partners can only declare TROUVAILLE, unlimited)
    */
-  async createFoundDeclaration(data: any, userId: string, files: any) {
+  async createFoundDeclaration(data: any, partenaireId: string, files: any) {
     const photo_recto = files?.photo_recto?.[0]?.path;
     const photo_verso = files?.photo_verso?.[0]?.path;
 
@@ -322,7 +274,8 @@ export class PartenaireService {
       {
         ...data,
         declaration_type: 'FOUND',
-        reporter_id: userId,
+        reporter_id: partenaireId,
+        reporter_type: 'PARTENAIRE',
         photo_recto,
         photo_verso,
       },
@@ -335,20 +288,20 @@ export class PartenaireService {
   /**
    * Delete one of the partner's own declarations
    */
-  async deleteDeclaration(declarationId: string, userId: string) {
-    return this.declarationService.deleteDeclaration(declarationId, userId);
+  async deleteDeclaration(declarationId: string, partenaireId: string) {
+    return this.declarationService.deleteDeclaration(declarationId, partenaireId);
   }
 
   /**
    * Partner wallet: balance + history
    */
-  async getWallet(userId: string, filters: any = {}) {
+  async getWallet(partenaireId: string, filters: any = {}) {
     const balanceRes = await pool.query(
-      `SELECT COALESCE(wallet_balance, 0)::float AS balance FROM users WHERE id = $1`,
-      [userId]
+      `SELECT COALESCE(wallet_balance, 0)::float AS balance FROM partenaires WHERE id = $1`,
+      [partenaireId]
     );
-    const history = await walletService.getHistory(
-      userId,
+    const history = await walletService.getPartnerHistory(
+      partenaireId,
       Math.min(100, Number(filters.limit) || 50),
       Number(filters.offset) || 0
     );
@@ -375,10 +328,10 @@ export class PartenaireService {
     };
 
     if (type === 'CREDIT') {
-      const balance = await walletService.credit(profile.user_id, amount, 'ADMIN_ADJUSTMENT', { metadata });
+      const balance = await walletService.creditPartner(partenaireId, amount, 'ADMIN_ADJUSTMENT', { metadata });
       return { success: true, type, amount, balance };
     }
-    const balance = await walletService.debit(profile.user_id, amount, 'ADMIN_ADJUSTMENT', { metadata });
+    const balance = await walletService.debitPartner(partenaireId, amount, 'ADMIN_ADJUSTMENT', { metadata });
     return { success: true, type, amount, balance };
   }
 
@@ -395,11 +348,14 @@ export class PartenaireService {
     return {
       rows: result.rows.map((r) => ({
         id: r.id,
-        user_id: r.user_id,
         nom_organisation: r.nom_organisation,
         email: r.email,
         telephone: r.telephone,
+        nom_contact: r.nom_contact,
+        prenom_contact: r.prenom_contact,
         ville: r.ville,
+        region: r.region,
+        adresse: r.adresse,
         statut: r.statut,
         wallet_balance: Number(r.wallet_balance || 0),
         created_at: r.created_at,
@@ -409,7 +365,7 @@ export class PartenaireService {
   }
 
   /**
-   * Admin updates a partner
+   * Admin updates a partner (standalone columns, no user to touch)
    */
   async update(partenaireId: string, data: any) {
     const profile = await this.repository.findById(partenaireId);
@@ -417,60 +373,52 @@ export class PartenaireService {
       throw new Error('Partenaire introuvable');
     }
 
-    const userUpdates: string[] = [];
-    const userParams: any[] = [];
-    let idx = 1;
-
-    if (data.email !== undefined) {
-      const taken = await pool.query(
-        `SELECT id FROM users WHERE LOWER(email) = LOWER($1) AND id != $2`,
-        [data.email, profile.user_id]
-      );
-      if (taken.rows.length > 0) {
+    if (data.email !== undefined && data.email !== profile.email) {
+      const taken = await this.repository.findByEmail(data.email);
+      if (taken && taken.id !== partenaireId) {
         throw new Error('Cet email est déjà utilisé par un autre compte');
       }
-      userUpdates.push(`email = $${idx++}`);
-      userParams.push(data.email);
-    }
-    if (data.telephone !== undefined) {
-      userUpdates.push(`telephone = $${idx++}`);
-      userParams.push(data.telephone || null);
-    }
-    if (data.nom_contact !== undefined) {
-      userUpdates.push(`nom = $${idx++}`);
-      userParams.push(data.nom_contact || data.nom_organisation || profile.nom_organisation);
-    }
-    if (data.prenom_contact !== undefined) {
-      userUpdates.push(`prenom = $${idx++}`);
-      userParams.push(data.prenom_contact || 'Organisation');
-    }
-    if (data.ville !== undefined) {
-      userUpdates.push(`ville = $${idx++}`);
-      userParams.push(data.ville);
-    }
-    if (data.region !== undefined) {
-      userUpdates.push(`region = $${idx++}`);
-      userParams.push(data.region || null);
-    }
-
-    if (userUpdates.length > 0) {
-      await pool.query(
-        `UPDATE users SET ${userUpdates.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = $${idx}`,
-        [...userParams, profile.user_id]
-      );
     }
 
     const updated = await this.repository.update(partenaireId, {
       nom_organisation: data.nom_organisation,
       adresse: data.adresse,
       statut: data.statut,
+      email: data.email,
+      telephone: data.telephone,
+      nom_contact: data.nom_contact,
+      prenom_contact: data.prenom_contact,
+      ville: data.ville,
+      region: data.region,
     });
 
     return this.findById(partenaireId);
   }
 
   /**
-   * Admin deletes a partner (profile + underlying user)
+   * Partner updates its own organisation profile (no email / statut)
+   */
+  async updateProfil(partenaireId: string, data: any) {
+    const profile = await this.repository.findById(partenaireId);
+    if (!profile) {
+      throw new Error('Partenaire introuvable');
+    }
+
+    const updated = await this.repository.update(partenaireId, {
+      nom_organisation: data.nom_organisation,
+      telephone: data.telephone,
+      nom_contact: data.nom_contact,
+      prenom_contact: data.prenom_contact,
+      adresse: data.adresse,
+      ville: data.ville,
+      region: data.region,
+    });
+
+    return this.findById(partenaireId);
+  }
+
+  /**
+   * Admin deletes a partner (fully standalone, no user to delete)
    */
   async delete(partenaireId: string) {
     const profile = await this.repository.findById(partenaireId);
@@ -478,7 +426,6 @@ export class PartenaireService {
       throw new Error('Partenaire introuvable');
     }
     await this.repository.delete(partenaireId);
-    await pool.query(`DELETE FROM users WHERE id = $1`, [profile.user_id]);
     return { success: true, message: 'Partenaire supprimé' };
   }
 }

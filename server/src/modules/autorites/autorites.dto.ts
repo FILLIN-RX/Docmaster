@@ -47,6 +47,16 @@ export class CreateAutoriteDTO {
   @IsString()
   @MaxLength(100, { message: 'La région ne peut pas dépasser 100 caractères' })
   region?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100, { message: 'Le département ne peut pas dépasser 100 caractères' })
+  department?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100, { message: "L'arrondissement ne peut pas dépasser 100 caractères" })
+  arrondissement?: string;
 }
 
 /**
@@ -112,6 +122,16 @@ export class UpdateAutoriteDTO {
   @IsString()
   @MaxLength(100)
   region?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  department?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  arrondissement?: string;
 
   @IsOptional()
   @IsBoolean()

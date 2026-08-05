@@ -57,6 +57,7 @@ export interface DocumentDeclaration {
     declaration_type: DeclarationType;
     status: DocumentStatus;
     reporter_id: string;
+    reporter_type?: 'USER' | 'PARTENAIRE';
     ville: string;
     region: string;
     pays: string;
@@ -82,6 +83,8 @@ export interface DocumentDeclaration {
     email_contact?: string;
     quartier?: string;
     metadata?: any;
+    department?: string;
+    arrondissement?: string;
     created_at: Date;
     deleted_at?: Date | null;
     deleted_reason?: string | null;
@@ -206,6 +209,8 @@ export interface Autorite {
     niveau: AutoriteNiveau;
     ville: string;
     region?: string;
+    department?: string;
+    arrondissement?: string;
     is_active: boolean;
     must_change_password: boolean;
     created_by?: string | null;
@@ -222,6 +227,8 @@ export interface AutoritePublic {
     niveau: AutoriteNiveau;
     ville: string;
     region?: string;
+    department?: string;
+    arrondissement?: string;
     is_active: boolean;
     must_change_password: boolean;
     created_at: Date;

@@ -22,6 +22,7 @@ export default function AdminSidebar({ open, onClose }: AdminSidebarProps) {
     { to: "/admin/referrals", icon: "fa-solid fa-user-group", label: t("admin_referrals") },
     { to: "/admin/declarations", icon: "fa-solid fa-folder-open", label: t("admin_declarations") },
     { to: "/admin/autorites", icon: "fa-solid fa-landmark", label: "Autorités" },
+    { to: "/admin/partenaires", icon: "fa-solid fa-building", label: "Partenaires" },
     { to: "/admin/matching", icon: "fa-solid fa-shuffle", label: "Matching" },
     { to: "/admin/withdrawals", icon: "fa-solid fa-money-bill-transfer", label: t("admin_withdrawals") },
     { to: "/admin/sms", icon: "fa-solid fa-comment-sms", label: "SMS" },

@@ -5,8 +5,8 @@ import { PartenaireRepository } from './partenaires.repository.ts';
 const repository = new PartenaireRepository();
 
 /**
- * Authenticate a partner via the standard user JWT.
- * The token must belong to a user with role 'PARTNER' and an ACTIF partenaire profile.
+ * Authenticate a partner via the partner JWT (id = partenaire.id).
+ * The token must belong to an ACTIF partenaire profile.
  * Expects: Authorization: Bearer <token> OR cookie "docmaster_token"
  */
 export const partenaireAuthMiddleware = async (req: Request, res: Response, next: NextFunction) => {
@@ -26,7 +26,7 @@ export const partenaireAuthMiddleware = async (req: Request, res: Response, next
     }
 
     const decoded = verifyToken(token);
-    const profile = await repository.findByUserId(decoded.id);
+    const profile = await repository.findById(decoded.id);
 
     if (!profile) {
       return res.status(401).json({
@@ -43,7 +43,7 @@ export const partenaireAuthMiddleware = async (req: Request, res: Response, next
 
     (req as any).partenaire = profile;
     (req as any).user = {
-      id: profile.user_id,
+      id: profile.id,
       email: profile.email,
       role: 'PARTNER',
     };

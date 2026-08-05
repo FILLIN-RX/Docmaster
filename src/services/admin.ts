@@ -15,6 +15,41 @@ interface Autorite {
   [key: string]: unknown;
 }
 
+interface Partenaire {
+  id: string;
+  nom_organisation: string;
+  email: string;
+  telephone?: string | null;
+  nom_contact?: string | null;
+  prenom_contact?: string | null;
+  ville?: string | null;
+  region?: string | null;
+  adresse?: string | null;
+  logo_url?: string | null;
+  statut: "ACTIF" | "SUSPENDU" | "INACTIF";
+  must_change_password: boolean;
+  wallet_balance: number;
+  is_verified?: boolean;
+  created_at: string;
+  updated_at?: string;
+  [key: string]: unknown;
+}
+
+interface PartenaireWalletTransaction {
+  id: string;
+  partenaire_id: string;
+  amount: string;
+  balance_before: string;
+  balance_after: string;
+  type: "CREDIT" | "DEBIT";
+  reason: string;
+  reference_id?: string | null;
+  reference_type?: string | null;
+  metadata?: Record<string, any> | null;
+  created_at: string;
+  [key: string]: unknown;
+}
+
 interface DashboardStats {
   total_users?: number;
   total_declarations?: number;
@@ -280,6 +315,37 @@ export const adminService = {
 
   async deleteAutorite(id: string): Promise<unknown> {
     const res = await apiClient.delete(`autorites/${id}`);
+    return res.data;
+  },
+
+  // ── Partenaires ──
+  async getPartenaires(filters?: { search?: string; statut?: string; page?: number; limit?: number }): Promise<{ rows: Partenaire[]; total: number }> {
+    const res = await apiClient.get("partenaires", { params: filters });
+    return { rows: res.data?.rows ?? [], total: res.data?.total ?? 0 };
+  },
+
+  async createPartenaire(data: Partial<Partenaire>): Promise<Partenaire & { temp_password: string }> {
+    const res = await apiClient.post("partenaires", data);
+    return res.data.data;
+  },
+
+  async updatePartenaire(id: string, data: Partial<Partenaire>): Promise<Partenaire> {
+    const res = await apiClient.put(`partenaires/${id}`, data);
+    return res.data.data;
+  },
+
+  async adjustPartenaireWallet(id: string, data: { type: "CREDIT" | "DEBIT"; amount: number; motif?: string }): Promise<{ balance: number }> {
+    const res = await apiClient.post(`partenaires/${id}/wallet`, data);
+    return res.data.data;
+  },
+
+  async getPartenaireWalletHistory(id: string, params?: { limit?: number; offset?: number }): Promise<{ balance: number; history: PartenaireWalletTransaction[] }> {
+    const res = await apiClient.get(`partenaires/${id}/wallet`, { params });
+    return { balance: res.data?.data?.balance ?? 0, history: res.data?.data?.history ?? [] };
+  },
+
+  async deletePartenaire(id: string): Promise<unknown> {
+    const res = await apiClient.delete(`partenaires/${id}`);
     return res.data;
   },
 

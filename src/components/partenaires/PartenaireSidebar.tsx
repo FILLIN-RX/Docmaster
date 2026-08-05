@@ -1,49 +1,50 @@
-import { Menu, Avatar, Typography, Badge, Button, Tooltip } from "antd";
+import { Menu, Avatar, Typography, Button, Tooltip } from "antd";
 import {
   DashboardOutlined,
   FileProtectOutlined,
   LogoutOutlined,
+  PlusCircleOutlined,
+  ProfileOutlined,
   UserOutlined,
-  SafetyCertificateOutlined,
-  EnvironmentOutlined,
-  TeamOutlined,
-  HistoryOutlined,
+  ShopOutlined,
+  WalletOutlined,
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAutorite } from "../../context/AutoriteContext";
-import { autoritePalette } from "../../theme/autorites";
+import { usePartenaire } from "../../context/PartenaireContext";
+import { partenairePalette } from "../../theme/partenaires";
 
-interface AutoriteSidebarProps {
+interface PartenaireSidebarProps {
   collapsed: boolean;
   onCollapse: (collapsed: boolean) => void;
 }
 
-export default function AutoriteSidebar({ collapsed, onCollapse }: AutoriteSidebarProps) {
-  const { autorite, logout } = useAutorite();
+export default function PartenaireSidebar({ collapsed, onCollapse }: PartenaireSidebarProps) {
+  const { partenaire, logout } = usePartenaire();
   const navigate = useNavigate();
   const location = useLocation();
 
   const selectedKey = (() => {
     if (location.pathname.includes("/declarations")) return "declarations";
-    if (location.pathname.includes("/autorites")) return "autorites";
-    if (location.pathname.includes("/journal")) return "journal";
+    if (location.pathname.includes("/declarer")) return "declarer";
+    if (location.pathname.includes("/portefeuille")) return "portefeuille";
+    if (location.pathname.includes("/profil")) return "profil";
     return "dashboard";
   })();
 
   const menuItems = [
     { key: "dashboard", icon: <DashboardOutlined />, label: "Tableau de bord" },
-    { key: "declarations", icon: <FileProtectOutlined />, label: "Déclarations" },
-    { key: "journal", icon: <HistoryOutlined />, label: "Journal d'activité" },
-    ...(autorite?.niveau === "HAUTE"
-      ? [{ key: "autorites", icon: <TeamOutlined />, label: "Gestion des autorités" }]
-      : []),
+    { key: "declarer", icon: <PlusCircleOutlined />, label: "Déclarer une trouvaille" },
+    { key: "declarations", icon: <FileProtectOutlined />, label: "Mes déclarations" },
+    { key: "portefeuille", icon: <WalletOutlined />, label: "Portefeuille" },
+    { key: "profil", icon: <ProfileOutlined />, label: "Profil de l'organisation" },
   ];
 
   const goTo = (key: string) => {
-    if (key === "declarations") navigate("/autorite/declarations");
-    else if (key === "autorites") navigate("/autorite/autorites");
-    else if (key === "journal") navigate("/autorite/journal");
-    else navigate("/autorite/dashboard");
+    if (key === "declarations") navigate("/partenaire/declarations");
+    else if (key === "declarer") navigate("/partenaire/declarer");
+    else if (key === "portefeuille") navigate("/partenaire/portefeuille");
+    else if (key === "profil") navigate("/partenaire/profil");
+    else navigate("/partenaire/dashboard");
   };
 
   const sidebarW = collapsed ? 80 : 240;
@@ -53,7 +54,7 @@ export default function AutoriteSidebar({ collapsed, onCollapse }: AutoriteSideb
       style={{
         width: sidebarW,
         minWidth: sidebarW,
-        background: autoritePalette.greenDark,
+        background: partenairePalette.greenDark,
         display: "flex",
         flexDirection: "column",
         transition: "width 0.2s ease, min-width 0.2s ease",
@@ -72,33 +73,33 @@ export default function AutoriteSidebar({ collapsed, onCollapse }: AutoriteSideb
           justifyContent: collapsed ? "center" : "flex-start",
           gap: 10,
           padding: collapsed ? "0" : "0 16px",
-          borderBottom: `1px solid ${autoritePalette.greenMid}`,
+          borderBottom: `1px solid ${partenairePalette.greenMid}`,
           cursor: "pointer",
           flexShrink: 0,
         }}
-        onClick={() => navigate("/autorite/dashboard")}
+        onClick={() => navigate("/partenaire/dashboard")}
       >
         <span
           style={{
             width: 34,
             height: 34,
             borderRadius: 8,
-            background: autoritePalette.primary,
+            background: partenairePalette.primary,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
           }}
         >
-          <SafetyCertificateOutlined style={{ color: "#fff", fontSize: 18 }} />
+          <ShopOutlined style={{ color: "#fff", fontSize: 18 }} />
         </span>
         {!collapsed && (
           <div style={{ lineHeight: 1.1, overflow: "hidden", whiteSpace: "nowrap" }}>
             <Typography.Text strong style={{ color: "#FFFFFF", fontSize: 15, display: "block" }}>
               DocMaster
             </Typography.Text>
-            <Typography.Text style={{ color: autoritePalette.primaryLight, fontSize: 11, display: "block" }}>
-              Espace Autorité
+            <Typography.Text style={{ color: partenairePalette.primaryLight, fontSize: 11, display: "block" }}>
+              Espace Partenaire
             </Typography.Text>
           </div>
         )}
@@ -118,36 +119,36 @@ export default function AutoriteSidebar({ collapsed, onCollapse }: AutoriteSideb
       </div>
 
       {/* User card */}
-      {!collapsed && autorite && (
+      {!collapsed && partenaire && (
         <div
           style={{
             padding: "12px 14px",
             borderRadius: 8,
             background: "rgba(255,255,255,0.08)",
-            border: `1px solid ${autoritePalette.greenMid}`,
+            border: `1px solid ${partenairePalette.greenMid}`,
             margin: "0 16px 16px",
             flexShrink: 0,
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-            <Avatar style={{ background: autoritePalette.primary, fontWeight: 600, fontSize: 12 }} icon={<UserOutlined />}>
-              {autorite ? `${(autorite.prenom || "").charAt(0)}${(autorite.nom || "").charAt(0)}`.toUpperCase() : ""}
+            <Avatar style={{ background: partenairePalette.primary, fontWeight: 600, fontSize: 12 }} icon={<UserOutlined />}>
+              {(partenaire.nom_organisation || "O").charAt(0).toUpperCase()}
             </Avatar>
             <div style={{ minWidth: 0, overflow: "hidden" }}>
               <Typography.Text strong style={{ color: "#fff", fontSize: 12, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {autorite.prenom} {autorite.nom}
+                {partenaire.nom_organisation}
               </Typography.Text>
-              <Typography.Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 11, display: "flex", alignItems: "center", gap: 4 }}>
-                <EnvironmentOutlined /> {autorite.ville}
-                {autorite.region ? `, ${autorite.region}` : ""}
+              <Typography.Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 11, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {partenaire.email}
               </Typography.Text>
             </div>
           </div>
-          <Badge
-            status={autorite.niveau === "HAUTE" ? "warning" : "success"}
-            text={<span style={{ color: "#fff", fontSize: 11 }}>Autorité {autorite.niveau === "HAUTE" ? "Haute" : "Niveau"}</span>}
-            style={{ display: "block", marginBottom: 10 }}
-          />
+          <Typography.Text
+            strong
+            style={{ color: "#fff", fontSize: 12, display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}
+          >
+            <WalletOutlined /> Solde : {Number(partenaire.wallet_balance || 0).toLocaleString("fr-FR")} FCFA
+          </Typography.Text>
           <Button danger block size="small" icon={<LogoutOutlined />} onClick={() => logout()} style={{ fontWeight: 500 }}>
             Se déconnecter
           </Button>

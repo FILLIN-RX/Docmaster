@@ -176,8 +176,8 @@ export class DeclarationService {
     const declaration = await this.declarationRepository.create(data);
     console.log(`🟢 [6] Déclaration créée avec ID: ${declaration.id}`);
     
-    // 6. Notify user
-    if (declaration.reporter_id) {
+    // 6. Notify user (only for user reporters; partners have their own portal)
+    if (declaration.reporter_id && declaration.reporter_type !== 'PARTENAIRE') {
       console.log(`🔵 [7] Notification utilisateur ${declaration.reporter_id}...`);
       await this.notificationService.notifyDeclarationCreated(
         declaration.reporter_id,
@@ -185,6 +185,8 @@ export class DeclarationService {
         docType ? docType.nom : declaration.doc_type,
       );
       console.log('🟢 [7] Notification envoyée');
+    } else if (declaration.reporter_type === 'PARTENAIRE') {
+      console.log('🟡 [7] Déclarant partenaire — notification utilisateur ignorée');
     }
 
     // 7. Check for matches
@@ -195,8 +197,8 @@ export class DeclarationService {
       .catch((err) => console.error("Error checking matches:", err));
     console.log('🟢 [8] Vérification matches lancée (async)');
 
-    // 8. Award Points
-    if (declaration.reporter_id) {
+    // 8. Award Points (only for user reporters; partner rewards go to the partner wallet)
+    if (declaration.reporter_id && declaration.reporter_type !== 'PARTENAIRE') {
       console.log(`🔵 [9] Attribution points à ${declaration.reporter_id}...`);
       const points = await this.settingRepository.getByKey('points_per_declaration');
       const pts = Number(points) || 5;
@@ -209,6 +211,8 @@ export class DeclarationService {
       });
 
       console.log(`🟢 [9] ${points} points attribués`);
+    } else if (declaration.reporter_type === 'PARTENAIRE') {
+      console.log('🟡 [9] Déclarant partenaire — points utilisateur ignorés');
     }
 
     console.log('✅ [DeclarationService.createDeclaration] === FIN SUCCÈS ===');
@@ -614,36 +618,54 @@ export class DeclarationService {
         const pointsReward = Number(docType.points_recompense) || 20;
         const rewardAmount = (basePrice * finderPercent) / 100;
 
+        // Detect if the finder is a partner (standalone account, own wallet)
+        const finderIsPartner = (await pool.query(
+          `SELECT id FROM partenaires WHERE id = $1`,
+          [claim.finder_id]
+        )).rows.length > 0;
+
         // Credit Balance
         const { walletService } = await import('./wallet.service.ts');
-        await walletService.credit(claim.finder_id, rewardAmount, 'DECLARATION_REWARD', {
-          referenceId: claim.id,
-          referenceType: 'claim',
-          metadata: { docId: lostDecl.id }
-        });
+        if (finderIsPartner) {
+          await walletService.creditPartner(claim.finder_id, rewardAmount, 'DECLARATION_REWARD', {
+            referenceId: claim.id,
+            referenceType: 'claim',
+            metadata: { docId: lostDecl.id }
+          });
+        } else {
+          await walletService.credit(claim.finder_id, rewardAmount, 'DECLARATION_REWARD', {
+            referenceId: claim.id,
+            referenceType: 'claim',
+            metadata: { docId: lostDecl.id }
+          });
+        }
         
-        // Credit Points
-        await this.awardPoints(claim.finder_id, pointsReward);
+        // Credit Points / Earnings / Transactions only for user finders
+        if (!finderIsPartner) {
+          await this.awardPoints(claim.finder_id, pointsReward);
 
-        // Record Transaction
-        await this.transactionRepository.create({
-          user_id: claim.finder_id,
-          amount: rewardAmount,
-          currency: 'XAF',
-          status: 'SUCCESS',
-          payment_method: 'VIRTUAL_WALLET',
-          type: 'finder_payout',
-          metadata: { docId: lostDecl.id, claimId: claim.id }
-        });
+          // Record Transaction
+          await this.transactionRepository.create({
+            user_id: claim.finder_id,
+            amount: rewardAmount,
+            currency: 'XAF',
+            status: 'SUCCESS',
+            payment_method: 'VIRTUAL_WALLET',
+            type: 'finder_payout',
+            metadata: { docId: lostDecl.id, claimId: claim.id }
+          });
 
-        // Record Earnings & Send Notifications
-        const { EarningsService } = await import('./earnings.service.ts');
-        await new EarningsService().recordReturnPoints(
-          claim.finder_id,
-          pointsReward,
-          rewardAmount,
-          { docId: lostDecl.id, claimId: claim.id, docType: docType.nom }
-        );
+          // Record Earnings & Send Notifications
+          const { EarningsService } = await import('./earnings.service.ts');
+          await new EarningsService().recordReturnPoints(
+            claim.finder_id,
+            pointsReward,
+            rewardAmount,
+            { docId: lostDecl.id, claimId: claim.id, docType: docType.nom }
+          );
+        } else {
+          console.log(`🟢 [3.2] Finder est un partenaire — récompense ${rewardAmount} XAF créditée sur wallet partenaire`);
+        }
 
         // Notify Owner
         await this.notificationService.notifyDocumentRecovered(claim.owner_id, docType.nom, lostDecl.id);

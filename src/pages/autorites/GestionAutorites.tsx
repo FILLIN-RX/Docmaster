@@ -18,6 +18,7 @@ import {
 import { UserAddOutlined, ReloadOutlined, DeleteOutlined, KeyOutlined } from "@ant-design/icons";
 import { autoritesService, AutoriteSession } from "../../services/autoritesService";
 import { autoritePalette } from "../../theme/autorites";
+import AntdLocationSelect from "../../components/ui/AntdLocationSelect";
 
 const { Title, Text } = Typography;
 
@@ -28,6 +29,7 @@ export default function GestionAutorites() {
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
   const [tempPassword, setTempPassword] = useState<string | null>(null);
+  const [locationValue, setLocationValue] = useState<{ region: string; department: string; arrondissement: string }>({ region: "", department: "", arrondissement: "" });
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchAutorites = () => {
@@ -42,6 +44,13 @@ export default function GestionAutorites() {
   useEffect(() => {
     fetchAutorites();
   }, []);
+
+  useEffect(() => {
+    if (modalOpen) {
+      setLocationValue({ region: "", department: "", arrondissement: "" });
+      form.resetFields();
+    }
+  }, [modalOpen]);
 
   const handleCreate = async () => {
     try {
@@ -264,12 +273,26 @@ export default function GestionAutorites() {
             <Form.Item name="telephone" label="Téléphone">
               <Input placeholder="ex: 671000000" />
             </Form.Item>
-            <Form.Item name="ville" label="Ville" rules={[{ required: true, message: "Ville requise" }]}>
-              <Input placeholder="ex: Yaoundé" />
-            </Form.Item>
           </div>
-          <Form.Item name="region" label="Région">
-            <Input placeholder="ex: Centre" />
+          <Form.Item
+            label="Localisation"
+            required
+            rules={[{ validator: async () => {
+              if (!locationValue.department) throw new Error("Ville requise");
+            }}]}
+          >
+            <AntdLocationSelect
+              value={locationValue}
+              onChange={(val) => {
+                setLocationValue(val);
+                form.setFieldsValue({
+                  region: val.region,
+                  department: val.department,
+                  arrondissement: val.arrondissement,
+                  ville: val.arrondissement || val.department,
+                });
+              }}
+            />
           </Form.Item>
           <Divider style={{ margin: "8px 0 16px" }} />
           <div

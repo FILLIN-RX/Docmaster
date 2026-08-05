@@ -11,12 +11,12 @@ export class DeclarationRepository {
     const query = `
       INSERT INTO declarations (
         identifiant_doc_dm, doc_type, owner_name, document_number, 
-        declaration_type, status, reporter_id, ville, region, pays, 
+        declaration_type, status, reporter_id, reporter_type, ville, region, pays, 
         fingerprint, found_location, etat_physique, photo_recto, 
         photo_verso, description, date_expiration, mode_contact, 
         payment_status, transactions_id, date_naissance, urgence_niveau, recompense_montant, date_perte,
-        telephone_contact, email_contact, quartier, metadata
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)
+        telephone_contact, email_contact, quartier, metadata, department, arrondissement
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31)
       RETURNING *
     `;
 
@@ -28,6 +28,7 @@ export class DeclarationRepository {
       data.declaration_type,
       data.status || "AVAILABLE",
       data.reporter_id,
+      data.reporter_type || 'USER',
       data.ville,
       data.region,
       data.pays,
@@ -49,6 +50,8 @@ export class DeclarationRepository {
       data.email_contact || null,
       data.quartier || null,
       data.metadata ? JSON.stringify(data.metadata) : null,
+      data.department || null,
+      data.arrondissement || null,
     ];
 
     const { rows } = await pool.query(query, values);

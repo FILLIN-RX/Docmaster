@@ -45,6 +45,7 @@ import ConfirmDeclarationModal from "../../components/auth/Declarer/ConfirmDecla
 import SuccessDeclarationModal from "../../components/auth/Declarer/SuccessDeclarationModal";
 import { DOC_META, PLACE_KEYS, type DocumentMetadata } from "../../components/auth/Declarer/docMeta";
 import { addMonths } from "../../utils/dateHelpers";
+import LocationSelect from "../../components/ui/LocationSelect";
 
 interface DocTypeCatalog {
   id: string;
@@ -83,7 +84,7 @@ export default function Declarer() {
   // Custom states matching the HTML inputs
   const [lossDate, setLossDate] = useState("");
   const [lossTime, setLossTime] = useState("");
-  const [ville, setVille] = useState("");
+  const [location, setLocation] = useState<{ region: string; department: string; arrondissement: string }>({ region: "", department: "", arrondissement: "" });
   const [quartier, setQuartier] = useState("");
   const [lieuPrecis, setLieuPrecis] = useState("");
   const [circumstances, setCircumstances] = useState("");
@@ -263,7 +264,7 @@ export default function Declarer() {
     if (active === 3) {
       const errors: Record<string, string> = {};
       if (!lossDate || !lossDate.trim()) errors.lossDate = t("declarer_field_required");
-      if (!ville || !ville.trim()) errors.ville = t("declarer_field_required");
+      if (!location.department) errors.ville = t("declarer_field_required");
       if (Object.keys(errors).length > 0) {
         setFieldErrors(errors);
         return false;
@@ -355,9 +356,11 @@ export default function Declarer() {
         fd.append("doc_type", docId);
         fd.append("owner_name", ownerName || t("declarer_owner_unknown"));
         if (docNum) fd.append("document_number", docNum);
-        fd.append("ville", ville || t("declarer_not_specified"));
+        fd.append("ville", (location.arrondissement || location.department) || t("declarer_not_specified"));
         if (quartier) fd.append("quartier", quartier);
-        fd.append("region", t("declarer_region_centre"));
+        fd.append("region", location.region || t("declarer_region_centre"));
+        if (location.department) fd.append("department", location.department);
+        if (location.arrondissement) fd.append("arrondissement", location.arrondissement);
         fd.append("pays", t("declarer_country_cameroon"));
         if (lossDate) fd.append("date_perte", lossDate);
         if (delivranceDate) fd.append("date_delivrance", delivranceDate);
@@ -809,11 +812,9 @@ export default function Declarer() {
 
                     <Box>
                       <FieldLabel icon="fa-city" labelKey="declarer_city" required />
-                      <TextInput
-                        value={ville}
-                        onChange={(e) => { setVille(e.currentTarget.value); setFieldErrors((prev) => ({ ...prev, ville: "" })); }}
-                        placeholder={t("declarer_placeholder_city")}
-                        leftSection={<i className="fa-solid fa-city" style={{ fontSize: 13, color: "var(--color-primary)" }} />}
+                      <LocationSelect
+                        value={location}
+                        onChange={(val) => { setLocation(val); setFieldErrors((prev) => ({ ...prev, ville: "" })); }}
                         error={fieldErrors.ville}
                       />
                     </Box>

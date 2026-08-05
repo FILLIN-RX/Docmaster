@@ -1,0 +1,199 @@
+================================================================================
+DOCMASTER — MODULE PARTENAIRE
+================================================================================
+Description complète de la fonctionnalité "Partenaires" (organisations).
+
+Un "partenaire" est une organisation (mairie, entreprise, association, ...)
+qui participe à DocMaster en déclarant des documents trouvés. Le partenaire
+dispose d'un portail web dédié, d'un portefeuille de récompenses et n'a pas de
+limite de déclarations (contrairement aux utilisateurs classiques abonnés).
+
+--------------------------------------------------------------------------------
+1. CONCEPT & MODÈLE DE DONNÉES
+--------------------------------------------------------------------------------
+* 1 partenaire = 1 ligne dans la table `partenaires`, TOTALEMENT AUTONOME
+  (comme les autorités) : RIEN n'est lié à la table `users`. Il n'y a plus de
+  user_id, plus de rôle 'PARTNER' dans users, plus de FK vers users.
+
+  -> Migration 55_create_partenaire_standalone.sql :
+     - ajoute sur `partenaires` : email (unique), mot_de_passe, telephone,
+       nom_contact, prenom_contact, ville, region, is_verified, wallet_balance ;
+     - backfill des données depuis les users PARTNER existants puis suppression
+       de la colonne user_id (et de sa FK) ;
+     - created_by devient informatif (id admin, sans FK, comme autorites) ;
+     - crée la table `partenaire_wallet_transactions` (wallet dédié) et migre
+       les anciennes transactions ;
+     - ajoute `reporter_type` ('USER' | 'PARTENAIRE') sur `declarations`,
+       retire la FK reporter_id -> users (reporter_id = id du partenaire pour
+       ses trouvailles) et la FK claims.finder_id -> users.
+
+* Champs du profil partenaire (table partenaires) :
+  id, nom_organisation (150 max), adresse (500), logo_url,
+  statut (CHECK : 'ACTIF' | 'SUSPENDU' | 'INACTIF'),
+  email (unique), mot_de_passe (argon2), telephone, nom_contact,
+  prenom_contact, ville, region, is_verified, wallet_balance,
+  must_change_password (bool), created_by (informatif), created_at, updated_at.
+
+* Règles de déclaration spécifiques :
+  - un partenaire ne peut créer QUE des déclarations de type TROUVAILLE
+    (FOUND), jamais de perte (LOST) ; s'il tente LOST -> erreur ;
+  - déclarations ILLIMITÉES : l'appel passe par
+    `declarationService.createDeclaration(data, { bypassLimits: true })`,
+    qui contourne la validation d'abonnement/limites ;
+  - les trouvailles d'un partenaire portent `reporter_id` = id du partenaire
+    et `reporter_type` = 'PARTENAIRE' (pas de notification in-app ni de points
+    utilisateur pour le déclarant).
+
+* Récompense de remise : quand un document trouvé par un partenaire est
+  remis, le flux de récompense détecte que le finder est un partenaire et
+  crédite `partenaires.wallet_balance` (table partenaire_wallet_transactions,
+  reason DECLARATION_REWARD) au lieu de users.wallet_balance.
+
+--------------------------------------------------------------------------------
+2. API BACKEND (route : /api/partenaires)
+--------------------------------------------------------------------------------
+AUTHENTIFICATION
+  * POST /api/partenaires/login      (public)
+      body : { email, mot_de_passe }
+      -> vérifie le mot de passe (argon2, mot_de_passe de `partenaires`) et le
+         statut du compte (SUSPENDU/INACTIF => refus : "Compte partenaire
+         désactivé").
+      -> réponse : { token (JWT standard, rôle PARTNER, id = id du partenaire),
+                     partenaire: {...} }
+      -> pose aussi un cookie httpOnly `docmaster_token` (24 h).
+  * POST /api/partenaires/logout     (public) : supprime le cookie.
+
+COMPTE
+  * POST /api/partenaires/change-password   (authentifié)
+      body : { ancien_mot_de_passe, nouveau_mot_de_passe }
+      -> obligatoire au 1er login (must_change_password = true).
+  * GET  /api/partenaires/me                 (authentifié)
+      -> profil complet : id, nom_organisation, email, téléphone,
+         nom/prénom contact, ville, région, adresse, statut,
+         must_change_password, wallet_balance, is_verified.
+
+STATISTIQUES
+  * GET  /api/partenaires/stats              (authentifié)
+      -> { total_declarations, found, matched, returned, available,
+           wallet_balance } (déclarations de trouvaille du partenaire).
+
+DÉCLARATIONS (trouvailles du partenaire seulement)
+  * GET    /api/partenaires/declarations     (authentifié)
+      -> filtres : page, limit, q (propriétaire / n° de document / référence),
+         status (AVAILABLE / MATCHED / RETURNED), doc_type.
+      -> réponse : { rows, total, page, limit }.
+  * POST   /api/partenaires/declarations     (authentifié, multipart/form-data)
+      -> champ photo_recto, photo_verso + champs texte (doc_type, owner_name,
+         document_number, ville, quartier, description, telephone_contact,
+         etat_physique, date_trouvaille, ...).
+      -> Force declaration_type = 'FOUND', reporter_id = id du partenaire et
+         reporter_type = 'PARTENAIRE'.
+  * DELETE /api/partenaires/declarations/:id (authentifié)
+      -> supprime une trouvaille du partenaire.
+
+PORTEFEUILLE
+  * GET  /api/partenaires/wallet              (authentifié)
+      -> { balance, history } : solde + historique des opérations
+         (partenaire_wallet_transactions), paramètres limit/offset.
+
+ADMINISTRATION (protégé par le middleware admin existant)
+  * POST   /api/partenaires                       : créer un partenaire.
+      -> insère directement dans `partenaires` (aucun user créé), génère un
+         mot de passe temporaire, envoie l'e-mail d'invitation
+         (sendPartnerInviteEmail) avec le lien /partenaire/connexion, envoie
+         un SMS si téléphone connu, et notifie les admins.
+      -> réponse : { id, nom_organisation, email, statut, temp_password }.
+  * GET    /api/partenaires                       : liste (search, statut, pagination).
+  * GET    /api/partenaires/:id                   : détail.
+  * PUT    /api/partenaires/:id                   : modifier (nom, email,
+      téléphone, contact, ville, région, adresse, statut). Le statut
+      SUSPENDU/INACTIF bloque le login.
+  * GET    /api/partenaires/:id/wallet            : solde + historique complet
+      (partenaire_wallet_transactions).
+  * POST   /api/partenaires/:id/wallet            : ajuster le portefeuille.
+      -> body : { type: 'CREDIT' | 'DEBIT', amount, motif? }
+      -> applique walletService.creditPartner/debitPartner avec reason
+         'ADMIN_ADJUSTMENT' et métadonnées (admin, organisation, motif).
+  * DELETE /api/partenaires/:id                   : supprime le partenaire
+      (rien d'autre à supprimer, aucun user lié).
+
+--------------------------------------------------------------------------------
+3. FRONTEND — PORTAIL PARTENAIRE
+--------------------------------------------------------------------------------
+Thème isolé : src/theme/partenaires.ts (palette "teal" + ConfigProvider antd
+via PartenaireDesignProvider, sans affecter le design Mantine du reste).
+
+AUTHENTIFICATION / CONTEXTE
+  * src/services/partenairesService.ts : client axios (withCredentials,
+    redirection 401 vers /partenaire/connexion) + types TS (plus de user_id).
+  * src/context/PartenaireContext.tsx : PartenaireProvider + usePartenaire()
+    (login / logout / refresh / chargement initial via me()).
+
+ROUTES (App.tsx, sous /partenaire)
+  * /partenaire/connexion                     : page de connexion (SVG de fond,
+      e-mail + mot de passe). Au 1er login => forçage du changement de mot de
+      passe.
+  * /partenaire/changement-mot-de-passe       : obligatoire tant que
+      must_change_password = true (protégé).
+  * /partenaire/dashboard                     : tableau de bord (protégé).
+  * /partenaire/declarations                  : liste des trouvailles (protégé).
+  * /partenaire/portefeuille                  : solde + historique (protégé).
+
+PAGES
+  * Connexion.tsx          : formulaire de connexion, gestion erreurs,
+                             redirection conditionnelle.
+  * ChangementMotDePasse.tsx : formulaire ancien/nouveau/confirmation.
+  * Dashboard.tsx          : carte de bienvenue (organisation, ville, solde),
+    statistiques (trouvailles / disponibles / correspondances / rendus) +
+    trouvailles récentes.
+  * Declarations.tsx       : barre de filtre (recherche, statut), tableau
+    paginé, bouton "Déclarer une trouvaille" (modal avec type de document,
+    propriétaire, n° de document, ville/quartier, état, description,
+    photos recto/verso), suppression avec confirmation.
+  * Portefeuille.tsx       : carte de solde + historique des opérations
+    (date, type credit/débit, montant, motif, solde après).
+
+LAYOUT
+  * PartenaireSidebar.tsx  : menu (Tableau de bord / Mes déclarations /
+    Portefeuille), logo "Espace Partenaire", carte utilisateur avec solde
+    visible, bouton de déconnexion.
+  * PartenaireLayout.tsx   : header (titre de page, avatar, menu déconnexion)
+    + contenu (Outlet).
+  * PartenaireProtectedRoute.tsx : redirige vers la connexion si non
+    authentifié, force le changement de mot de passe si nécessaire.
+
+RACCOURCI CLAVIER
+  * src/hooks/usePartenaireShortcut.ts : Ctrl+Shift+P (ou Cmd+Shift+P)
+    ouvre /partenaire/connexion depuis n'importe où (wired dans App.tsx,
+    comme Ctrl+Shift+A pour les autorités).
+
+--------------------------------------------------------------------------------
+4. PARCOURS UTILISATEURS (scénarios)
+--------------------------------------------------------------------------------
+ADMIN :
+  1. Crée un partenaire → le compte reçoit un mot de passe temporaire par
+     e-mail (et SMS).
+  2. Consulte / modifie les partenaires, désactive un compte (bloque le login).
+  3. Ajuste le portefeuille (crédit bonus / débit) avec motif.
+PARTENAIRE :
+  1. Se connecte avec le mot de passe temporaire → doit le changer
+     immédiatement.
+  2. Voit son tableau de bord (stats + solde).
+  3. Déclare des documents trouvés (illimité, avec photos) et les suit
+     (Disponible → Correspondance → Rendu).
+  4. Supprime une trouvaille s'il s'est trompé.
+  5. Consulte son portefeuille (solde + historique).
+  6. À la remise d'un document, la récompense est créditée sur son portefeuille
+     partenaire (détection automatique du finder partenaire).
+
+--------------------------------------------------------------------------------
+5. VALIDATION / ÉTAT
+--------------------------------------------------------------------------------
+* Migrations 53_create_partenaires.sql et 55_create_partenaire_standalone.sql
+  appliquées avec succès (le partenaire est autonome, comme autorites).
+* npx tsc : OK (serveur) ; vite build : OK (frontend).
+* Smoke tests end-to-end effectués : création (aucun user créé, 0 rôle PARTNER
+  dans users), login, changement de mot de passe, /me, /stats, /wallet,
+  déclaration FOUND avec reporter_type = 'PARTENAIRE', ajustement
+  CREDIT/DEBIT (partenaire_wallet_transactions), liste admin, suppression.
+  Tout est fonctionnel.

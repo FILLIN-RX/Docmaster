@@ -3,6 +3,7 @@ import { adminService } from "../../services/admin";
 import InfoTooltip from "../../components/ui/InfoTooltip";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import EmptyState from "../../components/ui/EmptyState";
+import AntdLocationSelect from "../../components/ui/AntdLocationSelect";
 
 interface Autorite {
   id: string;
@@ -26,6 +27,8 @@ const defaultForm = {
   niveau: "NORMAL",
   ville: "",
   region: "",
+  department: "",
+  arrondissement: "",
 };
 
 export default function AdminAutorites() {
@@ -56,7 +59,7 @@ export default function AdminAutorites() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.nom.trim() || !form.prenom.trim() || !form.email.trim() || !form.ville.trim()) return;
+    if (!form.nom.trim() || !form.prenom.trim() || !form.email.trim() || !form.department.trim()) return;
     setSaving(true);
     setError("");
     setTempPassword(null);
@@ -247,20 +250,16 @@ export default function AdminAutorites() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Ville</label>
-                  <input value={form.ville} onChange={(e) => setForm({ ...form, ville: e.target.value })}
-                    placeholder="ex: Yaoundé" required
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded text-[13px] outline-none focus:border-[#D98A30] transition-colors" />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Région</label>
-                  <input value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })}
-                    placeholder="ex: Centre"
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded text-[13px] outline-none focus:border-[#D98A30] transition-colors" />
-                </div>
-              </div>
+              <AntdLocationSelect
+                value={{ region: form.region, department: form.department, arrondissement: form.arrondissement }}
+                onChange={(val) => setForm({
+                  ...form,
+                  region: val.region,
+                  department: val.department,
+                  arrondissement: val.arrondissement,
+                  ville: val.arrondissement || val.department,
+                })}
+              />
 
               {error && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded text-[12px] text-red-600">{error}</div>
@@ -276,7 +275,7 @@ export default function AdminAutorites() {
                   className="px-4 py-2 text-[13px] text-gray-500 font-medium hover:text-gray-700 transition-colors">
                   Annuler
                 </button>
-                <button type="submit" disabled={saving || !form.nom.trim() || !form.prenom.trim() || !form.email.trim() || !form.ville.trim()}
+                <button type="submit" disabled={saving || !form.nom.trim() || !form.prenom.trim() || !form.email.trim() || !form.department.trim()}
                   className="px-5 py-2 bg-[#1E3A2F] text-white rounded text-[13px] font-semibold hover:bg-[#2D5A42] transition-colors disabled:opacity-60 flex items-center gap-1.5">
                   {saving && <i className="fa-solid fa-spinner fa-spin text-xs" />}
                   Créer l'autorité

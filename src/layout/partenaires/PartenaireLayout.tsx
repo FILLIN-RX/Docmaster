@@ -7,27 +7,29 @@ import {
   MenuUnfoldOutlined,
 } from "@ant-design/icons";
 import { Outlet, useLocation } from "react-router-dom";
-import { useAutorite } from "../../context/AutoriteContext";
-import { autoritePalette } from "../../theme/autorites";
-import AutoriteDesignProvider from "../../components/autorites/AutoriteDesignProvider";
-import AutoriteSidebar from "../../components/autorites/AutoriteSidebar";
+import { usePartenaire } from "../../context/PartenaireContext";
+import { partenairePalette } from "../../theme/partenaires";
+import PartenaireDesignProvider from "../../components/partenaires/PartenaireDesignProvider";
+import PartenaireSidebar from "../../components/partenaires/PartenaireSidebar";
 
 const PAGE_TITLES: Record<string, string> = {
   dashboard: "Tableau de bord",
-  declarations: "Gestion des déclarations",
-  autorites: "Gestion des autorités",
-  journal: "Journal d'activité",
+  declarer: "Déclarer une trouvaille",
+  declarations: "Mes déclarations",
+  portefeuille: "Portefeuille",
+  profil: "Profil de l'organisation",
 };
 
-export default function AutoriteLayout() {
+export default function PartenaireLayout() {
   const [collapsed, setCollapsed] = useState(false);
-  const { autorite, logout } = useAutorite();
+  const { partenaire, logout } = usePartenaire();
   const location = useLocation();
 
   const selectedKey = (() => {
     if (location.pathname.includes("/declarations")) return "declarations";
-    if (location.pathname.includes("/autorites")) return "autorites";
-    if (location.pathname.includes("/journal")) return "journal";
+    if (location.pathname.includes("/declarer")) return "declarer";
+    if (location.pathname.includes("/portefeuille")) return "portefeuille";
+    if (location.pathname.includes("/profil")) return "profil";
     return "dashboard";
   })();
 
@@ -44,22 +46,22 @@ export default function AutoriteLayout() {
   };
 
   return (
-    <AutoriteDesignProvider>
-      <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: autoritePalette.bgMain }}>
-        <AutoriteSidebar collapsed={collapsed} onCollapse={setCollapsed} />
+    <PartenaireDesignProvider>
+      <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: partenairePalette.bgMain }}>
+        <PartenaireSidebar collapsed={collapsed} onCollapse={setCollapsed} />
 
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           {/* Header */}
           <header
             style={{
               height: 64,
-              background: autoritePalette.surface,
+              background: partenairePalette.surface,
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
               padding: "0 24px",
-              borderBottom: `1px solid ${autoritePalette.border}`,
-              boxShadow: "0 1px 3px rgba(26,26,26,0.05)",
+              borderBottom: `1px solid ${partenairePalette.border}`,
+              boxShadow: "0 1px 3px rgba(18,18,18,0.05)",
               flexShrink: 0,
             }}
           >
@@ -68,24 +70,24 @@ export default function AutoriteLayout() {
                 type="text"
                 icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                 onClick={() => setCollapsed(!collapsed)}
-                style={{ color: autoritePalette.textMain }}
+                style={{ color: partenairePalette.textMain }}
               />
-              <Typography.Title level={5} style={{ margin: 0, color: autoritePalette.greenDark }}>
+              <Typography.Title level={5} style={{ margin: 0, color: partenairePalette.greenDark }}>
                 {PAGE_TITLES[selectedKey] || "Tableau de bord"}
               </Typography.Title>
             </Space>
 
             <Dropdown menu={userMenu} placement="bottomRight">
               <Space style={{ cursor: "pointer" }} size={10}>
-                <Avatar style={{ background: autoritePalette.primary, fontWeight: 600 }} icon={<UserOutlined />}>
-                  {autorite ? `${(autorite.prenom || "").charAt(0)}${(autorite.nom || "").charAt(0)}`.toUpperCase() : ""}
+                <Avatar style={{ background: partenairePalette.primary, fontWeight: 600 }} icon={<UserOutlined />}>
+                  {(partenaire?.nom_organisation || "O").charAt(0).toUpperCase()}
                 </Avatar>
                 <div style={{ lineHeight: 1.2 }}>
-                  <Typography.Text strong style={{ color: autoritePalette.textMain, display: "block", fontSize: 13 }}>
-                    {autorite ? `${autorite.prenom} ${autorite.nom}` : ""}
+                  <Typography.Text strong style={{ color: partenairePalette.textMain, display: "block", fontSize: 13 }}>
+                    {partenaire?.nom_organisation || ""}
                   </Typography.Text>
-                  <Typography.Text style={{ color: autoritePalette.textMuted, fontSize: 11, display: "block" }}>
-                    {autorite?.email}
+                  <Typography.Text style={{ color: partenairePalette.textMuted, fontSize: 11, display: "block" }}>
+                    {partenaire?.email}
                   </Typography.Text>
                 </div>
               </Space>
@@ -98,6 +100,6 @@ export default function AutoriteLayout() {
           </main>
         </div>
       </div>
-    </AutoriteDesignProvider>
+    </PartenaireDesignProvider>
   );
 }

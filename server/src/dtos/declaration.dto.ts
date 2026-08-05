@@ -55,6 +55,16 @@ export class CreateDeclarationDTO {
 
   @IsString()
   @IsOptional()
+  @MaxLength(100)
+  department?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  arrondissement?: string;
+
+  @IsString()
+  @IsOptional()
   @MinLength(2)
   pays?: string;
 
@@ -151,6 +161,16 @@ export class UpdateDeclarationDTO {
   @IsString()
   @IsOptional()
   region?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  department?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  arrondissement?: string;
 
   @IsString()
   @IsOptional()

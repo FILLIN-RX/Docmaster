@@ -7,6 +7,7 @@ import Topbar from "../../layout/Topbar";
 import { useI18n } from "../../context/I18nContext";
 import InfoAlert from "../../components/ui/InfoAlert";
 import DatePicker from "../../components/ui/DatePicker";
+import LocationSelect from "../../components/ui/LocationSelect";
 
 interface DocTypeItem {
   id: string;
@@ -38,7 +39,7 @@ export default function Trouver() {
   const [details, setDetails] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
-  const [ville, setVille] = useState("");
+  const [location, setLocation] = useState<{ region: string; department: string; arrondissement: string }>({ region: "", department: "", arrondissement: "" });
   const [dateFound, setDateFound] = useState(() => new Date().toISOString().split("T")[0]);
   const [dateExpirationTrouve, setDateExpirationTrouve] = useState("");
   const [rewardChoice, setRewardChoice] = useState("NON_MERCI");
@@ -203,7 +204,7 @@ export default function Trouver() {
       }
     }
     if (n > step && step === 3 && n === 4) {
-      if (!ville || ville.trim().length < 2) {
+      if (!location.department || location.department.trim().length < 2) {
         setAlertMsg(t("trouver_enter_city"));
         return;
       }
@@ -288,7 +289,7 @@ export default function Trouver() {
       setAlertMsg(t("trouver_enter_owner_short"));
       return;
     }
-    if (!ville) {
+    if (!location.department) {
       setAlertMsg(t("trouver_enter_city"));
       return;
     }
@@ -313,8 +314,10 @@ export default function Trouver() {
     formData.append("owner_name", ownerName);
     formData.append("document_number", docNum);
     formData.append("etat_physique", etat);
-    formData.append("ville", ville);
-    formData.append("region", t("trouver_region_not_specified"));
+    formData.append("ville", (location.arrondissement || location.department) || "");
+    formData.append("region", location.region || t("trouver_region_not_specified"));
+    if (location.department) formData.append("department", location.department);
+    if (location.arrondissement) formData.append("arrondissement", location.arrondissement);
     formData.append("pays", t("trouver_country_cameroon"));
     formData.append("date_perte", dateFound);
     if (dateExpirationTrouve) formData.append("date_expiration", dateExpirationTrouve);
@@ -334,7 +337,7 @@ export default function Trouver() {
 
     if (locationData) {
       formData.append("found_location", `${locationData.lat},${locationData.lng}`);
-      formData.append("found_location_city", locationData.city || ville);
+      formData.append("found_location_city", locationData.city || (location.arrondissement || location.department));
     }
 
     const metadata = {
@@ -816,20 +819,16 @@ export default function Trouver() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                <div>
-                  <label className="text-[11px] font-bold text-[#4b5563] mb-1 block tracking-[0.3px]">
-                    {t("trouver_city_district")} <span className="text-textMuted font-normal">({t("trouver_auto_filled")})</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={ville}
-                    onChange={(e) => setVille(e.target.value)}
-                    className="w-full p-[10px_13px] border-[1.5px] border-[#eae3d8] rounded-[11px] text-[13px] text-textMain bg-[#faf7f2] outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(217,138,48,0.1)]"
-                    placeholder={t("trouver_city_placeholder")}
-                  />
-                </div>
-                <div>
+              <div className="mb-4">
+                <label className="text-[11px] font-bold text-[#4b5563] mb-1 block tracking-[0.3px]">
+                  {t("trouver_city_district")} <span className="text-textMuted font-normal">({t("trouver_auto_filled")})</span>
+                </label>
+                <LocationSelect
+                  value={location}
+                  onChange={setLocation}
+                />
+              </div>
+              <div className="mb-4">
                   <label className="text-[11px] font-bold text-[#4b5563] mb-1 block tracking-[0.3px]">
                     {t("trouver_date_found")}
                   </label>
@@ -839,7 +838,6 @@ export default function Trouver() {
                     placeholder="AAAA-MM-JJ"
                     className="w-full p-[10px_13px] border-[1.5px] border-[#eae3d8] rounded-[11px] text-[13px] text-textMain bg-[#faf7f2] outline-none focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(217,138,48,0.1)]"
                   />
-                </div>
               </div>
 
               <div className="flex gap-2">
@@ -1067,7 +1065,7 @@ export default function Trouver() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-textMuted">{t("trouver_summary_location")}</span>
-                      <span className="font-bold">{ville || "—"}</span>
+                      <span className="font-bold">{(location.arrondissement || location.department) || "—"}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-textMuted">{t("trouver_summary_date")}</span>

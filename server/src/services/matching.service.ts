@@ -7,6 +7,7 @@ import { deviceRepository } from '../repositories/device.repository.ts';
 import { ClaimRepository } from '../repositories/claim.repository.ts';
 import { DocumentTypeRepository } from '../repositories/document-type.repository.ts';
 import { SocketService } from './socket.service.ts';
+import pool from '../database/db.js';
 
 export interface MatchCriterion {
   name: string;
@@ -480,12 +481,28 @@ export class MatchingService {
 
       const docTypeName = await this.getDocTypeName(d1.doc_type);
 
-      await this.notificationService.notifyMatchFound(
-        lostUserId,
-        foundUserId,
-        lostId,
-        docTypeName
-      );
+      const finderIsPartner = (await pool.query(
+        `SELECT id FROM partenaires WHERE id = $1`,
+        [foundUserId]
+      )).rows.length > 0;
+
+      if (finderIsPartner) {
+        // Notify only the lost user; the partner finder uses its own portal
+        await this.notificationService.createNotification({
+          user_id: lostUserId,
+          type: 'MATCH_FOUND',
+          title: 'Bonne nouvelle ! Document trouvé',
+          message: `Quelqu'un a signalé avoir trouvé votre ${docTypeName}.`,
+          metadata: { docId: lostId, docType: docTypeName, matchType: 'LOST_SIDE' }
+        });
+      } else {
+        await this.notificationService.notifyMatchFound(
+          lostUserId,
+          foundUserId,
+          lostId,
+          docTypeName
+        );
+      }
     }
   }
 

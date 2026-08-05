@@ -6,9 +6,11 @@ import {
   LoginPartenaireDTO,
   ChangePasswordPartenaireDTO,
   UpdatePartenaireDTO,
+  UpdateProfilPartenaireDTO,
   WalletAdjustDTO,
 } from './partenaires.dto.ts';
 import { CreateDeclarationDTO } from '../../dtos/declaration.dto.ts';
+import { walletService } from '../../services/wallet.service.ts';
 
 export class PartenaireController {
   private service = new PartenaireService();
@@ -70,7 +72,7 @@ export class PartenaireController {
       }
       const partenaire = (req as any).partenaire;
       const result = await this.service.changePassword(
-        partenaire.user_id,
+        partenaire.id,
         req.body.ancien_mot_de_passe,
         req.body.nouveau_mot_de_passe
       );
@@ -93,11 +95,27 @@ export class PartenaireController {
   };
 
   /**
+   * PUT /api/partenaires/profil  (PARTNER) — update own organisation profile
+   */
+  updateProfil = async (req: Request, res: Response) => {
+    try {
+      const errors = await validateDTO(req.body, UpdateProfilPartenaireDTO);
+      if (errors) {
+        return res.status(400).json({ success: false, errors });
+      }
+      const profile = await this.service.updateProfil((req as any).partenaire.id, req.body);
+      res.json({ success: true, data: profile });
+    } catch (error: any) {
+      res.status(400).json({ success: false, message: error.message });
+    }
+  };
+
+  /**
    * GET /api/partenaires/stats  (PARTNER) — dashboard stats
    */
   getStats = async (req: Request, res: Response) => {
     try {
-      const stats = await this.service.getStats((req as any).partenaire.user_id);
+      const stats = await this.service.getStats((req as any).partenaire.id);
       res.json({ success: true, data: stats });
     } catch (error: any) {
       res.status(500).json({ success: false, message: error.message });
@@ -109,7 +127,7 @@ export class PartenaireController {
    */
   getDeclarations = async (req: Request, res: Response) => {
     try {
-      const result = await this.service.getDeclarations((req as any).partenaire.user_id, req.query);
+      const result = await this.service.getDeclarations((req as any).partenaire.id, req.query);
       res.json({ success: true, ...result });
     } catch (error: any) {
       res.status(500).json({ success: false, message: error.message });
@@ -127,7 +145,7 @@ export class PartenaireController {
       }
       const result = await this.service.createFoundDeclaration(
         req.body,
-        (req as any).partenaire.user_id,
+        (req as any).partenaire.id,
         req.files
       );
       res.status(201).json({ success: true, message: 'Déclaration de document trouvé enregistrée', data: result });
@@ -143,7 +161,7 @@ export class PartenaireController {
     try {
       const result = await this.service.deleteDeclaration(
         req.params.id as string,
-        (req as any).partenaire.user_id
+        (req as any).partenaire.id
       );
       res.json(result);
     } catch (error: any) {
@@ -156,8 +174,28 @@ export class PartenaireController {
    */
   getWallet = async (req: Request, res: Response) => {
     try {
-      const wallet = await this.service.getWallet((req as any).partenaire.user_id, req.query);
+      const wallet = await this.service.getWallet((req as any).partenaire.id, req.query);
       res.json({ success: true, data: wallet });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
+
+  /**
+   * GET /api/partenaires/:id/wallet  (ADMIN) — partner balance + full history
+   */
+  getAdminWallet = async (req: Request, res: Response) => {
+    try {
+      const profile = await this.service.findById(req.params.id as string);
+      if (!profile) {
+        return res.status(404).json({ success: false, message: 'Partenaire introuvable' });
+      }
+      const history = await walletService.getPartnerHistory(
+        req.params.id as string,
+        Math.min(100, Number(req.query.limit) || 50),
+        Number(req.query.offset) || 0
+      );
+      res.json({ success: true, data: { balance: profile.wallet_balance, history } });
     } catch (error: any) {
       res.status(500).json({ success: false, message: error.message });
     }

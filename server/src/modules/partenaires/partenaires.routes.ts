@@ -22,6 +22,8 @@ router.post('/logout', controller.logout);
 router.post('/change-password', partenaireAuthMiddleware, controller.changePassword);
 // GET /api/partenaires/me — partner profile + wallet
 router.get('/me', partenaireAuthMiddleware, controller.me);
+// PUT /api/partenaires/profil — partner updates its own organisation profile
+router.put('/profil', partenaireAuthMiddleware, controller.updateProfil);
 // GET /api/partenaires/stats — partner dashboard stats
 router.get('/stats', partenaireAuthMiddleware, controller.getStats);
 // GET /api/partenaires/declarations — partner's found declarations
@@ -45,6 +47,8 @@ router.post('/', authMiddleware, adminMiddleware, controller.create);
 router.get('/', authMiddleware, adminMiddleware, controller.findAll);
 // GET /api/partenaires/:id — admin gets partner detail
 router.get('/:id', authMiddleware, adminMiddleware, controller.findById);
+// GET /api/partenaires/:id/wallet — admin gets partner wallet balance + history
+router.get('/:id/wallet', authMiddleware, adminMiddleware, controller.getAdminWallet);
 // PUT /api/partenaires/:id — admin updates a partner
 router.put('/:id', authMiddleware, adminMiddleware, controller.update);
 // POST /api/partenaires/:id/wallet — admin adjusts partner wallet

@@ -3,10 +3,13 @@ import { Routes, Route, Outlet } from "react-router-dom";
 import Layout from "./layout/Layout";
 import AdminLayout from "./layout/AdminLayout";
 import AutoriteLayout from "./layout/autorites/AutoriteLayout";
+import PartenaireLayout from "./layout/partenaires/PartenaireLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import AutoriteProtectedRoute from "./components/autorites/AutoriteProtectedRoute";
+import PartenaireProtectedRoute from "./components/partenaires/PartenaireProtectedRoute";
 import { AutoriteProvider } from "./context/AutoriteContext";
+import { PartenaireProvider } from "./context/PartenaireContext";
 import LazyPage from "./components/LazyPage";
 
 const Home = lazy(() => import("./pages/public/Home"));
@@ -44,11 +47,13 @@ const AdminSms = lazy(() => import("./pages/admin/AdminSms"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminDeclarations = lazy(() => import("./pages/admin/AdminDeclarations"));
 const AdminAutorites = lazy(() => import("./pages/admin/AdminAutorites"));
+const AdminPartenaires = lazy(() => import("./pages/admin/AdminPartenaires"));
 const AdminWithdrawals = lazy(() => import("./pages/admin/AdminWithdrawals"));
 const AdminDocumentTypes = lazy(() => import("./pages/admin/AdminDocumentTypes"));
 const AdminActivityLog = lazy(() => import("./pages/admin/AdminActivityLog"));
 const AdminMatchingMonitor = lazy(() => import("./pages/admin/AdminMatchingMonitor"));
 import { useAutoriteShortcut } from "./hooks/useAutoriteShortcut";
+import { usePartenaireShortcut } from "./hooks/usePartenaireShortcut";
 
 const AdminBroadcast = lazy(() => import("./pages/admin/AdminBroadcast"));
 const AutoriteConnexion = lazy(() => import("./pages/autorites/Connexion"));
@@ -58,8 +63,17 @@ const AutoriteDeclarations = lazy(() => import("./pages/autorites/Declarations")
 const AutoriteGestionAutorites = lazy(() => import("./pages/autorites/GestionAutorites"));
 const AutoriteJournalActivite = lazy(() => import("./pages/autorites/JournalActivite"));
 
+const PartenaireConnexion = lazy(() => import("./pages/partenaires/Connexion"));
+const PartenaireChangementMotDePasse = lazy(() => import("./pages/partenaires/ChangementMotDePasse"));
+const PartenaireDashboard = lazy(() => import("./pages/partenaires/Dashboard"));
+const PartenaireDeclarations = lazy(() => import("./pages/partenaires/Declarations"));
+const PartenaireDeclarerTrouvaille = lazy(() => import("./pages/partenaires/DeclarerTrouvaille"));
+const PartenairePortefeuille = lazy(() => import("./pages/partenaires/Portefeuille"));
+const PartenaireProfil = lazy(() => import("./pages/partenaires/Profil"));
+
 export default function App() {
   useAutoriteShortcut();
+  usePartenaireShortcut();
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-bgMain">
@@ -111,6 +125,7 @@ export default function App() {
           <Route path="/admin/settings" element={<LazyPage Component={AdminSettings} />} />
           <Route path="/admin/declarations" element={<LazyPage Component={AdminDeclarations} />} />
           <Route path="/admin/autorites" element={<LazyPage Component={AdminAutorites} />} />
+          <Route path="/admin/partenaires" element={<LazyPage Component={AdminPartenaires} />} />
           <Route path="/admin/withdrawals" element={<LazyPage Component={AdminWithdrawals} />} />
           <Route path="/admin/document-types" element={<LazyPage Component={AdminDocumentTypes} />} />
           <Route path="/admin/activity-log" element={<LazyPage Component={AdminActivityLog} />} />
@@ -140,6 +155,32 @@ export default function App() {
             <Route path="declarations" element={<LazyPage Component={AutoriteDeclarations} />} />
             <Route path="autorites" element={<LazyPage Component={AutoriteGestionAutorites} />} />
             <Route path="journal" element={<LazyPage Component={AutoriteJournalActivite} />} />
+          </Route>
+        </Route>
+
+        <Route path="/partenaire" element={<PartenaireProvider><Outlet /></PartenaireProvider>}>
+          <Route path="connexion" element={<LazyPage Component={PartenaireConnexion} />} />
+          <Route
+            path="changement-mot-de-passe"
+            element={
+              <PartenaireProtectedRoute>
+                <LazyPage Component={PartenaireChangementMotDePasse} />
+              </PartenaireProtectedRoute>
+            }
+          />
+          <Route
+            element={
+              <PartenaireProtectedRoute>
+                <PartenaireLayout />
+              </PartenaireProtectedRoute>
+            }
+          >
+            <Route index element={<LazyPage Component={PartenaireDashboard} />} />
+            <Route path="dashboard" element={<LazyPage Component={PartenaireDashboard} />} />
+            <Route path="declarations" element={<LazyPage Component={PartenaireDeclarations} />} />
+            <Route path="declarer" element={<LazyPage Component={PartenaireDeclarerTrouvaille} />} />
+            <Route path="portefeuille" element={<LazyPage Component={PartenairePortefeuille} />} />
+            <Route path="profil" element={<LazyPage Component={PartenaireProfil} />} />
           </Route>
         </Route>
       </Routes>

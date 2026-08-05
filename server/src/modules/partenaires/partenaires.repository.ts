@@ -2,7 +2,6 @@ import pool from "../../database/db.js";
 
 export interface PartenaireProfile {
   id: string;
-  user_id: string;
   nom_organisation: string;
   adresse: string | null;
   logo_url: string | null;
@@ -11,8 +10,9 @@ export interface PartenaireProfile {
   created_by: string | null;
   created_at: Date;
   updated_at: Date;
-  // joined user fields
+  // colonnes autonomes (plus de lien users)
   email: string;
+  mot_de_passe?: string;
   telephone: string | null;
   nom_contact: string | null;
   prenom_contact: string | null;
@@ -22,17 +22,25 @@ export interface PartenaireProfile {
   is_verified: boolean;
 }
 
-const PROFILE_COLUMNS = `
-  p.id, p.user_id, p.nom_organisation, p.adresse, p.logo_url,
+const PUBLIC_COLUMNS = `
+  p.id, p.nom_organisation, p.adresse, p.logo_url,
   p.statut, p.must_change_password, p.created_by, p.created_at, p.updated_at,
-  u.email, u.telephone, u.nom AS nom_contact, u.prenom AS prenom_contact,
-  u.ville, u.wallet_balance, u.is_verified
+  p.email, p.telephone, p.nom_contact, p.prenom_contact,
+  p.ville, p.region, p.wallet_balance, p.is_verified
 `;
 
+const WITH_PASSWORD_COLUMNS = `${PUBLIC_COLUMNS}, p.mot_de_passe`;
+
 interface PartenaireCreateData {
-  user_id: string;
   nom_organisation: string;
   adresse?: string;
+  email: string;
+  mot_de_passe: string;
+  telephone?: string | null;
+  nom_contact?: string | null;
+  prenom_contact?: string | null;
+  ville?: string | null;
+  region?: string | null;
   created_by?: string;
 }
 
@@ -40,33 +48,40 @@ interface PartenaireUpdateData {
   nom_organisation?: string;
   adresse?: string;
   statut?: 'ACTIF' | 'SUSPENDU' | 'INACTIF';
+  email?: string;
+  telephone?: string | null;
+  nom_contact?: string | null;
+  prenom_contact?: string | null;
+  ville?: string | null;
+  region?: string | null;
+  is_verified?: boolean;
 }
 
 export class PartenaireRepository {
   /**
-   * Create the partenaire profile linked to an existing user
+   * Create a standalone partner account (no linked user)
    */
   async create(data: PartenaireCreateData): Promise<PartenaireProfile> {
-    await pool.query(
-      `INSERT INTO partenaires (user_id, nom_organisation, adresse, created_by)
-       VALUES ($1, $2, $3, $4)`,
-      [data.user_id, data.nom_organisation, data.adresse || null, data.created_by || null]
-    );
-    return (await this.findByUserId(data.user_id))!;
-  }
-
-  /**
-   * Find profile by user id (for auth middleware)
-   */
-  async findByUserId(userId: string): Promise<PartenaireProfile | null> {
     const query = `
-      SELECT ${PROFILE_COLUMNS}
-      FROM partenaires p
-      JOIN users u ON u.id = p.user_id
-      WHERE p.user_id = $1
+      INSERT INTO partenaires (nom_organisation, adresse, email, mot_de_passe, telephone, nom_contact, prenom_contact, ville, region, created_by)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      RETURNING id, nom_organisation, adresse, logo_url, statut, must_change_password, created_by,
+                created_at, updated_at, email, telephone, nom_contact, prenom_contact,
+                ville, region, wallet_balance, is_verified, mot_de_passe
     `;
-    const { rows } = await pool.query(query, [userId]);
-    return rows[0] || null;
+    const { rows } = await pool.query(query, [
+      data.nom_organisation,
+      data.adresse || null,
+      data.email,
+      data.mot_de_passe,
+      data.telephone || null,
+      data.nom_contact || null,
+      data.prenom_contact || null,
+      data.ville || null,
+      data.region || null,
+      data.created_by || null,
+    ]);
+    return rows[0];
   }
 
   /**
@@ -74,10 +89,9 @@ export class PartenaireRepository {
    */
   async findByEmail(email: string): Promise<PartenaireProfile | null> {
     const query = `
-      SELECT ${PROFILE_COLUMNS}
+      SELECT ${WITH_PASSWORD_COLUMNS}
       FROM partenaires p
-      JOIN users u ON u.id = p.user_id
-      WHERE LOWER(u.email) = LOWER($1)
+      WHERE LOWER(p.email) = LOWER($1)
     `;
     const { rows } = await pool.query(query, [email]);
     return rows[0] || null;
@@ -88,9 +102,21 @@ export class PartenaireRepository {
    */
   async findById(id: string): Promise<PartenaireProfile | null> {
     const query = `
-      SELECT ${PROFILE_COLUMNS}
+      SELECT ${PUBLIC_COLUMNS}
       FROM partenaires p
-      JOIN users u ON u.id = p.user_id
+      WHERE p.id = $1
+    `;
+    const { rows } = await pool.query(query, [id]);
+    return rows[0] || null;
+  }
+
+  /**
+   * Find profile by id including password (internal use)
+   */
+  async findByIdWithPassword(id: string): Promise<PartenaireProfile | null> {
+    const query = `
+      SELECT ${WITH_PASSWORD_COLUMNS}
+      FROM partenaires p
       WHERE p.id = $1
     `;
     const { rows } = await pool.query(query, [id]);
@@ -111,7 +137,7 @@ export class PartenaireRepository {
     let idx = 1;
 
     if (filters.search) {
-      conditions.push(`(p.nom_organisation ILIKE $${idx} OR u.email ILIKE $${idx} OR u.nom ILIKE $${idx} OR u.prenom ILIKE $${idx})`);
+      conditions.push(`(p.nom_organisation ILIKE $${idx} OR p.email ILIKE $${idx} OR p.nom_contact ILIKE $${idx} OR p.prenom_contact ILIKE $${idx})`);
       params.push(`%${filters.search}%`);
       idx++;
     }
@@ -126,15 +152,14 @@ export class PartenaireRepository {
     const offset = (page - 1) * limit;
 
     const countRes = await pool.query(
-      `SELECT COUNT(*)::int AS total FROM partenaires p JOIN users u ON u.id = p.user_id ${where}`,
+      `SELECT COUNT(*)::int AS total FROM partenaires p ${where}`,
       params
     );
     const total = countRes.rows[0].total;
 
     const query = `
-      SELECT ${PROFILE_COLUMNS}
+      SELECT ${PUBLIC_COLUMNS}
       FROM partenaires p
-      JOIN users u ON u.id = p.user_id
       ${where}
       ORDER BY p.created_at DESC
       LIMIT $${idx} OFFSET $${idx + 1}
@@ -155,6 +180,13 @@ export class PartenaireRepository {
       nom_organisation: data.nom_organisation,
       adresse: data.adresse,
       statut: data.statut,
+      email: data.email,
+      telephone: data.telephone,
+      nom_contact: data.nom_contact,
+      prenom_contact: data.prenom_contact,
+      ville: data.ville,
+      region: data.region,
+      is_verified: data.is_verified,
     };
 
     for (const [key, value] of Object.entries(fields)) {
@@ -175,17 +207,17 @@ export class PartenaireRepository {
   }
 
   /**
-   * Reset the must_change_password flag after a password change
+   * Update password and reset the must_change_password flag
    */
-  async markPasswordChanged(userId: string): Promise<void> {
+  async updatePassword(id: string, newHashedPassword: string): Promise<void> {
     await pool.query(
-      `UPDATE partenaires SET must_change_password = false, updated_at = CURRENT_TIMESTAMP WHERE user_id = $1`,
-      [userId]
+      `UPDATE partenaires SET mot_de_passe = $1, must_change_password = false, is_verified = true, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+      [newHashedPassword, id]
     );
   }
 
   /**
-   * Delete a partner profile (the linked user is deleted separately by the service)
+   * Delete a partner profile (nothing else to cascade, fully standalone)
    */
   async delete(id: string): Promise<boolean> {
     const { rowCount } = await pool.query(`DELETE FROM partenaires WHERE id = $1`, [id]);
@@ -193,11 +225,11 @@ export class PartenaireRepository {
   }
 
   /**
-   * Count declarations made by the partner's user id
+   * Count declarations made by the partner (reporter_id = partenaire id)
    */
-  async countDeclarations(userId: string, declarationType?: string): Promise<number> {
-    const params: any[] = [userId];
-    let sql = `SELECT COUNT(*)::int AS count FROM declarations WHERE reporter_id = $1`;
+  async countDeclarations(partenaireId: string, declarationType?: string): Promise<number> {
+    const params: any[] = [partenaireId];
+    let sql = `SELECT COUNT(*)::int AS count FROM declarations WHERE reporter_id = $1 AND reporter_type = 'PARTENAIRE'`;
     if (declarationType) {
       sql += ` AND declaration_type = $2`;
       params.push(declarationType);

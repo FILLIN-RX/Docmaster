@@ -147,3 +147,44 @@ export class WalletAdjustDTO {
   @MaxLength(300)
   motif?: string;
 }
+
+/**
+ * DTO for partner updating their own organisation profile.
+ * Email, statut and wallet are managed by the admin.
+ */
+export class UpdateProfilPartenaireDTO {
+  @IsOptional()
+  @IsString()
+  @MaxLength(150)
+  nom_organisation?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  telephone?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  nom_contact?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  prenom_contact?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  adresse?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  ville?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  region?: string;
+}

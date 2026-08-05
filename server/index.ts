@@ -42,6 +42,7 @@ import adminRoutes from "./src/routes/admin.routes.js";
 import vaultMatchRoutes from "./src/routes/vault-match.routes.js";
 import { autoriteRoutes } from "./src/modules/autorites/autorites.module.js";
 import { partenaireRoutes } from "./src/modules/partenaires/partenaires.module.js";
+import { locationRoutes } from "./src/routes/locations.routes.js";
 
 // Load environment variables
 dotenv.config();
@@ -267,6 +268,7 @@ export function createApp(): Application {
   app.use("/api/vault-match", vaultMatchRoutes);
   app.use("/api/autorites", autoriteRoutes);
   app.use("/api/partenaires", partenaireRoutes);
+  app.use("/api/locations", locationRoutes);
 
   // ═════════════════════════════════════════════════════════════════
   // CHILLER SUB-APPLICATION

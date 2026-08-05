@@ -407,4 +407,90 @@ export class DeclarationRepository {
     console.log("📊 Performance Stats with items:", rows.length);
     return rows;
   }
+
+  /**
+   * KPIs par type de document canonique (LOST + FOUND)
+   * Normalise declarations.doc_type (uuid, code, nom en clair, variantes)
+   * vers les types de document_types, puis agrège les KPIs par type.
+   * @param period 'day', 'week', 'month', 'year'
+   */
+  async getStatsByType(period: string = "month") {
+    let interval = "1 month";
+    if (period === "day") interval = "1 day";
+    if (period === "week") interval = "1 week";
+    if (period === "year") interval = "1 year";
+
+    const query = `
+      WITH normalized_docs AS (
+        SELECT
+          d.*,
+          COALESCE(
+            normalize_doc_type(d.doc_type),
+            (SELECT id FROM document_types WHERE code = 'AUTRES' LIMIT 1)
+          ) AS doc_type_id
+        FROM declarations d
+      ),
+      current_period AS (
+        SELECT
+          doc_type_id,
+          COUNT(*) AS total,
+          COUNT(*) FILTER (WHERE declaration_type = 'LOST') AS lost,
+          COUNT(*) FILTER (WHERE declaration_type = 'FOUND') AS found,
+          COUNT(*) FILTER (WHERE status = 'RETURNED') AS returned
+        FROM normalized_docs
+        WHERE created_at >= NOW() - $1::interval
+        GROUP BY doc_type_id
+      ),
+      previous_period AS (
+        SELECT doc_type_id, COUNT(*) AS total
+        FROM normalized_docs
+        WHERE created_at >= NOW() - ($1::interval * 2)
+          AND created_at < NOW() - $1::interval
+        GROUP BY doc_type_id
+      ),
+      items_list AS (
+        SELECT
+          doc_type_id,
+          json_agg(
+            json_build_object(
+              'id', id,
+              'type', declaration_type,
+              'ville', ville,
+              'date', created_at,
+              'doc_type_raw', doc_type
+            ) ORDER BY created_at DESC
+          ) AS items
+        FROM normalized_docs
+        WHERE created_at >= NOW() - $1::interval
+        GROUP BY doc_type_id
+      )
+      SELECT
+        dt.id AS id,
+        dt.code AS code,
+        dt.nom AS name,
+        dt.categorie AS categorie,
+        dt.icone AS icone,
+        COALESCE(c.total, 0)::int AS total,
+        COALESCE(c.lost, 0)::int AS lost,
+        COALESCE(c.found, 0)::int AS found,
+        COALESCE(c.returned, 0)::int AS returned,
+        COALESCE(p.total, 0)::int AS previous_count,
+        CASE
+          WHEN COALESCE(p.total, 0) = 0 AND COALESCE(c.total, 0) > 0 THEN 100
+          WHEN COALESCE(p.total, 0) = 0 AND COALESCE(c.total, 0) = 0 THEN 0
+          ELSE ROUND(((COALESCE(c.total, 0) - COALESCE(p.total, 0))::numeric / GREATEST(p.total, 1)) * 100, 1)
+        END AS trend,
+        i.items AS recent_items
+      FROM document_types dt
+      LEFT JOIN current_period c ON c.doc_type_id = dt.id
+      LEFT JOIN previous_period p ON p.doc_type_id = dt.id
+      LEFT JOIN items_list i ON i.doc_type_id = dt.id
+      WHERE COALESCE(c.total, 0) > 0
+      ORDER BY c.total DESC, dt.nom ASC
+    `;
+
+    const { rows } = await pool.query(query, [interval]);
+    console.log("📊 Stats by type:", rows.length);
+    return rows;
+  }
 }

@@ -20,7 +20,7 @@ export interface User {
     lieu_naissance?: string;
     photo_url?: string;
     currency: string;
-    role: 'USER' | 'ADMIN';
+    role: 'USER' | 'ADMIN' | 'PARTNER';
     created_at: Date;
     updated_at: Date;
 }
@@ -192,4 +192,63 @@ export interface WithdrawalRequest {
     created_at: Date;
     updated_at: Date;
     processed_at?: Date;
+}
+
+export type AutoriteNiveau = 'HAUTE' | 'NORMAL';
+
+export interface Autorite {
+    id: string;
+    nom: string;
+    prenom: string;
+    email: string;
+    telephone?: string;
+    mot_de_passe: string;
+    niveau: AutoriteNiveau;
+    ville: string;
+    region?: string;
+    is_active: boolean;
+    must_change_password: boolean;
+    created_by?: string | null;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export interface AutoritePublic {
+    id: string;
+    nom: string;
+    prenom: string;
+    email: string;
+    telephone?: string;
+    niveau: AutoriteNiveau;
+    ville: string;
+    region?: string;
+    is_active: boolean;
+    must_change_password: boolean;
+    created_at: Date;
+}
+
+export type PartenaireStatut = 'ACTIF' | 'SUSPENDU' | 'INACTIF';
+
+export interface Partenaire {
+    id: string;
+    user_id: string;
+    nom_organisation: string;
+    adresse?: string | null;
+    logo_url?: string | null;
+    statut: PartenaireStatut;
+    must_change_password: boolean;
+    created_by?: string | null;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export interface PartenairePublic extends Partenaire {
+    email: string;
+    telephone?: string | null;
+    nom_contact?: string | null;
+    prenom_contact?: string | null;
+    ville?: string | null;
+    region?: string | null;
+    wallet_balance: number;
+    is_verified: boolean;
 }

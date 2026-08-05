@@ -199,7 +199,6 @@ export function AuthProvider({ children }) {
         pays: userData.pays || "Cameroun",
         ville: userData.ville || "Yaoundé",
         code_parrainage: userData.code_parrainage || null,
-        is_verified: userData.is_verified || false,
       });
       if (res.data.token) {
         saveSession(res.data.user, res.data.token);

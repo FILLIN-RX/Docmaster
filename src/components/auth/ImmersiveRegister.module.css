@@ -689,6 +689,9 @@
 .pseudoInput::placeholder {
   color: rgba(255,255,255,0.35);
 }
+.pseudoInputError {
+  border-color: #ef4444;
+}
 
 .suggestions {
   display: flex;

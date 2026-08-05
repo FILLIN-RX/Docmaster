@@ -34,4 +34,3 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </MantineProvider>
   </React.StrictMode>
 );
-

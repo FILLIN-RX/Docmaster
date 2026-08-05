@@ -58,12 +58,6 @@ export class UserService {
       }
     }
 
-    // If frontend says it's verified, double check in DB for security
-    let isVerified = false;
-    if (data.is_verified) {
-      isVerified = await this.userRepository.checkRecentlyVerified(data.email);
-    }
-
     // Hash password (generate a secure random password if none is provided, e.g. for Google OAuth)
     const passwordToHash = data.mot_de_passe || crypto.randomBytes(32).toString('hex');
     const hashedPassword = await argon2.hash(passwordToHash);
@@ -71,18 +65,25 @@ export class UserService {
     // Generate unique referral code
     const codeInvitation = await this.generateUniqueReferralCode();
 
-    // Create user with hashed password and referral code
+    // Create user with is_verified = false
     const user = await this.userRepository.createUser({
       ...data,
       mot_de_passe: hashedPassword,
       code_invitation: codeInvitation,
-      is_verified: isVerified,
+      is_verified: false,
     });
 
     // If there is a parrain_id, create a referral
     if (data.parrain_id) {
       const referralService = new ReferralService();
       await referralService.createReferral(data.parrain_id, user.id);
+    }
+
+    // Auto-send verification PIN by email
+    try {
+      await this.sendVerificationPin(user.email, user.telephone);
+    } catch (err: any) {
+      console.error('❌ Échec envoi email de vérification:', err.message);
     }
 
     // Send welcome email

@@ -44,7 +44,7 @@ class DeviceTransferService {
     try {
       const transporter = (mailService as any).transporter;
       await transporter.sendMail({
-        from: `"DocMaster Transferts" <${process.env.MAIL_FROM || 'notifications@dm.cm'}>`,
+        from: `"incubateur" <${process.env.MAIL_FROM || 'notifications@dm.cm'}>`,
         to: toEmail,
         subject: 'Transfert d\'appareil | DocMaster',
         html: `

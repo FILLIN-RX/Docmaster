@@ -1,5 +1,20 @@
 import apiClient from "./api";
 
+interface Autorite {
+  id: string;
+  nom: string;
+  prenom: string;
+  email: string;
+  telephone?: string | null;
+  niveau: "HAUTE" | "NORMAL";
+  ville: string;
+  region?: string | null;
+  is_active: boolean;
+  must_change_password: boolean;
+  created_at: string;
+  [key: string]: unknown;
+}
+
 interface DashboardStats {
   total_users?: number;
   total_declarations?: number;
@@ -245,6 +260,27 @@ export const adminService = {
   async getMatchingStats(): Promise<MatchingStats> {
     const res = await apiClient.get("admin/matching/stats");
     return res.data?.data ?? { totalMatches: 0, highConfidence: 0, potential: 0, averageScore: 0 };
+  },
+
+  // ── Autorités ──
+  async getAutorites(filters?: { niveau?: string; ville?: string; is_active?: boolean }): Promise<Autorite[]> {
+    const res = await apiClient.get("autorites", { params: filters });
+    return res.data.data ?? [];
+  },
+
+  async createAutorite(data: Partial<Autorite>): Promise<Autorite> {
+    const res = await apiClient.post("autorites", data);
+    return res.data.data;
+  },
+
+  async updateAutorite(id: string, data: Partial<Autorite>): Promise<Autorite> {
+    const res = await apiClient.put(`autorites/${id}`, data);
+    return res.data.data;
+  },
+
+  async deleteAutorite(id: string): Promise<unknown> {
+    const res = await apiClient.delete(`autorites/${id}`);
+    return res.data;
   },
 
 };

@@ -1,0 +1,55 @@
+import { Router } from 'express';
+import { PartenaireController } from './partenaires.controller.ts';
+import { partenaireAuthMiddleware } from './partenaires.middleware.ts';
+import { authMiddleware, adminMiddleware } from '../../middleware/auth.middleware.ts';
+import { upload } from '../../utils/upload.utils.ts';
+
+const router = Router();
+const controller = new PartenaireController();
+
+/**
+ * ── PUBLIC ──
+ */
+// POST /api/partenaires/login — partner login
+router.post('/login', controller.login);
+// POST /api/partenaires/logout — partner logout
+router.post('/logout', controller.logout);
+
+/**
+ * ── PARTNER (JWT utilisateur role PARTNER) ──
+ */
+// POST /api/partenaires/change-password — first login mandatory password change
+router.post('/change-password', partenaireAuthMiddleware, controller.changePassword);
+// GET /api/partenaires/me — partner profile + wallet
+router.get('/me', partenaireAuthMiddleware, controller.me);
+// GET /api/partenaires/stats — partner dashboard stats
+router.get('/stats', partenaireAuthMiddleware, controller.getStats);
+// GET /api/partenaires/declarations — partner's found declarations
+router.get('/declarations', partenaireAuthMiddleware, controller.getDeclarations);
+// POST /api/partenaires/declarations — create a found declaration (unlimited)
+router.post('/declarations', partenaireAuthMiddleware, upload.fields([
+  { name: 'photo_recto', maxCount: 1 },
+  { name: 'photo_verso', maxCount: 1 }
+]), controller.createFoundDeclaration);
+// DELETE /api/partenaires/declarations/:id — partner deletes its own declaration
+router.delete('/declarations/:id', partenaireAuthMiddleware, controller.deleteDeclaration);
+// GET /api/partenaires/wallet — balance + history
+router.get('/wallet', partenaireAuthMiddleware, controller.getWallet);
+
+/**
+ * ── ADMIN (token utilisateur admin) ──
+ */
+// POST /api/partenaires — admin creates a partner
+router.post('/', authMiddleware, adminMiddleware, controller.create);
+// GET /api/partenaires — admin lists partners
+router.get('/', authMiddleware, adminMiddleware, controller.findAll);
+// GET /api/partenaires/:id — admin gets partner detail
+router.get('/:id', authMiddleware, adminMiddleware, controller.findById);
+// PUT /api/partenaires/:id — admin updates a partner
+router.put('/:id', authMiddleware, adminMiddleware, controller.update);
+// POST /api/partenaires/:id/wallet — admin adjusts partner wallet
+router.post('/:id/wallet', authMiddleware, adminMiddleware, controller.adjustWallet);
+// DELETE /api/partenaires/:id — admin deletes a partner
+router.delete('/:id', authMiddleware, adminMiddleware, controller.delete);
+
+export default router;

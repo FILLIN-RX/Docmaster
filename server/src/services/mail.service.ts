@@ -39,11 +39,11 @@ export class MailService {
    */
   async sendPasswordResetEmail(to: string, token: string): Promise<void> {
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3003'}/reset-password?token=${token}`;
-    const fromName = "DocMaster Support";
+    const fromName = "incubateur";
     const fromEmail = process.env.MAIL_FROM || process.env.MAIL_USER || 'assistance@dm.cm';
-    
+
     const mailOptions = {
-      from: `"${fromName}" <${fromEmail}>`,
+      from: `${fromEmail}`,
       to,
       subject: 'Réinitialisation de votre mot de passe | DocMaster',
       html: `
@@ -89,11 +89,11 @@ export class MailService {
    * Send a welcome email
    */
   async sendWelcomeEmail(to: string, name: string): Promise<void> {
-    const fromName = "DocMaster";
+    const fromName = "incubateur";
     const fromEmail = process.env.MAIL_FROM || process.env.MAIL_USER || 'assistance@dm.cm';
 
     const mailOptions = {
-      from: `"${fromName}" <${fromEmail}>`,
+      from: `${fromEmail}`,
       to,
       subject: 'Bienvenue sur DocMaster !',
       html: `
@@ -137,11 +137,11 @@ export class MailService {
    * Send a verification email with a PIN code
    */
   async sendVerificationEmail(to: string, pin: string): Promise<void> {
-    const fromName = "Vérification DocMaster";
+    const fromName = "incubateur";
     const fromEmail = process.env.MAIL_FROM || process.env.MAIL_USER || 'assistance@dm.cm';
 
     const mailOptions = {
-      from: `"${fromName}" <${fromEmail}>`,
+      from: `${fromEmail}`,
       to,
       subject: 'Code de vérification | DocMaster',
       html: `
@@ -186,14 +186,14 @@ export class MailService {
    * Send an expiration reminder email
    */
   async sendExpirationReminderEmail(to: string, userName: string, docType: string, daysLeft: number, expiresAt?: Date): Promise<void> {
-    const fromName = "DocMaster Rappels";
+    const fromName = "incubateur";
     const fromEmail = process.env.MAIL_FROM || process.env.MAIL_USER || 'notifications@dm.cm';
     const dateStr = expiresAt ? new Date(expiresAt).toLocaleDateString('fr-FR') : 'bientôt';
 
     const subject = `Rappel : Votre ${docType} expire dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}`;
 
     const mailOptions = {
-      from: `"${fromName}" <${fromEmail}>`,
+      from: `${fromEmail}`,
       to,
       subject,
       html: `
@@ -231,13 +231,13 @@ export class MailService {
    * Send a generic notification email (for any notification type)
    */
   async sendNotificationEmail(to: string, userName: string, title: string, message: string): Promise<void> {
-    const fromName = "DocMaster Notifications";
+    const fromName = "incubateur";
     const fromEmail = process.env.MAIL_FROM || process.env.MAIL_USER || 'notifications@dm.cm';
 
     const mailOptions = {
-      from: `"${fromName}" <${fromEmail}>`,
+      from: `${fromEmail}`,
       to,
-      subject: `${title} | DocMaster`,
+      subject: `${title} | incubateur`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e0d8; border-radius: 14px;">
           <div style="text-align: center; margin-bottom: 20px;">
@@ -272,7 +272,7 @@ export class MailService {
    * Send a notification when a document match is found
    */
   async sendMatchNotificationEmail(to: string, userName: string, docType: string, matchType: 'LOST_SIDE' | 'FOUND_SIDE'): Promise<void> {
-    const fromName = "DocMaster Notifications";
+    const fromName = "incubateur";
     const fromEmail = process.env.MAIL_FROM || process.env.MAIL_USER || 'notifications@dm.cm';
 
     const isLostSide = matchType === 'LOST_SIDE';
@@ -287,7 +287,7 @@ export class MailService {
     const actionUrl = `${process.env.FRONTEND_URL || 'http://localhost:3003'}/dashboard.html`;
 
     const mailOptions = {
-      from: `"${fromName}" <${fromEmail}>`,
+      from: `${fromEmail}`,
       to,
       subject,
       html: `
@@ -318,6 +318,119 @@ export class MailService {
       console.log(`📧 Notification de match envoyée à : ${to}`);
     } catch (error: any) {
       console.error(`❌ Erreur lors de l'envoi de l'email de match à ${to}:`, error.message);
+    }
+  }
+
+  /**
+   * Send an invitation email to a new authority
+   */
+  async sendAuthorityInviteEmail(to: string, name: string, tempPassword: string, loginUrl: string): Promise<void> {
+    const fromName = "incubateur";
+    const fromEmail = process.env.MAIL_FROM || process.env.MAIL_USER || 'assistance@dm.cm';
+
+    const mailOptions = {
+      from: `${fromEmail}`,
+      to,
+      subject: 'Vous avez été nommé(e) autorité DocMaster',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e0d8; border-radius: 14px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <div style="width: 60px; height: 60px; background-color: #FEF0DC; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+              <span style="font-size: 30px;">🛡️</span>
+            </div>
+          </div>
+          <h2 style="color: #f5a64b; text-align: center;">Nomination Autorité</h2>
+          <p>Bonjour <strong>${name}</strong>,</p>
+          <p>Vous avez été nommé(e) <strong>autorité DocMaster</strong>. Vous pouvez désormais certifier les déclarations de documents.</p>
+          <p style="background-color: #F8FAFC; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
+            <strong>Votre mot de passe temporaire :</strong>
+            <span style="display: block; font-size: 20px; font-weight: 800; color: #1e293b; text-align: center; letter-spacing: 2px; margin-top: 6px;">${tempPassword}</span>
+          </p>
+          <p style="font-size: 13px; color: #64748b;">À votre première connexion, vous devrez changer ce mot de passe.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${loginUrl}" style="background-color: #f5a64b; color: white; padding: 14px 25px; text-decoration: none; border-radius: 10px; font-weight: bold; display: inline-block;">Se connecter à l'espace autorité</a>
+          </div>
+          <p style="font-size: 13px; color: #64748b;">Merci de contribuer à la sécurité des documents.</p>
+          <hr style="border: 0; border-top: 1px solid #e5e0d8; margin: 20px 0;">
+          <p style="font-size: 12px; color: #8e8e8e; text-align: center;">
+            &copy; ${new Date().getFullYear()} DocMaster. Tous droits réservés.
+          </p>
+        </div>
+      `,
+    };
+
+    try {
+      await this.transporter.sendMail(mailOptions);
+      console.log(`📧 Email d'invitation autorité envoyé à : ${to}`);
+    } catch (error: any) {
+      console.error(`❌ Erreur lors de l'envoi de l'email d'invitation à ${to}:`, error.message);
+      if (error.message.includes('550')) {
+        try {
+          mailOptions.from = fromEmail;
+          await this.transporter.sendMail(mailOptions);
+          console.log(`📧 Email d'invitation envoyé avec succès (fallback) à : ${to}`);
+          return;
+        } catch (e: any) {
+          console.error('❌ Échec définitif de l\'envoi (fallback compris):', e.message);
+        }
+      }
+      throw new Error(`Impossible d'envoyer l'email d'invitation à ${to}: ${error.message}`);
+    }
+  }
+
+  /**
+   * Send an invitation email to a new partner (organisation account)
+   */
+  async sendPartnerInviteEmail(to: string, organisationName: string, tempPassword: string, loginUrl: string): Promise<void> {
+    const fromEmail = process.env.MAIL_FROM || process.env.MAIL_USER || 'assistance@dm.cm';
+
+    const mailOptions = {
+      from: `${fromEmail}`,
+      to,
+      subject: 'Votre compte partenaire DocMaster est prêt',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e0d8; border-radius: 14px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <div style="width: 60px; height: 60px; background-color: #FEF0DC; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+              <span style="font-size: 30px;">🏢</span>
+            </div>
+          </div>
+          <h2 style="color: #f5a64b; text-align: center;">Compte Partenaire</h2>
+          <p>Bonjour,</p>
+          <p>Un compte <strong>partenaire DocMaster</strong> a été créé pour <strong>${organisationName}</strong>. Ce compte vous permet de déclarer des documents trouvés en illimité.</p>
+          <p style="background-color: #F8FAFC; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
+            <strong>Votre mot de passe temporaire :</strong>
+            <span style="display: block; font-size: 20px; font-weight: 800; color: #1e293b; text-align: center; letter-spacing: 2px; margin-top: 6px;">${tempPassword}</span>
+          </p>
+          <p style="font-size: 13px; color: #64748b;">À votre première connexion, vous devrez changer ce mot de passe.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${loginUrl}" style="background-color: #f5a64b; color: white; padding: 14px 25px; text-decoration: none; border-radius: 10px; font-weight: bold; display: inline-block;">Se connecter à l'espace partenaire</a>
+          </div>
+          <p style="font-size: 13px; color: #64748b;">Merci de contribuer à la sécurité des documents.</p>
+          <hr style="border: 0; border-top: 1px solid #e5e0d8; margin: 20px 0;">
+          <p style="font-size: 12px; color: #8e8e8e; text-align: center;">
+            &copy; ${new Date().getFullYear()} DocMaster. Tous droits réservés.
+          </p>
+        </div>
+      `,
+    };
+
+    try {
+      await this.transporter.sendMail(mailOptions);
+      console.log(`📧 Email d'invitation partenaire envoyé à : ${to}`);
+    } catch (error: any) {
+      console.error(`❌ Erreur lors de l'envoi de l'email d'invitation partenaire à ${to}:`, error.message);
+      if (error.message.includes('550')) {
+        try {
+          mailOptions.from = fromEmail;
+          await this.transporter.sendMail(mailOptions);
+          console.log(`📧 Email d'invitation partenaire envoyé avec succès (fallback) à : ${to}`);
+          return;
+        } catch (e: any) {
+          console.error('❌ Échec définitif de l\'envoi (fallback compris):', e.message);
+        }
+      }
+      throw new Error(`Impossible d'envoyer l'email d'invitation à ${to}: ${error.message}`);
     }
   }
 }

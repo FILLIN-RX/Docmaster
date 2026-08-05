@@ -363,6 +363,11 @@ export class DeclarationService {
         enrichedData.counterPartPhotoVerso = counterPartDecl.photo_verso;
         enrichedData.counterPartDeclaration = counterPartDecl; // Full finder declaration data
 
+        // Nom du trouveur (pour une déclaration PERDUE) / du propriétaire (pour une TROUVÉE)
+        if (declaration.declaration_type === 'LOST' && counterPartUser) {
+          enrichedData.finder_name = `${counterPartUser.prenom} ${counterPartUser.nom}`.trim();
+        }
+
         // Add claim info (to check if owner has paid)
         // Note: doc_id in claim is always the LOST declaration ID
         const lostId = declaration.declaration_type === 'FOUND' ? match.lost_declaration_id : id;
@@ -410,6 +415,10 @@ export class DeclarationService {
 
   async getPerformanceStats(period: string) {
     return await this.declarationRepository.getPerformanceStats(period);
+  }
+
+  async getStatsByType(period: string) {
+    return await this.declarationRepository.getStatsByType(period);
   }
 
   /**

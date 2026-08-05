@@ -6,7 +6,7 @@ import { useDocuments } from "../../hooks/useDocuments";
 import { useNotifications } from "../../hooks/useNotifications";
 import { useDeclarations, useDeclarationStats } from "../../hooks/useDeclarations";
 import { useDevices } from "../../hooks/useDevices";
-import { useGlobalStats, usePerformanceStats } from "../../hooks/useStats";
+import { useGlobalStats, useStatsByType, useActiveDocumentTypes } from "../../hooks/useStats";
 import { usePromo } from "../../hooks/usePromo";
 import { useToast } from "../../context/ToastContext";
 import { subscriptionsService } from "../../services/subscriptionsService";
@@ -77,17 +77,25 @@ export default function Dashboard() {
   const { declarations, loading: declsLoading } = useDeclarations();
   const { devices, loading: devLoading } = useDevices();
   const { stats: globalStats, loading: gStatsLoading } = useGlobalStats();
-  const { stats: perfStats, loading: perfLoading } = usePerformanceStats();
+  const [perfPeriod, setPerfPeriod] = useState<string>("month");
+  const { stats: perfStats, loading: perfLoading, fetch: fetchPerfStats } = useStatsByType("month");
+  const { types: catalogTypes, loading: catalogLoading, error: catalogError } = useActiveDocumentTypes();
   const { promo, loading: promoLoading, subscribing, subscribe: promoSubscribe, dismiss: dismissPromo, isDismissed } = usePromo();
   const toast = useToast();
 
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [skeletonDone, setSkeletonDone] = useState(false);
   const [selectedPerfDoc, setSelectedPerfDoc] = useState<any>(null);
+  const [catalogOpen, setCatalogOpen] = useState(false);
   const [pollingStatus, setPollingStatus] = useState<string | null>(null);
   const [nokashTransactionId, setNokashTransactionId] = useState<string | null>(null);
   const [pollingElapsed, setPollingElapsed] = useState(0);
   const [processingPayment, setProcessingPayment] = useState(false);
+
+  const handlePeriodChange = (period: string) => {
+    setPerfPeriod(period);
+    fetchPerfStats(period);
+  };
 
   const loading = docsLoading || notifsLoading || declsLoading || devLoading || gStatsLoading || perfLoading;
 
@@ -366,14 +374,27 @@ export default function Dashboard() {
                   <Title order={2} className="font-bricolage" fz={{ base: 16, sm: 18 }}>{t("dashboard_performance_title")}</Title>
                   <Text size="xs" c="dimmed" fs="italic">{t("dashboard_performance_desc")}</Text>
                 </div>
-                <Text size="xs" fw={700} c="gold" style={{ cursor: "pointer" }}>
-                  {t("dashboard_full_catalog")} <i className="fa-solid fa-chevron-right" style={{ fontSize: 9 }} />
-                </Text>
+                <Group gap="xs">
+                  {(["day", "week", "month", "year"] as const).map((p) => (
+                    <Button
+                      key={p}
+                      size="compact-xs"
+                      variant={perfPeriod === p ? "filled" : "subtle"}
+                      color={perfPeriod === p ? "gold" : "gray"}
+                      onClick={() => handlePeriodChange(p)}
+                    >
+                      {t(`dashboard_period_${p}`)}
+                    </Button>
+                  ))}
+                  <Text size="xs" fw={700} c="gold" style={{ cursor: "pointer" }} onClick={() => setCatalogOpen(true)}>
+                    {t("dashboard_full_catalog")} <i className="fa-solid fa-chevron-right" style={{ fontSize: 9 }} />
+                  </Text>
+                </Group>
               </Group>
               <SimpleGrid cols={{ base: 2, md: 3, xl: 4 }} spacing="sm">
                 {Array.isArray(perfData) && perfData.length > 0 ? (
                   perfData.slice(0, 8).map((doc: any, idx: number) => (
-                    <PerfCard key={doc.name || idx} doc={doc} onClick={() => setSelectedPerfDoc(doc)} />
+                    <PerfCard key={doc.name || idx} doc={doc} onClick={() => setSelectedPerfDoc(doc)} period={perfPeriod} />
                   ))
                 ) : (
                   <>
@@ -486,6 +507,15 @@ export default function Dashboard() {
           onPromoDismiss={dismissPromo}
           promoProcessing={processingPayment || subscribing}
           pollingStatus={pollingStatus}
+        />
+      )}
+
+      {catalogOpen && (
+        <CatalogModal
+          types={catalogTypes}
+          loading={catalogLoading}
+          error={catalogError}
+          onClose={() => setCatalogOpen(false)}
         />
       )}
 
@@ -678,30 +708,38 @@ function TrackingFoundCard({ decl, navigate }: { decl: Declaration; navigate: (p
 const typeImages: Record<string, string> = {
   CNI: "/src/assets/images/cni-poubelle.jpeg",
   PASSPORT: "/src/assets/images/passport.png",
-  PASSEPORT: "/src/assets/images/passport.png",
-  "PERMIS DE CONDUIRE": "/src/assets/images/permis.jpg",
-  DIPLÔME: "/src/assets/images/bacc.png",
-  "CARTE BANCAIRE": "/src/assets/images/1.png",
-  "CARTE GRISE": "/src/assets/images/docmaster.png",
+  PERMIS: "/src/assets/images/permis.jpg",
+  DIPLOME: "/src/assets/images/bacc.png",
+  CARTE_BLUE: "/src/assets/images/1.png",
+  CARTE_GRISE: "/src/assets/images/docmaster.png",
 };
 
 const typeConfigs: Record<string, { icon: string; color: string; label: string }> = {
   CNI: { icon: "fa-id-card", color: "bg-orange-50 text-orange-600", label: "dashboard_label_cni" },
   PASSPORT: { icon: "fa-passport", color: "bg-blue-50 text-blue-600", label: "dashboard_label_passeport" },
-  PASSEPORT: { icon: "fa-passport", color: "bg-blue-50 text-blue-600", label: "dashboard_label_passeport" },
-  "PERMIS DE CONDUIRE": { icon: "fa-car", color: "bg-green-50 text-green-600", label: "dashboard_label_permis" },
-  DIPLÔME: { icon: "fa-graduation-cap", color: "bg-purple-50 text-purple-600", label: "dashboard_label_diplome" },
-  "CARTE BANCAIRE": { icon: "fa-credit-card", color: "bg-indigo-50 text-indigo-600", label: "dashboard_label_carte_bancaire" },
-  "CARTE GRISE": { icon: "fa-file-invoice", color: "bg-red-50 text-red-600", label: "dashboard_label_carte_grise" },
+  PERMIS: { icon: "fa-car", color: "bg-green-50 text-green-600", label: "dashboard_label_permis" },
+  DIPLOME: { icon: "fa-graduation-cap", color: "bg-purple-50 text-purple-600", label: "dashboard_label_diplome" },
+  CARTE_BLUE: { icon: "fa-credit-card", color: "bg-indigo-50 text-indigo-600", label: "dashboard_label_doc" },
+  CARTE_GRISE: { icon: "fa-file-invoice", color: "bg-red-50 text-red-600", label: "dashboard_label_carte_grise" },
+  CARTE_SEJOUR: { icon: "fa-passport", color: "bg-cyan-50 text-cyan-600", label: "dashboard_label_doc" },
+  CARTE_VOTE: { icon: "fa-check-to-slot", color: "bg-lime-50 text-lime-600", label: "dashboard_label_doc" },
+  ACTE_NAISSANCE: { icon: "fa-file-circle-plus", color: "bg-teal-50 text-teal-600", label: "dashboard_label_acte" },
+  ACTE_MARIAGE: { icon: "fa-ring", color: "bg-pink-50 text-pink-600", label: "dashboard_label_acte" },
+  ACTE_DECES: { icon: "fa-scroll", color: "bg-stone-100 text-stone-600", label: "dashboard_label_acte" },
+  TITRE_FINANCIER: { icon: "fa-house-chimney", color: "bg-amber-50 text-amber-600", label: "dashboard_label_doc" },
+  AUTRES: { icon: "fa-circle-question", color: "bg-gray-50 text-gray-600", label: "dashboard_label_doc" },
   DEFAULT: { icon: "fa-file-lines", color: "bg-gray-50 text-gray-600", label: "dashboard_label_doc" },
 };
 
-function PerfCard({ doc, onClick }: { doc: any; onClick?: () => void }) {
+function PerfCard({ doc, onClick, period }: { doc: any; onClick?: () => void; period?: string }) {
   const { t } = useI18n();
-  const name = (doc.name || "").toUpperCase();
-  const cfg = typeConfigs[name] || typeConfigs.DEFAULT;
+  const code = doc.code || "DEFAULT";
+  const cfg = typeConfigs[code] || typeConfigs.DEFAULT;
   const trend = parseFloat(doc.trend) || 0;
   const isUp = trend >= 0;
+  const total = parseInt(doc.total) || 0;
+  const lost = parseInt(doc.lost) || 0;
+  const found = parseInt(doc.found) || 0;
 
   const latest = doc.recent_items?.[0];
   const activityText = latest ? `${latest.type === "LOST" ? t("dashboard_perf_lost") : t("dashboard_perf_found")} ${timeAgo(latest.date, t)}${latest.ville ? ` ${t("dashboard_perf_in")} ${latest.ville}` : ""}` : t("dashboard_perf_no_activity");
@@ -710,7 +748,7 @@ function PerfCard({ doc, onClick }: { doc: any; onClick?: () => void }) {
     <Card withBorder radius="lg" padding={0} onClick={onClick} style={{ cursor: "pointer" }}>
       <Card.Section>
         <div style={{ position: "relative", height: 96, overflow: "hidden", background: "var(--mantine-color-surface2)" }}>
-          <img src={typeImages[name] || "/src/assets/images/devices_docs.png"} style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.9 }} alt={doc.name} />
+          <img src={typeImages[code] || "/src/assets/images/devices_docs.png"} style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.9 }} alt={doc.name} />
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.4), transparent)", opacity: 0.6 }} />
           <Paper style={{ position: "absolute", top: 8, right: 8, padding: "2px 6px", borderRadius: 6, background: "rgba(255,255,255,0.9)", fontSize: 9, fontWeight: 700, color: isUp ? "#16a34a" : "#ef4444", display: "flex", alignItems: "center", gap: 2 }}>
             <i className={`fa-solid ${isUp ? "fa-arrow-up" : "fa-arrow-down"}`} style={{ fontSize: 7 }} /> {Math.abs(trend)}%
@@ -722,19 +760,27 @@ function PerfCard({ doc, onClick }: { doc: any; onClick?: () => void }) {
           <div className={`w-6 h-6 rounded-md ${cfg.color} flex items-center justify-center`} style={{ fontSize: 10 }}>
             <i className={`fa-solid ${cfg.icon}`} />
           </div>
-          <Text size="xs" fw={700} truncate>{t(cfg.label)}</Text>
+          <Text size="xs" fw={700} truncate>{doc.name || t(cfg.label)}</Text>
         </Group>
         <div>
           <Group gap={4} align="baseline">
-            <Text span fz={13} fw={800} c="gold">{(parseInt(doc.count) || 0).toLocaleString()}</Text>
-            <Text span size="xs" c="dimmed" fs="italic">{t("dashboard_this_month")}</Text>
+            <Text span fz={13} fw={800} c="gold">{total.toLocaleString()}</Text>
+            <Text span size="xs" c="dimmed" fs="italic">{t(`dashboard_this_${period || "month"}`)}</Text>
+          </Group>
+          <Group gap={6} mt={4}>
+            <Paper style={{ fontSize: 8, color: "#d97706", background: "#fef3c7", padding: "2px 6px", borderRadius: 6, width: "fit-content" }}>
+              <i className="fa-solid fa-arrow-down" style={{ fontSize: 7, marginRight: 3 }} /> {lost} {t("dashboard_perf_lost")}
+            </Paper>
+            <Paper style={{ fontSize: 8, color: "#16a34a", background: "#dcfce7", padding: "2px 6px", borderRadius: 6, width: "fit-content" }}>
+              <i className="fa-solid fa-arrow-up" style={{ fontSize: 7, marginRight: 3 }} /> {found} {t("dashboard_perf_found")}
+            </Paper>
           </Group>
           <Paper style={{ fontSize: 8, color: "var(--mantine-color-dimmed)", marginTop: 4, background: "var(--mantine-color-surface2)", padding: "2px 6px", borderRadius: 6, width: "fit-content" }}>
             <i className="fa-solid fa-clock-rotate-left" style={{ fontSize: 7, marginRight: 4 }} /> {activityText}
           </Paper>
         </div>
         <div style={{ marginTop: 8, width: "100%", height: 4, background: "var(--mantine-color-surface2)", borderRadius: 999, overflow: "hidden" }}>
-          <div style={{ height: "100%", background: "rgba(217,138,48,0.3)", borderRadius: 999, width: `${Math.min(100, ((parseInt(doc.count) || 0) / 1000) * 100)}%` }} />
+          <div style={{ height: "100%", background: "rgba(217,138,48,0.3)", borderRadius: 999, width: `${Math.min(100, (total / 1000) * 100)}%` }} />
         </div>
       </div>
     </Card>
@@ -764,9 +810,9 @@ function PerfModal({ doc, onClose, promo, isDismissed, onPromoSubscribe, onPromo
 }) {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const name = (doc.name || "").toUpperCase();
-  const cfg = typeConfigs[name] || typeConfigs.DEFAULT;
-  const image = typeImages[name] || "/src/assets/images/devices_docs.png";
+  const code = doc.code || "DEFAULT";
+  const cfg = typeConfigs[code] || typeConfigs.DEFAULT;
+  const image = typeImages[code] || "/src/assets/images/devices_docs.png";
   const trend = parseFloat(doc.trend) || 0;
   const isUp = trend >= 0;
   const recentItems = doc.recent_items || [];
@@ -782,7 +828,7 @@ function PerfModal({ doc, onClose, promo, isDismissed, onPromoSubscribe, onPromo
               <i className={`fa-solid ${cfg.icon} text-lg`} />
             </div>
             <div>
-              <Text c="white" fz={18} fw={800} className="font-bricolage">{t(cfg.label)}</Text>
+              <Text c="white" fz={18} fw={800} className="font-bricolage">{doc.name || t(cfg.label)}</Text>
               <Badge color={isUp ? "green" : "red"} size="sm" variant="light">
                 <i className={`fa-solid ${isUp ? "fa-arrow-up" : "fa-arrow-down"}`} style={{ fontSize: 8 }} /> {Math.abs(trend)}%
               </Badge>
@@ -793,7 +839,7 @@ function PerfModal({ doc, onClose, promo, isDismissed, onPromoSubscribe, onPromo
         <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
           <SimpleGrid cols={3} spacing="sm">
             <Paper p="md" ta="center" style={{ background: "var(--mantine-color-surface2)" }}>
-              <Text fz={20} fw={800} className="font-bricolage">{(parseInt(doc.count) || 0).toLocaleString()}</Text>
+              <Text fz={20} fw={800} className="font-bricolage">{(parseInt(doc.total) || 0).toLocaleString()}</Text>
               <Text size="xs" c="dimmed" fw={500}>{t("dashboard_perf_this_month")}</Text>
             </Paper>
             <Paper p="md" ta="center" style={{ background: "var(--mantine-color-surface2)" }}>
@@ -805,6 +851,20 @@ function PerfModal({ doc, onClose, promo, isDismissed, onPromoSubscribe, onPromo
                 {isUp ? "+" : ""}{trend}%
               </Text>
               <Text size="xs" c="dimmed" fw={500}>{t("dashboard_perf_trend")}</Text>
+            </Paper>
+          </SimpleGrid>
+          <SimpleGrid cols={3} spacing="sm">
+            <Paper p="md" ta="center" style={{ background: "#fef3c7" }}>
+              <Text fz={18} fw={800} className="font-bricolage" c="#d97706">{(parseInt(doc.lost) || 0).toLocaleString()}</Text>
+              <Text size="xs" c="dimmed" fw={500}>{t("dashboard_perf_lost")}</Text>
+            </Paper>
+            <Paper p="md" ta="center" style={{ background: "#dcfce7" }}>
+              <Text fz={18} fw={800} className="font-bricolage" c="#16a34a">{(parseInt(doc.found) || 0).toLocaleString()}</Text>
+              <Text size="xs" c="dimmed" fw={500}>{t("dashboard_perf_found")}</Text>
+            </Paper>
+            <Paper p="md" ta="center" style={{ background: "var(--mantine-color-surface2)" }}>
+              <Text fz={18} fw={800} className="font-bricolage" c="#10B981">{(parseInt(doc.returned) || 0).toLocaleString()}</Text>
+              <Text size="xs" c="dimmed" fw={500}>{t("dashboard_perf_returned")}</Text>
             </Paper>
           </SimpleGrid>
 
@@ -863,5 +923,87 @@ function PerfModal({ doc, onClose, promo, isDismissed, onPromoSubscribe, onPromo
         />
       )}
     </>
+  );
+}
+
+function CatalogModal({ types, loading, error, onClose }: {
+  types: any[];
+  loading: boolean;
+  error: string | null;
+  onClose: () => void;
+}) {
+  const { t } = useI18n();
+
+  return (
+    <Modal
+      opened
+      onClose={onClose}
+      size="lg"
+      title={
+        <Group gap="sm">
+          <i className="fa-solid fa-book text-primary" />
+          <Text fw={700} className="font-bricolage">{t("dashboard_catalog_title")}</Text>
+        </Group>
+      }
+    >
+      <Text size="xs" c="dimmed" mb="md">{t("dashboard_catalog_desc")}</Text>
+
+      {loading && (
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="animate-pulse" style={{ height: 84, background: "var(--mantine-color-bgMain)", borderRadius: 12 }} />
+          ))}
+        </SimpleGrid>
+      )}
+
+      {!loading && error && (
+        <Text ta="center" py="lg" size="xs" c="red" fs="italic">{error}</Text>
+      )}
+
+      {!loading && !error && (!Array.isArray(types) || types.length === 0) && (
+        <Text ta="center" py="lg" size="xs" c="dimmed" fs="italic">
+          <i className="fa-solid fa-inbox text-2xl" style={{ color: "#e5e7eb", display: "block", marginBottom: 8 }} />
+          {t("dashboard_catalog_empty")}
+        </Text>
+      )}
+
+      {!loading && !error && Array.isArray(types) && types.length > 0 && (
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm" style={{ maxHeight: 420, overflowY: "auto" }}>
+          {types.map((type: any) => {
+            const code = type.code || "DEFAULT";
+            const cfg = typeConfigs[code] || typeConfigs.DEFAULT;
+            const boxStyle = type.color || type.bg
+              ? { background: type.bg || "#f3f4f6", color: type.color || "#6b7280" }
+              : undefined;
+            return (
+              <Card key={type.id || code} withBorder radius="md" p="sm">
+                <Group gap="sm" align="flex-start" wrap="nowrap">
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={boxStyle || { background: "#f3f4f6", color: "#6b7280" }}
+                  >
+                    <i className={`fa-solid ${cfg.icon}`} style={{ fontSize: 13 }} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <Group gap={6} wrap="nowrap">
+                      <Text fz={13} fw={700} truncate>{type.nom}</Text>
+                      <Badge size="xs" variant="light" color="gray">{type.code}</Badge>
+                    </Group>
+                    {type.description && (
+                      <Text size="xs" c="dimmed" fs="italic" lineClamp={2} mt={2}>{type.description}</Text>
+                    )}
+                    {Number(type.prix_retrouvaille) > 0 && (
+                      <Text size="xs" fw={600} mt={4} c="gold">
+                        {t("dashboard_catalog_price")} : {Number(type.prix_retrouvaille).toLocaleString("fr-FR")} FCFA
+                      </Text>
+                    )}
+                  </div>
+                </Group>
+              </Card>
+            );
+          })}
+        </SimpleGrid>
+      )}
+    </Modal>
   );
 }

@@ -6,6 +6,7 @@ import {
   searchDeclarations,
   getGlobalStats,
   getPerformanceStats,
+  getStatsByType,
   searchPublicFound,
   getDeclarationById,
   getRenderContext,
@@ -70,6 +71,51 @@ router.get('/stats', getGlobalStats);
  *         description: Erreur serveur
  */
 router.get('/performance', getPerformanceStats);
+
+/**
+ * @swagger
+ * /declarations/stats-by-type:
+ *   get:
+ *     summary: KPIs par type de document (LOST + FOUND)
+ *     tags: [Declarations]
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         schema:
+ *           type: string
+ *           enum: [day, week, month, year]
+ *         description: Période d'analyse (défaut: month)
+ *     responses:
+ *       200:
+ *         description: KPIs par type de document canonique
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: string, format: uuid }
+ *                       code: { type: string }
+ *                       name: { type: string }
+ *                       categorie: { type: string }
+ *                       icone: { type: string }
+ *                       total: { type: integer }
+ *                       lost: { type: integer }
+ *                       found: { type: integer }
+ *                       returned: { type: integer }
+ *                       previous_count: { type: integer }
+ *                       trend: { type: number }
+ *                       recent_items: { type: array }
+ *       500:
+ *         description: Erreur serveur
+ */
+router.get('/stats-by-type', getStatsByType);
 
 /**
  * @swagger

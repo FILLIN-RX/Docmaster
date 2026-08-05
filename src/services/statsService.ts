@@ -14,6 +14,13 @@ export const statsService = {
     return res.data;
   },
 
+  async getStatsByType(period?: string) {
+    const res = await apiClient.get<ApiResponse>("declarations/stats-by-type", {
+      params: period ? { period } : undefined,
+    });
+    return res.data;
+  },
+
   async getActiveDocumentTypes() {
     const res = await apiClient.get<ApiResponse>("document-types/active");
     return res.data;

@@ -4,16 +4,40 @@ import { Anchor, Button, Paper, Text, Title, TextInput, PasswordInput, Alert, Gr
 import { DateInput } from "@mantine/dates";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { GoogleButton, FacebookButton } from "./SocialButtons/SocialButtons";
 import { useAuth } from "../../context/AuthContext";
 import { useI18n } from "../../context/I18nContext";
 import { useGoogleOneTap } from "../../hooks/useGoogleOneTap";
 import { authService } from "../../services/authService";
+import {
+  registerSchema,
+  registerDefaultValues,
+  registerStepFields,
+  type RegisterFormValues,
+} from "../../types/register";
 import styles from "./ImmersiveRegister.module.css";
 import DocMascot from "./Docmascot";
 import bgLang from "../../assets/images/login.jpg";
 
 const TOTAL_STEPS = 6;
+
+function localIsoDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function toIsoDate(value: string | Date | null): string {
+  if (!value) return "";
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return localIsoDate(value);
+  }
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value));
+  return m ? `${m[1]}-${m[2]}-${m[3]}` : String(value);
+}
 
 export default function ImmersiveRegister() {
   const { t, lang, setLanguage } = useI18n();
@@ -25,14 +49,18 @@ export default function ImmersiveRegister() {
   const [langStep, setLangStep] = useState(true);
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState<"next" | "prev">("next");
-  const [form, setForm] = useState({
-    nom: "", prenom: "", dateNaissance: "",
-    telephone: "", email: "",
-    password: "", passwordConfirm: "",
-    pseudo: "", referral: "",
+  const {
+    register: registerField,
+    watch,
+    setValue,
+    trigger,
+    formState: { errors },
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    mode: "onTouched",
+    defaultValues: registerDefaultValues,
   });
-  const [pwStrength, setPwStrength] = useState(0);
-  const [pwMatch, setPwMatch] = useState<boolean | null>(null);
+  const form = watch();
   const [pinValues, setPinValues] = useState(["", "", "", "", "", ""]);
   const [pinSending, setPinSending] = useState(false);
   const [pinError, setPinError] = useState("");
@@ -61,14 +89,15 @@ export default function ImmersiveRegister() {
   useEffect(() => {
     const stored = localStorage.getItem("dm_referral_code");
     if (stored && !searchParams.get("ref") && !searchParams.get("code") && !form.referral) {
-      setForm((f) => ({ ...f, referral: stored }));
+      setValue("referral", stored);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     const ref = searchParams.get("ref") || searchParams.get("code");
     if (ref) {
-      setForm((f) => ({ ...f, referral: ref }));
+      setValue("referral", ref);
       setShowReferral(true);
       setReferralLocked(true);
       localStorage.setItem("dm_referral_code", ref);
@@ -122,6 +151,11 @@ export default function ImmersiveRegister() {
     return score;
   }, []);
 
+  const pwStrength = form.password ? calcPwStrength(form.password) : 0;
+  const pwMatch: boolean | null = !form.passwordConfirm
+    ? null
+    : form.passwordConfirm === form.password;
+
   const focusPinIdx = (i: number) => {
     document.querySelector<HTMLInputElement>(`[data-pin-idx="${i}"]`)?.focus();
   };
@@ -160,9 +194,11 @@ export default function ImmersiveRegister() {
     focusPinIdx(Math.min(digits.length, 5));
   };
 
-  const goNext = () => {
+  const goNext = async (s: number) => {
+    const fields = registerStepFields[s];
+    if (fields && !(await trigger(fields))) return;
     setDirection("next");
-    setStep((s) => Math.min(s + 1, TOTAL_STEPS));
+    setStep((cur) => Math.min(cur + 1, TOTAL_STEPS));
   };
 
   const goPrev = () => {
@@ -171,35 +207,19 @@ export default function ImmersiveRegister() {
   };
 
   const canGoNext = (s: number): boolean => {
-    if (s === 1) return !!(form.nom && form.prenom);
-    if (s === 2) return !!form.dateNaissance;
-    if (s === 3) return !!(form.email && form.telephone && form.telephone.length >= 8) && emailExists !== true && !emailChecking;
-    if (s === 4) return !!(form.password && pwStrength >= 2 && pwMatch === true);
-    if (s === 5) return pinSent && pinValues.every((v) => v !== "") && !pinSending;
+    if (s === 1) return !!(form.nom && form.prenom) && !errors.nom && !errors.prenom;
+    if (s === 2) return !!form.dateNaissance && !errors.dateNaissance;
+    if (s === 3) return !!(form.email && form.telephone && form.telephone.length >= 8) && emailExists !== true && !emailChecking && !errors.email && !errors.telephone;
+    if (s === 4) return !!(form.password && pwStrength >= 2 && pwMatch === true) && !errors.password && !errors.passwordConfirm;
+    if (s === 6) return pinSent && pinValues.every((v) => v !== "") && !pinSending;
     return true;
   };
 
-  const sendVerificationAndProceed = async () => {
+  const proceedToPseudo = async () => {
+    const ok = await trigger(registerStepFields[4]);
+    if (!ok) return;
+    setDirection("next");
     setStep(5);
-    setPinSending(true);
-    setPinError("");
-    setPinValues(["", "", "", "", "", ""]);
-    setPinSent(false);
-    try {
-      const res = await authService.sendVerificationPin({
-        email: form.email,
-        telephone: form.telephone,
-      }) as { method: "SMS" | "EMAIL"; target: string };
-      setPinMethod(res.method);
-      setPinTarget(res.target);
-      setPinSent(true);
-      setResendCountdown(30);
-      setTimeout(() => focusPinIdx(0), 100);
-    } catch (err: any) {
-      setPinError(err.response?.data?.error || "Erreur d'envoi du code");
-    } finally {
-      setPinSending(false);
-    }
   };
 
   const handleVerifyPin = async () => {
@@ -210,8 +230,11 @@ export default function ImmersiveRegister() {
         email: form.email,
         pin: pinValues.join(""),
       });
-      setDirection("next");
-      setStep(6);
+      localStorage.removeItem("dm_referral_code");
+      localStorage.removeItem("dm_referral_locked");
+      // OTP verified → now create the account
+      setRegError("");
+      await onFinalSubmit(form);
     } catch (err: any) {
       setPinError(err.response?.data?.error || "Code invalide ou expiré");
       setPinValues(["", "", "", "", "", ""]);
@@ -272,27 +295,61 @@ export default function ImmersiveRegister() {
     }
   };
 
-  const handleFinalSubmit = async () => {
+const onFinalSubmit = async (data: RegisterFormValues) => {
     setRegError("");
     setRegLoading(true);
     const result = await register({
-      nom: form.nom,
-      prenom: form.prenom,
-      email: form.email,
-      mot_de_passe: form.password,
-      telephone: form.telephone,
-      date_naissance: form.dateNaissance,
-      code_parrainage: form.referral || undefined,
-      is_verified: true,
+      nom: data.nom,
+      prenom: data.prenom,
+      email: data.email,
+      mot_de_passe: data.password,
+      telephone: data.telephone,
+      date_naissance: data.dateNaissance,
+      code_parrainage: data.referral || undefined,
     });
     setRegLoading(false);
     if (result.success) {
       localStorage.removeItem("dm_referral_code");
       localStorage.removeItem("dm_referral_locked");
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     } else {
       setRegError(result.message);
     }
+  };
+
+  /**
+   * Step 5 → send OTP first, then go to PIN verification.
+   * Account creation happens AFTER successful OTP verification.
+   */
+  const handleSendPinThenSubmit = async () => {
+    setRegError("");
+    setPinValues(["", "", "", "", "", ""]);
+    setPinError("");
+    setPinSent(false);
+    setResendCountdown(30);
+    setPinSending(true);
+    try {
+      const pinRes = await authService.sendVerificationPin({
+        email: form.email,
+        telephone: form.telephone,
+      }) as { method: "SMS" | "EMAIL"; target: string };
+      setPinMethod(pinRes.method);
+      setPinTarget(pinRes.target);
+      setPinSent(true);
+      setDirection("next");
+      setStep(6);
+      setTimeout(() => focusPinIdx(0), 100);
+    } catch (err: any) {
+      setPinError(err.response?.data?.error || "Erreur d'envoi du code");
+    } finally {
+      setPinSending(false);
+    }
+  };
+
+  const handleFinalSubmit = () => {
+    void trigger(registerStepFields[5]).then((valid) => {
+      if (valid) void handleSendPinThenSubmit();
+    });
   };
 
   const handleGoogleLogin = async () => {
@@ -421,30 +478,30 @@ export default function ImmersiveRegister() {
 
               <div className={styles.fields} style={{ marginTop: 4 }}>
                 <TextInput
-                  value={form.nom}
-                  onChange={(e) => setForm((f) => ({ ...f, nom: e.target.value }))}
+                  {...registerField("nom")}
                   placeholder={t("profil_placeholder_lastname")}
                   leftSection={<i className="fa-regular fa-user" />}
                   size="lg"
                   radius="lg"
                   required
+                  error={errors.nom?.message}
                 />
                 <TextInput
-                  value={form.prenom}
-                  onChange={(e) => setForm((f) => ({ ...f, prenom: e.target.value }))}
-                  onKeyDown={(e) => e.key === "Enter" && canGoNext(1) && goNext()}
+                  {...registerField("prenom")}
+                  onKeyDown={(e) => e.key === "Enter" && canGoNext(1) && goNext(1)}
                   placeholder={t("profil_placeholder_firstname")}
                   leftSection={<i className="fa-regular fa-user" />}
                   size="lg"
                   radius="lg"
                   required
+                  error={errors.prenom?.message}
                 />
               </div>
 
               <div className={styles.btnRow}>
                 <button
                   className={`${styles.btnPrimary} ${styles.btnPrimaryGold}`}
-                  onClick={goNext}
+                  onClick={() => goNext(1)}
                   disabled={!canGoNext(1)}
                 >
                   {t("login_btn_continue")} <i className="fa-solid fa-arrow-right" />
@@ -487,8 +544,8 @@ export default function ImmersiveRegister() {
 
             <DateInput
               value={form.dateNaissance || ""}
-              onChange={(val) => setForm((f) => ({ ...f, dateNaissance: val ?? "" }))}
-              maxDate={new Date().toISOString().split("T")[0]}
+              onChange={(val) => setValue("dateNaissance", toIsoDate(val ?? null), { shouldValidate: true })}
+              maxDate={localIsoDate(new Date())}
               size="lg"
               radius="lg"
               placeholder="Sélectionnez votre date de naissance"
@@ -496,6 +553,7 @@ export default function ImmersiveRegister() {
               clearable
               valueFormat="DD/MM/YYYY"
               locale="fr"
+              error={errors.dateNaissance?.message}
             />
 
             <div className={styles.btnRow}>
@@ -504,7 +562,7 @@ export default function ImmersiveRegister() {
               </button>
               <button
                 className={`${styles.btnPrimary} ${styles.btnPrimaryWhite}`}
-                onClick={goNext}
+                onClick={() => goNext(2)}
                 disabled={!canGoNext(2)}
               >
                 {t("login_btn_continue")} <i className="fa-solid fa-arrow-right" />
@@ -537,8 +595,7 @@ export default function ImmersiveRegister() {
               <div>
                 <TextInput
                   type="email"
-                  value={form.email}
-                  onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                  {...registerField("email")}
                   placeholder={t("login_email_placeholder")}
                   leftSection={<i className="fa-regular fa-envelope" />}
                   rightSection={
@@ -552,7 +609,7 @@ export default function ImmersiveRegister() {
                   }
                   size="lg"
                   radius="lg"
-                  error={emailExists === true ? "Cet email est déjà utilisé" : undefined}
+                  error={emailExists === true ? "Cet email est déjà utilisé" : errors.email?.message}
                   styles={{
                     input: {
                       background: "rgba(255,255,255,0.20)",
@@ -580,8 +637,8 @@ export default function ImmersiveRegister() {
               <PhoneInput
                 country={"cm"}
                 value={form.telephone}
-                onChange={(phone) => setForm((f) => ({ ...f, telephone: phone }))}
-                onKeyDown={(e: React.KeyboardEvent) => e.key === "Enter" && canGoNext(3) && goNext()}
+                onChange={(phone) => setValue("telephone", phone, { shouldValidate: true })}
+                onKeyDown={(e: React.KeyboardEvent) => e.key === "Enter" && canGoNext(3) && goNext(3)}
                 placeholder={t("profil_placeholder_phone")}
                 enableSearch
                 searchPlaceholder="Rechercher un pays..."
@@ -622,7 +679,7 @@ export default function ImmersiveRegister() {
               </button>
               <button
                 className={`${styles.btnPrimary} ${styles.btnPrimaryGold}`}
-                onClick={goNext}
+                onClick={() => goNext(3)}
                 disabled={!canGoNext(3)}
               >
                 {t("login_btn_continue")} <i className="fa-solid fa-arrow-right" />
@@ -653,15 +710,12 @@ export default function ImmersiveRegister() {
 
             <div className={styles.fields}>
               <PasswordInput
-                value={form.password}
-                onChange={(e) => {
-                  setForm((f) => ({ ...f, password: e.target.value }));
-                  setPwStrength(calcPwStrength(e.target.value));
-                }}
+                {...registerField("password")}
                 placeholder={t("reset_placeholder_password")}
                 leftSection={<i className="fa-solid fa-lock" />}
                 size="lg"
                 radius="lg"
+                error={errors.password?.message}
                 styles={{
                   input: {
                     background: "rgba(255,255,255,0.08)",
@@ -690,16 +744,13 @@ export default function ImmersiveRegister() {
                 </div>
               )}
               <PasswordInput
-                value={form.passwordConfirm}
-                onChange={(e) => {
-                  setForm((f) => ({ ...f, passwordConfirm: e.target.value }));
-                  setPwMatch(e.target.value === form.password && e.target.value.length > 0);
-                }}
-                onKeyDown={(e) => e.key === "Enter" && canGoNext(4) && !pinSending && sendVerificationAndProceed()}
+                {...registerField("passwordConfirm")}
+                onKeyDown={(e) => e.key === "Enter" && canGoNext(4) && proceedToPseudo()}
                 placeholder={t("reset_placeholder_confirm")}
                 leftSection={<i className="fa-solid fa-lock" />}
                 size="lg"
                 radius="lg"
+                error={errors.passwordConfirm?.message}
                 styles={{
                   input: {
                     background: "rgba(255,255,255,0.08)",
@@ -735,13 +786,113 @@ export default function ImmersiveRegister() {
               </button>
               <button
                 className={`${styles.btnPrimary} ${styles.btnPrimaryGold}`}
-                onClick={sendVerificationAndProceed}
-                disabled={!canGoNext(4) || pinSending}
+                onClick={proceedToPseudo}
+                disabled={!canGoNext(4)}
               >
-                {pinSending ? (
+                <>{t("login_btn_validate")} <i className="fa-solid fa-arrow-right" /></>
+              </button>
+            </div>
+
+            {renderDots()}
+          </div>
+        </div>
+      )}
+
+      {/* ═══ STEP 5: Pseudo + Parrainage ═══ */}
+      {!langStep && step === 5 && (
+        <div className={`${styles.stepWrapper} ${styles.step6} ${direction === "prev" ? styles.prev : ""}`} key="step5">
+          <div className={`${styles.decor} ${styles.decor6a}`} />
+          <div className={`${styles.decor} ${styles.decor6b}`} />
+
+          <div className={styles.content}>
+            <div className={styles.mascotWrap}>
+              <div className={styles.mascotGlow} />
+              <DocMascot variant="launch" />
+            </div>
+
+            <h1 className={`${styles.title} ${styles.titleLight}`}>Plus qu'une étape !</h1>
+            <p className={`${styles.subtitle} ${styles.subtitleLight}`}>
+              Choisissez votre nom d'utilisateur pour finaliser votre inscription.
+            </p>
+
+            {regError && (
+              <Alert variant="light" color="red" icon={<i className="fa-solid fa-circle-exclamation" />} px="md" py="sm">
+                {regError}
+              </Alert>
+            )}
+
+            <div className={styles.fields}>
+              <div className={styles.pseudoWrap}>
+                <span className={styles.pseudoPrefix}>@</span>
+                <input
+                  className={`${styles.pseudoInput} ${errors.pseudo ? styles.pseudoInputError : ""}`}
+                  type="text"
+                  {...registerField("pseudo")}
+                  onKeyDown={(e) => e.key === "Enter" && form.pseudo && !regLoading && handleFinalSubmit()}
+                  placeholder="jean_dupont42"
+                />
+              </div>
+              {errors.pseudo && (
+                <Text size="xs" c="red" mt={4}>
+                  {errors.pseudo.message}
+                </Text>
+              )}
+
+              {pseudoSuggestions.length > 0 && (
+                <>
+                  <span className={styles.suggestionsLabel}>{t("login_suggestions")}</span>
+                  <div className={styles.suggestions}>
+                    {pseudoSuggestions.map((s) => (
+                      <button
+                        key={s}
+                        className={styles.suggestionBtn}
+                        onClick={() => setValue("pseudo", s, { shouldValidate: true })}
+                      >
+                        @{s}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <button
+                className={styles.referralToggle}
+                onClick={() => setShowReferral(!showReferral)}
+              >
+                <i className="fa-solid fa-gift" />
+                {t("login_referral_question")}
+                <i className={`fa-solid fa-chevron-down ${styles.referralToggleIcon} ${showReferral ? styles.referralToggleIconOpen : ""}`} />
+              </button>
+
+              {showReferral && (
+                <TextInput
+                  variant="unstyled"
+                  className={styles.inputDark}
+                  {...registerField("referral")}
+                  onChange={(e) => {
+                    registerField("referral").onChange(e);
+                    if (!referralLocked) localStorage.setItem("dm_referral_code", e.target.value);
+                  }}
+                  disabled={referralLocked}
+                  placeholder={t("login_referral_placeholder")}
+                  leftSection={<i className="fa-solid fa-gift" />}
+                />
+              )}
+            </div>
+
+            <div className={styles.btnRow}>
+              <button className={styles.btnBack} onClick={goPrev}>
+                <i className="fa-solid fa-arrow-left" />
+              </button>
+              <button
+                className={`${styles.btnPrimary} ${styles.btnPrimaryGreen}`}
+                onClick={handleFinalSubmit}
+                disabled={!form.pseudo || regLoading}
+              >
+                {regLoading ? (
                   <i className="fa-solid fa-spinner fa-spin" />
                 ) : (
-                  <>{t("login_btn_validate")} <i className="fa-solid fa-arrow-right" /></>
+                  <><i className="fa-solid fa-rocket" /> {t("login_btn_create")}</>
                 )}
               </button>
             </div>
@@ -751,9 +902,9 @@ export default function ImmersiveRegister() {
         </div>
       )}
 
-      {/* ═══ STEP 5: PIN ═══ */}
-      {!langStep && step === 5 && (
-        <div className={`${styles.stepWrapper} ${styles.step5} ${direction === "prev" ? styles.prev : ""}`} key="step5">
+      {/* ═══ STEP 6: PIN ═══ */}
+      {!langStep && step === 6 && (
+        <div className={`${styles.stepWrapper} ${styles.step5} ${direction === "prev" ? styles.prev : ""}`} key="step6">
           <div className={`${styles.decor} ${styles.decor5a}`} />
           <div className={`${styles.decor} ${styles.decor5b}`} />
 
@@ -834,7 +985,7 @@ export default function ImmersiveRegister() {
             <div className={styles.btnRow}>
               <button
                 className={styles.btnBack}
-                onClick={() => { setDirection("prev"); setStep(4); }}
+                onClick={() => { setDirection("prev"); setStep(5); }}
                 disabled={pinSending}
               >
                 <i className="fa-solid fa-arrow-left" />
@@ -842,7 +993,7 @@ export default function ImmersiveRegister() {
               <button
                 className={`${styles.btnPrimary} ${styles.btnPrimaryWhite}`}
                 onClick={handleVerifyPin}
-                disabled={!canGoNext(5) || pinSending}
+                disabled={!canGoNext(6) || pinSending}
               >
                 {pinSending ? (
                   <i className="fa-solid fa-spinner fa-spin" />
@@ -853,106 +1004,6 @@ export default function ImmersiveRegister() {
             </div>
 
             <div style={{ height: 8 }} />
-          </div>
-        </div>
-      )}
-
-      {/* ═══ STEP 6: Pseudo + Parrainage ═══ */}
-      {!langStep && step === 6 && (
-        <div className={`${styles.stepWrapper} ${styles.step6} ${direction === "prev" ? styles.prev : ""}`} key="step6">
-          <div className={`${styles.decor} ${styles.decor6a}`} />
-          <div className={`${styles.decor} ${styles.decor6b}`} />
-
-          <div className={styles.content}>
-            <div className={styles.mascotWrap}>
-              <div className={styles.mascotGlow} />
-              <DocMascot variant="launch" />
-            </div>
-
-            <h1 className={`${styles.title} ${styles.titleLight}`}>Plus qu'une étape !</h1>
-            <p className={`${styles.subtitle} ${styles.subtitleLight}`}>
-              Choisissez votre nom d'utilisateur pour finaliser votre inscription.
-            </p>
-
-            {regError && (
-              <Alert variant="light" color="red" icon={<i className="fa-solid fa-circle-exclamation" />} px="md" py="sm">
-                {regError}
-              </Alert>
-            )}
-
-            <div className={styles.fields}>
-              <div className={styles.pseudoWrap}>
-                <span className={styles.pseudoPrefix}>@</span>
-                <input
-                  className={styles.pseudoInput}
-                  type="text"
-                  value={form.pseudo}
-                  onChange={(e) => setForm((f) => ({ ...f, pseudo: e.target.value }))}
-                  onKeyDown={(e) => e.key === "Enter" && form.pseudo && !regLoading && handleFinalSubmit()}
-                  placeholder="jean_dupont42"
-                />
-              </div>
-
-              {pseudoSuggestions.length > 0 && (
-                <>
-                  <span className={styles.suggestionsLabel}>{t("login_suggestions")}</span>
-                  <div className={styles.suggestions}>
-                    {pseudoSuggestions.map((s) => (
-                      <button
-                        key={s}
-                        className={styles.suggestionBtn}
-                        onClick={() => setForm((f) => ({ ...f, pseudo: s }))}
-                      >
-                        @{s}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-
-              <button
-                className={styles.referralToggle}
-                onClick={() => setShowReferral(!showReferral)}
-              >
-                <i className="fa-solid fa-gift" />
-                {t("login_referral_question")}
-                <i className={`fa-solid fa-chevron-down ${styles.referralToggleIcon} ${showReferral ? styles.referralToggleIconOpen : ""}`} />
-              </button>
-
-              {showReferral && (
-                <TextInput
-                  variant="unstyled"
-                  className={styles.inputDark}
-                  value={form.referral}
-                  onChange={(e) => {
-                    setForm((f) => ({ ...f, referral: e.target.value }));
-                    if (!referralLocked) localStorage.setItem("dm_referral_code", e.target.value);
-                  }}
-                  disabled={referralLocked}
-                  placeholder={t("login_referral_placeholder")}
-                  leftSection={<i className="fa-solid fa-gift" />}
-                />
-              )}
-            </div>
-
-            <div className={styles.btnRow}>
-              <button className={styles.btnBack} onClick={goPrev}>
-                <i className="fa-solid fa-arrow-left" />
-              </button>
-              <button
-                className={`${styles.btnPrimary} ${styles.btnPrimaryGreen}`}
-                onClick={handleFinalSubmit}
-                disabled={!form.pseudo || regLoading}
-              >
-                {regLoading ? (
-                  <i className="fa-solid fa-spinner fa-spin" />
-                ) : (
-                  <><i className="fa-solid fa-rocket" /> {t("login_btn_create")}</>
-                )}
-              </button>
-            </div>
-
-            {renderDots()}
           </div>
         </div>
       )}

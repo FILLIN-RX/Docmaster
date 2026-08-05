@@ -44,8 +44,8 @@ export class UserRepository {
    */
   async createUser(userData: Partial<User>): Promise<User> {
     const query = `
-      INSERT INTO users (nom, prenom, email, mot_de_passe, telephone, pays, ville, code_invitation, parrain_id, is_verified) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
+      INSERT INTO users (nom, prenom, email, mot_de_passe, telephone, pays, ville, date_naissance, code_invitation, parrain_id, is_verified) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
       RETURNING *`;
     
     const { rows } = await pool.query(query, [
@@ -56,6 +56,7 @@ export class UserRepository {
       userData.telephone || null,
       userData.pays || 'Cameroun',
       userData.ville || 'Yaoundé',
+      userData.date_naissance || null,
       userData.code_invitation || null,
       userData.parrain_id || null,
       userData.is_verified || false,
@@ -340,8 +341,8 @@ export class UserRepository {
     
     const { rows } = await pool.query(query, [email, code]);
     if (rows[0]) {
-      // Mark as used
       await pool.query('UPDATE verification_codes SET used = true WHERE id = $1', [rows[0].id]);
+      await pool.query('UPDATE users SET is_verified = true WHERE email = $1', [email]);
       return true;
     }
     return false;

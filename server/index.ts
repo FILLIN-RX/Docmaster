@@ -40,6 +40,8 @@ import promoRoutes from "./src/routes/promo.routes.js";
 import deviceTransferRoutes from "./src/routes/device-transfer.routes.js";
 import adminRoutes from "./src/routes/admin.routes.js";
 import vaultMatchRoutes from "./src/routes/vault-match.routes.js";
+import { autoriteRoutes } from "./src/modules/autorites/autorites.module.js";
+import { partenaireRoutes } from "./src/modules/partenaires/partenaires.module.js";
 
 // Load environment variables
 dotenv.config();
@@ -263,6 +265,8 @@ export function createApp(): Application {
   app.use("/api/device-transfers", deviceTransferRoutes);
   app.use("/api/admin", adminRoutes);
   app.use("/api/vault-match", vaultMatchRoutes);
+  app.use("/api/autorites", autoriteRoutes);
+  app.use("/api/partenaires", partenaireRoutes);
 
   // ═════════════════════════════════════════════════════════════════
   // CHILLER SUB-APPLICATION

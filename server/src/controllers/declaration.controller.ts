@@ -6,6 +6,7 @@ import { activityLogService } from '../services/activity-log.service.ts';
 import { CreateDeclarationDTO, RequestDeleteDeclarationDTO } from '../dtos/declaration.dto.ts';
 import { validateDTO, mapFormDataToObject, formatValidationErrors } from '../utils/validation.utils.ts';
 import { DocumentRepository } from '../repositories/document.repository.ts';
+import pool from '../database/db.js';
 
 const declarationService = new DeclarationService();
 const pdfService = new PdfService();
@@ -309,6 +310,18 @@ export const getPerformanceStats = async (req: Request, res: Response) => {
   }
 };
 
+export const getStatsByType = async (req: Request, res: Response) => {
+  try {
+    const { period } = req.query; // day, week, month, year
+    const stats = await declarationService.getStatsByType((period as string) || "month");
+    res.json({ success: true, data: stats });
+  } catch (error: any) {
+    console.error('❌ [getStatsByType] ERREUR:', error.message);
+    console.error('❌ [getStatsByType] Stack:', error.stack);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const searchPublicFound = async (req: Request, res: Response) => {
   try {
     const { q } = req.query;
@@ -445,6 +458,21 @@ export const generatePdf = async (req: Request, res: Response) => {
     
     if (!declaration) {
       return res.status(404).json({ success: false, message: 'Déclaration introuvable' });
+    }
+
+    // Enrichir avec le nom de l'autorité certificateur (pour le cachet de certification)
+    if (declaration.is_certified && declaration.certified_by) {
+      try {
+        const cert = await pool.query(
+          'SELECT nom, prenom FROM autorites WHERE id = $1',
+          [declaration.certified_by]
+        );
+        if (cert.rows[0]) {
+          declaration.certified_by_name = `${cert.rows[0].prenom} ${cert.rows[0].nom}`;
+        }
+      } catch (err: any) {
+        console.error('❌ Erreur récupération certificateur:', err.message);
+      }
     }
 
     res.setHeader('Content-Type', 'application/pdf');

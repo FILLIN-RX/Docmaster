@@ -30,7 +30,7 @@ export class AuthController {
    */
   async register(req: Request, res: Response): Promise<void> {
     try {
-      const { nom, prenom, email, mot_de_passe, telephone, pays, ville, code_parrainage, is_verified } = req.body;
+      const { nom, prenom, email, mot_de_passe, telephone, pays, ville, date_naissance, code_parrainage } = req.body;
 
       // Validate required fields
       if (!nom || !prenom || !email || !mot_de_passe) {
@@ -46,7 +46,7 @@ export class AuthController {
         }
       }
 
-      // Register user
+      // Register user (is_verified is always checked server-side)
       const user = await this.userService.registerUser({
         nom,
         prenom,
@@ -55,8 +55,8 @@ export class AuthController {
         telephone,
         pays,
         ville,
+        date_naissance,
         parrain_id,
-        is_verified,
       });
 
       // Return user without password

@@ -11,6 +11,7 @@ import { useAutorite } from "../../context/AutoriteContext";
 import { autoritePalette } from "../../theme/autorites";
 import AutoriteDesignProvider from "../../components/autorites/AutoriteDesignProvider";
 import AutoriteSidebar from "../../components/autorites/AutoriteSidebar";
+import NotificationDropdown from "../../components/ui/NotificationDropdown";
 
 const PAGE_TITLES: Record<string, string> = {
   dashboard: "Tableau de bord",
@@ -45,10 +46,65 @@ export default function AutoriteLayout() {
 
   return (
     <AutoriteDesignProvider>
-      <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: autoritePalette.bgMain }}>
+      <div
+        style={{
+          display: "flex",
+          height: "100vh",
+          overflow: "hidden",
+          background: autoritePalette.bgMain,
+          position: "relative",
+        }}
+      >
+        {/* Decorative blobs — match main app background */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            overflow: "hidden",
+            zIndex: 0,
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              width: 520,
+              height: 520,
+              borderRadius: "50%",
+              background: "rgba(168, 203, 175, 0.18)",
+              filter: "blur(80px)",
+              top: -180,
+              right: -160,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              width: 420,
+              height: 420,
+              borderRadius: "50%",
+              background: "rgba(232, 184, 154, 0.16)",
+              filter: "blur(80px)",
+              bottom: -160,
+              left: -120,
+            }}
+          />
+        </div>
+
         <AutoriteSidebar collapsed={collapsed} onCollapse={setCollapsed} />
 
-        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div
+          style={{
+            flex: 1,
+            minWidth: 0,
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            position: "relative",
+            zIndex: 1,
+          }}
+        >
           {/* Header */}
           <header
             style={{
@@ -75,21 +131,25 @@ export default function AutoriteLayout() {
               </Typography.Title>
             </Space>
 
-            <Dropdown menu={userMenu} placement="bottomRight">
-              <Space style={{ cursor: "pointer" }} size={10}>
-                <Avatar style={{ background: autoritePalette.primary, fontWeight: 600 }} icon={<UserOutlined />}>
-                  {autorite ? `${(autorite.prenom || "").charAt(0)}${(autorite.nom || "").charAt(0)}`.toUpperCase() : ""}
-                </Avatar>
-                <div style={{ lineHeight: 1.2 }}>
-                  <Typography.Text strong style={{ color: autoritePalette.textMain, display: "block", fontSize: 13 }}>
-                    {autorite ? `${autorite.prenom} ${autorite.nom}` : ""}
-                  </Typography.Text>
-                  <Typography.Text style={{ color: autoritePalette.textMuted, fontSize: 11, display: "block" }}>
-                    {autorite?.email}
-                  </Typography.Text>
-                </div>
-              </Space>
-            </Dropdown>
+            <Space size={12}>
+              <NotificationDropdown accentColor={autoritePalette.primary} />
+
+              <Dropdown menu={userMenu} placement="bottomRight">
+                <Space style={{ cursor: "pointer" }} size={10}>
+                  <Avatar style={{ background: autoritePalette.primary, fontWeight: 600 }} icon={<UserOutlined />}>
+                    {autorite ? `${(autorite.prenom || "").charAt(0)}${(autorite.nom || "").charAt(0)}`.toUpperCase() : ""}
+                  </Avatar>
+                  <div style={{ lineHeight: 1.2 }}>
+                    <Typography.Text strong style={{ color: autoritePalette.textMain, display: "block", fontSize: 13 }}>
+                      {autorite ? `${autorite.prenom} ${autorite.nom}` : ""}
+                    </Typography.Text>
+                    <Typography.Text style={{ color: autoritePalette.textMuted, fontSize: 11, display: "block" }}>
+                      {autorite?.email}
+                    </Typography.Text>
+                  </div>
+                </Space>
+              </Dropdown>
+            </Space>
           </header>
 
           {/* Content */}

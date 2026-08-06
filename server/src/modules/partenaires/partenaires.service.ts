@@ -327,11 +327,25 @@ export class PartenaireService {
       by_admin: adminId || null,
     };
 
+    let balance: number;
     if (type === 'CREDIT') {
-      const balance = await walletService.creditPartner(partenaireId, amount, 'ADMIN_ADJUSTMENT', { metadata });
-      return { success: true, type, amount, balance };
+      balance = await walletService.creditPartner(partenaireId, amount, 'ADMIN_ADJUSTMENT', { metadata });
+    } else {
+      balance = await walletService.debitPartner(partenaireId, amount, 'ADMIN_ADJUSTMENT', { metadata });
     }
-    const balance = await walletService.debitPartner(partenaireId, amount, 'ADMIN_ADJUSTMENT', { metadata });
+
+    // Notification du partenaire
+    try {
+      await this.notificationService.notifyPartenaireWalletAdjust(
+        partenaireId,
+        type,
+        amount,
+        motif || (type === 'CREDIT' ? 'Ajustement administrateur (crédit)' : 'Ajustement administrateur (débit)')
+      );
+    } catch (err) {
+      console.error('❌ [Partenaires] Notification wallet ajust échouée:', (err as any).message);
+    }
+
     return { success: true, type, amount, balance };
   }
 

@@ -487,14 +487,18 @@ export class MatchingService {
       )).rows.length > 0;
 
       if (finderIsPartner) {
-        // Notify only the lost user; the partner finder uses its own portal
+        // Notifier le propriétaire (user) que son doc a été trouvé
         await this.notificationService.createNotification({
           user_id: lostUserId,
+          destinataire_type: 'USER',
+          destinataire_id: lostUserId,
           type: 'MATCH_FOUND',
           title: 'Bonne nouvelle ! Document trouvé',
           message: `Quelqu'un a signalé avoir trouvé votre ${docTypeName}.`,
           metadata: { docId: lostId, docType: docTypeName, matchType: 'LOST_SIDE' }
         });
+        // Notifier le partenaire finder
+        await this.notificationService.notifyPartenaireMatchFound(foundUserId, docTypeName, foundId);
       } else {
         await this.notificationService.notifyMatchFound(
           lostUserId,

@@ -1,6 +1,10 @@
 import { Router, Request, Response } from "express";
-import { readFileSync } from "fs";
-import { join } from "path";
+import { readFileSync, existsSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const router = Router();
 
@@ -22,12 +26,19 @@ interface Region {
 let divisions: Region[] = [];
 
 try {
-  const raw = readFileSync(
-    join(process.cwd(), "docs/cameroon_administrative_divisions.json"),
-    "utf-8"
-  );
+  // Try finding it at the build output location first, then the root
+  let path = join(__dirname, "../../dist/docs/cameroon_administrative_divisions.json");
+  if (!existsSync(path)) {
+     path = join(__dirname, "../../../docs/cameroon_administrative_divisions.json");
+  }
+  const raw = readFileSync(path, "utf-8");
   divisions = JSON.parse(raw);
-  console.log(`🌍 [Locations] Loaded ${divisions.length} regions from JSON`);
+  console.log(`🌍 [Locations] Loaded ${divisions.length} regions from JSON at ${path}`);
+  if (divisions.length === 0) {
+    console.warn("⚠️ [Locations] Loaded divisions array is empty!");
+  } else {
+    console.log("🌍 [Locations] First region sample:", JSON.stringify(divisions[0], null, 2).substring(0, 200));
+  }
 } catch (err: any) {
   console.error("❌ [Locations] Failed to load divisions JSON:", err.message);
 }
@@ -40,17 +51,19 @@ try {
  */
 router.get("/", (req: Request, res: Response) => {
   const { region, department } = req.query;
+  console.log(`🌍 [Locations] Request received: region=${region}, department=${department}`);
+  console.log(`🌍 [Locations] Current total regions in memory: ${divisions.length}`);
 
   // No params: return all regions (compact)
   if (!region) {
-    return res.json(
-      divisions.map((r) => ({
-        id: r.id,
-        region: r.region,
-        capital: r.capital,
-        departmentCount: r.departments.length,
-      }))
-    );
+    const data = divisions.map((r) => ({
+      id: r.id,
+      region: r.region,
+      capital: r.capital,
+      departmentCount: r.departments.length,
+    }));
+    console.log(`🌍 [Locations] Returning ${data.length} regions. Sample:`, JSON.stringify(data[0]));
+    return res.json(data);
   }
 
   // Find region
@@ -59,6 +72,7 @@ router.get("/", (req: Request, res: Response) => {
   );
 
   if (!regionData) {
+    console.warn(`⚠️ [Locations] Region "${region}" not found`);
     return res.status(404).json({
       success: false,
       message: `Region "${region}" not found`,
@@ -67,7 +81,7 @@ router.get("/", (req: Request, res: Response) => {
 
   // No department: return departments of this region
   if (!department) {
-    return res.json({
+    const data = {
       region: regionData.region,
       capital: regionData.capital,
       departments: regionData.departments.map((d) => ({
@@ -76,7 +90,9 @@ router.get("/", (req: Request, res: Response) => {
         chefLieu: d.chefLieu,
         arrondissementCount: d.arrondissements.length,
       })),
-    });
+    };
+    console.log(`🌍 [Locations] Returning ${data.departments.length} departments for region ${region}`);
+    return res.json(data);
   }
 
   // Find department
@@ -85,6 +101,7 @@ router.get("/", (req: Request, res: Response) => {
   );
 
   if (!deptData) {
+    console.warn(`⚠️ [Locations] Department "${department}" not found in region "${region}"`);
     return res.status(404).json({
       success: false,
       message: `Department "${department}" not found in region "${region}"`,
@@ -92,6 +109,7 @@ router.get("/", (req: Request, res: Response) => {
   }
 
   // Return arrondissements
+  console.log(`🌍 [Locations] Returning ${deptData.arrondissements.length} arrondissements for ${department}`);
   return res.json({
     region: regionData.region,
     department: deptData.name,

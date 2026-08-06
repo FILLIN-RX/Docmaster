@@ -47,9 +47,16 @@ function cacheKey(region: string, department?: string): string {
  */
 export async function getRegions(): Promise<RegionSummary[]> {
   if (regionsCache) return regionsCache;
-  const { data } = await apiClient.get("locations");
-  regionsCache = data;
-  return data;
+  console.log("🔍 [Frontend] Fetching all regions...");
+  try {
+    const { data } = await apiClient.get("locations");
+    console.log("✅ [Frontend] Regions fetched:", data);
+    regionsCache = data;
+    return data;
+  } catch (error) {
+    console.error("❌ [Frontend] Error fetching regions:", error);
+    throw error;
+  }
 }
 
 /**
@@ -58,10 +65,17 @@ export async function getRegions(): Promise<RegionSummary[]> {
 export async function getDepartments(region: string): Promise<DepartmentSummary[]> {
   const key = region;
   if (departmentsCache.has(key)) return departmentsCache.get(key)!;
-  const { data } = await apiClient.get("locations", { params: { region } });
-  const depts: DepartmentSummary[] = data.departments || [];
-  departmentsCache.set(key, depts);
-  return depts;
+  console.log(`🔍 [Frontend] Fetching departments for region: ${region}...`);
+  try {
+    const { data } = await apiClient.get("locations", { params: { region } });
+    console.log(`✅ [Frontend] Departments fetched for ${region}:`, data);
+    const depts: DepartmentSummary[] = data.departments || [];
+    departmentsCache.set(key, depts);
+    return depts;
+  } catch (error) {
+    console.error(`❌ [Frontend] Error fetching departments for ${region}:`, error);
+    throw error;
+  }
 }
 
 /**
@@ -73,10 +87,17 @@ export async function getArrondissements(
 ): Promise<string[]> {
   const key = cacheKey(region, department);
   if (arrondissementsCache.has(key)) return arrondissementsCache.get(key)!;
-  const { data } = await apiClient.get("locations", { params: { region, department } });
-  const arrs: string[] = data.arrondissements || [];
-  arrondissementsCache.set(key, arrs);
-  return arrs;
+  console.log(`🔍 [Frontend] Fetching arrondissements for ${region}/${department}...`);
+  try {
+    const { data } = await apiClient.get("locations", { params: { region, department } });
+    console.log(`✅ [Frontend] Arrondissements fetched for ${region}/${department}:`, data);
+    const arrs: string[] = data.arrondissements || [];
+    arrondissementsCache.set(key, arrs);
+    return arrs;
+  } catch (error) {
+    console.error(`❌ [Frontend] Error fetching arrondissements for ${region}/${department}:`, error);
+    throw error;
+  }
 }
 
 /**

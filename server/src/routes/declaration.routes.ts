@@ -84,7 +84,7 @@ router.get('/performance', getPerformanceStats);
  *         schema:
  *           type: string
  *           enum: [day, week, month, year]
- *         description: Période d'analyse (défaut: month)
+ *         description: "Période d'analyse (défaut: month)"
  *     responses:
  *       200:
  *         description: KPIs par type de document canonique

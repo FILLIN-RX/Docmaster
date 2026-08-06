@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { autoritesService, type AutoriteSession } from "../services/autoritesService";
+import { saveToken, deleteToken } from "../utils/cookie";
 
 interface AutoriteContextValue {
   autorite: AutoriteSession | null;
@@ -44,6 +45,9 @@ export function AutoriteProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, motDePasse: string) => {
     const res = await autoritesService.login(email, motDePasse);
+    if (res.data.data.token) {
+      saveToken(res.data.data.token);
+    }
     setAutorite(res.data.data.autorite);
     return res.data.data.autorite;
   }, []);
@@ -54,6 +58,7 @@ export function AutoriteProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* ignore */
     }
+    deleteToken();
     setAutorite(null);
     window.location.href = "/autorite/connexion";
   }, []);

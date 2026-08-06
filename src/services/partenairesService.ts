@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getToken, deleteToken } from "../utils/cookie";
 
 const resolveBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL;
@@ -14,9 +15,20 @@ const partenairesApi = axios.create({
   headers: {},
 });
 
+partenairesApi.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 partenairesApi.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.response?.status === 401) {
+      deleteToken();
+    }
     if (error.response?.status === 401 && !window.location.pathname.includes("/partenaire/connexion")) {
       window.location.href = "/partenaire/connexion";
     }

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getToken, deleteToken } from "../utils/cookie";
 
 const resolveBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL;
@@ -14,9 +15,20 @@ const autoritesApi = axios.create({
   headers: {},
 });
 
+autoritesApi.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 autoritesApi.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.response?.status === 401) {
+      deleteToken();
+    }
     if (error.response?.status === 401 && !window.location.pathname.includes("/autorite/connexion")) {
       window.location.href = "/autorite/connexion";
     }

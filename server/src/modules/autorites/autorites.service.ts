@@ -413,6 +413,8 @@ export class AutoriteService {
       if (declaration.reporter_id) {
         await this.notificationService.createNotification({
           user_id: declaration.reporter_id,
+          destinataire_type: 'USER',
+          destinataire_id: declaration.reporter_id,
           type: 'DECLARATION_CERTIFIED',
           title: 'Déclaration certifiée',
           message: `Votre déclaration ${declaration.identifiant_doc_dm || ''} a été validée et certifiée par une autorité DocMaster.`,
@@ -454,6 +456,18 @@ export class AutoriteService {
       SocketService.getInstance().sendToAdmins('DECLARATION_CERTIFIED', { declaration_id: declarationId, certified_by: autorite.id });
     } catch (err: any) {
       console.error('❌ [Autorites] Socket certification échoué:', err.message);
+    }
+
+    // Notification à l'autorité elle-même (pour l'historique de son journal)
+    try {
+      const docType = declaration.doc_type || 'document';
+      await this.notificationService.notifyAutoriteCertification(
+        autorite.id,
+        declarationId,
+        docType
+      );
+    } catch (err: any) {
+      console.error('❌ [Autorites] Notification autorité échouée:', err.message);
     }
 
     return updated;

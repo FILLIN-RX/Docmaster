@@ -185,8 +185,12 @@ export class DeclarationService {
         docType ? docType.nom : declaration.doc_type,
       );
       console.log('🟢 [7] Notification envoyée');
-    } else if (declaration.reporter_type === 'PARTENAIRE') {
-      console.log('🟡 [7] Déclarant partenaire — notification utilisateur ignorée');
+    } else if (declaration.reporter_type === 'PARTENAIRE' && declaration.reporter_id) {
+      console.log(`🟡 [7] Notifier partenaire ${declaration.reporter_id} de la déclaration créée`);
+      await this.notificationService.notifyPartenaireDeclarationCreated(
+        declaration.reporter_id,
+        docType ? docType.nom : declaration.doc_type,
+      );
     }
 
     // 7. Check for matches
@@ -632,6 +636,13 @@ export class DeclarationService {
             referenceType: 'claim',
             metadata: { docId: lostDecl.id }
           });
+          // Notifier le partenaire de la rémunération
+          await this.notificationService.notifyPartenaireReward(
+            claim.finder_id,
+            rewardAmount,
+            docType.nom,
+            lostDecl.id
+          );
         } else {
           await walletService.credit(claim.finder_id, rewardAmount, 'DECLARATION_REWARD', {
             referenceId: claim.id,

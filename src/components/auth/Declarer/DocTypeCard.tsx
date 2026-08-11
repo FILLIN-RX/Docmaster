@@ -1,4 +1,4 @@
-import { Card, Text, Badge, ThemeIcon } from "@mantine/core";
+import { Card, Text, Badge, ThemeIcon, ActionIcon } from "@mantine/core";
 import { useI18n } from "../../../context/I18nContext";
 
 interface DocTypeCatalog {
@@ -13,15 +13,21 @@ interface DocTypeCatalog {
 interface DocTypeCardProps {
   doc: DocTypeCatalog;
   selected: boolean;
+  count: number;
   onToggle: (id: string) => void;
+  onAddMore: (id: string) => void;
 }
 
 /**
  * Selectable tile representing one document type. Visual states:
  * - selected: orange-tinted background, check badge in corner, filled icon
  * - unselected: white background, light icon variant
+ *
+ * A dedicated "+" button appears once the type is selected: it adds
+ * another instance of the same type (e.g. a second CNI) without
+ * triggering the toggle.
  */
-export default function DocTypeCard({ doc, selected, onToggle }: DocTypeCardProps) {
+export default function DocTypeCard({ doc, selected, count, onToggle, onAddMore }: DocTypeCardProps) {
   const { t } = useI18n();
   const hasExp = (doc.delai_expiration_mois ?? 0) > 0;
 
@@ -45,15 +51,43 @@ export default function DocTypeCard({ doc, selected, onToggle }: DocTypeCardProp
       }}
     >
       {selected && (
-        <ThemeIcon
-          size="sm"
-          radius="xl"
-          color="orange"
-          variant="filled"
-          style={{ position: "absolute", top: 6, right: 6 }}
-        >
-          <i className="fa-solid fa-check" style={{ fontSize: 9 }} />
-        </ThemeIcon>
+        <>
+          <ThemeIcon
+            size="sm"
+            radius="xl"
+            color="orange"
+            variant="filled"
+            style={{ position: "absolute", top: 6, right: 6 }}
+          >
+            <i className="fa-solid fa-check" style={{ fontSize: 9 }} />
+          </ThemeIcon>
+          {count > 0 && (
+            <Badge
+              size="sm"
+              color="orange"
+              variant="light"
+              radius="xl"
+              style={{ position: "absolute", top: 6, left: 6 }}
+            >
+              ×{count}
+            </Badge>
+          )}
+          <ActionIcon
+            size="sm"
+            radius="xl"
+            variant="filled"
+            color="green.9"
+            style={{ position: "absolute", bottom: 8, right: 8 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddMore(doc.id);
+            }}
+            aria-label={t("declarer_add_another")}
+            title={t("declarer_add_another")}
+          >
+            <i className="fa-solid fa-plus" style={{ fontSize: 10 }} />
+          </ActionIcon>
+        </>
       )}
       <ThemeIcon
         size={40}

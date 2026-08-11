@@ -56,6 +56,11 @@ interface DocTypeCatalog {
   delai_expiration_mois: number;
 }
 
+interface DocInstance {
+  key: string;
+  docId: string;
+}
+
 export default function Declarer() {
   const { t } = useI18n();
   const { user } = useAuth();
@@ -78,7 +83,8 @@ export default function Declarer() {
 
   // Form states
   const [ownerType, setOwnerType] = useState<"me" | "other" | null>(null);
-  const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
+  const [selectedDocs, setSelectedDocs] = useState<DocInstance[]>([]);
+  const instanceCounterRef = useRef(0);
   const [formData, setFormData] = useState<Record<string, any>>({});
 
   // Custom states matching the HTML inputs
@@ -180,27 +186,61 @@ export default function Declarer() {
     return DOC_META[code] || DOC_META.autre;
   };
 
+  const getDocIdOf = (instanceKey: string) => selectedDocs.find((s) => s.key === instanceKey)?.docId;
+
+  const fillOwnerName = (docId: string, instanceKey: string) => {
+    const fullName = ownerType === "me" ? [user?.prenom, user?.nom].filter(Boolean).join(" ").trim() : "";
+    if (fullName) {
+      const key = `titulaire_${instanceKey}`;
+      setFormData((prevData) => ({ ...prevData, [key]: fullName }));
+    }
+  };
+
+  const createInstanceKey = (docId: string) => `${docId}-${++instanceCounterRef.current}`;
+
   const toggleDocType = (docId: string) => {
     setSelectedDocs((prev) => {
-      if (prev.includes(docId)) return prev.filter((d) => d !== docId);
-      const fullName = ownerType === "me" ? [user?.prenom, user?.nom].filter(Boolean).join(" ").trim() : "";
-      if (fullName) {
-        const key = `titulaire_${docId}`;
-        setFormData((prevData) => ({ ...prevData, [key]: fullName }));
-      }
-      return [...prev, docId];
+      if (prev.some((s) => s.docId === docId)) return prev.filter((s) => s.docId !== docId);
+      const key = createInstanceKey(docId);
+      fillOwnerName(docId, key);
+      return [...prev, { key, docId }];
     });
   };
 
-  const updateFormField = (docId: string, fieldId: string, value: string) => {
-    const key = `${fieldId}_${docId}`;
+  const addDocInstance = (docId: string) => {
+    const key = createInstanceKey(docId);
+    fillOwnerName(docId, key);
+    setSelectedDocs((prev) => [...prev, { key, docId }]);
+  };
+
+  const removeDocInstance = (instanceKey: string) => {
+    setSelectedDocs((prev) => prev.filter((s) => s.key !== instanceKey));
+    setFormData((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((k) => {
+        if (k.endsWith(`_${instanceKey}`)) delete next[k];
+      });
+      return next;
+    });
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((k) => {
+        if (k.endsWith(`_${instanceKey}`)) delete next[k];
+      });
+      return next;
+    });
+  };
+
+  const updateFormField = (instanceKey: string, fieldId: string, value: string) => {
+    const key = `${fieldId}_${instanceKey}`;
     setFormData((prev) => {
       const next = { ...prev, [key]: value };
       if (fieldId === "date_delivrance" && value) {
+        const docId = getDocIdOf(instanceKey);
         const doc = docTypes.find((d) => d.id === docId);
         const expMoins = doc?.delai_expiration_mois ?? 0;
         if (expMoins > 0) {
-          const expKey = `date_expiration_${docId}`;
+          const expKey = `date_expiration_${instanceKey}`;
           next[expKey] = addMonths(value, expMoins);
         }
       }
@@ -208,8 +248,8 @@ export default function Declarer() {
     });
   };
 
-  const getFormValue = (docId: string, fieldId: string, defaultValue = ""): string => {
-    const key = `${fieldId}_${docId}`;
+  const getFormValue = (instanceKey: string, fieldId: string, defaultValue = ""): string => {
+    const key = `${fieldId}_${instanceKey}`;
     return formData[key] ?? defaultValue;
   };
 
@@ -234,23 +274,23 @@ export default function Declarer() {
     }
     if (active === 2) {
       const errors: Record<string, string> = {};
-      for (const docId of selectedDocs) {
-        const meta = getDocMeta(docId);
-        const docType = docTypes.find((d) => d.id === docId);
+      for (const inst of selectedDocs) {
+        const meta = getDocMeta(inst.docId);
+        const docType = docTypes.find((d) => d.id === inst.docId);
         const expMoins = docType?.delai_expiration_mois ?? 0;
         const hasExp = expMoins > 0;
         for (const field of meta.fields) {
           if (field.optional) continue;
           if (hasExp && field.id === "date_expiration") continue;
-          const val = getFormValue(docId, field.id);
+          const val = getFormValue(inst.key, field.id);
           if (!val || !val.trim()) {
-            errors[field.id + "_" + docId] = t("declarer_field_required");
+            errors[field.id + "_" + inst.key] = t("declarer_field_required");
           }
         }
         if (hasExp && !meta.fields.some((f) => f.id === "date_delivrance")) {
-          const val = getFormValue(docId, "date_delivrance");
+          const val = getFormValue(inst.key, "date_delivrance");
           if (!val || !val.trim()) {
-            errors["date_delivrance_" + docId] = t("declarer_field_required");
+            errors["date_delivrance_" + inst.key] = t("declarer_field_required");
           }
         }
       }
@@ -312,14 +352,28 @@ export default function Declarer() {
       return;
     }
 
-    for (const docId of selectedDocs) {
-      const docNum = getFormValue(docId, "numero");
+    for (const inst of selectedDocs) {
+      const docNum = getFormValue(inst.key, "numero");
       if (docNum && !/\d/.test(docNum)) {
-        toast.warning(t("declarer_alert_num_digit_prefix") + t(getDocMeta(docId).label) + t("declarer_alert_num_digit_suffix"));
+        toast.warning(t("declarer_alert_num_digit_prefix") + t(getDocMeta(inst.docId).label) + t("declarer_alert_num_digit_suffix"));
         setSubmitting(false);
         confirmHandlers.close();
         return;
       }
+    }
+
+    const numberByDocId: Record<string, Set<string>> = {};
+    for (const inst of selectedDocs) {
+      const docNum = (getFormValue(inst.key, "numero") || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (!docNum) continue;
+      if (!numberByDocId[inst.docId]) numberByDocId[inst.docId] = new Set();
+      if (numberByDocId[inst.docId].has(docNum)) {
+        toast.warning(t("declarer_alert_duplicate_number"));
+        setSubmitting(false);
+        confirmHandlers.close();
+        return;
+      }
+      numberByDocId[inst.docId].add(docNum);
     }
 
     if (lossDate) {
@@ -342,18 +396,18 @@ export default function Declarer() {
       let createdRefs: string[] = [];
       let lastId = "";
 
-      for (const docId of selectedDocs) {
-        const meta = getDocMeta(docId);
+      for (const inst of selectedDocs) {
+        const meta = getDocMeta(inst.docId);
 
         // Build document fields
-        const ownerName = getFormValue(docId, "titulaire");
-        const docNum = getFormValue(docId, "numero");
-        const birthDate = getFormValue(docId, "date_naissance") || undefined;
-        const delivranceDate = getFormValue(docId, "date_delivrance") || undefined;
-        const expiryDate = getFormValue(docId, "date_expiration") || undefined;
+        const ownerName = getFormValue(inst.key, "titulaire");
+        const docNum = getFormValue(inst.key, "numero");
+        const birthDate = getFormValue(inst.key, "date_naissance") || undefined;
+        const delivranceDate = getFormValue(inst.key, "date_delivrance") || undefined;
+        const expiryDate = getFormValue(inst.key, "date_expiration") || undefined;
 
         const fd = new FormData();
-        fd.append("doc_type", docId);
+        fd.append("doc_type", inst.docId);
         fd.append("owner_name", ownerName || t("declarer_owner_unknown"));
         if (docNum) fd.append("document_number", docNum);
         fd.append("ville", (location.arrondissement || location.department) || t("declarer_not_specified"));
@@ -431,6 +485,7 @@ export default function Declarer() {
   const resetForm = () => {
     setActive(0);
     setSelectedDocs([]);
+    instanceCounterRef.current = 0;
     setFormData({});
     setOwnerType(null);
     setLossDate("");
@@ -533,8 +588,8 @@ export default function Declarer() {
                         setOwnerType(opt.value);
                         if (opt.value === "me") {
                           if (ownerFullName) {
-                            selectedDocs.forEach((docId) => {
-                              const key = `titulaire_${docId}`;
+                            selectedDocs.forEach((inst) => {
+                              const key = `titulaire_${inst.key}`;
                               setFormData((prev) => ({ ...prev, [key]: ownerFullName }));
                             });
                           }
@@ -579,14 +634,19 @@ export default function Declarer() {
                 description={t("declarer_step2_desc")}
               >
                 <SimpleGrid cols={{ base: 2, xs: 3, sm: 4 }} spacing="xs">
-                  {docTypes.map((doc) => (
-                    <DocTypeCard
-                      key={doc.id}
-                      doc={doc}
-                      selected={selectedDocs.includes(doc.id)}
-                      onToggle={toggleDocType}
-                    />
-                  ))}
+                  {docTypes.map((doc) => {
+                    const count = selectedDocs.filter((s) => s.docId === doc.id).length;
+                    return (
+                      <DocTypeCard
+                        key={doc.id}
+                        doc={doc}
+                        selected={count > 0}
+                        count={count}
+                        onToggle={toggleDocType}
+                        onAddMore={addDocInstance}
+                      />
+                    );
+                  })}
                 </SimpleGrid>
 
                 {selectedDocs.length > 0 && (
@@ -600,22 +660,25 @@ export default function Declarer() {
                       </Text>
                     </Group>
                     <Group gap="xs">
-                      {selectedDocs.map((docId) => {
-                        const doc = docTypes.find((d) => d.id === docId);
+                      {selectedDocs.map((inst) => {
+                        const doc = docTypes.find((d) => d.id === inst.docId);
+                        const sameTypeCount = selectedDocs.filter((s) => s.docId === inst.docId).length;
+                        const sameTypeIndex = selectedDocs.filter((s) => s.docId === inst.docId).findIndex((s) => s.key === inst.key) + 1;
                         return (
                           <Badge
-                            key={docId}
+                            key={inst.key}
                             color="green.9"
                             variant="filled"
                             radius="xl"
                             size="lg"
                             rightSection={
-                              <i className="fa-solid fa-xmark" style={{ fontSize: 9, cursor: "pointer" }} onClick={() => toggleDocType(docId)} />
+                              <i className="fa-solid fa-xmark" style={{ fontSize: 9, cursor: "pointer" }} onClick={() => removeDocInstance(inst.key)} />
                             }
                             leftSection={<i className={`fa-solid fa-${doc?.icone || "file"}`} style={{ fontSize: 9 }} />}
                             style={{ cursor: "pointer", textTransform: "none", paddingRight: 8 }}
                           >
                             {doc?.nom}
+                            {sameTypeCount > 1 ? ` n°${sameTypeIndex}` : ""}
                           </Badge>
                         );
                       })}
@@ -642,18 +705,20 @@ export default function Declarer() {
                 )}
 
                 <Stack gap="md">
-                  {selectedDocs.map((docId, idx) => {
-                    const meta = getDocMeta(docId);
-                    const doc = docTypes.find((d) => d.id === docId);
+                  {selectedDocs.map((inst, idx) => {
+                    const meta = getDocMeta(inst.docId);
+                    const doc = docTypes.find((d) => d.id === inst.docId);
                     const hexColor = meta.color || "#6B7280";
                     const expMoins = doc?.delai_expiration_mois ?? 0;
                     const hasExp = expMoins > 0;
                     const hasDateDelivranceField = meta.fields.some((f) => f.id === "date_delivrance");
                     const hasDateExpirationField = meta.fields.some((f) => f.id === "date_expiration");
-                    const isComplete = getFormValue(docId, "titulaire") && getFormValue(docId, "numero");
+                    const isComplete = getFormValue(inst.key, "titulaire") && getFormValue(inst.key, "numero");
+                    const sameTypeCount = selectedDocs.filter((s) => s.docId === inst.docId).length;
+                    const sameTypeIndex = selectedDocs.filter((s) => s.docId === inst.docId).findIndex((s) => s.key === inst.key) + 1;
 
                     return (
-                      <Card key={docId} padding={0} radius="lg" withBorder style={{ borderColor: hexColor + "30" }}>
+                      <Card key={inst.key} padding={0} radius="lg" withBorder style={{ borderColor: hexColor + "30" }}>
                         <Box
                           p="md"
                           style={{ background: hexColor + "0D", borderBottom: `1px solid ${hexColor}20`, borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
@@ -665,11 +730,21 @@ export default function Declarer() {
                             <Box style={{ flex: 1, minWidth: 0 }}>
                               <Text size="sm" fw={700} style={{ color: hexColor }}>
                                 {doc?.nom || t("declarer_document")}
+                                {sameTypeCount > 1 ? ` n°${sameTypeIndex}` : ""}
                               </Text>
                               <Text size="xs" c="dimmed">
                                 {t("declarer_document")} {idx + 1} {t("declarer_of")} {selectedDocs.length}
                               </Text>
                             </Box>
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              onClick={() => removeDocInstance(inst.key)}
+                              aria-label={t("declarer_remove_document")}
+                              title={t("declarer_remove_document")}
+                            >
+                              <i className="fa-solid fa-trash-can" style={{ fontSize: 13 }} />
+                            </ActionIcon>
                             <Badge
                               size="sm"
                               radius="xl"
@@ -693,26 +768,26 @@ export default function Declarer() {
                                 />
                                 {field.type === "textarea" ? (
                                   <Textarea
-                                    value={getFormValue(docId, field.id)}
-                                    onChange={(e) => { updateFormField(docId, field.id, e.currentTarget.value); setFieldErrors((prev) => ({ ...prev, [field.id + "_" + docId]: "" })); }}
+                                    value={getFormValue(inst.key, field.id)}
+                                    onChange={(e) => { updateFormField(inst.key, field.id, e.currentTarget.value); setFieldErrors((prev) => ({ ...prev, [field.id + "_" + inst.key]: "" })); }}
                                     placeholder={field.placeholder ? t(field.placeholder) : ""}
                                     minRows={3}
-                                    error={fieldErrors[field.id + "_" + docId]}
+                                    error={fieldErrors[field.id + "_" + inst.key]}
                                     autosize
                                   />
                                 ) : field.type === "date" ? (
                                   <DatePicker
-                                    value={getFormValue(docId, field.id)}
-                                    onChange={(v) => { updateFormField(docId, field.id, v); setFieldErrors((prev) => ({ ...prev, [field.id + "_" + docId]: "" })); }}
+                                    value={getFormValue(inst.key, field.id)}
+                                    onChange={(v) => { updateFormField(inst.key, field.id, v); setFieldErrors((prev) => ({ ...prev, [field.id + "_" + inst.key]: "" })); }}
                                     placeholder={t("declarer_date_format")}
                                   />
                                 ) : (
                                   <TextInput
                                     type={field.type}
-                                    value={getFormValue(docId, field.id)}
-                                    onChange={(e) => { updateFormField(docId, field.id, e.currentTarget.value); setFieldErrors((prev) => ({ ...prev, [field.id + "_" + docId]: "" })); }}
+                                    value={getFormValue(inst.key, field.id)}
+                                    onChange={(e) => { updateFormField(inst.key, field.id, e.currentTarget.value); setFieldErrors((prev) => ({ ...prev, [field.id + "_" + inst.key]: "" })); }}
                                     placeholder={field.placeholder ? t(field.placeholder) : ""}
-                                    error={fieldErrors[field.id + "_" + docId]}
+                                    error={fieldErrors[field.id + "_" + inst.key]}
                                     leftSection={field.icon ? <i className={`fa-solid ${field.icon}`} style={{ fontSize: 13, color: "var(--color-primary)" }} /> : undefined}
                                   />
                                 )}
@@ -723,12 +798,12 @@ export default function Declarer() {
                               <Box>
                                 <FieldLabel icon="fa-calendar" labelKey="declarer_field_date_delivrance" required />
                                 <DatePicker
-                                  value={getFormValue(docId, "date_delivrance")}
-                                  onChange={(v) => { updateFormField(docId, "date_delivrance", v); setFieldErrors((prev) => ({ ...prev, ["date_delivrance_" + docId]: "" })); }}
+                                  value={getFormValue(inst.key, "date_delivrance")}
+                                  onChange={(v) => { updateFormField(inst.key, "date_delivrance", v); setFieldErrors((prev) => ({ ...prev, ["date_delivrance_" + inst.key]: "" })); }}
                                   placeholder={t("declarer_date_format")}
                                 />
-                                {fieldErrors["date_delivrance_" + docId] && (
-                                  <Text size="xs" c="red" mt={4}>{fieldErrors["date_delivrance_" + docId]}</Text>
+                                {fieldErrors["date_delivrance_" + inst.key] && (
+                                  <Text size="xs" c="red" mt={4}>{fieldErrors["date_delivrance_" + inst.key]}</Text>
                                 )}
                               </Box>
                             )}
@@ -737,7 +812,7 @@ export default function Declarer() {
                               <Box>
                                 <FieldLabel icon="fa-calendar-check" labelKey="declarer_field_date_expiration" />
                                 <DatePicker
-                                  value={getFormValue(docId, "date_expiration")}
+                                  value={getFormValue(inst.key, "date_expiration")}
                                   onChange={() => { }}
                                   placeholder={t("declarer_date_format")}
                                   disabled
@@ -1093,12 +1168,14 @@ export default function Declarer() {
                 {selectedDocs.length === 0 ? (
                   <Text size="xs" c="rgba(255,255,255,0.4)" fs="italic">{t("declarer_none_selected")}</Text>
                 ) : (
-                  selectedDocs.map((docId) => {
-                    const doc = docTypes.find((d) => d.id === docId);
+                  selectedDocs.map((inst) => {
+                    const doc = docTypes.find((d) => d.id === inst.docId);
+                    const sameTypeCount = selectedDocs.filter((s) => s.docId === inst.docId).length;
+                    const sameTypeIndex = selectedDocs.filter((s) => s.docId === inst.docId).findIndex((s) => s.key === inst.key) + 1;
                     return (
-                      <Group key={docId} gap="xs">
+                      <Group key={inst.key} gap="xs">
                         <i className={`fa-solid fa-${doc?.icone || "file"}`} style={{ fontSize: 12, color: "var(--color-primary)" }} />
-                        <Text size="xs" fw={600} c="white">{doc?.nom}</Text>
+                        <Text size="xs" fw={600} c="white">{doc?.nom}{sameTypeCount > 1 ? ` n°${sameTypeIndex}` : ""}</Text>
                       </Group>
                     );
                   })

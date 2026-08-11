@@ -44,6 +44,7 @@ interface LocationValue {
 }
 
 interface DocEntry {
+  key: string;
   typeId: string;
   ownerName: string;
   docNum: string;
@@ -58,7 +59,10 @@ interface DocEntry {
 
 const MAX_DOCS = 5;
 
+let entrySeq = 0;
+
 const createDocEntry = (typeId: string): DocEntry => ({
+  key: `${typeId}-${++entrySeq}`,
   typeId,
   ownerName: "",
   docNum: "",
@@ -109,15 +113,22 @@ export default function DeclarerTrouvaille() {
   const findDocType = (id: string) => orderedDocTypes.find((d) => d.id === id) || null;
 
   const toggleType = (typeId: string) => {
-    if (docs.some((doc) => doc.typeId === typeId)) {
-      setDocs((prev) => prev.filter((doc) => doc.typeId !== typeId));
-    } else {
-      setDocs((prev) => (prev.length >= MAX_DOCS ? prev : [...prev, createDocEntry(typeId)]));
-    }
+    setDocs((prev) => {
+      if (prev.some((doc) => doc.typeId === typeId)) {
+        return prev.filter((doc) => doc.typeId !== typeId);
+      }
+      return prev.length >= MAX_DOCS ? prev : [...prev, createDocEntry(typeId)];
+    });
   };
 
-  const updateDoc = (typeId: string, patch: Partial<DocEntry>) =>
-    setDocs((prev) => prev.map((doc) => (doc.typeId === typeId ? { ...doc, ...patch } : doc)));
+  const addDoc = (typeId: string) => {
+    setDocs((prev) => (prev.length >= MAX_DOCS ? prev : [...prev, createDocEntry(typeId)]));
+  };
+
+  const removeDoc = (key: string) => setDocs((prev) => prev.filter((doc) => doc.key !== key));
+
+  const updateDoc = (key: string, patch: Partial<DocEntry>) =>
+    setDocs((prev) => prev.map((doc) => (doc.key === key ? { ...doc, ...patch } : doc)));
 
   const nextStep = () => {
     if (step === 0) {
@@ -146,7 +157,7 @@ export default function DeclarerTrouvaille() {
     setStep((s) => s + 1);
   };
 
-  const handleFileSelect = (typeId: string, side: "recto" | "verso", file: File | null) => {
+  const handleFileSelect = (key: string, side: "recto" | "verso", file: File | null) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       message.error(t("partenaire_declarer_err_image"));
@@ -154,7 +165,7 @@ export default function DeclarerTrouvaille() {
     }
     const reader = new FileReader();
     reader.onload = (e) => {
-      updateDoc(typeId, {
+      updateDoc(key, {
         [side === "recto" ? "fileRecto" : "fileVerso"]: file,
         [side === "recto" ? "previewRecto" : "previewVerso"]: e.target?.result as string,
       });
@@ -177,6 +188,19 @@ export default function DeclarerTrouvaille() {
     }
 
     setSubmitting(true);
+
+    const numberByType: Record<string, Set<string>> = {};
+    for (const doc of docs) {
+      const norm = (doc.docNum || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (!norm) continue;
+      if (!numberByType[doc.typeId]) numberByType[doc.typeId] = new Set();
+      if (numberByType[doc.typeId].has(norm)) {
+        message.warning(t("partenaire_declarer_warn_duplicate_number"));
+        setSubmitting(false);
+        return;
+      }
+      numberByType[doc.typeId].add(norm);
+    }
 
     const autreCatalog = docTypes.find((d) => d.code === "AUTRES");
     const refs: string[] = [];
@@ -345,8 +369,10 @@ export default function DeclarerTrouvaille() {
           ) : (
             <Row gutter={[12, 12]}>
               {orderedDocTypes.map((d) => {
-                const selected = docs.some((doc) => doc.typeId === d.id);
+                const count = docs.filter((doc) => doc.typeId === d.id).length;
+                const selected = count > 0;
                 const disabled = !selected && docs.length >= MAX_DOCS;
+                const addDisabled = docs.length >= MAX_DOCS;
                 return (
                   <Col xs={12} sm={8} md={6} key={d.id}>
                     <div
@@ -373,6 +399,31 @@ export default function DeclarerTrouvaille() {
                         <CheckCircleOutlined
                           style={{ color: partenairePalette.primary, position: "absolute", top: 8, right: 8, fontSize: 16 }}
                         />
+                      )}
+                      {selected && count > 0 && (
+                        <Tag color="blue" style={{ position: "absolute", top: 6, left: 6, fontSize: 10, margin: 0 }}>
+                          ×{count}
+                        </Tag>
+                      )}
+                      {selected && (
+                        <Button
+                          size="small"
+                          shape="circle"
+                          type="primary"
+                          disabled={addDisabled}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (addDisabled) {
+                              message.info(t("partenaire_declarer_type_max"));
+                              return;
+                            }
+                            addDoc(d.id);
+                          }}
+                          title={t("partenaire_declarer_add_another")}
+                          style={{ position: "absolute", bottom: 8, right: 8, width: 22, height: 22, fontSize: 11, lineHeight: 1, padding: 0 }}
+                        >
+                          +
+                        </Button>
                       )}
                       <div
                         style={{
@@ -419,16 +470,29 @@ export default function DeclarerTrouvaille() {
           </Typography.Title>
           {docs.map((doc, idx) => {
             const docType = findDocType(doc.typeId);
+            const sameTypeCount = docs.filter((d) => d.typeId === doc.typeId).length;
+            const sameTypeIndex = docs.filter((d) => d.typeId === doc.typeId).findIndex((d) => d.key === doc.key) + 1;
+            const label = sameTypeCount > 1 ? `${docType?.nom || ""} n°${sameTypeIndex}` : docType?.nom || "";
             return (
               <Card
-                key={doc.typeId}
+                key={doc.key}
                 size="small"
                 style={{ borderRadius: 10, marginBottom: 12, border: `1px solid ${partenairePalette.border}` }}
                 title={
                   <Space>
                     <Tag color="blue">{idx + 1}</Tag>
-                    <Typography.Text strong>{docType?.nom || ""}</Typography.Text>
+                    <Typography.Text strong>{label}</Typography.Text>
                   </Space>
+                }
+                extra={
+                  <Button
+                    size="small"
+                    type="text"
+                    danger
+                    icon={<i className="fa-solid fa-trash-can" />}
+                    onClick={() => removeDoc(doc.key)}
+                    title={t("partenaire_declarer_remove_doc")}
+                  />
                 }
               >
                 <Form layout="vertical" requiredMark={false}>
@@ -438,25 +502,25 @@ export default function DeclarerTrouvaille() {
                         <Input
                           placeholder={t("partenaire_declarer_owner_placeholder")}
                           value={doc.ownerName}
-                          onChange={(e) => updateDoc(doc.typeId, { ownerName: e.target.value })}
+                          onChange={(e) => updateDoc(doc.key, { ownerName: e.target.value })}
                         />
                       </Form.Item>
                     </Col>
                     <Col span={12}>
                       <Form.Item label={t("partenaire_declarer_doc_number_label")}>
-                        <Input placeholder={t("partenaire_declarer_doc_number_placeholder")} value={doc.docNum} onChange={(e) => updateDoc(doc.typeId, { docNum: e.target.value })} />
+                        <Input placeholder={t("partenaire_declarer_doc_number_placeholder")} value={doc.docNum} onChange={(e) => updateDoc(doc.key, { docNum: e.target.value })} />
                       </Form.Item>
                     </Col>
                   </Row>
 
                   {docType && (docType.delai_expiration_mois ?? 0) > 0 && (
                     <Form.Item label={t("partenaire_declarer_expiry_label")}>
-                      <Input type="date" value={doc.dateExpiration} onChange={(e) => updateDoc(doc.typeId, { dateExpiration: e.target.value })} />
+                      <Input type="date" value={doc.dateExpiration} onChange={(e) => updateDoc(doc.key, { dateExpiration: e.target.value })} />
                     </Form.Item>
                   )}
 
                   <Form.Item label={t("partenaire_declarer_state_label")}>
-                    <Radio.Group value={doc.etat} onChange={(e) => updateDoc(doc.typeId, { etat: e.target.value })}>
+                    <Radio.Group value={doc.etat} onChange={(e) => updateDoc(doc.key, { etat: e.target.value })}>
                       <Space wrap>
                         <Radio.Button value="bon">
                           <i className="fa-solid fa-circle-check" style={{ color: "#16a34a", marginRight: 6 }} />
@@ -479,7 +543,7 @@ export default function DeclarerTrouvaille() {
                       rows={2}
                       placeholder={t("partenaire_declarer_details_placeholder")}
                       value={doc.details}
-                      onChange={(e) => updateDoc(doc.typeId, { details: e.target.value })}
+                      onChange={(e) => updateDoc(doc.key, { details: e.target.value })}
                     />
                   </Form.Item>
                 </Form>
@@ -543,10 +607,12 @@ export default function DeclarerTrouvaille() {
           </Typography.Title>
           {docs.map((doc, idx) => {
             const docType = findDocType(doc.typeId);
-            const label = docType?.nom || "";
+            const sameTypeCount = docs.filter((d) => d.typeId === doc.typeId).length;
+            const sameTypeIndex = docs.filter((d) => d.typeId === doc.typeId).findIndex((d) => d.key === doc.key) + 1;
+            const label = sameTypeCount > 1 ? `${docType?.nom || ""} n°${sameTypeIndex}` : docType?.nom || "";
             return (
               <Card
-                key={doc.typeId}
+                key={doc.key}
                 size="small"
                 style={{ borderRadius: 10, marginBottom: 12, border: `1px solid ${partenairePalette.border}` }}
                 title={
@@ -561,12 +627,12 @@ export default function DeclarerTrouvaille() {
                     <Form.Item label={t("partenaire_declarer_photo_front_label")}>
                       <Upload
                         beforeUpload={(file) => {
-                          handleFileSelect(doc.typeId, "recto", file);
+                          handleFileSelect(doc.key, "recto", file);
                           return false;
                         }}
                         maxCount={1}
-                        onRemove={() => updateDoc(doc.typeId, { fileRecto: null, previewRecto: null })}
-                        fileList={doc.fileRecto ? [{ uid: `recto-${doc.typeId}`, name: doc.fileRecto.name, status: "done" } as any] : []}
+                        onRemove={() => updateDoc(doc.key, { fileRecto: null, previewRecto: null })}
+                        fileList={doc.fileRecto ? [{ uid: `recto-${doc.key}`, name: doc.fileRecto.name, status: "done" } as any] : []}
                         listType="picture-card"
                         style={{ width: "100%" }}
                       >
@@ -583,12 +649,12 @@ export default function DeclarerTrouvaille() {
                     <Form.Item label={t("partenaire_declarer_photo_back_label")}>
                       <Upload
                         beforeUpload={(file) => {
-                          handleFileSelect(doc.typeId, "verso", file);
+                          handleFileSelect(doc.key, "verso", file);
                           return false;
                         }}
                         maxCount={1}
-                        onRemove={() => updateDoc(doc.typeId, { fileVerso: null, previewVerso: null })}
-                        fileList={doc.fileVerso ? [{ uid: `verso-${doc.typeId}`, name: doc.fileVerso.name, status: "done" } as any] : []}
+                        onRemove={() => updateDoc(doc.key, { fileVerso: null, previewVerso: null })}
+                        fileList={doc.fileVerso ? [{ uid: `verso-${doc.key}`, name: doc.fileVerso.name, status: "done" } as any] : []}
                         listType="picture-card"
                       >
                         {!doc.previewVerso && (
@@ -662,10 +728,13 @@ export default function DeclarerTrouvaille() {
               {docs.map((doc, idx) => {
                 const docType = findDocType(doc.typeId);
                 const typeLabel = docType?.nom || "—";
+                const sameTypeCount = docs.filter((d) => d.typeId === doc.typeId).length;
+                const sameTypeIndex = docs.filter((d) => d.typeId === doc.typeId).findIndex((d) => d.key === doc.key) + 1;
+                const label = sameTypeCount > 1 ? `${typeLabel} n°${sameTypeIndex}` : typeLabel;
                 return (
-                  <div key={doc.typeId} style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                  <div key={doc.key} style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
                     <Typography.Text type="secondary">
-                      {t("partenaire_declarer_summary_doc", { n: idx + 1 })} — {typeLabel}
+                      {t("partenaire_declarer_summary_doc", { n: idx + 1 })} — {label}
                     </Typography.Text>
                     <Typography.Text strong>{doc.ownerName || "—"}</Typography.Text>
                   </div>

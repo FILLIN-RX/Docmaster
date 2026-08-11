@@ -139,6 +139,9 @@ export interface Declaration {
   is_lost?: boolean;
   is_found?: boolean;
   reference?: string;
+  reporter_id?: string;
+  reporter_type?: string;
+  reporter_partenaire_nom?: string;
 }
 
 export type MatchStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED';

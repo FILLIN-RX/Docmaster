@@ -34,11 +34,12 @@ apiClient.interceptors.response.use(
       deleteToken();
       localStorage.removeItem("docmaster_user_session");
       localStorage.removeItem("dm_devices_cache");
-      if (
-        !window.location.pathname.includes("/login") &&
-        window.location.pathname !== "/"
-      ) {
-        window.location.href = "/login";
+      
+      const isAdminRoute = window.location.pathname.startsWith("/admin");
+      const loginRoute = isAdminRoute ? "/admin/login" : "/login";
+      
+      if (!window.location.pathname.includes(loginRoute)) {
+        window.location.href = loginRoute;
       }
     } else if (!error.response) {
       emitToast({ type: "error", message: "Erreur réseau. Vérifiez votre connexion internet." });

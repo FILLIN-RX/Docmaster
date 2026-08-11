@@ -27,6 +27,7 @@ import {
   WalletOutlined,
 } from "@ant-design/icons";
 import { usePartenaire } from "../../context/PartenaireContext";
+import { useI18n } from "../../context/I18nContext";
 import { partenairesService } from "../../services/partenairesService";
 import AntdLocationSelect from "../../components/ui/AntdLocationSelect";
 import OsmStreetSearch from "../../components/ui/OsmStreetSearch";
@@ -44,6 +45,8 @@ interface ProfilFormValues {
 
 export default function Profil() {
   const { partenaire, refresh } = usePartenaire();
+  const { t, lang } = useI18n();
+  const localeTag = lang === "ar" ? "ar" : lang === "en" ? "en" : "fr-FR";
   const [form] = Form.useForm<ProfilFormValues>();
   const [locationValue, setLocationValue] = useState<{ region: string; department: string; arrondissement: string }>({
     region: "",
@@ -88,7 +91,7 @@ export default function Profil() {
       });
       await refresh();
       setDone(true);
-      message.success("Profil mis à jour");
+      message.success(t("partenaire_profil_updated_msg"));
       setTimeout(() => setDone(false), 2500);
     } catch (err: any) {
       const errors = err?.response?.data?.errors;
@@ -96,7 +99,7 @@ export default function Profil() {
         const first = Object.values(errors)[0];
         setError(Array.isArray(first) ? (first[0] as string) : String(first));
       } else {
-        setError(err?.response?.data?.message || "Impossible d'enregistrer le profil.");
+        setError(err?.response?.data?.message || t("partenaire_profil_error_default"));
       }
     } finally {
       setSaving(false);
@@ -108,12 +111,12 @@ export default function Profil() {
   const statutTag =
     partenaire.statut === "ACTIF" ? (
       <Tag icon={<CheckCircleOutlined />} color="green">
-        Actif
+        {t("partenaire_profil_status_active")}
       </Tag>
     ) : partenaire.statut === "SUSPENDU" ? (
-      <Tag color="red">Suspendu</Tag>
+      <Tag color="red">{t("partenaire_profil_status_suspended")}</Tag>
     ) : (
-      <Tag color="orange">Inactif</Tag>
+      <Tag color="orange">{t("partenaire_profil_status_inactive")}</Tag>
     );
 
   return (
@@ -147,7 +150,7 @@ export default function Profil() {
                 <MailOutlined style={{ color: partenairePalette.primary, marginTop: 3 }} />
                 <div>
                   <Typography.Text type="secondary" style={{ fontSize: 11, display: "block" }}>
-                    Email institutionnel
+                    {t("partenaire_profil_email_label")}
                   </Typography.Text>
                   <Typography.Text strong>{partenaire.email}</Typography.Text>
                 </div>
@@ -156,7 +159,7 @@ export default function Profil() {
                 <PhoneOutlined style={{ color: partenairePalette.primary, marginTop: 3 }} />
                 <div>
                   <Typography.Text type="secondary" style={{ fontSize: 11, display: "block" }}>
-                    Téléphone
+                    {t("partenaire_profil_phone_label")}
                   </Typography.Text>
                   <Typography.Text strong>{partenaire.telephone || "—"}</Typography.Text>
                 </div>
@@ -165,7 +168,7 @@ export default function Profil() {
                 <UserOutlined style={{ color: partenairePalette.primary, marginTop: 3 }} />
                 <div>
                   <Typography.Text type="secondary" style={{ fontSize: 11, display: "block" }}>
-                    Personne de contact
+                    {t("partenaire_profil_contact_person")}
                   </Typography.Text>
                   <Typography.Text strong>
                     {[partenaire.prenom_contact, partenaire.nom_contact].filter(Boolean).join(" ") || "—"}
@@ -176,7 +179,7 @@ export default function Profil() {
                 <EnvironmentOutlined style={{ color: partenairePalette.primary, marginTop: 3 }} />
                 <div>
                   <Typography.Text type="secondary" style={{ fontSize: 11, display: "block" }}>
-                    Localisation
+                    {t("partenaire_profil_location")}
                   </Typography.Text>
                   <Typography.Text strong>
                     {[partenaire.ville, partenaire.region].filter(Boolean).join(", ") || "—"}
@@ -187,7 +190,7 @@ export default function Profil() {
                 <IdcardOutlined style={{ color: partenairePalette.primary, marginTop: 3 }} />
                 <div>
                   <Typography.Text type="secondary" style={{ fontSize: 11, display: "block" }}>
-                    Adresse / Rue
+                    {t("partenaire_profil_address")}
                   </Typography.Text>
                   <Typography.Text strong>{partenaire.adresse || "—"}</Typography.Text>
                 </div>
@@ -196,10 +199,10 @@ export default function Profil() {
                 <WalletOutlined style={{ color: partenairePalette.success, marginTop: 3 }} />
                 <div>
                   <Typography.Text type="secondary" style={{ fontSize: 11, display: "block" }}>
-                    Solde du portefeuille
+                    {t("partenaire_profil_balance")}
                   </Typography.Text>
                   <Typography.Text strong style={{ color: partenairePalette.success }}>
-                    {Number(partenaire.wallet_balance || 0).toLocaleString("fr-FR")} FCFA
+                    {Number(partenaire.wallet_balance || 0).toLocaleString(localeTag)} FCFA
                   </Typography.Text>
                 </div>
               </div>
@@ -214,7 +217,7 @@ export default function Profil() {
             title={
               <Space>
                 <ShopOutlined style={{ color: partenairePalette.primary }} />
-                <span>Modifier les informations de l'organisation</span>
+                <span>{t("partenaire_profil_edit_title")}</span>
               </Space>
             }
           >
@@ -223,7 +226,7 @@ export default function Profil() {
                 type="success"
                 showIcon
                 icon={<CheckCircleOutlined />}
-                message="Profil mis à jour avec succès"
+                message={t("partenaire_profil_updated")}
                 style={{ marginBottom: 16 }}
               />
             )}
@@ -234,34 +237,34 @@ export default function Profil() {
             <Form form={form} layout="vertical" onFinish={onSave} requiredMark={false}>
               <Form.Item
                 name="nom_organisation"
-                label="Nom de l'organisation"
-                rules={[{ required: true, message: "Le nom de l'organisation est requis" }]}
+                label={t("partenaire_profil_org_name_label")}
+                rules={[{ required: true, message: t("partenaire_profil_org_name_required") }]}
               >
-                <Input placeholder="ex: Mairie de Douala" />
+                <Input placeholder={t("partenaire_profil_org_name_placeholder")} />
               </Form.Item>
 
               <Row gutter={12}>
                 <Col span={12}>
-                  <Form.Item name="telephone" label="Téléphone">
+                  <Form.Item name="telephone" label={t("partenaire_profil_phone")}>
                     <Input placeholder="ex: 671000000" />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="prenom_contact" label="Prénom du contact">
-                    <Input placeholder="ex: Marie" />
+                  <Form.Item name="prenom_contact" label={t("partenaire_profil_contact_firstname")}>
+                    <Input placeholder={t("partenaire_profil_contact_firstname_placeholder")} />
                   </Form.Item>
                 </Col>
               </Row>
 
               <Row gutter={12}>
                 <Col span={12}>
-                  <Form.Item name="nom_contact" label="Nom du contact">
-                    <Input placeholder="ex: Ngono" />
+                  <Form.Item name="nom_contact" label={t("partenaire_profil_contact_lastname")}>
+                    <Input placeholder={t("partenaire_profil_contact_lastname_placeholder")} />
                   </Form.Item>
                 </Col>
               </Row>
 
-              <Form.Item label="Localisation" required>
+              <Form.Item label={t("partenaire_profil_location")} required>
                 <AntdLocationSelect
                   value={locationValue}
                   onChange={(val) => {
@@ -274,10 +277,10 @@ export default function Profil() {
                 />
               </Form.Item>
 
-              <Form.Item name="adresse" label="Rue / Adresse">
+              <Form.Item name="adresse" label={t("partenaire_profil_street")}>
                 <OsmStreetSearch
                   onChange={(adresse) => form.setFieldsValue({ adresse })}
-                  placeholder="Rechercher une rue ou un lieu (OpenStreetMap)…"
+                  placeholder={t("partenaire_profil_street_placeholder")}
                   className="w-full px-3 py-2 bg-white border border-gray-200 rounded text-[13px] outline-none focus:border-[#1F7A8C] transition-colors"
                 />
               </Form.Item>
@@ -285,12 +288,12 @@ export default function Profil() {
               <Divider style={{ margin: "8px 0 16px" }}>
                 <Typography.Text type="secondary" style={{ fontSize: 11 }}>
                   <LockOutlined style={{ marginRight: 6 }} />
-                  L'email et le statut sont gérés par l'administration
+                  {t("partenaire_profil_admin_note")}
                 </Typography.Text>
               </Divider>
 
               <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={saving} style={{ height: 40 }}>
-                Enregistrer les modifications
+                {t("partenaire_profil_save")}
               </Button>
             </Form>
           </Card>

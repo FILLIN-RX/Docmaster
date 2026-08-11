@@ -8,22 +8,16 @@ import {
 } from "@ant-design/icons";
 import { Outlet, useLocation } from "react-router-dom";
 import { usePartenaire } from "../../context/PartenaireContext";
+import { useI18n } from "../../context/I18nContext";
 import { partenairePalette } from "../../theme/partenaires";
 import PartenaireDesignProvider from "../../components/partenaires/PartenaireDesignProvider";
 import PartenaireSidebar from "../../components/partenaires/PartenaireSidebar";
 import NotificationDropdown from "../../components/ui/NotificationDropdown";
 
-const PAGE_TITLES: Record<string, string> = {
-  dashboard: "Tableau de bord",
-  declarer: "Déclarer une trouvaille",
-  declarations: "Mes déclarations",
-  portefeuille: "Portefeuille",
-  profil: "Profil de l'organisation",
-};
-
 export default function PartenaireLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const { partenaire, logout } = usePartenaire();
+  const { t } = useI18n();
   const location = useLocation();
 
   const selectedKey = (() => {
@@ -34,12 +28,22 @@ export default function PartenaireLayout() {
     return "dashboard";
   })();
 
+  const pageTitle = (() => {
+    switch (selectedKey) {
+      case "declarer": return t("partenaire_layout_title_declarer");
+      case "declarations": return t("partenaire_layout_title_declarations");
+      case "portefeuille": return t("partenaire_layout_title_portefeuille");
+      case "profil": return t("partenaire_layout_title_profil");
+      default: return t("partenaire_layout_title_dashboard");
+    }
+  })();
+
   const userMenu = {
     items: [
       {
         key: "logout",
         icon: <LogoutOutlined />,
-        label: "Se déconnecter",
+        label: t("partenaire_layout_logout"),
         danger: true,
         onClick: () => logout(),
       },
@@ -129,7 +133,7 @@ export default function PartenaireLayout() {
                 style={{ color: partenairePalette.textMain }}
               />
               <Typography.Title level={5} style={{ margin: 0, color: partenairePalette.greenDark }}>
-                {PAGE_TITLES[selectedKey] || "Tableau de bord"}
+                {pageTitle}
               </Typography.Title>
             </Space>
 

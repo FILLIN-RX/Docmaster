@@ -15,41 +15,14 @@ import { partenairesService, type PartenaireStats, type PartenaireDeclaration } 
 import { statsService } from "../../services/statsService";
 import { useStatsByType } from "../../hooks/useStats";
 import { usePartenaire } from "../../context/PartenaireContext";
+import { useI18n } from "../../context/I18nContext";
 import { partenairePalette } from "../../theme/partenaires";
+import DeclarationDetailDrawer from "../../components/partenaires/DeclarationDetailDrawer";
 
-const today = new Intl.DateTimeFormat("fr-FR", {
-  weekday: "long",
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-}).format(new Date());
-
-function greeting() {
-  const h = new Date().getHours();
-  if (h >= 18) return "Bonsoir";
-  if (h < 5) return "Bonsoir";
-  return "Bonjour";
-}
-
-const formatDate = (v?: string | null) => {
-  if (!v) return "—";
-  try {
-    return new Date(v).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
-  } catch {
-    return v;
-  }
-};
-
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  AVAILABLE: { label: "Disponible", color: "blue" },
-  MATCHED: { label: "Correspondance", color: "gold" },
-  RETURNED: { label: "Rendu", color: "green" },
-};
-
-const statusTag = (s?: string | null) => {
-  const st = STATUS_LABELS[s || ""];
-  if (!st) return <Tag>{s || "—"}</Tag>;
-  return <Tag color={st.color}>{st.label}</Tag>;
+const STATUS_LABEL_KEYS: Record<string, { labelKey: string; color: string }> = {
+  AVAILABLE: { labelKey: "partenaire_dashboard_status_available", color: "blue" },
+  MATCHED: { labelKey: "partenaire_dashboard_status_matched", color: "gold" },
+  RETURNED: { labelKey: "partenaire_dashboard_status_returned", color: "green" },
 };
 
 function getIconForType(type?: string) {
@@ -65,6 +38,8 @@ function getIconForType(type?: string) {
 
 export default function Dashboard() {
   const { partenaire } = usePartenaire();
+  const { t, lang } = useI18n();
+  const localeTag = lang === "ar" ? "ar" : lang === "en" ? "en" : "fr-FR";
   const navigate = useNavigate();
   const [stats, setStats] = useState<PartenaireStats | null>(null);
   const [recent, setRecent] = useState<PartenaireDeclaration[]>([]);
@@ -73,7 +48,36 @@ export default function Dashboard() {
   const [error, setError] = useState("");
   const [globalStats, setGlobalStats] = useState<{ total_lost: number; total_recovered: number } | null>(null);
   const [perfPeriod, setPerfPeriod] = useState("month");
+  const [detail, setDetail] = useState<PartenaireDeclaration | null>(null);
   const { stats: perfStats, loading: perfLoading } = useStatsByType(perfPeriod);
+
+  const today = new Intl.DateTimeFormat(localeTag, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
+
+  function greeting() {
+    const h = new Date().getHours();
+    if (h >= 18 || h < 5) return t("partenaire_dashboard_greeting_evening");
+    return t("partenaire_dashboard_greeting_morning");
+  }
+
+  const formatDate = (v?: string | null) => {
+    if (!v) return "—";
+    try {
+      return new Date(v).toLocaleDateString(localeTag, { day: "2-digit", month: "short", year: "numeric" });
+    } catch {
+      return v;
+    }
+  };
+
+  const statusTag = (s?: string | null) => {
+    const meta = STATUS_LABEL_KEYS[s || ""];
+    if (!meta) return <Tag>{s || "—"}</Tag>;
+    return <Tag color={meta.color}>{t(meta.labelKey)}</Tag>;
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -83,7 +87,7 @@ export default function Dashboard() {
         if (!cancelled) setStats(res.data.data);
       })
       .catch((err: any) => {
-        if (!cancelled) setError(err?.response?.data?.message || "Impossible de charger les statistiques.");
+        if (!cancelled) setError(err?.response?.data?.message || t("partenaire_dashboard_stats_error"));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -99,7 +103,7 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -140,32 +144,32 @@ export default function Dashboard() {
 
   const cards = [
     {
-      title: "Trouvailles déclarées",
+      title: t("partenaire_dashboard_card_findings"),
       value: stats?.total_declarations ?? 0,
       icon: <FileProtectOutlined style={{ color: "#f59e0b" }} />,
       iconBg: "rgba(245,158,11,0.12)",
-      hint: "Déclarations de votre organisation",
+      hint: t("partenaire_dashboard_hint_findings"),
     },
     {
-      title: "Disponibles",
+      title: t("partenaire_dashboard_card_available"),
       value: stats?.available ?? 0,
       icon: <ClockCircleOutlined style={{ color: "#3b82f6" }} />,
       iconBg: "rgba(59,130,246,0.12)",
-      hint: "En attente de correspondance",
+      hint: t("partenaire_dashboard_hint_available"),
     },
     {
-      title: "Correspondances",
+      title: t("partenaire_dashboard_card_matched"),
       value: stats?.matched ?? 0,
       icon: <RiseOutlined style={{ color: "#8b5cf6" }} />,
       iconBg: "rgba(139,92,246,0.12)",
-      hint: "Propriétaires identifiés",
+      hint: t("partenaire_dashboard_hint_matched"),
     },
     {
-      title: "Documents rendus",
+      title: t("partenaire_dashboard_card_returned"),
       value: stats?.returned ?? 0,
       icon: <CheckCircleOutlined style={{ color: "#10b981" }} />,
       iconBg: "rgba(16,185,129,0.12)",
-      hint: "Restitution réussie",
+      hint: t("partenaire_dashboard_hint_returned"),
     },
   ];
 
@@ -179,10 +183,10 @@ export default function Dashboard() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
         <div>
           <Typography.Title level={2} style={{ margin: 0, color: partenairePalette.greenDark, fontSize: 22 }}>
-            {greeting()}, <span>{partenaire?.nom_organisation || "Partenaire"}</span>
+            {greeting()}, <span>{partenaire?.nom_organisation || t("partenaire_dashboard_org_default")}</span>
           </Typography.Title>
           <Typography.Text type="secondary" style={{ fontStyle: "italic", fontSize: 13 }}>
-            Voici un aperçu des activités de votre organisation.
+            {t("partenaire_dashboard_subtitle")}
           </Typography.Text>
         </div>
         <div
@@ -244,7 +248,7 @@ export default function Dashboard() {
           <Card style={{ borderRadius: 10, border: `1px solid ${partenairePalette.border}`, height: "100%" }} styles={{ body: { padding: 18 } }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
               <Typography.Text style={{ fontSize: 11.5, color: partenairePalette.textMuted, fontWeight: 500 }}>
-                Docs perdus (DocMaster)
+                {t("partenaire_dashboard_global_lost_label")}
               </Typography.Text>
               <div
                 style={{
@@ -266,7 +270,7 @@ export default function Dashboard() {
               {globalStats?.total_lost ?? "—"}
             </Typography.Text>
             <Typography.Text style={{ fontSize: 11, color: partenairePalette.textMuted }}>
-              Documents perdus sur la plateforme
+              {t("partenaire_dashboard_global_lost_desc")}
             </Typography.Text>
           </Card>
         </Col>
@@ -274,7 +278,7 @@ export default function Dashboard() {
           <Card style={{ borderRadius: 10, border: `1px solid ${partenairePalette.border}`, height: "100%" }} styles={{ body: { padding: 18 } }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
               <Typography.Text style={{ fontSize: 11.5, color: partenairePalette.textMuted, fontWeight: 500 }}>
-                Docs retrouvés (DocMaster)
+                {t("partenaire_dashboard_global_found_label")}
               </Typography.Text>
               <div
                 style={{
@@ -296,7 +300,7 @@ export default function Dashboard() {
               {globalStats?.total_recovered ?? "—"}
             </Typography.Text>
             <Typography.Text style={{ fontSize: 11, color: partenairePalette.textMuted }}>
-              Documents restitués sur la plateforme
+              {t("partenaire_dashboard_global_found_desc")}
             </Typography.Text>
           </Card>
         </Col>
@@ -330,11 +334,10 @@ export default function Dashboard() {
                 <i className="fa-solid fa-folder-open" style={{ color: partenairePalette.textMuted, fontSize: 24 }} />
               </div>
               <Typography.Title level={4} style={{ marginBottom: 4, color: partenairePalette.greenDark }}>
-                Aucune activité pour le moment
+                {t("partenaire_dashboard_empty_title")}
               </Typography.Title>
               <Typography.Text type="secondary" style={{ fontSize: 13, display: "block", marginBottom: 18 }}>
-                Lancez-vous en déclarant une trouvaille : le document pourra retrouver son propriétaire et votre
-                organisation sera récompensée.
+                {t("partenaire_dashboard_empty_desc")}
               </Typography.Text>
               <Space wrap>
                 <Button
@@ -343,10 +346,10 @@ export default function Dashboard() {
                   onClick={() => navigate("/partenaire/declarer")}
                   style={{ height: 38 }}
                 >
-                  Déclarer une trouvaille
+                  {t("partenaire_dashboard_declare")}
                 </Button>
                 <Button icon={<FileProtectOutlined />} onClick={() => navigate("/partenaire/declarations")} style={{ height: 38 }}>
-                  Voir mes déclarations
+                  {t("partenaire_dashboard_view_declarations")}
                 </Button>
               </Space>
             </Card>
@@ -357,7 +360,7 @@ export default function Dashboard() {
                 <Space size={8}>
                   <i className="fa-solid fa-clock-rotate-left" style={{ color: partenairePalette.primary, fontSize: 14 }} />
                   <span style={{ fontSize: 15, fontWeight: 700, color: partenairePalette.greenDark }}>
-                    Activités récentes
+                    {t("partenaire_dashboard_recent_activity")}
                   </span>
                 </Space>
               }
@@ -366,7 +369,7 @@ export default function Dashboard() {
                   style={{ fontSize: 12, fontWeight: 600, color: partenairePalette.primaryDark, cursor: "pointer" }}
                   onClick={() => navigate("/partenaire/declarations")}
                 >
-                  Tout voir <i className="fa-solid fa-arrow-right" style={{ fontSize: 9 }} />
+                  {t("partenaire_dashboard_view_all")} <i className="fa-solid fa-arrow-right" style={{ fontSize: 9 }} />
                 </Typography.Text>
               }
               styles={{ body: { padding: 0 } }}
@@ -376,47 +379,20 @@ export default function Dashboard() {
                   <Spin />
                 </div>
               ) : recent.length === 0 ? (
-                <Empty description="Aucune activité" style={{ padding: 24 }} />
+                <Empty description={t("partenaire_dashboard_no_activity")} style={{ padding: 24 }} />
               ) : (
-                recent.slice(0, 6).map((decl, i) => (
-                  <div
-                    key={decl.id}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      padding: "12px 16px",
-                      borderBottom: i < Math.min(recent.slice(0, 6).length, 6) - 1 ? `1px solid ${partenairePalette.border}` : "none",
-                      cursor: "pointer",
-                    }}
-                    onClick={() => navigate("/partenaire/declarations")}
-                  >
-                    <div
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 9,
-                        background: partenairePalette.primaryLight,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                      }}
-                    >
-                      <i className={`fa-solid ${getIconForType(decl.doc_type)}`} style={{ color: partenairePalette.primaryDark, fontSize: 14 }} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Typography.Text strong style={{ fontSize: 13, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {decl.doc_type_name || decl.doc_type || "Document"} trouvé
-                      </Typography.Text>
-                      <Typography.Text type="secondary" style={{ fontSize: 11.5, fontStyle: "italic", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        <EnvironmentOutlined style={{ fontSize: 9 }} /> {decl.ville || "Localisation non précisée"} ·{" "}
-                        <i className="fa-regular fa-clock" style={{ fontSize: 9 }} /> {formatDate(decl.created_at)}
-                      </Typography.Text>
-                    </div>
-                    {statusTag(decl.status)}
-                  </div>
-                ))
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+                    gap: 16,
+                    padding: 16,
+                  }}
+                >
+                  {recent.slice(0, 6).map((decl) => (
+                    <FoundCard key={decl.id} decl={decl} onOpen={() => setDetail(decl)} />
+                  ))}
+                </div>
               )}
             </Card>
           )}
@@ -444,7 +420,7 @@ export default function Dashboard() {
                 </Typography.Text>
                 <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                   <Tag color="cyan" style={{ marginRight: 6 }}>
-                    Partenaire
+                    {t("partenaire_dashboard_partner")}
                   </Tag>
                   <EnvironmentOutlined style={{ marginRight: 4, fontSize: 11 }} />
                   {partenaire?.ville || "—"}
@@ -452,7 +428,7 @@ export default function Dashboard() {
                 </Typography.Text>
               </div>
               <Button type="primary" icon={<PlusCircleOutlined />} onClick={() => navigate("/partenaire/declarer")}>
-                Déclarer une trouvaille
+                {t("partenaire_dashboard_declare")}
               </Button>
             </div>
           </Card>
@@ -465,14 +441,14 @@ export default function Dashboard() {
             <Space size={8} style={{ marginBottom: 14 }}>
               <i className="fa-solid fa-wallet" style={{ color: partenairePalette.primary, fontSize: 14 }} />
               <Typography.Text strong style={{ color: partenairePalette.greenDark, fontSize: 15 }}>
-                Portefeuille
+                {t("partenaire_dashboard_portefeuille")}
               </Typography.Text>
             </Space>
             <Typography.Text type="secondary" style={{ fontSize: 11.5, display: "block", marginBottom: 4 }}>
-              Solde disponible
+              {t("partenaire_dashboard_balance")}
             </Typography.Text>
             <Typography.Title level={3} style={{ margin: 0, color: partenairePalette.success, fontWeight: 800 }}>
-              {Number(partenaire?.wallet_balance ?? 0).toLocaleString("fr-FR")} FCFA
+              {Number(partenaire?.wallet_balance ?? 0).toLocaleString(localeTag)} FCFA
             </Typography.Title>
             <Button
               block
@@ -480,7 +456,7 @@ export default function Dashboard() {
               onClick={() => navigate("/partenaire/portefeuille")}
               icon={<i className="fa-solid fa-arrow-right" style={{ fontSize: 11 }} />}
             >
-              Voir l'historique
+              {t("partenaire_dashboard_view_history")}
             </Button>
           </Card>
         </Col>
@@ -489,7 +465,7 @@ export default function Dashboard() {
             <Space size={8} style={{ marginBottom: 16 }}>
               <i className="fa-solid fa-chart-pie" style={{ color: partenairePalette.primary, fontSize: 14 }} />
               <Typography.Text strong style={{ color: partenairePalette.greenDark, fontSize: 15 }}>
-                Répartition des trouvailles
+                {t("partenaire_dashboard_findings_split")}
               </Typography.Text>
             </Space>
             <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
@@ -504,15 +480,15 @@ export default function Dashboard() {
                       <div style={{ fontSize: 24, fontWeight: 800, color: partenairePalette.greenDark, lineHeight: 1 }}>
                         {stats?.total_declarations ?? 0}
                       </div>
-                      <div style={{ fontSize: 10, color: partenairePalette.textMuted }}>trouvailles</div>
+                      <div style={{ fontSize: 10, color: partenairePalette.textMuted }}>{t("partenaire_dashboard_findings_count")}</div>
                     </div>
                   )}
                 />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minWidth: 160 }}>
-                <DonutRow color="#3b82f6" label="Disponibles" value={stats?.available ?? 0} />
-                <DonutRow color="#8b5cf6" label="Correspondances" value={stats?.matched ?? 0} />
-                <DonutRow color="#10b981" label="Rendus" value={stats?.returned ?? 0} />
+                <DonutRow color="#3b82f6" label={t("partenaire_dashboard_card_available")} value={stats?.available ?? 0} />
+                <DonutRow color="#8b5cf6" label={t("partenaire_dashboard_card_matched")} value={stats?.matched ?? 0} />
+                <DonutRow color="#10b981" label={t("partenaire_dashboard_status_returned")} value={stats?.returned ?? 0} />
               </div>
             </div>
           </Card>
@@ -526,11 +502,11 @@ export default function Dashboard() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
               <div>
                 <Typography.Text strong style={{ color: partenairePalette.greenDark, fontSize: 15 }}>
-                  Performances DocMaster
+                  {t("partenaire_dashboard_perf_title")}
                 </Typography.Text>
                 <br />
                 <Typography.Text type="secondary" style={{ fontSize: 12, fontStyle: "italic" }}>
-                  Évolution des documents perdus et trouvés par type sur la plateforme.
+                  {t("partenaire_dashboard_perf_subtitle")}
                 </Typography.Text>
               </div>
               <Space wrap size={4}>
@@ -542,7 +518,7 @@ export default function Dashboard() {
                     onClick={() => setPerfPeriod(p.key)}
                     style={{ fontSize: 12 }}
                   >
-                    {p.label}
+                    {t(p.labelKey)}
                   </Button>
                 ))}
               </Space>
@@ -560,7 +536,7 @@ export default function Dashboard() {
                 ))
               ) : (
                 <Col span={24}>
-                  <Empty description="Aucune donnée de performance pour la période sélectionnée" />
+                  <Empty description={t("partenaire_dashboard_perf_empty")} />
                 </Col>
               )}
             </Row>
@@ -568,7 +544,187 @@ export default function Dashboard() {
         </Col>
       </Row>
 
+      <DeclarationDetailDrawer
+        open={!!detail}
+        declaration={detail}
+        onClose={() => setDetail(null)}
+      />
     </div>
+  );
+}
+
+const FOUND_STEP_COLORS: Record<string, { bg: string; border: string; text: string; faded: string; line: string; fill: string; headerBg: string; iconBg: string }> = {
+  blue: {
+    bg: "#3B82F6",
+    border: "#3B82F6",
+    text: "#2563EB",
+    faded: "#93C5FD",
+    line: "#BFDBFE",
+    fill: "#3B82F6",
+    headerBg: "rgba(59,130,246,0.05)",
+    iconBg: "rgba(59,130,246,0.1)",
+  },
+  green: {
+    bg: "#22C55E",
+    border: "#22C55E",
+    text: "#16A34A",
+    faded: "#86EFAC",
+    line: "#BBF7D0",
+    fill: "#22C55E",
+    headerBg: "rgba(34,197,94,0.05)",
+    iconBg: "rgba(34,197,94,0.1)",
+  },
+};
+
+function FoundStepIndicator({ steps, current, color }: { steps: string[]; current: number; color: "blue" | "green" }) {
+  const c = FOUND_STEP_COLORS[color] || FOUND_STEP_COLORS.blue;
+  return (
+    <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "0 8px", marginTop: 16 }}>
+      <div style={{ position: "absolute", top: 12, left: 40, right: 40, height: 2, backgroundColor: c.line }} />
+      <div style={{ position: "absolute", top: 12, left: 40, height: 2, width: `${((current - 1) / (steps.length - 1)) * 100}%`, backgroundColor: c.fill }} />
+      {steps.map((step, i) => {
+        const done = i < current - 1;
+        const active = i === current - 1;
+        return (
+          <div key={step} style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, minWidth: 52 }}>
+            <div
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 8,
+                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                background: done ? c.bg : "white",
+                border: done ? "none" : `2px solid ${active ? c.border : c.line}`,
+                color: done ? "white" : active ? c.text : c.faded,
+              }}
+            >
+              {done ? <i className="fa-solid fa-check" /> : <i className={`fa-solid ${i === 0 ? "fa-magnifying-glass" : i === 1 ? "fa-file-signature" : i === 2 ? "fa-user-check" : "fa-handshake"}`} />}
+            </div>
+            <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: -0.3, color: done || active ? c.text : c.faded }}>
+              {step}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function FoundCard({ decl, onOpen }: { decl: PartenaireDeclaration; onOpen: () => void }) {
+  const { t } = useI18n();
+  const isDone = decl.status === "RETURNED" || decl.status === "MATCHED";
+  const c = FOUND_STEP_COLORS[isDone ? "green" : "blue"];
+
+  let step = 1;
+  if (decl.status === "AVAILABLE") step = 2;
+  if (decl.status === "MATCHED") step = 3;
+  if (decl.status === "RETURNED") step = 4;
+
+  const headerLabel = decl.status === "RETURNED"
+    ? t("partenaire_dashboard_card_returned_header")
+    : decl.status === "MATCHED"
+    ? t("partenaire_dashboard_card_matched_header")
+    : t("partenaire_dashboard_card_found_header");
+  const headerIcon = decl.status === "RETURNED" ? "fa-circle-check" : decl.status === "MATCHED" ? "fa-handshake" : "fa-hand-holding-heart";
+  const badgeLabel = decl.status === "RETURNED"
+    ? t("partenaire_dashboard_status_returned")
+    : decl.status === "MATCHED"
+    ? t("partenaire_dashboard_status_to_return")
+    : t("partenaire_dashboard_status_reported");
+  const badgeColor = isDone ? "green" : "blue";
+
+  return (
+    <Card
+      style={{
+        borderRadius: 14,
+        border: `1px solid ${partenairePalette.border}`,
+        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+        overflow: "hidden",
+        cursor: "pointer",
+      }}
+      styles={{ body: { padding: 0 } }}
+      onClick={onOpen}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 8,
+          padding: "10px 16px",
+          background: c.headerBg,
+          borderBottom: `1px solid ${c.line}`,
+        }}
+      >
+        <Space size={8}>
+          <i className={`fa-solid ${headerIcon}`} style={{ color: c.text }} />
+          <Typography.Text strong style={{ color: c.text, fontSize: 13 }}>
+            {headerLabel}
+          </Typography.Text>
+        </Space>
+        <Tag color={badgeColor} style={{ margin: 0, fontWeight: 700 }}>
+          {badgeLabel}
+        </Tag>
+      </div>
+      <div style={{ padding: "16px 20px" }}>
+        <Space size={12} style={{ marginBottom: 4 }}>
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 12,
+              background: c.iconBg,
+              color: c.text,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <i className={`fa-solid ${getIconForType(decl.doc_type)}`} style={{ fontSize: 18 }} />
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <Typography.Text strong style={{ fontSize: 13.5, display: "block" }}>
+              {decl.doc_type_name || decl.doc_type || t("partenaire_dashboard_doc_default")} — {decl.owner_name || t("partenaire_dashboard_owner_unknown")}
+            </Typography.Text>
+            <Typography.Text type="secondary" style={{ fontSize: 11.5, fontStyle: "italic" }}>
+              Réf : {decl.identifiant_doc_dm || decl.id.slice(0, 8)} · {STATUS_LABEL_KEYS[decl.status || ""] ? t(STATUS_LABEL_KEYS[decl.status].labelKey) : decl.status || "—"}
+            </Typography.Text>
+          </div>
+        </Space>
+        <FoundStepIndicator
+          steps={[
+            t("partenaire_dashboard_step_found"),
+            t("partenaire_dashboard_step_reported"),
+            t("partenaire_dashboard_step_owner"),
+            t("partenaire_dashboard_step_returned"),
+          ]}
+          current={step}
+          color={isDone ? "green" : "blue"}
+        />
+        {decl.status !== "MATCHED" && decl.status !== "RETURNED" && (
+          <div
+            style={{
+              marginTop: 16,
+              fontSize: 11,
+              color: partenairePalette.textMuted,
+              fontStyle: "italic",
+              textAlign: "center",
+              background: "rgba(59,130,246,0.1)",
+              borderRadius: 12,
+              padding: "8px 12px",
+            }}
+          >
+            <i className="fa-solid fa-clock-rotate-left" style={{ color: "#3B82F6", marginRight: 4 }} />
+            {t("partenaire_dashboard_waiting")}
+          </div>
+        )}
+      </div>
+    </Card>
   );
 }
 
@@ -585,21 +741,21 @@ function DonutRow({ color, label, value }: { color: string; label: string; value
 }
 
 const PERIODS = [
-  { key: "day", label: "Jour" },
-  { key: "week", label: "Semaine" },
-  { key: "month", label: "Mois" },
-  { key: "year", label: "Année" },
+  { key: "day", labelKey: "partenaire_dashboard_period_day" },
+  { key: "week", labelKey: "partenaire_dashboard_period_week" },
+  { key: "month", labelKey: "partenaire_dashboard_period_month" },
+  { key: "year", labelKey: "partenaire_dashboard_period_year" },
 ];
 
-const PERIOD_LABELS: Record<string, string> = {
-  day: "ce jour",
-  week: "cette semaine",
-  month: "ce mois",
-  year: "cette année",
+const PERIOD_LABEL_KEYS: Record<string, string> = {
+  day: "partenaire_dashboard_period_label_day",
+  week: "partenaire_dashboard_period_label_week",
+  month: "partenaire_dashboard_period_label_month",
+  year: "partenaire_dashboard_period_label_year",
 };
 
-function periodLabel(p?: string) {
-  return PERIOD_LABELS[p || "month"] || "ce mois";
+function periodLabelKey(p?: string) {
+  return PERIOD_LABEL_KEYS[p || "month"] || "partenaire_dashboard_period_label_month";
 }
 
 const PERF_TYPE_ICONS: Record<string, { icon: string; color: string }> = {
@@ -614,16 +770,19 @@ const PERF_TYPE_ICONS: Record<string, { icon: string; color: string }> = {
 };
 
 function timeAgo(dateString?: string) {
+  const { t } = useI18n();
   if (!dateString) return "—";
   const diff = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
-  if (diff < 60) return "à l'instant";
-  if (diff < 3600) return `il y a ${Math.floor(diff / 60)} min`;
-  if (diff < 86400) return `il y a ${Math.floor(diff / 3600)} h`;
-  if (diff < 604800) return `il y a ${Math.floor(diff / 86400)} j`;
-  return "récemment";
+  if (diff < 60) return t("partenaire_dashboard_just_now");
+  if (diff < 3600) return t("partenaire_dashboard_time_min", { count: Math.floor(diff / 60) });
+  if (diff < 86400) return t("partenaire_dashboard_time_hour", { count: Math.floor(diff / 3600) });
+  if (diff < 604800) return t("partenaire_dashboard_time_day", { count: Math.floor(diff / 86400) });
+  return t("partenaire_dashboard_recently");
 }
 
 function PerfCard({ doc, period }: { doc: any; period?: string }) {
+  const { t, lang } = useI18n();
+  const localeTag = lang === "ar" ? "ar" : lang === "en" ? "en" : "fr-FR";
   const code = doc.code || "DEFAULT";
   const cfg = PERF_TYPE_ICONS[code] || PERF_TYPE_ICONS.DEFAULT;
   const trend = parseFloat(doc.trend) || 0;
@@ -633,8 +792,8 @@ function PerfCard({ doc, period }: { doc: any; period?: string }) {
   const found = parseInt(doc.found) || 0;
   const latest = doc.recent_items?.[0];
   const activityText = latest
-    ? `${latest.type === "LOST" ? "perdu" : "trouvé"} ${timeAgo(latest.date)}${latest.ville ? ` à ${latest.ville}` : ""}`
-    : "aucune activité récente";
+    ? `${latest.type === "LOST" ? t("partenaire_dashboard_lost_verb") : t("partenaire_dashboard_found_verb")} ${timeAgo(latest.date)}${latest.ville ? ` à ${latest.ville}` : ""}`
+    : t("partenaire_dashboard_no_recent_activity");
 
   return (
     <Card style={{ borderRadius: 10, border: `1px solid ${partenairePalette.border}`, height: "100%" }} styles={{ body: { padding: 14 } }}>
@@ -657,7 +816,7 @@ function PerfCard({ doc, period }: { doc: any; period?: string }) {
           strong
           style={{ fontSize: 12.5, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
         >
-          {doc.name || "Document"}
+          {doc.name || t("partenaire_dashboard_doc_default")}
         </Typography.Text>
         <div
           style={{
@@ -676,18 +835,18 @@ function PerfCard({ doc, period }: { doc: any; period?: string }) {
       </div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
         <Typography.Text style={{ fontSize: 18, fontWeight: 800, color: partenairePalette.primaryDark }}>
-          {total.toLocaleString("fr-FR")}
+          {total.toLocaleString(localeTag)}
         </Typography.Text>
         <Typography.Text type="secondary" style={{ fontSize: 10.5, fontStyle: "italic" }}>
-          {periodLabel(period)}
+          {t(periodLabelKey(period))}
         </Typography.Text>
       </div>
       <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
         <div style={{ fontSize: 9.5, color: "#d97706", background: "#fef3c7", padding: "2px 6px", borderRadius: 6 }}>
-          <i className="fa-solid fa-arrow-down" style={{ fontSize: 7, marginRight: 3 }} /> {lost} perdus
+          <i className="fa-solid fa-arrow-down" style={{ fontSize: 7, marginRight: 3 }} /> {t("partenaire_dashboard_lost_count", { count: lost })}
         </div>
         <div style={{ fontSize: 9.5, color: "#16a34a", background: "#dcfce7", padding: "2px 6px", borderRadius: 6 }}>
-          <i className="fa-solid fa-arrow-up" style={{ fontSize: 7, marginRight: 3 }} /> {found} trouvés
+          <i className="fa-solid fa-arrow-up" style={{ fontSize: 7, marginRight: 3 }} /> {t("partenaire_dashboard_found_count", { count: found })}
         </div>
       </div>
       <div

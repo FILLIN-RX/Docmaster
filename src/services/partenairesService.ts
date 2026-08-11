@@ -26,10 +26,15 @@ partenairesApi.interceptors.request.use((config) => {
 partenairesApi.interceptors.response.use(
   (response) => response,
   (error) => {
+    const PUBLIC_AUTH_PATHS = [
+      "/partenaire/connexion",
+      "/partenaire/mot-de-passe-oublie",
+      "/partenaire/reinitialisation",
+    ];
     if (error.response?.status === 401) {
       deleteToken();
     }
-    if (error.response?.status === 401 && !window.location.pathname.includes("/partenaire/connexion")) {
+    if (error.response?.status === 401 && !PUBLIC_AUTH_PATHS.some((p) => window.location.pathname.startsWith(p))) {
       window.location.href = "/partenaire/connexion";
     }
     return Promise.reject(error);
@@ -110,6 +115,17 @@ export const partenairesService = {
 
   logout() {
     return partenairesApi.post<{ success: boolean; message: string }>("/logout");
+  },
+
+  forgotPassword(email: string) {
+    return partenairesApi.post<{ success: boolean; message: string }>("/forgot-password", { email });
+  },
+
+  resetPassword(token: string, nouveauMotDePasse: string) {
+    return partenairesApi.post<{ success: boolean; message: string }>("/reset-password", {
+      token,
+      nouveau_mot_de_passe: nouveauMotDePasse,
+    });
   },
 
   me() {

@@ -4,7 +4,14 @@ import { useToast } from "../context/ToastContext";
 import { extractApiError } from "../utils/extractApiError";
 import type { Notification } from "../types/api";
 
-export function useNotifications() {
+interface NotificationsService {
+  getAll: () => Promise<any>;
+  markAsRead: (id: string) => Promise<any>;
+  markAllAsRead: () => Promise<any>;
+}
+
+export function useNotifications(service?: NotificationsService) {
+  const svc = service || notificationsService;
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +23,7 @@ export function useNotifications() {
     setLoading(true);
     setError(null);
     try {
-      const res = await notificationsService.getAll();
+      const res = await svc.getAll();
       const list = res.data || [];
       setNotifications(list);
       setUnreadCount(list.filter((n) => !(n.is_read ?? n.lue)).length);
@@ -26,7 +33,7 @@ export function useNotifications() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [svc]);
 
   useEffect(() => { fetch(); }, [fetch]);
 
@@ -49,7 +56,7 @@ export function useNotifications() {
 
   const markAsRead = useCallback(async (id: string) => {
     try {
-      const res = await notificationsService.markAsRead(id);
+      const res = await svc.markAsRead(id);
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, is_read: true, lue: true } : n))
       );
@@ -60,11 +67,11 @@ export function useNotifications() {
       toast.error(extractApiError(err));
       throw err;
     }
-  }, [toast]);
+  }, [svc, toast]);
 
   const markAllAsRead = useCallback(async () => {
     try {
-      const res = await notificationsService.markAllAsRead();
+      const res = await svc.markAllAsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true, lue: true })));
       setUnreadCount(0);
       dispatchSync();
@@ -74,7 +81,7 @@ export function useNotifications() {
       toast.error(extractApiError(err));
       throw err;
     }
-  }, [toast]);
+  }, [svc, toast]);
 
   return { notifications, loading, error, unreadCount, fetch, markAsRead, markAllAsRead };
 }

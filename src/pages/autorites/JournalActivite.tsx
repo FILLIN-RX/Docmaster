@@ -24,46 +24,43 @@ import {
   autoritesService,
   AutoriteActivityLog,
 } from "../../services/autoritesService";
+import { useI18n } from "../../context/I18nContext";
 import { autoritePalette } from "../../theme/autorites";
 import { useAutorite } from "../../context/AutoriteContext";
 
 const { Title, Text } = Typography;
 
-const ACTION_META: Record<string, { label: string; color: string; icon: React.ReactNode; desc: string }> = {
+const ACTION_META: Record<string, { labelKey: string; color: string; icon: React.ReactNode }> = {
   CERTIFY_DECLARATION: {
-    label: "Certification",
+    labelKey: "autorite_journal_action_certify",
     color: "green",
     icon: <SafetyCertificateOutlined />,
-    desc: "a certifié une déclaration",
   },
   UNCERTIFY_DECLARATION: {
-    label: "Décertification",
+    labelKey: "autorite_journal_action_uncertify",
     color: "red",
     icon: <StopOutlined />,
-    desc: "a retiré une certification",
   },
   CREATE_AUTORITE: {
-    label: "Création autorité",
+    labelKey: "autorite_journal_action_create",
     color: "orange",
     icon: <UserAddOutlined />,
-    desc: "a créé une autorité",
   },
   DELETE_AUTORITE: {
-    label: "Suppression autorité",
+    labelKey: "autorite_journal_action_delete",
     color: "volcano",
     icon: <DeleteOutlined />,
-    desc: "a supprimé une autorité",
   },
   AUTHORITY_LOGIN: {
-    label: "Connexion",
+    labelKey: "autorite_journal_action_login",
     color: "blue",
     icon: <LoginOutlined />,
-    desc: "s'est connecté",
   },
 };
 
 export default function JournalActivite() {
   const { autorite } = useAutorite();
+  const { t, lang } = useI18n();
   const [logs, setLogs] = useState<AutoriteActivityLog[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -72,6 +69,7 @@ export default function JournalActivite() {
   const [actionFilter, setActionFilter] = useState<string>("");
 
   const isHaute = autorite?.niveau === "HAUTE";
+  const localeTag = lang === "ar" ? "ar" : lang === "en" ? "en" : "fr-FR";
 
   const fetchLogs = useCallback(() => {
     setLoading(true);
@@ -86,7 +84,7 @@ export default function JournalActivite() {
         setTotal(res.data.total || 0);
       })
       .catch((err) => {
-        message.error(err?.response?.data?.message || "Impossible de charger le journal");
+        message.error(err?.response?.data?.message || t("autorite_journal_load_error"));
       })
       .finally(() => setLoading(false));
   }, [page, pageSize, actionFilter]);
@@ -97,11 +95,11 @@ export default function JournalActivite() {
 
   const zoneLabel = isHaute
     ? autorite?.region
-      ? `Région : ${autorite.region}`
+      ? t("autorite_journal_zone_region", { region: autorite.region })
       : autorite?.ville
-        ? `Ville : ${autorite.ville}`
-        : "Territoire national"
-    : `Ville : ${autorite?.ville || "—"}`;
+        ? t("autorite_journal_zone_ville", { ville: autorite.ville })
+        : t("autorite_journal_zone_national")
+    : t("autorite_journal_zone_ville", { ville: autorite?.ville || "—" });
 
   const levelBadge = (n: string | null) =>
     n === "HAUTE" ? (
@@ -116,22 +114,22 @@ export default function JournalActivite() {
 
   const columns = [
     {
-      title: "Date",
+      title: t("autorite_journal_col_date"),
       dataIndex: "created_at",
       width: 150,
       render: (v: string) => (
         <div>
           <Text style={{ fontSize: 12, color: autoritePalette.textMain, display: "block" }}>
-            {new Date(v).toLocaleDateString("fr-FR")}
+            {new Date(v).toLocaleDateString(localeTag)}
           </Text>
           <Text type="secondary" style={{ fontSize: 11 }}>
-            {new Date(v).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+            {new Date(v).toLocaleTimeString(localeTag, { hour: "2-digit", minute: "2-digit" })}
           </Text>
         </div>
       ),
     },
     {
-      title: "Autorité",
+      title: t("autorite_journal_col_autorite"),
       key: "autorite",
       width: 220,
       render: (_: unknown, log: AutoriteActivityLog) => (
@@ -159,14 +157,14 @@ export default function JournalActivite() {
       ),
     },
     {
-      title: "Action",
+      title: t("autorite_journal_col_action"),
       key: "action",
       render: (_: unknown, log: AutoriteActivityLog) => {
         const meta = ACTION_META[log.action_type];
         return meta ? (
           <Space>
             <Tag icon={meta.icon} color={meta.color} style={{ fontWeight: 600 }}>
-              {meta.label}
+              {t(meta.labelKey)}
             </Tag>
             <Text style={{ fontSize: 12, color: autoritePalette.textMuted }}>{log.description}</Text>
           </Space>
@@ -182,11 +180,11 @@ export default function JournalActivite() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, gap: 16, flexWrap: "wrap" }}>
         <div>
           <Title level={4} style={{ margin: 0, color: autoritePalette.greenDark }}>
-            Journal d'activité
+            {t("autorite_journal_title")}
           </Title>
           <Space size={8} style={{ marginTop: 4 }}>
             <Text type="secondary" style={{ fontSize: 13 }}>
-              Activité des autorités de votre secteur.
+              {t("autorite_journal_subtitle")}
             </Text>
             <Badge
               status={isHaute ? "warning" : "success"}
@@ -199,15 +197,15 @@ export default function JournalActivite() {
             value={actionFilter || undefined}
             onChange={setActionFilter}
             allowClear
-            placeholder="Toutes les actions"
+            placeholder={t("autorite_journal_all_actions")}
             style={{ width: 200 }}
             options={Object.entries(ACTION_META).map(([value, meta]) => ({
               value,
-              label: meta.label,
+              label: t(meta.labelKey),
             }))}
           />
           <Button icon={<ReloadOutlined />} onClick={fetchLogs}>
-            Actualiser
+            {t("autorite_journal_refresh")}
           </Button>
         </Space>
       </div>
@@ -232,12 +230,12 @@ export default function JournalActivite() {
               setPage(p);
               setPageSize(ps);
             },
-            showTotal: (t) => `${t} action(s)`,
+            showTotal: (tCount) => t("autorite_journal_total", { count: tCount }),
           }}
           locale={{
             emptyText: (
               <Empty
-                description="Aucune activité dans votre secteur pour le moment"
+                description={t("autorite_journal_empty")}
                 style={{ fontSize: 13 }}
               />
             ),

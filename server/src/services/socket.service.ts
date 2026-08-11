@@ -3,6 +3,7 @@ import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'votre_secret_tres_long_et_securise';
+const AUTORITE_JWT_SECRET = process.env.AUTORITE_JWT_SECRET || 'autorite-secret-change-in-production';
 
 export class SocketService {
   private static instance: SocketService;
@@ -56,9 +57,15 @@ export class SocketService {
       }
 
       try {
-        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        let decoded: any = null;
+        try {
+          decoded = jwt.verify(token, JWT_SECRET);
+        } catch {
+          // Tokens AUTORITE utilisent leur propre secret
+          decoded = jwt.verify(token, AUTORITE_JWT_SECRET);
+        }
         (socket as any).userId = decoded.id;
-        (socket as any).userRole = decoded.role || 'USER';
+        (socket as any).userRole = decoded.role || decoded.type || 'USER';
         next();
       } catch (err) {
         next(new Error('Authentication error: Invalid token'));

@@ -84,6 +84,29 @@ export class ChangePasswordPartenaireDTO {
 }
 
 /**
+ * DTO for requesting a password reset link
+ */
+export class ForgotPasswordPartenaireDTO {
+  @IsEmail({}, { message: 'Email invalide' })
+  @IsNotEmpty({ message: 'L\'email est requis' })
+  email!: string;
+}
+
+/**
+ * DTO for resetting the password with a token
+ */
+export class ResetPasswordPartenaireDTO {
+  @IsString()
+  @IsNotEmpty({ message: 'Le token est requis' })
+  token!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Le nouveau mot de passe est requis' })
+  @MaxLength(72, { message: 'Le mot de passe ne peut pas dépasser 72 caractères' })
+  nouveau_mot_de_passe!: string;
+}
+
+/**
  * DTO for admin updating a partner
  */
 export class UpdatePartenaireDTO {

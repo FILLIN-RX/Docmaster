@@ -17,12 +17,14 @@ import {
 } from "antd";
 import { UserAddOutlined, ReloadOutlined, DeleteOutlined, KeyOutlined } from "@ant-design/icons";
 import { autoritesService, AutoriteSession } from "../../services/autoritesService";
+import { useI18n } from "../../context/I18nContext";
 import { autoritePalette } from "../../theme/autorites";
 import AntdLocationSelect from "../../components/ui/AntdLocationSelect";
 
 const { Title, Text } = Typography;
 
 export default function GestionAutorites() {
+  const { t } = useI18n();
   const [autorites, setAutorites] = useState<AutoriteSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -61,22 +63,35 @@ export default function GestionAutorites() {
       setModalOpen(false);
       form.resetFields();
       fetchAutorites();
-      message.success("Autorité créée avec succès");
+      message.success(t("autorite_gestion_create_success"));
     } catch (err: any) {
       if (err?.response?.data?.message) {
         message.error(err.response.data.message);
       } else if (err?.response?.data?.errors) {
         const first = Object.values(err.response.data.errors)[0] as string[];
-        message.error(first?.[0] || "Création impossible");
+        message.error(first?.[0] || t("autorite_gestion_create_error"));
       }
     } finally {
       setSaving(false);
     }
   };
 
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    try {
+      await autoritesService.deleteManaged(id);
+      message.success(t("autorite_gestion_delete_success"));
+      fetchAutorites();
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || t("autorite_gestion_delete_error"));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const columns = [
     {
-      title: "Autorité",
+      title: t("autorite_gestion_col_autorite"),
       key: "autorite",
       render: (_: unknown, a: AutoriteSession) => (
         <Space>
@@ -107,7 +122,7 @@ export default function GestionAutorites() {
       ),
     },
     {
-      title: "Ville",
+      title: t("autorite_gestion_col_ville"),
       dataIndex: "ville",
       width: 160,
       render: (v: string, a: AutoriteSession) => (
@@ -118,54 +133,54 @@ export default function GestionAutorites() {
       ),
     },
     {
-      title: "Niveau",
+      title: t("autorite_gestion_col_niveau"),
       dataIndex: "niveau",
       width: 120,
       render: (v: string) => (
         <Tag color={v === "HAUTE" ? "orange" : "green"} style={{ fontWeight: 600 }}>
-          {v === "HAUTE" ? "Haute" : "Niveau"}
+          {v === "HAUTE" ? t("autorite_gestion_niveau_haute") : t("autorite_gestion_niveau_normal")}
         </Tag>
       ),
     },
     {
-      title: "Statut",
+      title: t("autorite_gestion_col_statut"),
       dataIndex: "is_active",
       width: 110,
       render: (v: boolean) =>
         v ? (
-          <Badge status="success" text={<Text style={{ fontSize: 12 }}>Actif</Text>} />
+          <Badge status="success" text={<Text style={{ fontSize: 12 }}>{t("autorite_gestion_active")}</Text>} />
         ) : (
-          <Badge status="default" text={<Text style={{ fontSize: 12 }}>Inactif</Text>} />
+          <Badge status="default" text={<Text style={{ fontSize: 12 }}>{t("autorite_gestion_inactive")}</Text>} />
         ),
     },
     {
-      title: "Mot de passe",
+      title: t("autorite_gestion_col_password"),
       dataIndex: "must_change_password",
       width: 170,
       render: (v: boolean) =>
         v ? (
           <Tag icon={<KeyOutlined />} color="warning" style={{ fontSize: 11 }}>
-            À changer
+            {t("autorite_gestion_to_change")}
           </Tag>
         ) : (
           <Text type="secondary" style={{ fontSize: 12 }}>
-            Défini
+            {t("autorite_gestion_set")}
           </Text>
         ),
     },
     {
-      title: "Actions",
+      title: t("autorite_gestion_col_actions"),
       key: "actions",
       width: 90,
       align: "right" as const,
       render: (_: unknown, a: AutoriteSession) => (
         <Popconfirm
-          title="Supprimer cette autorité ?"
-          description="Cette action est irréversible."
+          title={t("autorite_gestion_delete_title")}
+          description={t("autorite_gestion_delete_desc")}
           onConfirm={() => handleDelete(a.id)}
-          okText="Supprimer"
+          okText={t("autorite_gestion_delete_ok")}
           okButtonProps={{ danger: true }}
-          cancelText="Annuler"
+          cancelText={t("autorite_gestion_cancel")}
         >
           <Button
             danger
@@ -179,36 +194,23 @@ export default function GestionAutorites() {
     },
   ];
 
-  const handleDelete = async (id: string) => {
-    setDeletingId(id);
-    try {
-      await autoritesService.deleteManaged(id);
-      message.success("Autorité supprimée");
-      fetchAutorites();
-    } catch (err: any) {
-      message.error(err?.response?.data?.message || "Suppression impossible");
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
         <div>
           <Title level={4} style={{ margin: 0, color: autoritePalette.greenDark }}>
-            Gestion des autorités
+            {t("autorite_gestion_title")}
           </Title>
           <Text type="secondary" style={{ fontSize: 13 }}>
-            Créez et gérez les autorités de niveau relevant de votre territoire.
+            {t("autorite_gestion_subtitle")}
           </Text>
         </div>
         <Space>
           <Button icon={<ReloadOutlined />} onClick={fetchAutorites}>
-            Actualiser
+            {t("autorite_gestion_refresh")}
           </Button>
           <Button type="primary" icon={<UserAddOutlined />} onClick={() => setModalOpen(true)} style={{ background: autoritePalette.primary, borderColor: autoritePalette.primary }}>
-            Créer une autorité
+            {t("autorite_gestion_create")}
           </Button>
         </Space>
       </div>
@@ -224,7 +226,7 @@ export default function GestionAutorites() {
           loading={loading}
           pagination={false}
           locale={{
-            emptyText: <Empty description="Aucune autorité créée pour le moment" />,
+            emptyText: <Empty description={t("autorite_gestion_empty")} />,
           }}
         />
       </Card>
@@ -235,10 +237,10 @@ export default function GestionAutorites() {
         title={
           <Space>
             <UserAddOutlined style={{ color: autoritePalette.primary }} />
-            Créer une autorité de niveau
+            {t("autorite_gestion_modal_title")}
           </Space>
         }
-        okText="Créer l'autorité"
+        okText={t("autorite_gestion_modal_ok")}
         okButtonProps={{
           loading: saving,
           style: { background: autoritePalette.primary, borderColor: autoritePalette.primary },
@@ -250,35 +252,35 @@ export default function GestionAutorites() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Form.Item
               name="prenom"
-              label="Prénom"
-              rules={[{ required: true, message: "Prénom requis" }]}
+              label={t("autorite_gestion_prenom")}
+              rules={[{ required: true, message: t("autorite_gestion_prenom_required") }]}
             >
               <Input placeholder="ex: Marie" />
             </Form.Item>
-            <Form.Item name="nom" label="Nom" rules={[{ required: true, message: "Nom requis" }]}>
+            <Form.Item name="nom" label={t("autorite_gestion_nom")} rules={[{ required: true, message: t("autorite_gestion_nom_required") }]}>
               <Input placeholder="ex: Ngono" />
             </Form.Item>
           </div>
           <Form.Item
             name="email"
-            label="Email institutionnel"
+            label={t("autorite_gestion_email")}
             rules={[
-              { required: true, message: "Email requis" },
-              { type: "email", message: "Email invalide" },
+              { required: true, message: t("autorite_gestion_email_required") },
+              { type: "email", message: t("autorite_gestion_email_invalid") },
             ]}
           >
             <Input placeholder="ex: marie.ngono@pndp.cm" />
           </Form.Item>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Form.Item name="telephone" label="Téléphone">
+            <Form.Item name="telephone" label={t("autorite_gestion_telephone")}>
               <Input placeholder="ex: 671000000" />
             </Form.Item>
           </div>
           <Form.Item
-            label="Localisation"
+            label={t("autorite_gestion_location")}
             required
             rules={[{ validator: async () => {
-              if (!locationValue.department) throw new Error("Ville requise");
+              if (!locationValue.department) throw new Error(t("autorite_gestion_city_required"));
             }}]}
           >
             <AntdLocationSelect
@@ -305,8 +307,7 @@ export default function GestionAutorites() {
               color: "#d46b08",
             }}
           >
-            Un mot de passe temporaire sera généré et envoyé par e-mail (et SMS si téléphone fourni).
-            L'autorité devra le changer dès sa première connexion.
+            {t("autorite_gestion_info_box")}
           </div>
         </Form>
       </Modal>
@@ -316,7 +317,7 @@ export default function GestionAutorites() {
         onCancel={() => setTempPassword(null)}
         footer={
           <Button type="primary" onClick={() => setTempPassword(null)} style={{ background: autoritePalette.primary, borderColor: autoritePalette.primary }}>
-            Fermer
+            {t("autorite_gestion_temp_close")}
           </Button>
         }
         width={420}
@@ -338,10 +339,10 @@ export default function GestionAutorites() {
             <KeyOutlined style={{ color: "#52c41a", fontSize: 20 }} />
           </div>
           <Title level={4} style={{ margin: 0, color: autoritePalette.greenDark }}>
-            Autorité créée
+            {t("autorite_gestion_temp_title")}
           </Title>
           <Text type="secondary" style={{ fontSize: 13, display: "block", margin: "8px 0 14px" }}>
-            Le mot de passe temporaire a été envoyé par e-mail. Conservez-en une copie :
+            {t("autorite_gestion_temp_desc")}
           </Text>
           <div
             style={{
@@ -359,7 +360,7 @@ export default function GestionAutorites() {
             {tempPassword}
           </div>
           <Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 12 }}>
-            L'autorité devra le changer à sa première connexion.
+            {t("autorite_gestion_temp_footer")}
           </Text>
         </div>
       </Modal>

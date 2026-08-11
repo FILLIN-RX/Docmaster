@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { Button, Card, Form, Input, Typography, Alert, Space } from "antd";
 import { LockOutlined, MailOutlined, ShopOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { usePartenaire } from "../../context/PartenaireContext";
+import { useI18n } from "../../context/I18nContext";
 import { partenairePalette } from "../../theme/partenaires";
 import PartenaireDesignProvider from "../../components/partenaires/PartenaireDesignProvider";
+import LanguageSwitcher from "../../components/ui/LanguageSwitcher";
 
 export default function PartenaireConnexion() {
   const { login } = usePartenaire();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -23,7 +26,7 @@ export default function PartenaireConnexion() {
         navigate("/partenaire/dashboard", { replace: true });
       }
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Connexion impossible. Vérifiez vos identifiants.");
+      setError(err?.response?.data?.message || t("partenaire_login_error_default"));
     } finally {
       setLoading(false);
     }
@@ -92,6 +95,10 @@ export default function PartenaireConnexion() {
           />
         </svg>
 
+        <div style={{ position: "absolute", top: 16, right: 16, zIndex: 2 }}>
+          <LanguageSwitcher onDark accentColor={partenairePalette.primary} />
+        </div>
+
         <Card
           style={{ width: 420, maxWidth: "100%", boxShadow: "0 12px 40px rgba(18,18,18,0.25)", position: "relative", zIndex: 1 }}
           styles={{ body: { padding: 36 } }}
@@ -115,7 +122,7 @@ export default function PartenaireConnexion() {
               DocMaster
             </Typography.Title>
             <Typography.Text style={{ color: partenairePalette.textMuted }}>
-              Espace organisation partenaire
+              {t("partenaire_login_title")}
             </Typography.Text>
           </div>
 
@@ -126,10 +133,10 @@ export default function PartenaireConnexion() {
           <Form layout="vertical" onFinish={onFinish} requiredMark={false} size="large">
             <Form.Item
               name="email"
-              label="Adresse e-mail"
+              label={t("portal_email_label")}
               rules={[
-                { required: true, message: "Veuillez saisir votre e-mail" },
-                { type: "email", message: "Adresse e-mail invalide" },
+                { required: true, message: t("portal_email_required") },
+                { type: "email", message: t("portal_email_invalid") },
               ]}
             >
               <Input prefix={<MailOutlined style={{ color: partenairePalette.textMuted }} />} placeholder="organisation@exemple.cm" />
@@ -137,23 +144,29 @@ export default function PartenaireConnexion() {
 
             <Form.Item
               name="mot_de_passe"
-              label="Mot de passe"
-              rules={[{ required: true, message: "Veuillez saisir votre mot de passe" }]}
+              label={t("portal_password_label")}
+              rules={[{ required: true, message: t("portal_password_required") }]}
             >
               <Input.Password prefix={<LockOutlined style={{ color: partenairePalette.textMuted }} />} placeholder="••••••••" />
             </Form.Item>
 
             <Button type="primary" htmlType="submit" block loading={loading} style={{ height: 46, fontWeight: 600 }}>
-              Se connecter
+              {t("portal_submit")}
             </Button>
           </Form>
 
+          <div style={{ textAlign: "center", marginTop: 16 }}>
+            <Link to="/partenaire/mot-de-passe-oublie" style={{ fontSize: 13, color: partenairePalette.primaryDark, fontWeight: 500 }}>
+              {t("portal_forgot_link")}
+            </Link>
+          </div>
+
           <Space direction="vertical" size={4} style={{ width: "100%", textAlign: "center", marginTop: 20 }}>
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              Accès réservé aux organisations partenaires
+              {t("partenaire_login_footer_access")}
             </Typography.Text>
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              Mot de passe temporaire fourni par e-mail
+              {t("portal_temp_password_footer")}
             </Typography.Text>
           </Space>
         </Card>

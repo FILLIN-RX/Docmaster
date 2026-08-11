@@ -13,6 +13,10 @@ const controller = new AutoriteController();
 router.post('/login', controller.login);
 // POST /api/autorites/logout — authority logout
 router.post('/logout', controller.logout);
+// POST /api/autorites/forgot-password — send password reset link
+router.post('/forgot-password', controller.forgotPassword);
+// POST /api/autorites/reset-password — reset password with token
+router.post('/reset-password', controller.resetPassword);
 
 /**
  * ── AUTORITE (JWT dédié) ──
@@ -27,6 +31,14 @@ router.get('/stats', autoriteAuthMiddleware, controller.getStats);
 router.get('/activity', autoriteAuthMiddleware, controller.getActivityLogs);
 // GET /api/autorites/declarations — declarations visible to the authority
 router.get('/declarations', autoriteAuthMiddleware, controller.getDeclarations);
+// GET /api/autorites/declarations/options — distinct pays/regions for the filters (zone-restricted)
+router.get('/declarations/options', autoriteAuthMiddleware, controller.getFilterOptions);
+// GET /api/autorites/notifications — own notifications (zone only)
+router.get('/notifications', autoriteAuthMiddleware, controller.getNotifications);
+// PATCH /api/autorites/notifications/:id/read — mark one notification as read
+router.patch('/notifications/:id/read', autoriteAuthMiddleware, controller.markNotificationRead);
+// PATCH /api/autorites/notifications/read-all — mark all own notifications as read
+router.patch('/notifications/read-all', autoriteAuthMiddleware, controller.markAllNotificationsRead);
 // GET /api/autorites/declarations/:id/pdf — declaration PDF (with certification stamp)
 router.get('/declarations/:id/pdf', autoriteAuthMiddleware, controller.generatePdf);
 // POST /api/autorites/declarations/:id/certify — certify a declaration

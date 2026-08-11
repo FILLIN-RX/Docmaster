@@ -10,7 +10,6 @@ export const partenairePalette = {
   bgMain: "#F4EFE6",
   surface: "#FFFFFF",
   surface2: "#FAF7F2",
-  surface: "#FFFFFF",
   textMain: "#12343C",
   textMuted: "#5C767F",
   border: "#D9E4E7",

@@ -193,6 +193,16 @@ export class DeclarationService {
       );
     }
 
+    // 6.5 Notify authorities of the zone (each authority only receives its zone's declarations)
+    try {
+      await this.notificationService.notifyAutoritesZone({
+        ...declaration,
+        doc_type_name: docType ? docType.nom : declaration.doc_type,
+      });
+    } catch (err) {
+      console.error('Error notifying autorites of zone:', err);
+    }
+
     // 7. Check for matches
     console.log('🔵 [8] Vérification des matches...');
     matchingService.notifyNewDeclaration();
@@ -251,7 +261,28 @@ export class DeclarationService {
    */
   async searchDeclarations(filters: any): Promise<{ data: any[]; total: number }> {
     const { rows, total } = await this.declarationRepository.search(filters);
-    
+
+    // Attach partner organisation name for PARTENAIRE reporters
+    const partnerMap: Record<string, string> = {};
+    const partnerIds = [
+      ...new Set(
+        rows
+          .filter((d) => d.reporter_type === 'PARTENAIRE' && d.reporter_id)
+          .map((d) => d.reporter_id)
+      ),
+    ];
+    if (partnerIds.length > 0) {
+      try {
+        const pRes = await pool.query(
+          'SELECT id, nom_organisation FROM partenaires WHERE id = ANY($1::uuid[])',
+          [partnerIds]
+        );
+        pRes.rows.forEach((p) => { partnerMap[p.id] = p.nom_organisation; });
+      } catch (err) {
+        console.error('Error resolving partner org names:', err);
+      }
+    }
+
     // Attach doc type info to each result
     const results = await Promise.all(
       rows.map(async (decl) => {
@@ -260,17 +291,18 @@ export class DeclarationService {
         if (decl.doc_type && this.isUuid(decl.doc_type)) {
           docType = await this.docTypeRepository.findById(decl.doc_type);
         }
-        
+
         if (!docType) {
           docType = await this.docTypeRepository.findByCode(decl.doc_type);
         }
         return {
           ...decl,
-          docTypeInfo: docType || null
+          docTypeInfo: docType || null,
+          reporter_partenaire_nom: decl.reporter_type === 'PARTENAIRE' ? partnerMap[decl.reporter_id] || null : null,
         };
       })
     );
-    
+
     return { data: await encodeMediaFields(results), total };
   }
 
@@ -340,6 +372,19 @@ export class DeclarationService {
       docTypeInfo: docType || null
     };
 
+    // Attach partner organisation name for PARTENAIRE reporters
+    if (declaration.reporter_type === 'PARTENAIRE' && declaration.reporter_id) {
+      try {
+        const pRes = await pool.query(
+          'SELECT nom_organisation FROM partenaires WHERE id = $1',
+          [declaration.reporter_id]
+        );
+        enrichedData.reporter_partenaire_nom = pRes.rows[0]?.nom_organisation || null;
+      } catch (err) {
+        console.error('Error resolving partner org name:', err);
+      }
+    }
+
     // Calculate specific gains for finder if this is a found document or matching
     if (docType) {
       enrichedData.reward_amount = (docType.prix_retrouvaille * docType.finder_percent) / 100;
@@ -355,7 +400,33 @@ export class DeclarationService {
       
       const counterPartDecl = await this.declarationRepository.findById(counterPartId);
       if (counterPartDecl) {
-        const counterPartUser = await this.userRepository.findById(counterPartDecl.reporter_id);
+        const isPartner = counterPartDecl.reporter_type === 'PARTENAIRE';
+        const counterPartUser = isPartner
+          ? null
+          : await this.userRepository.findById(counterPartDecl.reporter_id);
+
+        if (isPartner && counterPartDecl.reporter_id) {
+          let orgNom: string | null = null;
+          try {
+            const pRes = await pool.query(
+              'SELECT nom_organisation FROM partenaires WHERE id = $1',
+              [counterPartDecl.reporter_id]
+            );
+            orgNom = pRes.rows[0]?.nom_organisation || null;
+          } catch (err) {
+            console.error('Error resolving partner org name:', err);
+          }
+          enrichedData.counterPart = {
+            id: counterPartDecl.reporter_id,
+            nom: orgNom || 'Organisation partenaire',
+            prenom: '',
+            is_partenaire: true,
+          };
+          if (declaration.declaration_type === 'LOST') {
+            enrichedData.finder_name = orgNom || 'Organisation partenaire';
+          }
+        }
+
         if (counterPartUser) {
           enrichedData.counterPart = {
             id: counterPartUser.id,
@@ -563,6 +634,96 @@ export class DeclarationService {
   }
 
   /**
+   * Reward the finder after a successful claim validation.
+   * Partner finders are credited on the partner wallet (partenaires.wallet_balance
+   * + partenaire_wallet_transactions), user finders on the user wallet + points.
+   */
+  async rewardFinderAfterValidation(claim: any, lostDecl: any, docType: any): Promise<number | null> {
+    if (!lostDecl || !claim.finder_id || !docType) return null;
+
+    const basePrice = Number(docType.prix_retrouvaille) || 5000;
+    const finderPercent = Number(docType.finder_percent) || 80;
+    const pointsReward = Number(docType.points_recompense) || 20;
+    const rewardAmount = (basePrice * finderPercent) / 100;
+
+    // Detect if the finder is a partner (standalone account, own wallet)
+    const finderIsPartner = (await pool.query(
+      `SELECT id FROM partenaires WHERE id = $1`,
+      [claim.finder_id]
+    )).rows.length > 0;
+
+    const { walletService } = await import('./wallet.service.ts');
+    if (finderIsPartner) {
+      await walletService.creditPartner(claim.finder_id, rewardAmount, 'DECLARATION_REWARD', {
+        referenceId: claim.id,
+        referenceType: 'claim',
+        metadata: { docId: lostDecl.id }
+      });
+      // Record transaction (payout) for the partner
+      await pool.query(
+        `INSERT INTO transactions (id, user_id, amount, currency, status, payment_method, type, metadata)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          uuidv4(),
+          claim.finder_id,
+          rewardAmount,
+          'XAF',
+          'SUCCESS',
+          'VIRTUAL_WALLET',
+          'finder_payout',
+          JSON.stringify({
+            docId: lostDecl.id,
+            claimId: claim.id,
+            note: `Récompense pour remise de ${docType.nom}`,
+            partenaire: true,
+          }),
+        ]
+      );
+      // Notifier le partenaire de la rémunération
+      await this.notificationService.notifyPartenaireReward(
+        claim.finder_id,
+        rewardAmount,
+        docType.nom,
+        lostDecl.id
+      );
+      console.log(`🟢 [Reward] Finder est un partenaire — récompense ${rewardAmount} XAF créditée sur wallet partenaire`);
+    } else {
+      await walletService.credit(claim.finder_id, rewardAmount, 'DECLARATION_REWARD', {
+        referenceId: claim.id,
+        referenceType: 'claim',
+        metadata: { docId: lostDecl.id }
+      });
+      await this.awardPoints(claim.finder_id, pointsReward);
+
+      // Record Transaction
+      await this.transactionRepository.create({
+        user_id: claim.finder_id,
+        amount: rewardAmount,
+        currency: 'XAF',
+        status: 'SUCCESS',
+        payment_method: 'VIRTUAL_WALLET',
+        type: 'finder_payout',
+        metadata: { docId: lostDecl.id, claimId: claim.id }
+      });
+
+      // Record Earnings & Send Notifications
+      const { EarningsService } = await import('./earnings.service.ts');
+      await new EarningsService().recordReturnPoints(
+        claim.finder_id,
+        pointsReward,
+        rewardAmount,
+        { docId: lostDecl.id, claimId: claim.id, docType: docType.nom }
+      );
+      console.log(`💰 [Reward] Finder ${claim.finder_id} rewarded with ${rewardAmount} XAF and ${pointsReward} pts after validation.`);
+    }
+
+    // Notify Owner
+    await this.notificationService.notifyDocumentRecovered(claim.owner_id, docType.nom, lostDecl.id);
+
+    return rewardAmount;
+  }
+
+  /**
    * Validate recovery code and process all rewards/status updates
    */
   async validateRecovery(declarationId: string, userId: string, code: string) {
@@ -615,71 +776,9 @@ export class DeclarationService {
       if (lostDecl.doc_type && this.isUuid(lostDecl.doc_type)) {
         docType = await this.docTypeRepository.findById(lostDecl.doc_type);
       }
-      
+
       if (docType) {
-        const basePrice = Number(docType.prix_retrouvaille) || 5000;
-        const finderPercent = Number(docType.finder_percent) || 80;
-        const pointsReward = Number(docType.points_recompense) || 20;
-        const rewardAmount = (basePrice * finderPercent) / 100;
-
-        // Detect if the finder is a partner (standalone account, own wallet)
-        const finderIsPartner = (await pool.query(
-          `SELECT id FROM partenaires WHERE id = $1`,
-          [claim.finder_id]
-        )).rows.length > 0;
-
-        // Credit Balance
-        const { walletService } = await import('./wallet.service.ts');
-        if (finderIsPartner) {
-          await walletService.creditPartner(claim.finder_id, rewardAmount, 'DECLARATION_REWARD', {
-            referenceId: claim.id,
-            referenceType: 'claim',
-            metadata: { docId: lostDecl.id }
-          });
-          // Notifier le partenaire de la rémunération
-          await this.notificationService.notifyPartenaireReward(
-            claim.finder_id,
-            rewardAmount,
-            docType.nom,
-            lostDecl.id
-          );
-        } else {
-          await walletService.credit(claim.finder_id, rewardAmount, 'DECLARATION_REWARD', {
-            referenceId: claim.id,
-            referenceType: 'claim',
-            metadata: { docId: lostDecl.id }
-          });
-        }
-        
-        // Credit Points / Earnings / Transactions only for user finders
-        if (!finderIsPartner) {
-          await this.awardPoints(claim.finder_id, pointsReward);
-
-          // Record Transaction
-          await this.transactionRepository.create({
-            user_id: claim.finder_id,
-            amount: rewardAmount,
-            currency: 'XAF',
-            status: 'SUCCESS',
-            payment_method: 'VIRTUAL_WALLET',
-            type: 'finder_payout',
-            metadata: { docId: lostDecl.id, claimId: claim.id }
-          });
-
-          // Record Earnings & Send Notifications
-          const { EarningsService } = await import('./earnings.service.ts');
-          await new EarningsService().recordReturnPoints(
-            claim.finder_id,
-            pointsReward,
-            rewardAmount,
-            { docId: lostDecl.id, claimId: claim.id, docType: docType.nom }
-          );
-        } else {
-          console.log(`🟢 [3.2] Finder est un partenaire — récompense ${rewardAmount} XAF créditée sur wallet partenaire`);
-        }
-
-        // Notify Owner
-        await this.notificationService.notifyDocumentRecovered(claim.owner_id, docType.nom, lostDecl.id);
+        await this.rewardFinderAfterValidation(claim, lostDecl, docType);
       }
     }
 

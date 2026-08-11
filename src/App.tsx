@@ -57,6 +57,8 @@ import { usePartenaireShortcut } from "./hooks/usePartenaireShortcut";
 
 const AdminBroadcast = lazy(() => import("./pages/admin/AdminBroadcast"));
 const AutoriteConnexion = lazy(() => import("./pages/autorites/Connexion"));
+const AutoriteMotDePasseOublie = lazy(() => import("./pages/autorites/MotDePasseOublie"));
+const AutoriteReinitialisationMotDePasse = lazy(() => import("./pages/autorites/ReinitialisationMotDePasse"));
 const AutoriteChangementMotDePasse = lazy(() => import("./pages/autorites/ChangementMotDePasse"));
 const AutoriteDashboard = lazy(() => import("./pages/autorites/Dashboard"));
 const AutoriteDeclarations = lazy(() => import("./pages/autorites/Declarations"));
@@ -64,6 +66,8 @@ const AutoriteGestionAutorites = lazy(() => import("./pages/autorites/GestionAut
 const AutoriteJournalActivite = lazy(() => import("./pages/autorites/JournalActivite"));
 
 const PartenaireConnexion = lazy(() => import("./pages/partenaires/Connexion"));
+const PartenaireMotDePasseOublie = lazy(() => import("./pages/partenaires/MotDePasseOublie"));
+const PartenaireReinitialisationMotDePasse = lazy(() => import("./pages/partenaires/ReinitialisationMotDePasse"));
 const PartenaireChangementMotDePasse = lazy(() => import("./pages/partenaires/ChangementMotDePasse"));
 const PartenaireDashboard = lazy(() => import("./pages/partenaires/Dashboard"));
 const PartenaireDeclarations = lazy(() => import("./pages/partenaires/Declarations"));
@@ -135,6 +139,8 @@ export default function App() {
 
         <Route path="/autorite" element={<AutoriteProvider><Outlet /></AutoriteProvider>}>
           <Route path="connexion" element={<LazyPage Component={AutoriteConnexion} />} />
+          <Route path="mot-de-passe-oublie" element={<LazyPage Component={AutoriteMotDePasseOublie} />} />
+          <Route path="reinitialisation" element={<LazyPage Component={AutoriteReinitialisationMotDePasse} />} />
           <Route
             path="changement-mot-de-passe"
             element={
@@ -160,6 +166,8 @@ export default function App() {
 
         <Route path="/partenaire" element={<PartenaireProvider><Outlet /></PartenaireProvider>}>
           <Route path="connexion" element={<LazyPage Component={PartenaireConnexion} />} />
+          <Route path="mot-de-passe-oublie" element={<LazyPage Component={PartenaireMotDePasseOublie} />} />
+          <Route path="reinitialisation" element={<LazyPage Component={PartenaireReinitialisationMotDePasse} />} />
           <Route
             path="changement-mot-de-passe"
             element={

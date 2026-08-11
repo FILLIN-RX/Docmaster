@@ -11,6 +11,7 @@ import {
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAutorite } from "../../context/AutoriteContext";
+import { useI18n } from "../../context/I18nContext";
 import { autoritePalette } from "../../theme/autorites";
 
 interface AutoriteSidebarProps {
@@ -20,6 +21,7 @@ interface AutoriteSidebarProps {
 
 export default function AutoriteSidebar({ collapsed, onCollapse }: AutoriteSidebarProps) {
   const { autorite, logout } = useAutorite();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -31,11 +33,11 @@ export default function AutoriteSidebar({ collapsed, onCollapse }: AutoriteSideb
   })();
 
   const menuItems = [
-    { key: "dashboard", icon: <DashboardOutlined />, label: "Tableau de bord" },
-    { key: "declarations", icon: <FileProtectOutlined />, label: "Déclarations" },
-    { key: "journal", icon: <HistoryOutlined />, label: "Journal d'activité" },
+    { key: "dashboard", icon: <DashboardOutlined />, label: t("autorite_sidebar_dashboard") },
+    { key: "declarations", icon: <FileProtectOutlined />, label: t("autorite_sidebar_declarations") },
+    { key: "journal", icon: <HistoryOutlined />, label: t("autorite_sidebar_journal") },
     ...(autorite?.niveau === "HAUTE"
-      ? [{ key: "autorites", icon: <TeamOutlined />, label: "Gestion des autorités" }]
+      ? [{ key: "autorites", icon: <TeamOutlined />, label: t("autorite_sidebar_manage") }]
       : []),
   ];
 
@@ -98,7 +100,7 @@ export default function AutoriteSidebar({ collapsed, onCollapse }: AutoriteSideb
               DocMaster
             </Typography.Text>
             <Typography.Text style={{ color: autoritePalette.primaryLight, fontSize: 11, display: "block" }}>
-              Espace Autorité
+              {t("autorite_sidebar_space")}
             </Typography.Text>
           </div>
         )}
@@ -145,18 +147,22 @@ export default function AutoriteSidebar({ collapsed, onCollapse }: AutoriteSideb
           </div>
           <Badge
             status={autorite.niveau === "HAUTE" ? "warning" : "success"}
-            text={<span style={{ color: "#fff", fontSize: 11 }}>Autorité {autorite.niveau === "HAUTE" ? "Haute" : "Niveau"}</span>}
+            text={
+              <span style={{ color: "#fff", fontSize: 11 }}>
+                {autorite.niveau === "HAUTE" ? t("autorite_sidebar_level_haute") : t("autorite_sidebar_level_normal")}
+              </span>
+            }
             style={{ display: "block", marginBottom: 10 }}
           />
           <Button danger block size="small" icon={<LogoutOutlined />} onClick={() => logout()} style={{ fontWeight: 500 }}>
-            Se déconnecter
+            {t("autorite_sidebar_logout")}
           </Button>
         </div>
       )}
 
       {collapsed && (
         <div style={{ padding: "0 0 16px", display: "flex", justifyContent: "center" }}>
-          <Tooltip title="Se déconnecter" placement="right">
+          <Tooltip title={t("autorite_sidebar_logout")} placement="right">
             <Button danger type="text" icon={<LogoutOutlined />} onClick={() => logout()} />
           </Tooltip>
         </div>

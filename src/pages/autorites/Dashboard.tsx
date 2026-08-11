@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { Avatar, Card, Col, Row, Spin, Statistic, Typography, Tag, Space } from "antd";
+import { Trans } from "react-i18next";
+import { Avatar, Card, Col, Row, Spin, Statistic, Typography, Tag, Space, Empty } from "antd";
 import {
   FileProtectOutlined,
   SafetyCertificateOutlined,
   SearchOutlined,
-  FlagOutlined,
   UserOutlined,
   EnvironmentOutlined,
   RiseOutlined,
@@ -16,46 +16,53 @@ import {
 import { BorderBeam } from "antd";
 import { autoritesService, type AutoriteStats, type AutoriteDeclaration } from "../../services/autoritesService";
 import { useAutorite } from "../../context/AutoriteContext";
+import { useI18n } from "../../context/I18nContext";
 import { autoritePalette } from "../../theme/autorites";
 
-const DOC_TYPE_LABELS: Record<string, string> = {
-  "carte-nationale-identite": "Carte Nationale d'Identité",
-  "Carte Nationale d'Identité": "Carte Nationale d'Identité",
-  CNI: "Carte Nationale d'Identité",
-  passeport: "Passeport",
-  permis_conduire: "Permis de conduire",
-  "permis-conduire": "Permis de conduire",
-  "Permis de conduire": "Permis de conduire",
-  carte_grise: "Carte grise",
-  "carte-grise": "Carte grise",
-  "Carte grise": "Carte grise",
-  "titre-foncier": "Titre foncier",
-  "Titre foncier": "Titre foncier",
-  diplome: "Diplôme",
-  "Diplôme": "Diplôme",
-  diploma: "Diplôme",
+const DOC_TYPE_KEYS: Record<string, string> = {
+  "carte-nationale-identite": "mesdocuments_category_cni",
+  "carte nationale d'identité": "mesdocuments_category_cni",
+  cni: "mesdocuments_category_cni",
+  passeport: "mesdocuments_category_passeport",
+  permis_conduire: "mesdocuments_category_permis",
+  "permis-conduire": "mesdocuments_category_permis",
+  "permis de conduire": "mesdocuments_category_permis",
+  carte_grise: "autorite_doc_carte_grise",
+  "carte-grise": "autorite_doc_carte_grise",
+  "carte grise": "autorite_doc_carte_grise",
+  "titre-foncier": "autorite_doc_titre_foncier",
+  "titre foncier": "autorite_doc_titre_foncier",
+  diplome: "mesdocuments_category_diplome",
+  diplôme: "mesdocuments_category_diplome",
+  diploma: "mesdocuments_category_diplome",
 };
-const docTypeName = (t?: string | null): string => {
-  if (!t) return "Document";
-  const n = String(t).toLowerCase();
-  return DOC_TYPE_LABELS[n] || DOC_TYPE_LABELS[t || ""] || t;
-};
-const formatDate = (v?: string | null) => {
-  if (!v) return "—";
-  try {
-    return new Date(v).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
-  } catch {
-    return v;
-  }
+const docTypeKey = (raw?: string | null): string => {
+  if (!raw) return "autorite_dashboard_doc_default";
+  const n = String(raw).toLowerCase();
+  return DOC_TYPE_KEYS[n] || DOC_TYPE_KEYS[String(raw)] || "autorite_dashboard_doc_default";
 };
 
 export default function Dashboard() {
   const { autorite } = useAutorite();
+  const { t, lang } = useI18n();
   const [stats, setStats] = useState<AutoriteStats | null>(null);
   const [recent, setRecent] = useState<AutoriteDeclaration[]>([]);
   const [recentLoading, setRecentLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const formatDate = (v?: string | null) => {
+    if (!v) return "—";
+    try {
+      return new Date(v).toLocaleDateString(lang === "ar" ? "ar" : lang === "en" ? "en" : "fr-FR", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    } catch {
+      return v;
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -65,7 +72,7 @@ export default function Dashboard() {
         if (!cancelled) setStats(res.data.data);
       })
       .catch((err: any) => {
-        if (!cancelled) setError(err?.response?.data?.message || "Impossible de charger les statistiques.");
+        if (!cancelled) setError(err?.response?.data?.message || t("autorite_dashboard_stats_error"));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -111,11 +118,10 @@ export default function Dashboard() {
   }
 
   const cards = [
-    { title: "Déclarations totales", value: stats?.total ?? 0, icon: <FileProtectOutlined />, color: autoritePalette.primary },
-    { title: "Certifiées", value: stats?.certified ?? 0, icon: <SafetyCertificateOutlined />, color: autoritePalette.success },
-    { title: "Perdues", value: stats?.lost ?? 0, icon: <SearchOutlined />, color: autoritePalette.primaryDark },
-    { title: "Trouvées", value: stats?.found ?? 0, icon: <FlagOutlined />, color: autoritePalette.greenMid },
-    { title: "Certifiées par moi", value: stats?.by_me ?? 0, icon: <RiseOutlined />, color: autoritePalette.greenDark },
+    { title: t("autorite_dashboard_cards_total"), value: stats?.total ?? 0, icon: <FileProtectOutlined />, color: autoritePalette.primary },
+    { title: t("autorite_dashboard_cards_certified"), value: stats?.certified ?? 0, icon: <SafetyCertificateOutlined />, color: autoritePalette.success },
+    { title: t("autorite_dashboard_cards_lost"), value: stats?.lost ?? 0, icon: <SearchOutlined />, color: autoritePalette.primaryDark },
+    { title: t("autorite_dashboard_cards_by_me"), value: stats?.by_me ?? 0, icon: <RiseOutlined />, color: autoritePalette.greenDark },
   ];
 
   const certifiedRate = stats && stats.total > 0 ? Math.round((stats.certified / stats.total) * 100) : 0;
@@ -146,7 +152,7 @@ export default function Dashboard() {
             </Typography.Title>
             <Space size={8} wrap style={{ marginTop: 4 }}>
               <Tag color={autorite?.niveau === "HAUTE" ? "warning" : "green"} style={{ fontWeight: 500 }}>
-                {autorite?.niveau === "HAUTE" ? "Autorité Haute" : "Autorité de niveau"}
+                {autorite?.niveau === "HAUTE" ? t("autorite_dashboard_badge_haute") : t("autorite_dashboard_badge_normal")}
               </Tag>
               <Tag icon={<EnvironmentOutlined />} style={{ color: autoritePalette.textMuted }}>
                 {autorite?.ville}
@@ -156,7 +162,7 @@ export default function Dashboard() {
           </div>
           <div style={{ marginLeft: "auto", textAlign: "right" }}>
             <Typography.Text type="secondary" style={{ display: "block", fontSize: 12 }}>
-              Taux de certification
+              {t("autorite_dashboard_rate_label")}
             </Typography.Text>
             <Typography.Title level={3} style={{ margin: 0, color: autoritePalette.primary }}>
               {certifiedRate}%
@@ -204,17 +210,17 @@ export default function Dashboard() {
             </div>
             <div>
               <Typography.Title level={5} style={{ margin: 0, color: autoritePalette.greenDark }}>
-                Déclarations récentes
+                {t("autorite_dashboard_recent_title")}
               </Typography.Title>
               <Typography.Text style={{ fontSize: 12, color: autoritePalette.textMuted }}>
-                Les dernières déclarations de votre juridiction
+                {t("autorite_dashboard_recent_subtitle")}
               </Typography.Text>
             </div>
             <a
               href="/autorite/declarations"
               style={{ marginLeft: 16, fontSize: 13, fontWeight: 500, color: autoritePalette.primaryDark }}
             >
-              Tout voir <ArrowRightOutlined style={{ fontSize: 11 }} />
+              {t("autorite_dashboard_recent_view_all")} <ArrowRightOutlined style={{ fontSize: 11 }} />
             </a>
           </Space>
         </Space>
@@ -232,7 +238,7 @@ export default function Dashboard() {
                 <div style={{ textAlign: "center", padding: "28px 0" }}>
                   <EnvironmentOutlined style={{ fontSize: 34, color: autoritePalette.textMuted }} />
                   <Typography.Text style={{ display: "block", marginTop: 10, color: autoritePalette.textMuted }}>
-                    Aucune déclaration récente dans votre zone pour le moment.
+                    {t("autorite_dashboard_recent_empty")}
                   </Typography.Text>
                 </div>
               </Card>
@@ -279,7 +285,7 @@ export default function Dashboard() {
                                   fontWeight: 600,
                                 }}
                               >
-                                Certifiée
+                                {t("autorite_status_certified")}
                               </Tag>
                             ) : (
                               <Tag
@@ -291,7 +297,7 @@ export default function Dashboard() {
                                   fontWeight: 500,
                                 }}
                               >
-                                Non certifiée
+                                {t("autorite_status_not_certified")}
                               </Tag>
                             )}
                             <Tag
@@ -303,18 +309,18 @@ export default function Dashboard() {
                                 fontWeight: 600,
                               }}
                             >
-                              {isLost ? "Perdu" : "Trouvé"}
+                              {isLost ? t("autorite_status_lost") : t("autorite_status_found")}
                             </Tag>
                           </div>
                           <Typography.Text strong style={{ fontSize: 14, color: autoritePalette.textMain, display: "block", marginTop: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {docTypeName(decl.doc_type_nom || decl.doc_type)}
+                            {t(docTypeKey(decl.doc_type_nom || decl.doc_type))}
                           </Typography.Text>
                         </div>
                       </Space>
 
                       <div style={{ marginBottom: 8 }}>
                         <Typography.Text style={{ fontSize: 14, fontWeight: 600, color: autoritePalette.greenDark, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {decl.owner_name || "Déclarant inconnu"}
+                          {decl.owner_name || t("autorite_dashboard_declarant_unknown")}
                         </Typography.Text>
                         <Typography.Text style={{ fontSize: 12, color: autoritePalette.textMuted }}>
                           {decl.document_number || "—"}
@@ -325,7 +331,7 @@ export default function Dashboard() {
                         <Space size={5} align="center">
                           <HomeOutlined style={{ fontSize: 12, color: autoritePalette.textMuted }} />
                           <Typography.Text style={{ fontSize: 12, color: autoritePalette.textMuted }}>
-                            {[decl.ville, decl.region].filter(Boolean).join(", ") || "Localisation inconnue"}
+                            {[decl.ville, decl.region].filter(Boolean).join(", ") || t("autorite_dashboard_location_unknown")}
                           </Typography.Text>
                         </Space>
                         <Space size={5} align="center">
@@ -347,12 +353,12 @@ export default function Dashboard() {
                       >
                         <Typography.Text style={{ fontSize: 11, color: isLost && decl.finder_name ? "#3B82F6" : autoritePalette.textMuted }}>
                           {isLost && decl.finder_name
-                            ? `Trouvé par ${decl.finder_name}`
+                            ? t("autorite_dashboard_found_by", { name: decl.finder_name })
                             : decl.reporter_nom
-                              ? `Par ${decl.reporter_prenom || ""} ${decl.reporter_nom}`
+                              ? t("autorite_dashboard_reported_by", { name: `${decl.reporter_prenom || ""} ${decl.reporter_nom}`.trim() })
                               : isLost
-                                ? "Signalé perdu"
-                                : "Signalé trouvé"}
+                                ? t("autorite_dashboard_reported_lost")
+                                : t("autorite_dashboard_reported_found")}
                         </Typography.Text>
                         <Typography.Text style={{ fontSize: 11, fontWeight: 600, color: autoritePalette.primaryDark }}>
                           {decl.identifiant_doc_dm || decl.id.slice(0, 8)}
@@ -371,19 +377,26 @@ export default function Dashboard() {
         style={{ marginTop: 20, borderRadius: 10, border: `1px solid ${autoritePalette.border}` }}
         title={
           <Typography.Text strong style={{ color: autoritePalette.greenDark }}>
-            Aperçu de votre juridiction
+            {t("autorite_dashboard_jurisdiction_title")}
           </Typography.Text>
         }
       >
         <Space direction="vertical" size={6}>
-          <Typography.Text style={{ color: autoritePalette.textMain }}>
-            En tant qu'<b>{autorite?.niveau === "HAUTE" ? "autorité haute" : "autorité"}</b> de{" "}
-            <b>{autorite?.ville}</b>, vous pouvez certifier les déclarations de documents perdus ou trouvés.
+          <Typography.Text
+            style={{ color: autoritePalette.textMain }}
+          >
+            <Trans
+              i18nKey="autorite_dashboard_jurisdiction_desc"
+              values={{
+                niveau: autorite?.niveau === "HAUTE" ? t("autorite_dashboard_jurisdiction_niveau_haute") : t("autorite_dashboard_jurisdiction_niveau_normal"),
+                ville: autorite?.ville || "",
+              }}
+            />
           </Typography.Text>
           <Typography.Text type="secondary">
             {autorite?.niveau === "HAUTE"
-              ? "Vous avez accès à l'ensemble des déclarations sur tout le territoire."
-              : "Votre accès couvre uniquement les déclarations de votre ville."}
+              ? t("autorite_dashboard_jurisdiction_access_haute")
+              : t("autorite_dashboard_jurisdiction_access_normal")}
           </Typography.Text>
         </Space>
       </Card>

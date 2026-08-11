@@ -147,6 +147,58 @@ export class PartenaireService {
   }
 
   /**
+   * Forgot password: generate a reset token and send the reset link by email
+   */
+  async requestPasswordReset(email: string) {
+    const profile = await this.repository.findByEmail(email);
+    if (!profile) {
+      throw new Error('Aucun compte partenaire avec cet email');
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date();
+    expires.setHours(expires.getHours() + 24);
+
+    await this.repository.setPasswordResetToken(profile.id, token, expires);
+
+    try {
+      await this.mailService.sendPortalPasswordResetEmail(
+        profile.email,
+        token,
+        'partenaire'
+      );
+    } catch (err: any) {
+      console.error('❌ [Partenaires] Email réinitialisation échoué:', err.message);
+    }
+
+    return { success: true, message: 'Email de réinitialisation envoyé si un compte existe' };
+  }
+
+  /**
+   * Reset the password with a valid token
+   */
+  async resetPassword(token: string, nouveauMotDePasse: string) {
+    if (!nouveauMotDePasse || nouveauMotDePasse.length < 8) {
+      throw new Error('Le nouveau mot de passe doit contenir au moins 8 caractères');
+    }
+
+    const profile = await this.repository.findByResetToken(token);
+    if (!profile) {
+      throw new Error('Lien de réinitialisation invalide ou expiré');
+    }
+
+    const hashed = await argon2.hash(nouveauMotDePasse);
+    await this.repository.updatePassword(profile.id, hashed);
+    await this.repository.clearPasswordResetToken(profile.id);
+
+    return {
+      success: true,
+      message: 'Mot de passe réinitialisé avec succès',
+      partenaire: { id: profile.id, email: profile.email },
+    };
+  }
+
+  /**
    * Get partner profile by partenaire id
    */
   async findById(id: string) {

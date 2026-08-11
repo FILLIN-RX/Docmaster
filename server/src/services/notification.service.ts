@@ -414,6 +414,84 @@ export class NotificationService {
     });
   }
 
+  /**
+   * Notifie les autorités de la zone concernée lorsqu'une nouvelle déclaration
+   * (perte ou trouvaille) est enregistrée.
+   * NORMAL : autorités de la même ville.
+   * HAUTE  : autorités de la même région (ou ville si région absente).
+   */
+  async notifyAutoritesZone(declaration: any) {
+    try {
+      const ville = (declaration.ville || '').trim();
+      const region = (declaration.region || '').trim();
+      if (!ville && !region) return;
+
+      const { rows } = await pool.query(
+        `
+        SELECT id FROM autorites
+        WHERE is_active = true
+          AND (
+            (
+              niveau = 'NORMAL'
+              AND ville IS NOT NULL
+              AND $1 <> ''
+              AND (
+                LOWER(ville) = LOWER($1)
+                OR LOWER(ville) LIKE '%' || LOWER($1) || '%'
+                OR LOWER($1) LIKE '%' || LOWER(ville) || '%'
+              )
+            )
+            OR (
+              niveau = 'HAUTE'
+              AND (
+                (region IS NOT NULL AND $2 <> '' AND (
+                  LOWER(region) = LOWER($2)
+                  OR LOWER(region) LIKE '%' || LOWER($2) || '%'
+                  OR LOWER($2) LIKE '%' || LOWER(region) || '%'
+                ))
+                OR (ville IS NOT NULL AND $1 <> '' AND (
+                  LOWER(ville) = LOWER($1)
+                  OR LOWER(ville) LIKE '%' || LOWER($1) || '%'
+                  OR LOWER($1) LIKE '%' || LOWER(ville) || '%'
+                ))
+              )
+            )
+          )
+        `,
+        [ville, region || '']
+      );
+
+      const isLost = declaration.declaration_type === 'LOST';
+      const typeLabel = isLost ? 'perte' : 'trouvaille';
+      const docType = declaration.doc_type_name || declaration.doc_type || 'document';
+
+      for (const row of rows) {
+        try {
+          await this.createNotification({
+            destinataire_type: 'AUTORITE',
+            destinataire_id: row.id,
+            type: 'NEW_DECLARATION_ZONE',
+            title: `Nouvelle déclaration dans votre zone`,
+            message: `Une déclaration de ${typeLabel} (${docType}) a été enregistrée${ville ? ` à ${ville}` : ''}.`,
+            metadata: {
+              declaration_id: declaration.id,
+              identifiant_doc_dm: declaration.identifiant_doc_dm || null,
+              docType,
+              ville,
+              region,
+              declaration_type: declaration.declaration_type,
+              action: 'ZONE_NEW_DECLARATION'
+            }
+          });
+        } catch (err) {
+          console.error('Error notifying autorite of zone declaration:', err);
+        }
+      }
+    } catch (error: any) {
+      console.error('Error notifying autorites zone:', error);
+    }
+  }
+
   // ─────────────────────────────────────────────────────────
   // Notifications admin (existant)
   // ─────────────────────────────────────────────────────────

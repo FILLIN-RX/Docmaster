@@ -2,6 +2,7 @@ import PDFDocument from 'pdfkit';
 import { Response } from 'express';
 import path from 'path';
 import fs from 'fs';
+import { pdfModule } from '../modules/pdf/pdf.module.ts';
 
 // ─── Palette Premium & Minimaliste ────────────────────────────────────────────
 const C = {
@@ -57,6 +58,23 @@ const DOC_TYPE_NOMS: Record<string, string> = {
 
 export class PdfService {
   async generateDeclarationPdf(declaration: any, res: Response): Promise<void> {
+    // 1. Rendu premium Puppeteer (Chromium headless) — les en-têtes HTTP
+    //    sont déjà posés par le contrôleur, on envoie directement le Buffer.
+    try {
+      const declarationType: 'LOST' | 'FOUND' =
+        declaration?.declaration_type === 'FOUND' ? 'FOUND' : 'LOST';
+      const buffer = await pdfModule.generateDeclarationPdf(declaration, declarationType);
+      res.end(buffer);
+      return;
+    } catch (err: any) {
+      console.warn('[PdfService] Rendu Puppeteer indisponible, bascule pdfkit :', err?.message || err);
+    }
+
+    // 2. Fallback pdfkit (comportement historique)
+    return this.generateWithPdfkit(declaration, res);
+  }
+
+  private async generateWithPdfkit(declaration: any, res: Response): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
         const doc = new PDFDocument({
@@ -215,15 +233,6 @@ export class PdfService {
             .text(val(declaration?.description, '—'), ML + 8, y + 20, { width: CW - 16, lineGap: 3 });
           return y + descH;
         })();
-
-        // ── Récompense éventuelle ──
-        if (declaration?.recompense_montant && parseFloat(declaration.recompense_montant) > 0) {
-          y += 10;
-          doc.roundedRect(ML, y, CW, 22, 6).fill(C.warningLight).strokeColor('#FCD34D').lineWidth(0.6).stroke();
-          doc.font('Helvetica-Bold').fontSize(8).fillColor('#B45309')
-            .text(`RÉCOMPENSE OFFERTE : ${Number(declaration.recompense_montant).toLocaleString('fr-FR')} FCFA`, ML + 14, y + 6, { width: CW - 28 });
-          y += 24;
-        }
 
         y += 10;
 

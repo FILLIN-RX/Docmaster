@@ -3,6 +3,7 @@ import {
   useLocations,
   type LocationState,
 } from "../../hooks/useLocations";
+import { useI18n } from "../../context/I18nContext";
 
 interface AntdLocationSelectProps {
   value?: LocationState;
@@ -15,6 +16,7 @@ export default function AntdLocationSelect({
   onChange,
   showArrondissement = true,
 }: AntdLocationSelectProps) {
+  const { t } = useI18n();
   const {
     regions,
     departments,
@@ -71,9 +73,9 @@ export default function AntdLocationSelect({
   return (
     <div style={{ display: "grid", gridTemplateColumns: showArrondissement ? "1fr 1fr 1fr" : "1fr 1fr", gap: 12 }}>
       <div style={{ minWidth: 0 }}>
-        <label style={labelStyle}>Région</label>
+        <label style={labelStyle}>{t("location_region")}</label>
         <Select
-          placeholder="Région"
+          placeholder={t("location_region")}
           options={regionOptions}
           value={region || undefined}
           onChange={handleRegion}
@@ -86,9 +88,9 @@ export default function AntdLocationSelect({
         />
       </div>
       <div style={{ minWidth: 0 }}>
-        <label style={labelStyle}>Département</label>
+        <label style={labelStyle}>{t("location_department")}</label>
         <Select
-          placeholder={region ? "Département" : "Choisir région d'abord"}
+          placeholder={region ? t("location_department") : t("location_choose_region_first")}
           options={deptOptions}
           value={department || undefined}
           onChange={handleDepartment}
@@ -103,9 +105,9 @@ export default function AntdLocationSelect({
       </div>
       {showArrondissement && (
         <div style={{ minWidth: 0 }}>
-          <label style={labelStyle}>Arrondissement</label>
+          <label style={labelStyle}>{t("location_arrondissement")}</label>
           <Select
-            placeholder={department ? "Arrondissement" : "Choisir département"}
+            placeholder={department ? t("location_arrondissement") : t("location_choose_department")}
             options={arrOptions}
             value={arrondissement || undefined}
             onChange={handleArrondissement}

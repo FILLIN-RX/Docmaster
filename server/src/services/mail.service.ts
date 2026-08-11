@@ -86,6 +86,57 @@ export class MailService {
   }
 
   /**
+   * Send a password reset email for an authority or partner portal
+   */
+  async sendPortalPasswordResetEmail(to: string, token: string, portal: "autorite" | "partenaire"): Promise<void> {
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3003';
+    const resetUrl = `${baseUrl}/${portal}/reinitialisation?token=${token}`;
+    const fromEmail = process.env.MAIL_FROM || process.env.MAIL_USER || 'assistance@dm.cm';
+    const portalLabel = portal === 'autorite' ? 'espace autorité' : 'espace partenaire';
+
+    const mailOptions = {
+      from: `${fromEmail}`,
+      to,
+      subject: 'Réinitialisation de votre mot de passe | DocMaster',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e0d8; border-radius: 14px;">
+          <h2 style="color: #f5a64b; text-align: center;">Réinitialisation de mot de passe</h2>
+          <p>Bonjour,</p>
+          <p>Vous avez demandé la réinitialisation du mot de passe de votre <strong>${portalLabel}</strong> DocMaster. Veuillez cliquer sur le bouton ci-dessous pour procéder :</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" style="background-color: #f5a64b; color: white; padding: 14px 25px; text-decoration: none; border-radius: 10px; font-weight: bold; display: inline-block;">Réinitialiser mon mot de passe</a>
+          </div>
+          <p>Ce lien expirera dans 24 heures.</p>
+          <p>Si vous n'avez pas demandé cette action, vous pouvez ignorer cet email en toute sécurité.</p>
+          <hr style="border: 0; border-top: 1px solid #e5e0d8; margin: 20px 0;">
+          <p style="font-size: 12px; color: #8e8e8e; text-align: center;">
+            &copy; ${new Date().getFullYear()} DocMaster. Tous droits réservés.
+          </p>
+        </div>
+      `,
+    };
+
+    try {
+      await this.transporter.sendMail(mailOptions);
+      console.log(`📧 Email de réinitialisation (${portal}) envoyé à : ${to}`);
+    } catch (error: any) {
+      console.error(`❌ Erreur lors de l'envoi de l'email à ${to}:`, error.message);
+      if (error.message.includes('550')) {
+        console.log('🔄 Tentative d\'envoi avec l\'adresse email brute...');
+        try {
+          mailOptions.from = fromEmail;
+          await this.transporter.sendMail(mailOptions);
+          console.log(`📧 Email envoyé avec succès (fallback brut) à : ${to}`);
+          return;
+        } catch (e: any) {
+          console.error('❌ Échec définitif de l\'envoi (fallback compris):', e.message);
+        }
+      }
+      throw new Error('Impossible d\'envoyer l\'email de réinitialisation.');
+    }
+  }
+
+  /**
    * Send a welcome email
    */
   async sendWelcomeEmail(to: string, name: string): Promise<void> {

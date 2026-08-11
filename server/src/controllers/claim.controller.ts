@@ -1,18 +1,12 @@
 import { Request, Response } from 'express';
 import { ClaimRepository } from '../repositories/claim.repository.ts';
 import { DeclarationRepository } from '../repositories/declaration.repository.ts';
-import { NotificationService } from '../services/notification.service.ts';
 import { MatchRepository } from '../repositories/match.repository.ts';
-import { UserRepository } from '../repositories/auth.repository.ts';
 import { DocumentTypeRepository } from '../repositories/document-type.repository.ts';
-import { v4 as uuidv4 } from 'uuid';
-import { query } from '../database/db.ts';
 
 const claimRepo = new ClaimRepository();
 const declRepo = new DeclarationRepository();
-const notifService = new NotificationService();
 const matchRepo = new MatchRepository();
-const userRepo = new UserRepository();
 const docTypeRepo = new DocumentTypeRepository();
 
 export class ClaimController {
@@ -113,66 +107,14 @@ export class ClaimController {
         }
       }
 
-      // 6. Notify the owner and credit reward to finder
-      if (lostDecl) {
-        await notifService.notifyDocumentRecovered(
-          claim.owner_id,
-          lostDecl.doc_type,
-          lostDecl.id
-        );
-
-        // Calculate and credit reward to finder (XAF and Points)
+      // 6. Notify the owner and credit reward to finder (user wallet or partner wallet)
+      if (lostDecl && claim.finder_id) {
         // Fetch document type to get commission details
         const docType = await docTypeRepo.findById(lostDecl.doc_type);
-        
-        if (docType && claim.finder_id) {
-          const basePrice = Number(docType.prix_retrouvaille) || 5000;
-          const finderPercent = Number(docType.finder_percent) || 80;
-          const pointsReward = Number(docType.points_recompense) || 20;
-          
-          const finderRewardAmount = (basePrice * finderPercent) / 100;
 
-          // 1. Credit wallet
-          const { walletService } = await import('../services/wallet.service.ts');
-          await walletService.credit(claim.finder_id, finderRewardAmount, 'DECLARATION_REWARD', {
-            referenceId: claim.id,
-            referenceType: 'claim',
-            metadata: { docId: lostDecl.id }
-          });
-          
-          // 2. Create transaction record (payout)
-          await query(
-            `INSERT INTO transactions (id, user_id, amount, currency, status, payment_method, type, metadata) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-            [
-              uuidv4(),
-              claim.finder_id,
-              finderRewardAmount,
-              'XAF',
-              'SUCCESS',
-              'VIRTUAL_WALLET',
-              'finder_payout',
-              JSON.stringify({ 
-                docId: lostDecl.id, 
-                claimId: claim.id,
-                note: `Récompense pour remise de ${docType.nom}`
-              })
-            ]
-          );
-
-          // 3. Award points
-          await userRepo.updatePoints(claim.finder_id, pointsReward);
-
-          // 4. Record earnings history + send notifications
-          const { EarningsService } = await import('../services/earnings.service.ts');
-          await new EarningsService().recordReturnPoints(
-            claim.finder_id,
-            pointsReward,
-            finderRewardAmount,
-            { docId: lostDecl.id, claimId: claim.id, docType: docType.nom }
-          );
-          
-          console.log(`💰 [Claim] Finder ${claim.finder_id} rewarded with ${finderRewardAmount} XAF and ${pointsReward} pts after validation.`);
+        if (docType) {
+          const { DeclarationService } = await import('../services/declaration.service.ts');
+          await new DeclarationService().rewardFinderAfterValidation(claim, lostDecl, docType);
         }
       }
 

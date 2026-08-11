@@ -26,10 +26,15 @@ autoritesApi.interceptors.request.use((config) => {
 autoritesApi.interceptors.response.use(
   (response) => response,
   (error) => {
+    const PUBLIC_AUTH_PATHS = [
+      "/autorite/connexion",
+      "/autorite/mot-de-passe-oublie",
+      "/autorite/reinitialisation",
+    ];
     if (error.response?.status === 401) {
       deleteToken();
     }
-    if (error.response?.status === 401 && !window.location.pathname.includes("/autorite/connexion")) {
+    if (error.response?.status === 401 && !PUBLIC_AUTH_PATHS.some((p) => window.location.pathname.startsWith(p))) {
       window.location.href = "/autorite/connexion";
     }
     return Promise.reject(error);
@@ -89,9 +94,12 @@ export interface AutoriteDeclaration {
   certified_at?: string | null;
   certified_by_nom?: string | null;
   certified_by_prenom?: string | null;
+  reporter_type?: string | null;
   reporter_nom?: string | null;
   reporter_prenom?: string | null;
+  reporter_partenaire_nom?: string | null;
   finder_name?: string | null;
+  found_location_label?: string | null;
   created_at: string;
 }
 
@@ -135,6 +143,17 @@ export const autoritesService = {
     return autoritesApi.post<{ success: boolean; message: string }>("/logout");
   },
 
+  forgotPassword(email: string) {
+    return autoritesApi.post<{ success: boolean; message: string }>("/forgot-password", { email });
+  },
+
+  resetPassword(token: string, nouveauMotDePasse: string) {
+    return autoritesApi.post<{ success: boolean; message: string }>("/reset-password", {
+      token,
+      nouveau_mot_de_passe: nouveauMotDePasse,
+    });
+  },
+
   me() {
     return autoritesApi.get<{ success: boolean; data: AutoriteSession }>("/me");
   },
@@ -169,13 +188,23 @@ export const autoritesService = {
     limit?: number;
     offset?: number;
     search?: string;
-    declaration_type?: string;
     status?: string;
     is_certified?: boolean;
+    pays?: string;
+    region?: string;
+    date_from?: string;
+    date_to?: string;
+    sort?: "asc" | "desc";
   }) {
     return autoritesApi.get<{ success: boolean; count: number; data: AutoriteDeclaration[] }>("/declarations", {
       params,
     });
+  },
+
+  getDeclarationOptions() {
+    return autoritesApi.get<{ success: boolean; data: { pays: string[]; regions: string[] } }>(
+      "/declarations/options"
+    );
   },
 
   certify(declarationId: string) {
@@ -194,6 +223,20 @@ export const autoritesService = {
     return autoritesApi.post<{ success: boolean; message: string; data: AutoriteDeclaration }>(
       `/declarations/${declarationId}/uncertify`
     );
+  },
+
+  getNotifications() {
+    return autoritesApi.get<{ success: boolean; data: any[]; count: number; unreadCount: number }>(
+      "/notifications"
+    );
+  },
+
+  markNotificationRead(id: string) {
+    return autoritesApi.patch<{ success: boolean; message: string }>(`/notifications/${id}/read`);
+  },
+
+  markAllNotificationsRead() {
+    return autoritesApi.patch<{ success: boolean; message: string }>("/notifications/read-all");
   },
 };
 

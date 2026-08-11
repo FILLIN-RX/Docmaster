@@ -1,4 +1,4 @@
-import { jsPDF } from "jspdf";
+import { jsPDF, GState } from "jspdf";
 
 export interface DeclarationPDFData {
   ref: string;
@@ -12,7 +12,9 @@ export interface DeclarationPDFData {
   urgence: string;
   telephone: string;
   email: string;
-  recompense: string;
+  certifie?: boolean;
+  certifie_par?: string | null;
+  certifie_le?: string | null;
 }
 
 interface DocumentPDFData {
@@ -130,134 +132,226 @@ export function generateDeclarationPDF(data: DeclarationPDFData) {
   const pdf = new jsPDF();
 
   const pageW = 210;
-  let y = 20;
+  const pageH = 297;
+  const mL = 20;
+  const mR = 20;
+  const contentW = pageW - mL - mR;
+  const certifie = !!data.certifie;
+  const certifiePar = data.certifie_par || "Autorité DocMaster";
+  const certifieLe = data.certifie_le || "";
 
-  function header() {
-    pdf.setFillColor(30, 58, 47);
-    pdf.rect(0, 0, pageW, 50, "F");
-    pdf.setFillColor(245, 166, 75);
-    pdf.rect(0, 50, pageW, 3, "F");
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(22);
-    pdf.text("DOCMASTER", 105, 22, { align: "center" });
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(9);
-    pdf.text("DÉCLARATION DE PERTE DE DOCUMENT", 105, 34, { align: "center" });
+  let y = 0;
+
+  function setY(v: number) {
+    y = v;
   }
 
-  function footer() {
-    const pages = pdf.internal.getNumberOfPages();
-    for (let i = 1; i <= pages; i++) {
-      pdf.setPage(i);
-      pdf.setFillColor(30, 58, 47);
-      pdf.rect(0, 285, pageW, 12, "F");
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(7);
-      pdf.text(`DocMaster — ${data.ref} — Généré le ${data.date}`, 105, 293, { align: "center" });
+  function ensureSpace(needed: number) {
+    if (y + needed > 265) {
+      pdf.addPage();
+      y = 28;
     }
   }
 
-  function section(title: string) {
-    y += 6;
-    pdf.setFillColor(245, 166, 75);
-    pdf.rect(20, y, 3, 10, "F");
-    pdf.setTextColor(30, 58, 47);
+  function drawWatermark() {
+    pdf.setGState(new GState({ opacity: 0.12 }));
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(72);
+    pdf.setTextColor(120, 120, 120);
+    pdf.text("CERTIFIÉ", pageW / 2, 150, { align: "center", angle: 35 });
+    pdf.setGState(new GState({ opacity: 1 }));
+  }
+
+  function footerOnPage(pageIndex: number) {
+    pdf.setPage(pageIndex);
+    pdf.setDrawColor(180, 180, 180);
+    pdf.setLineWidth(0.4);
+    pdf.line(mL, pageH - 16, pageW - mR, pageH - 16);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(6.5);
+    pdf.setTextColor(130, 130, 130);
+    pdf.text(`Généré électroniquement par DocMaster — Réf: ${data.ref} — ${data.date}`, pageW / 2, pageH - 11, { align: "center" });
+    pdf.setFontSize(6);
+    pdf.setFont("helvetica", "italic");
+    pdf.text("Ce document est une attestation de déclaration. Toute falsification engage la responsabilité de son auteur.", pageW / 2, pageH - 7, { align: "center" });
+  }
+
+  function header() {
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(13);
-    pdf.text(title, 27, y + 8);
-    y += 14;
+    pdf.setTextColor(20, 20, 20);
+    pdf.text("DOCMASTER", mL, 22);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(7);
+    pdf.setTextColor(110, 110, 110);
+    pdf.text("PLATEFORME DE GESTION DOCUMENTAIRE", mL, 28);
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+    pdf.setTextColor(90, 90, 90);
+    pdf.text(`Réf: ${data.ref}`, pageW - mR, 22, { align: "right" });
+    pdf.text(`Date: ${data.date}`, pageW - mR, 28, { align: "right" });
+
+    pdf.setDrawColor(30, 30, 30);
+    pdf.setLineWidth(1.1);
+    pdf.line(mL, 35, pageW - mR, 35);
+    pdf.setLineWidth(0.3);
+    pdf.line(mL, 37, pageW - mR, 37);
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(15);
+    pdf.setTextColor(15, 15, 15);
+    pdf.text("DÉCLARATION DE PERTE DE DOCUMENT", pageW / 2, 47, { align: "center" });
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+    pdf.setTextColor(90, 90, 90);
+    pdf.text("ATTESTATION OFFICIELLE DE DÉCLARATION", pageW / 2, 53, { align: "center" });
+    setY(61);
+  }
+
+  function section(title: string) {
+    ensureSpace(20);
+    y += 2;
+    pdf.setFillColor(243, 243, 245);
+    pdf.setDrawColor(190, 190, 195);
+    pdf.setLineWidth(0.4);
+    pdf.rect(mL, y, contentW, 8, "FD");
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(9);
+    pdf.setTextColor(20, 20, 20);
+    pdf.text(title, mL + 4, y + 5.7);
+    y += 10;
   }
 
   function field(label: string, value: string) {
-    pdf.setTextColor(107, 114, 128);
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(9);
-    pdf.text(label, 25, y);
-    pdf.setTextColor(26, 26, 26);
+    ensureSpace(7);
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(10);
-    pdf.text(value || "—", 70, y);
-    y += 7;
+    pdf.setFontSize(6.5);
+    pdf.setTextColor(110, 110, 110);
+    pdf.text(label, mL + 2, y);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9.5);
+    pdf.setTextColor(20, 20, 20);
+    const maxW = contentW - 62;
+    const lines = pdf.splitTextToSize(value || "—", maxW);
+    pdf.text(lines, mL + 64, y);
+    y += 1 + lines.length * 3.9;
   }
 
   function divider() {
     y += 2;
-    pdf.setDrawColor(234, 227, 216);
-    pdf.line(20, y, 190, y);
-    y += 5;
+    pdf.setDrawColor(210, 210, 215);
+    pdf.setLineWidth(0.3);
+    pdf.line(mL, y, pageW - mR, y);
+    y += 3;
   }
 
   header();
 
-  y = 62;
-  pdf.setTextColor(107, 114, 128);
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(8);
-  pdf.text(`Réf: ${data.ref}`, 190, y, { align: "right" });
-  y += 4;
-  pdf.text(`Date: ${data.date}`, 190, y, { align: "right" });
-  y += 10;
-
-  section("Informations du déclarant");
-  field("Déclarant", data.pour_soi ? "Pour moi-même" : "Pour une autre personne");
-  field("Contact", `${data.telephone}${data.email ? ` / ${data.email}` : ""}`);
-  y += 4;
+  section("1. INFORMATIONS DU DÉCLARANT");
+  field("DÉCLARANT", data.pour_soi ? "Pour moi-même" : "Pour une autre personne");
+  field("NOM DU PROPRIÉTAIRE", data.proprietaire);
+  field("CONTACT", `${data.telephone || "—"}${data.email ? ` / ${data.email}` : ""}`);
+  y += 3;
 
   divider();
-  section("Document(s) concerné(s)");
+  section("2. DOCUMENT(S) CONCERNÉ(S)");
 
   data.documents.forEach((d, i) => {
+    ensureSpace(30);
     if (i > 0) y += 2;
-    pdf.setFillColor(245, 166, 75);
-    pdf.setDrawColor(245, 166, 75);
-    pdf.roundedRect(22, y - 1, 166, 6, 1, 1, "S");
-    pdf.setTextColor(30, 58, 47);
+    pdf.setDrawColor(190, 190, 195);
+    pdf.setLineWidth(0.3);
+    pdf.setFillColor(250, 250, 250);
+    pdf.rect(mL, y, contentW, 7, "FD");
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(9);
-    pdf.text(`${i + 1}. ${d.label}`, 26, y + 3);
+    pdf.setTextColor(20, 20, 20);
+    pdf.text(`${i + 1}. ${d.label}`, mL + 3, y + 5);
     y += 9;
-    field("Nom sur le document", d.nom_complet);
-    field("Numéro", d.numero);
-    field("Date de délivrance", d.date_delivrance);
-    field("Date d'expiration", d.date_expiration);
-    y += 2;
+    field("NOM SUR LE DOCUMENT", d.nom_complet);
+    field("NUMÉRO", d.numero);
+    field("DATE DE DÉLIVRANCE", d.date_delivrance);
+    field("DATE D'EXPIRATION", d.date_expiration);
   });
 
   divider();
-  section("Circonstances de la perte");
-  field("Date de perte", data.date_perte);
-  field("Lieu", data.lieu_perte);
-  field("Circonstances", data.circonstances || "Non spécifiées");
-  field("Urgence", data.urgence);
-  if (data.recompense) field("Récompense", `${data.recompense} FCFA`);
+  section("3. CIRCONSTANCES DE LA PERTE");
+  field("DATE DE PERTE", data.date_perte);
+  field("LIEU", data.lieu_perte);
+  field("CIRCONSTANCES", data.circonstances || "Non spécifiées");
 
-  y += 6;
-  divider();
+  y += 5;
 
-  pdf.setDrawColor(234, 227, 216);
-  pdf.line(50, y, 160, y);
-  y += 4;
-  pdf.setTextColor(107, 114, 128);
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(8);
-  pdf.text("Signature du déclarant", 105, y, { align: "center" });
+  ensureSpace(58);
 
-  if (y > 260) pdf.addPage();
-  y = 270;
-  pdf.setFillColor(245, 166, 75);
-  pdf.roundedRect(60, y, 90, 16, 3, 3, "F");
-  pdf.setTextColor(255, 255, 255);
+  const sigBoxW = (contentW - 14) / 2;
+  const sigY = y;
+  const sigH = 48;
+
+  pdf.setDrawColor(140, 140, 145);
+  pdf.setLineWidth(0.4);
+  pdf.rect(mL, sigY, sigBoxW, sigH);
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(10);
-  pdf.text("CERTIFICAT DE DÉCLARATION", 105, y + 11, { align: "center" });
-  y += 22;
-  pdf.setTextColor(107, 114, 128);
-  pdf.setFont("helvetica", "italic");
-  pdf.setFontSize(8);
-  pdf.text("Document officiel généré par DocMaster. Faire défense de le falsifier.", 105, y, { align: "center" });
+  pdf.setFontSize(7);
+  pdf.setTextColor(60, 60, 60);
+  pdf.text("SIGNATURE DU DÉCLARANT", mL + sigBoxW / 2, sigY + 8, { align: "center" });
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(7);
+  pdf.setTextColor(130, 130, 130);
+  pdf.text("Lu et approuvé", mL + sigBoxW / 2, sigY + 13, { align: "center" });
+  pdf.setDrawColor(160, 160, 165);
+  pdf.line(mL + 14, sigY + 34, mL + sigBoxW - 14, sigY + 34);
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(6.5);
+  pdf.setTextColor(80, 80, 80);
+  pdf.text(data.proprietaire || "", mL + sigBoxW / 2, sigY + 39, { align: "center" });
 
-  footer();
+  const stampX = mL + sigBoxW + 14 + sigBoxW / 2;
+  const stampY = sigY + 24;
+  pdf.setDrawColor(140, 140, 145);
+  pdf.setLineWidth(0.4);
+  pdf.rect(mL + sigBoxW + 14, sigY, sigBoxW, sigH);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(7);
+  pdf.setTextColor(60, 60, 60);
+  pdf.text("CACHET DU SERVICE", mL + sigBoxW + 14 + sigBoxW / 2, sigY + 8, { align: "center" });
+
+  if (certifie) {
+    pdf.setDrawColor(30, 30, 30);
+    pdf.setLineWidth(1.2);
+    pdf.circle(stampX, stampY, 16);
+    pdf.setLineWidth(0.4);
+    pdf.circle(stampX, stampY, 13.5);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(9);
+    pdf.setTextColor(30, 30, 30);
+    pdf.text("CERTIFIÉ", stampX, stampY - 1, { align: "center", angle: -12 });
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(5.5);
+    pdf.text(certifiePar, stampX, stampY + 6, { align: "center", angle: -12, maxWidth: 26 });
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(5.5);
+    pdf.text(certifieLe, stampX, stampY + 11, { align: "center", angle: -12 });
+  }
+
+  setY(sigY + sigH + 10);
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(7);
+  pdf.setTextColor(90, 90, 90);
+  pdf.text("Document officiel délivré par DocMaster. Conservez précieusement cette attestation ainsi que la référence indiquée.", pageW / 2, y, { align: "center" });
+
+  const pages = pdf.getNumberOfPages();
+  if (certifie) {
+    for (let i = 1; i <= pages; i++) {
+      pdf.setPage(i);
+      drawWatermark();
+    }
+  }
+  for (let i = 1; i <= pages; i++) {
+    footerOnPage(i);
+  }
+
   pdf.save(`declaration-perte-${data.ref}.pdf`);
 }

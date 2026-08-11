@@ -5,6 +5,8 @@ import {
   CreatePartenaireDTO,
   LoginPartenaireDTO,
   ChangePasswordPartenaireDTO,
+  ForgotPasswordPartenaireDTO,
+  ResetPasswordPartenaireDTO,
   UpdatePartenaireDTO,
   UpdateProfilPartenaireDTO,
   WalletAdjustDTO,
@@ -59,6 +61,41 @@ export class PartenaireController {
   logout = async (_req: Request, res: Response) => {
     res.clearCookie('docmaster_token', { httpOnly: true, sameSite: 'lax' });
     res.json({ success: true, message: 'Déconnecté' });
+  };
+
+  /**
+   * POST /api/partenaires/forgot-password  (PUBLIC) — send password reset link
+   */
+  forgotPassword = async (req: Request, res: Response) => {
+    try {
+      const errors = await validateDTO(req.body, ForgotPasswordPartenaireDTO);
+      if (errors) {
+        return res.status(400).json({ success: false, errors });
+      }
+      const result = await this.service.requestPasswordReset(req.body.email);
+      res.json(result);
+    } catch (error: any) {
+      res.status(404).json({ success: false, message: error.message });
+    }
+  };
+
+  /**
+   * POST /api/partenaires/reset-password  (PUBLIC) — reset password with token
+   */
+  resetPassword = async (req: Request, res: Response) => {
+    try {
+      const errors = await validateDTO(req.body, ResetPasswordPartenaireDTO);
+      if (errors) {
+        return res.status(400).json({ success: false, errors });
+      }
+      const result = await this.service.resetPassword(
+        req.body.token,
+        req.body.nouveau_mot_de_passe
+      );
+      res.json(result);
+    } catch (error: any) {
+      res.status(400).json({ success: false, message: error.message });
+    }
   };
 
   /**

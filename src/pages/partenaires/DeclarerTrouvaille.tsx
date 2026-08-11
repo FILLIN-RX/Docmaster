@@ -4,11 +4,9 @@ import {
   Card,
   Checkbox,
   Col,
-  Divider,
   Empty,
   Form,
   Input,
-  Modal,
   Radio,
   Row,
   Select,
@@ -34,6 +32,7 @@ import { useNavigate } from "react-router-dom";
 import { documentTypesService } from "../../services/declarationsService";
 import type { DocTypeCatalog } from "../../types/api";
 import { partenairesService } from "../../services/partenairesService";
+import { useI18n } from "../../context/I18nContext";
 import AntdLocationSelect from "../../components/ui/AntdLocationSelect";
 import OsmStreetSearch from "../../components/ui/OsmStreetSearch";
 import { partenairePalette } from "../../theme/partenaires";
@@ -44,37 +43,53 @@ interface LocationValue {
   arrondissement: string;
 }
 
-const inputCls = "w-full";
+interface DocEntry {
+  typeId: string;
+  ownerName: string;
+  docNum: string;
+  dateExpiration: string;
+  etat: string;
+  details: string;
+  fileRecto: File | null;
+  fileVerso: File | null;
+  previewRecto: string | null;
+  previewVerso: string | null;
+}
+
+const MAX_DOCS = 5;
+
+const createDocEntry = (typeId: string): DocEntry => ({
+  typeId,
+  ownerName: "",
+  docNum: "",
+  dateExpiration: "",
+  etat: "bon",
+  details: "",
+  fileRecto: null,
+  fileVerso: null,
+  previewRecto: null,
+  previewVerso: null,
+});
 
 export default function DeclarerTrouvaille() {
   const navigate = useNavigate();
+  const { t, lang } = useI18n();
+  const localeTag = lang === "ar" ? "ar" : lang === "en" ? "en" : "fr-FR";
 
   const [step, setStep] = useState(0);
   const [docTypes, setDocTypes] = useState<DocTypeCatalog[]>([]);
-  const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [autreType, setAutreType] = useState("");
-
-  const [ownerName, setOwnerName] = useState("");
-  const [docNum, setDocNum] = useState("");
-  const [etat, setEtat] = useState("bon");
-  const [details, setDetails] = useState("");
+  const [docs, setDocs] = useState<DocEntry[]>([]);
 
   const [location, setLocation] = useState<LocationValue>({ region: "", department: "", arrondissement: "" });
   const [rue, setRue] = useState("");
   const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(null);
   const [dateFound, setDateFound] = useState<string>(new Date().toISOString().split("T")[0]);
-  const [dateExpiration, setDateExpiration] = useState<string>("");
-
-  const [fileRecto, setFileRecto] = useState<File | null>(null);
-  const [fileVerso, setFileVerso] = useState<File | null>(null);
-  const [previewRecto, setPreviewRecto] = useState<string | null>(null);
-  const [previewVerso, setPreviewVerso] = useState<string | null>(null);
 
   const [contactTel, setContactTel] = useState("");
   const [contactMode, setContactMode] = useState("PHONE");
   const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [successRef, setSuccessRef] = useState<string | null>(null);
+  const [successRefs, setSuccessRefs] = useState<string[] | null>(null);
 
   useEffect(() => {
     documentTypesService.getActive().then((res) => {
@@ -82,106 +97,135 @@ export default function DeclarerTrouvaille() {
     });
   }, []);
 
-  const selectedDoc = docTypes.find((d) => d.id === selectedType);
+  const isAutreType = (d: DocTypeCatalog) => d.code === "AUTRES" || d.id === "autre";
+
+  const orderedDocTypes = [
+    ...docTypes.filter((d) => !isAutreType(d)),
+    ...(docTypes.some(isAutreType)
+      ? docTypes.filter(isAutreType)
+      : [{ id: "autre", code: "AUTRES", nom: t("partenaire_declarer_type_other"), icone: "circle-question", is_active: true, delai_expiration_mois: 0 }]),
+  ];
+
+  const findDocType = (id: string) => orderedDocTypes.find((d) => d.id === id) || null;
+
+  const toggleType = (typeId: string) => {
+    if (docs.some((doc) => doc.typeId === typeId)) {
+      setDocs((prev) => prev.filter((doc) => doc.typeId !== typeId));
+    } else {
+      setDocs((prev) => (prev.length >= MAX_DOCS ? prev : [...prev, createDocEntry(typeId)]));
+    }
+  };
+
+  const updateDoc = (typeId: string, patch: Partial<DocEntry>) =>
+    setDocs((prev) => prev.map((doc) => (doc.typeId === typeId ? { ...doc, ...patch } : doc)));
 
   const nextStep = () => {
-    if (step === 0 && !selectedType) {
-      message.warning("Sélectionnez d'abord le type de document.");
-      return;
+    if (step === 0) {
+      if (docs.length === 0) {
+        message.warning(t("partenaire_declarer_warn_type_first"));
+        return;
+      }
     }
-    if (step === 1 && ownerName.trim().length < 2) {
-      message.warning("Entrez le nom du propriétaire (au moins 2 caractères).");
-      return;
+    if (step === 1) {
+      const invalid = docs.find((doc) => doc.ownerName.trim().length < 2);
+      if (invalid) {
+        message.warning(t("partenaire_declarer_warn_owner"));
+        return;
+      }
     }
     if (step === 2) {
       if (!location.department) {
-        message.warning("Sélectionnez la ville (département).");
+        message.warning(t("partenaire_declarer_warn_city"));
         return;
       }
       if (dateFound && new Date(dateFound) > new Date()) {
-        message.warning("La date de trouvaille ne peut pas être dans le futur.");
+        message.warning(t("partenaire_declarer_warn_date_future"));
         return;
       }
     }
     setStep((s) => s + 1);
   };
 
-  const handleFileSelect = (
-    file: File | null,
-    setFile: (f: File | null) => void,
-    setPreview: (s: string | null) => void
-  ) => {
+  const handleFileSelect = (typeId: string, side: "recto" | "verso", file: File | null) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      message.error("Veuillez choisir une image.");
+      message.error(t("partenaire_declarer_err_image"));
       return;
     }
-    setFile(file);
     const reader = new FileReader();
-    reader.onload = (e) => setPreview(e.target?.result as string);
+    reader.onload = (e) => {
+      updateDoc(typeId, {
+        [side === "recto" ? "fileRecto" : "fileVerso"]: file,
+        [side === "recto" ? "previewRecto" : "previewVerso"]: e.target?.result as string,
+      });
+    };
     reader.readAsDataURL(file);
   };
 
   const submitDeclaration = async () => {
     if (!consent) {
-      message.warning("Veuillez certifier l'exactitude des informations.");
+      message.warning(t("partenaire_declarer_warn_consent"));
       return;
     }
-    if (!selectedType) {
-      message.warning("Sélectionnez le type de document.");
-      return;
-    }
-    if (!ownerName) {
-      message.warning("Entrez le nom du propriétaire.");
+    if (docs.length === 0) {
+      message.warning(t("partenaire_declarer_warn_type"));
       return;
     }
     if (!location.department) {
-      message.warning("Sélectionnez la ville.");
+      message.warning(t("partenaire_declarer_warn_city_short"));
       return;
     }
 
     setSubmitting(true);
 
-    const formData = new FormData();
-    formData.append("doc_type", selectedType);
-    formData.append("owner_name", ownerName);
-    if (docNum.trim()) formData.append("document_number", docNum.trim());
-    formData.append("etat_physique", etat);
-    formData.append("ville", (location.arrondissement || location.department) || "");
-    if (location.region) formData.append("region", location.region);
-    if (location.department) formData.append("department", location.department);
-    if (location.arrondissement) formData.append("arrondissement", location.arrondissement);
-    formData.append("pays", "Cameroun");
-    formData.append("date_perte", dateFound);
-    if (dateExpiration) formData.append("date_expiration", dateExpiration);
-    formData.append("mode_contact", contactMode);
-    if (contactTel.trim()) formData.append("telephone_contact", contactTel.trim());
-    if (details.trim()) formData.append("description", details.trim());
-    if (rue.trim()) formData.append("quartier", rue.trim());
-    if (coords) formData.append("found_location", JSON.stringify({ lat: coords.lat, lon: coords.lon }));
-    if (autreType.trim()) {
-      formData.append("metadata", JSON.stringify({ autre_type: autreType.trim() }));
-    }
-    if (fileRecto) formData.append("photo_recto", fileRecto);
-    if (fileVerso) formData.append("photo_verso", fileVerso);
+    const autreCatalog = docTypes.find((d) => d.code === "AUTRES");
+    const refs: string[] = [];
+    const failures: string[] = [];
 
-    try {
-      const res = await partenairesService.createDeclaration(formData);
-      setSuccessRef(res.data?.data?.identifiant_doc_dm || null);
-      message.success("Déclaration de trouvaille enregistrée");
-    } catch (err: any) {
-      const errors = err?.response?.data?.errors;
-      if (errors && typeof errors === "object") {
-        const first = Object.values(errors)[0];
-        message.error(Array.isArray(first) ? (first[0] as string) : String(first));
-      } else {
-        message.error(err?.response?.data?.message || "Impossible d'enregistrer la déclaration.");
+    for (const doc of docs) {
+      const docType = findDocType(doc.typeId);
+      const isAutre = doc.typeId === "autre" || docType?.code === "AUTRES";
+
+      const formData = new FormData();
+      formData.append("doc_type", isAutre ? (autreCatalog?.id || "AUTRES") : doc.typeId);
+      formData.append("owner_name", doc.ownerName);
+      if (doc.docNum.trim()) formData.append("document_number", doc.docNum.trim());
+      formData.append("etat_physique", doc.etat);
+      formData.append("ville", (location.arrondissement || location.department) || "");
+      if (location.region) formData.append("region", location.region);
+      if (location.department) formData.append("department", location.department);
+      if (location.arrondissement) formData.append("arrondissement", location.arrondissement);
+      formData.append("pays", "Cameroun");
+      formData.append("date_perte", dateFound);
+      if (doc.dateExpiration) formData.append("date_expiration", doc.dateExpiration);
+      formData.append("mode_contact", contactMode);
+      if (contactTel.trim()) formData.append("telephone_contact", contactTel.trim());
+      if (doc.details.trim()) formData.append("description", doc.details.trim());
+      if (rue.trim()) formData.append("quartier", rue.trim());
+      if (coords) formData.append("found_location", JSON.stringify({ lat: coords.lat, lon: coords.lon }));
+      if (doc.fileRecto) formData.append("photo_recto", doc.fileRecto);
+      if (doc.fileVerso) formData.append("photo_verso", doc.fileVerso);
+
+      try {
+        const res = await partenairesService.createDeclaration(formData);
+        const ref = res.data?.data?.identifiant_doc_dm;
+        if (ref) refs.push(ref);
+      } catch (err: any) {
+        failures.push(doc.ownerName || docType?.nom || t("partenaire_declarer_summary_type"));
       }
-      setSubmitting(false);
+    }
+
+    setSubmitting(false);
+
+    if (refs.length > 0) {
+      setSuccessRefs(refs);
+      message.success(t("partenaire_declarer_success_msg"));
+    } else {
+      message.error(t("partenaire_declarer_error_default"));
     }
   };
 
-  if (successRef !== null) {
+  if (successRefs !== null) {
     return (
       <div style={{ maxWidth: 560, margin: "40px auto" }}>
         <Card
@@ -203,10 +247,12 @@ export default function DeclarerTrouvaille() {
             <CheckCircleOutlined style={{ color: partenairePalette.success, fontSize: 26 }} />
           </div>
           <Typography.Title level={4} style={{ marginBottom: 4 }}>
-            Déclaration publiée
+            {t("partenaire_declarer_success_title")}
           </Typography.Title>
           <Typography.Paragraph type="secondary" style={{ fontSize: 13 }}>
-            Votre déclaration de trouvaille a été enregistrée avec succès.
+            {successRefs.length > 1
+              ? t("partenaire_declarer_success_desc_multi", { count: successRefs.length })
+              : t("partenaire_declarer_success_desc")}
           </Typography.Paragraph>
           <div
             style={{
@@ -218,27 +264,29 @@ export default function DeclarerTrouvaille() {
               textAlign: "left",
             }}
           >
-            <Typography.Text style={{ fontSize: 11, color: partenairePalette.textMuted, display: "block", textTransform: "uppercase", fontWeight: 600 }}>
-              Référence de la déclaration
+            <Typography.Text style={{ fontSize: 11, color: partenairePalette.textMuted, display: "block", textTransform: "uppercase", fontWeight: 600, marginBottom: 8 }}>
+              {t("partenaire_declarer_success_ref")}
             </Typography.Text>
-            <Space>
-              <Typography.Text strong style={{ fontSize: 18, letterSpacing: 1 }}>
-                {successRef || "—"}
-              </Typography.Text>
-              {successRef && (
-                <Button
-                  size="small"
-                  type="text"
-                  icon={<i className="fa-solid fa-copy" />}
-                  onClick={() => navigator.clipboard.writeText(successRef)}
-                />
-              )}
-            </Space>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {successRefs.map((ref) => (
+                <Space key={ref} style={{ justifyContent: "space-between", width: "100%" }}>
+                  <Typography.Text strong style={{ fontSize: 16, letterSpacing: 1 }}>
+                    {ref}
+                  </Typography.Text>
+                  <Button
+                    size="small"
+                    type="text"
+                    icon={<i className="fa-solid fa-copy" />}
+                    onClick={() => navigator.clipboard.writeText(ref)}
+                  />
+                </Space>
+              ))}
+            </div>
           </div>
           <div style={{ padding: "12px 16px", background: "#fff7e6", border: "1px solid #ffd591", borderRadius: 8, textAlign: "left", marginBottom: 24 }}>
             <Typography.Text style={{ fontSize: 12, color: "#d46b08" }}>
               <i className="fa-solid fa-wallet" style={{ marginRight: 8 }} />
-              La récompense financière sera créditée sur votre portefeuille.
+              {t("partenaire_declarer_success_reward")}
             </Typography.Text>
           </div>
           <Space>
@@ -247,10 +295,10 @@ export default function DeclarerTrouvaille() {
                 window.location.reload();
               }}
             >
-              Nouvelle déclaration
+              {t("partenaire_declarer_new")}
             </Button>
             <Button type="primary" onClick={() => navigate("/partenaire/declarations")}>
-              Voir mes déclarations
+              {t("partenaire_declarer_view_declarations")}
             </Button>
           </Space>
         </Card>
@@ -268,149 +316,180 @@ export default function DeclarerTrouvaille() {
           current={step}
           size="small"
           items={[
-            { title: "Type", icon: <TagOutlined /> },
-            { title: "Informations", icon: <UserOutlined /> },
-            { title: "Localisation", icon: <EnvironmentOutlined /> },
-            { title: "Photos", icon: <CameraOutlined /> },
-            { title: "Contact", icon: <ContactsOutlined /> },
+            { title: t("partenaire_declarer_step_type"), icon: <TagOutlined /> },
+            { title: t("partenaire_declarer_step_info"), icon: <UserOutlined /> },
+            { title: t("partenaire_declarer_step_location"), icon: <EnvironmentOutlined /> },
+            { title: t("partenaire_declarer_step_photos"), icon: <CameraOutlined /> },
+            { title: t("partenaire_declarer_step_contact"), icon: <ContactsOutlined /> },
           ]}
         />
       </Card>
 
-      {/* Étape 1 — Type de document */}
+      {/* Étape 1 — Types de documents (sélection multiple) */}
       {step === 0 && (
         <Card style={{ borderRadius: 10, border: `1px solid ${partenairePalette.border}` }}>
-          <Typography.Title level={5}>
-            <TagOutlined style={{ color: partenairePalette.primary, marginRight: 8 }} />
-            Quel type de document avez-vous trouvé ?
-          </Typography.Title>
-          {docTypes.length === 0 ? (
-            <Empty description="Aucun type de document disponible" />
+          <Space style={{ width: "100%", justifyContent: "space-between", marginBottom: 12 }}>
+            <Typography.Title level={5} style={{ margin: 0 }}>
+              <TagOutlined style={{ color: partenairePalette.primary, marginRight: 8 }} />
+              {t("partenaire_declarer_type_title")}
+            </Typography.Title>
+            <Tag color={docs.length >= MAX_DOCS ? "orange" : "blue"} style={{ fontSize: 12 }}>
+              {docs.length}/{MAX_DOCS}
+            </Tag>
+          </Space>
+          <Typography.Paragraph type="secondary" style={{ fontSize: 13, marginTop: 0 }}>
+            {t("partenaire_declarer_type_hint")}
+          </Typography.Paragraph>
+          {orderedDocTypes.length === 0 ? (
+            <Empty description={t("partenaire_declarer_type_empty")} />
           ) : (
             <Row gutter={[12, 12]}>
-              {docTypes.map((d) => (
-                <Col xs={12} sm={8} md={6} key={d.id}>
-                  <div
-                    onClick={() => {
-                      setSelectedType(d.id);
-                      setAutreType("");
-                    }}
-                    style={{
-                      border: `2px solid ${selectedType === d.id ? partenairePalette.primary : partenairePalette.border}`,
-                      background: selectedType === d.id ? partenairePalette.primaryLight : "#fff",
-                      borderRadius: 10,
-                      padding: "12px 8px",
-                      textAlign: "center",
-                      cursor: "pointer",
-                      transition: "all .2s",
-                    }}
-                  >
+              {orderedDocTypes.map((d) => {
+                const selected = docs.some((doc) => doc.typeId === d.id);
+                const disabled = !selected && docs.length >= MAX_DOCS;
+                return (
+                  <Col xs={12} sm={8} md={6} key={d.id}>
                     <div
+                      onClick={() => {
+                        if (disabled) {
+                          message.info(t("partenaire_declarer_type_max"));
+                          return;
+                        }
+                        toggleType(d.id);
+                      }}
                       style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 8,
-                        background: selectedType === d.id ? partenairePalette.primary : partenairePalette.greenLight,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        margin: "0 auto 8px",
+                        border: `2px solid ${selected ? partenairePalette.primary : partenairePalette.border}`,
+                        background: selected ? partenairePalette.primaryLight : "#fff",
+                        borderRadius: 10,
+                        padding: "12px 8px",
+                        textAlign: "center",
+                        cursor: disabled ? "not-allowed" : "pointer",
+                        opacity: disabled ? 0.5 : 1,
+                        transition: "all .2s",
+                        position: "relative",
                       }}
                     >
-                      <i className={`fa-solid fa-${d.icone || "file-lines"}`} style={{ color: selectedType === d.id ? "#fff" : partenairePalette.primary, fontSize: 16 }} />
+                      {selected && (
+                        <CheckCircleOutlined
+                          style={{ color: partenairePalette.primary, position: "absolute", top: 8, right: 8, fontSize: 16 }}
+                        />
+                      )}
+                      <div
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 8,
+                          background: selected ? partenairePalette.primary : partenairePalette.greenLight,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          margin: "0 auto 8px",
+                        }}
+                      >
+                        <i className={`fa-solid fa-${d.icone || "file-lines"}`} style={{ color: selected ? "#fff" : partenairePalette.primary, fontSize: 16 }} />
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: partenairePalette.textMain }}>{d.nom}</div>
+                      {(d.delai_expiration_mois ?? 0) > 0 ? (
+                        <Tag color="orange" style={{ fontSize: 10, marginTop: 6 }}>
+                          {t("partenaire_declarer_type_has_expiry")}
+                        </Tag>
+                      ) : (
+                        <Tag color="green" style={{ fontSize: 10, marginTop: 6 }}>
+                          {t("partenaire_declarer_type_no_expiry")}
+                        </Tag>
+                      )}
                     </div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: partenairePalette.textMain }}>{d.nom}</div>
-                    {(d.delai_expiration_mois ?? 0) > 0 ? (
-                      <Tag color="orange" style={{ fontSize: 10, marginTop: 6 }}>
-                        A expiration
-                      </Tag>
-                    ) : (
-                      <Tag color="green" style={{ fontSize: 10, marginTop: 6 }}>
-                        Sans expiration
-                      </Tag>
-                    )}
-                  </div>
-                </Col>
-              ))}
+                  </Col>
+                );
+              })}
             </Row>
           )}
-          {selectedType === "autre" && (
-            <Input
-              style={{ marginTop: 16 }}
-              placeholder="Précisez le type de document"
-              value={autreType}
-              onChange={(e) => setAutreType(e.target.value)}
-            />
-          )}
-          <Button type="primary" block style={{ marginTop: 24, height: 40 }} onClick={nextStep} disabled={!selectedType}>
-            Continuer <i className="fa-solid fa-arrow-right ml-1" style={{ fontSize: 11 }} />
+          <Button type="primary" block style={{ marginTop: 24, height: 40 }} onClick={nextStep} disabled={docs.length === 0}>
+            {t("partenaire_declarer_continue")} <i className="fa-solid fa-arrow-right ml-1" style={{ fontSize: 11 }} />
           </Button>
         </Card>
       )}
 
-      {/* Étape 2 — Informations */}
+      {/* Étape 2 — Informations par document */}
       {step === 1 && (
         <Card style={{ borderRadius: 10, border: `1px solid ${partenairePalette.border}` }}>
           <Typography.Title level={5}>
             <UserOutlined style={{ color: partenairePalette.primary, marginRight: 8 }} />
-            Informations sur le document
+            {t("partenaire_declarer_info_title")}
           </Typography.Title>
-          <Form layout="vertical" requiredMark={false}>
-            <Row gutter={12}>
-              <Col span={12}>
-                <Form.Item label="Nom du propriétaire (si lisible)">
-                  <Input
-                    placeholder="Nom complet figurant sur le document"
-                    value={ownerName}
-                    onChange={(e) => setOwnerName(e.target.value)}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="Numéro du document (si visible)">
-                  <Input placeholder="N° de document" value={docNum} onChange={(e) => setDocNum(e.target.value)} />
-                </Form.Item>
-              </Col>
-            </Row>
+          {docs.map((doc, idx) => {
+            const docType = findDocType(doc.typeId);
+            return (
+              <Card
+                key={doc.typeId}
+                size="small"
+                style={{ borderRadius: 10, marginBottom: 12, border: `1px solid ${partenairePalette.border}` }}
+                title={
+                  <Space>
+                    <Tag color="blue">{idx + 1}</Tag>
+                    <Typography.Text strong>{docType?.nom || ""}</Typography.Text>
+                  </Space>
+                }
+              >
+                <Form layout="vertical" requiredMark={false}>
+                  <Row gutter={12}>
+                    <Col span={12}>
+                      <Form.Item label={t("partenaire_declarer_owner_label")}>
+                        <Input
+                          placeholder={t("partenaire_declarer_owner_placeholder")}
+                          value={doc.ownerName}
+                          onChange={(e) => updateDoc(doc.typeId, { ownerName: e.target.value })}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item label={t("partenaire_declarer_doc_number_label")}>
+                        <Input placeholder={t("partenaire_declarer_doc_number_placeholder")} value={doc.docNum} onChange={(e) => updateDoc(doc.typeId, { docNum: e.target.value })} />
+                      </Form.Item>
+                    </Col>
+                  </Row>
 
-            {selectedDoc && (selectedDoc.delai_expiration_mois ?? 0) > 0 && (
-              <Form.Item label="Date d'expiration (si visible)">
-                <Input type="date" value={dateExpiration} onChange={(e) => setDateExpiration(e.target.value)} />
-              </Form.Item>
-            )}
+                  {docType && (docType.delai_expiration_mois ?? 0) > 0 && (
+                    <Form.Item label={t("partenaire_declarer_expiry_label")}>
+                      <Input type="date" value={doc.dateExpiration} onChange={(e) => updateDoc(doc.typeId, { dateExpiration: e.target.value })} />
+                    </Form.Item>
+                  )}
 
-            <Form.Item label="État physique du document">
-              <Radio.Group value={etat} onChange={(e) => setEtat(e.target.value)}>
-                <Space wrap>
-                  <Radio.Button value="bon">
-                    <i className="fa-solid fa-circle-check" style={{ color: "#16a34a", marginRight: 6 }} />
-                    Bon état
-                  </Radio.Button>
-                  <Radio.Button value="moyen">
-                    <i className="fa-solid fa-triangle-exclamation" style={{ color: "#f59e0b", marginRight: 6 }} />
-                    État moyen
-                  </Radio.Button>
-                  <Radio.Button value="abime">
-                    <i className="fa-solid fa-circle-xmark" style={{ color: "#ef4444", marginRight: 6 }} />
-                    Abîmé
-                  </Radio.Button>
-                </Space>
-              </Radio.Group>
-            </Form.Item>
+                  <Form.Item label={t("partenaire_declarer_state_label")}>
+                    <Radio.Group value={doc.etat} onChange={(e) => updateDoc(doc.typeId, { etat: e.target.value })}>
+                      <Space wrap>
+                        <Radio.Button value="bon">
+                          <i className="fa-solid fa-circle-check" style={{ color: "#16a34a", marginRight: 6 }} />
+                          {t("partenaire_declarer_state_good")}
+                        </Radio.Button>
+                        <Radio.Button value="moyen">
+                          <i className="fa-solid fa-triangle-exclamation" style={{ color: "#f59e0b", marginRight: 6 }} />
+                          {t("partenaire_declarer_state_mid")}
+                        </Radio.Button>
+                        <Radio.Button value="abime">
+                          <i className="fa-solid fa-circle-xmark" style={{ color: "#ef4444", marginRight: 6 }} />
+                          {t("partenaire_declarer_state_damaged")}
+                        </Radio.Button>
+                      </Space>
+                    </Radio.Group>
+                  </Form.Item>
 
-            <Form.Item label="Détails utiles">
-              <Input.TextArea
-                rows={2}
-                placeholder="Couleur, particularités, autres informations..."
-                value={details}
-                onChange={(e) => setDetails(e.target.value)}
-              />
-            </Form.Item>
-          </Form>
+                  <Form.Item label={t("partenaire_declarer_details_label")}>
+                    <Input.TextArea
+                      rows={2}
+                      placeholder={t("partenaire_declarer_details_placeholder")}
+                      value={doc.details}
+                      onChange={(e) => updateDoc(doc.typeId, { details: e.target.value })}
+                    />
+                  </Form.Item>
+                </Form>
+              </Card>
+            );
+          })}
           <Space style={{ width: "100%", justifyContent: "space-between" }}>
-            <Button onClick={() => setStep(0)}>Retour</Button>
+            <Button onClick={() => setStep(0)}>{t("partenaire_declarer_back")}</Button>
             <Button type="primary" onClick={nextStep}>
-              Continuer <i className="fa-solid fa-arrow-right ml-1" style={{ fontSize: 11 }} />
+              {t("partenaire_declarer_continue")} <i className="fa-solid fa-arrow-right ml-1" style={{ fontSize: 11 }} />
             </Button>
           </Space>
         </Card>
@@ -421,102 +500,114 @@ export default function DeclarerTrouvaille() {
         <Card style={{ borderRadius: 10, border: `1px solid ${partenairePalette.border}` }}>
           <Typography.Title level={5}>
             <EnvironmentOutlined style={{ color: partenairePalette.primary, marginRight: 8 }} />
-            Où le document a-t-il été trouvé ?
+            {t("partenaire_declarer_location_title")}
           </Typography.Title>
           <Form layout="vertical" requiredMark={false}>
-            <Form.Item label="Ville / Région" required>
+            <Form.Item label={t("partenaire_declarer_location_label")} required>
               <AntdLocationSelect
                 value={location}
                 onChange={(val) => setLocation({ ...val })}
               />
             </Form.Item>
-            <Form.Item label="Rue / lieu précis">
+            <Form.Item label={t("partenaire_declarer_street_label")}>
               <OsmStreetSearch
                 value={rue}
                 onChange={(v) => setRue(v)}
                 onCoordinates={(lat, lon) => setCoords({ lat, lon })}
-                placeholder="Rechercher une rue ou un lieu (OpenStreetMap)…"
+                placeholder={t("partenaire_declarer_street_placeholder")}
               />
             </Form.Item>
             <Row gutter={12}>
               <Col span={12}>
-                <Form.Item label="Date de trouvaille" required>
+                <Form.Item label={t("partenaire_declarer_found_date_label")} required>
                   <Input type="date" value={dateFound} onChange={(e) => setDateFound(e.target.value)} />
                 </Form.Item>
               </Col>
             </Row>
           </Form>
           <Space style={{ width: "100%", justifyContent: "space-between" }}>
-            <Button onClick={() => setStep(1)}>Retour</Button>
+            <Button onClick={() => setStep(1)}>{t("partenaire_declarer_back")}</Button>
             <Button type="primary" onClick={nextStep}>
-              Continuer <i className="fa-solid fa-arrow-right ml-1" style={{ fontSize: 11 }} />
+              {t("partenaire_declarer_continue")} <i className="fa-solid fa-arrow-right ml-1" style={{ fontSize: 11 }} />
             </Button>
           </Space>
         </Card>
       )}
 
-      {/* Étape 4 — Photos */}
+      {/* Étape 4 — Photos par document */}
       {step === 3 && (
         <Card style={{ borderRadius: 10, border: `1px solid ${partenairePalette.border}` }}>
           <Typography.Title level={5}>
             <CameraOutlined style={{ color: partenairePalette.primary, marginRight: 8 }} />
-            Photos du document
+            {t("partenaire_declarer_photos_title")}
           </Typography.Title>
-          <Row gutter={12}>
-            <Col span={12}>
-              <Form.Item label="Photo recto">
-                <Upload
-                  beforeUpload={(file) => {
-                    handleFileSelect(file, setFileRecto, setPreviewRecto);
-                    return false;
-                  }}
-                  maxCount={1}
-                  onRemove={() => {
-                    setFileRecto(null);
-                    setPreviewRecto(null);
-                  }}
-                  fileList={fileRecto ? [{ uid: "recto", name: fileRecto.name, status: "done" } as any] : []}
-                  listType="picture-card"
-                  style={{ width: "100%" }}
-                >
-                  {!previewRecto && (
-                    <div style={{ fontSize: 12, color: partenairePalette.textMuted }}>
-                      <UploadOutlined style={{ fontSize: 20, display: "block", marginBottom: 6 }} />
-                      Ajouter
-                    </div>
-                  )}
-                </Upload>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="Photo verso (optionnel)">
-                <Upload
-                  beforeUpload={(file) => {
-                    handleFileSelect(file, setFileVerso, setPreviewVerso);
-                    return false;
-                  }}
-                  maxCount={1}
-                  onRemove={() => {
-                    setFileVerso(null);
-                    setPreviewVerso(null);
-                  }}
-                  fileList={fileVerso ? [{ uid: "verso", name: fileVerso.name, status: "done" } as any] : []}
-                  listType="picture-card"
-                >
-                  {!previewVerso && (
-                    <div style={{ fontSize: 12, color: partenairePalette.textMuted }}>
-                      <UploadOutlined style={{ fontSize: 20, display: "block", marginBottom: 6 }} />
-                      Ajouter
-                    </div>
-                  )}
-                </Upload>
-              </Form.Item>
-            </Col>
-          </Row>
+          {docs.map((doc, idx) => {
+            const docType = findDocType(doc.typeId);
+            const label = docType?.nom || "";
+            return (
+              <Card
+                key={doc.typeId}
+                size="small"
+                style={{ borderRadius: 10, marginBottom: 12, border: `1px solid ${partenairePalette.border}` }}
+                title={
+                  <Space>
+                    <Tag color="blue">{idx + 1}</Tag>
+                    <Typography.Text strong>{label}</Typography.Text>
+                  </Space>
+                }
+              >
+                <Row gutter={12}>
+                  <Col span={12}>
+                    <Form.Item label={t("partenaire_declarer_photo_front_label")}>
+                      <Upload
+                        beforeUpload={(file) => {
+                          handleFileSelect(doc.typeId, "recto", file);
+                          return false;
+                        }}
+                        maxCount={1}
+                        onRemove={() => updateDoc(doc.typeId, { fileRecto: null, previewRecto: null })}
+                        fileList={doc.fileRecto ? [{ uid: `recto-${doc.typeId}`, name: doc.fileRecto.name, status: "done" } as any] : []}
+                        listType="picture-card"
+                        style={{ width: "100%" }}
+                      >
+                        {!doc.previewRecto && (
+                          <div style={{ fontSize: 12, color: partenairePalette.textMuted }}>
+                            <UploadOutlined style={{ fontSize: 20, display: "block", marginBottom: 6 }} />
+                            {t("partenaire_declarer_upload")}
+                          </div>
+                        )}
+                      </Upload>
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item label={t("partenaire_declarer_photo_back_label")}>
+                      <Upload
+                        beforeUpload={(file) => {
+                          handleFileSelect(doc.typeId, "verso", file);
+                          return false;
+                        }}
+                        maxCount={1}
+                        onRemove={() => updateDoc(doc.typeId, { fileVerso: null, previewVerso: null })}
+                        fileList={doc.fileVerso ? [{ uid: `verso-${doc.typeId}`, name: doc.fileVerso.name, status: "done" } as any] : []}
+                        listType="picture-card"
+                      >
+                        {!doc.previewVerso && (
+                          <div style={{ fontSize: 12, color: partenairePalette.textMuted }}>
+                            <UploadOutlined style={{ fontSize: 20, display: "block", marginBottom: 6 }} />
+                            {t("partenaire_declarer_upload")}
+                          </div>
+                        )}
+                      </Upload>
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </Card>
+            );
+          })}
           <Space style={{ width: "100%", justifyContent: "space-between" }}>
-            <Button onClick={() => setStep(2)}>Retour</Button>
+            <Button onClick={() => setStep(2)}>{t("partenaire_declarer_back")}</Button>
             <Button type="primary" onClick={() => setStep(4)}>
-              Continuer <i className="fa-solid fa-arrow-right ml-1" style={{ fontSize: 11 }} />
+              {t("partenaire_declarer_continue")} <i className="fa-solid fa-arrow-right ml-1" style={{ fontSize: 11 }} />
             </Button>
           </Space>
         </Card>
@@ -527,27 +618,27 @@ export default function DeclarerTrouvaille() {
         <Card style={{ borderRadius: 10, border: `1px solid ${partenairePalette.border}` }}>
           <Typography.Title level={5}>
             <PhoneOutlined style={{ color: partenairePalette.primary, marginRight: 8 }} />
-            Contact et publication
+            {t("partenaire_declarer_contact_title")}
           </Typography.Title>
           <Form layout="vertical" requiredMark={false}>
             <Row gutter={12}>
               <Col span={12}>
-                <Form.Item label="Téléphone de contact">
+                <Form.Item label={t("partenaire_declarer_contact_phone_label")}>
                   <Input
-                    placeholder="+237 6XX XXX XXX"
+                    placeholder={t("partenaire_declarer_contact_phone_placeholder")}
                     value={contactTel}
                     onChange={(e) => setContactTel(e.target.value)}
                   />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label="Mode de contact préféré">
+                <Form.Item label={t("partenaire_declarer_contact_mode_label")}>
                   <Select
                     value={contactMode}
                     onChange={setContactMode}
                     options={[
-                      { value: "PHONE", label: "Par téléphone" },
-                      { value: "APP_CHAT", label: "Chat dans l'application" },
+                      { value: "PHONE", label: t("partenaire_declarer_contact_phone") },
+                      { value: "APP_CHAT", label: t("partenaire_declarer_contact_chat") },
                     ]}
                   />
                 </Form.Item>
@@ -565,47 +656,49 @@ export default function DeclarerTrouvaille() {
             }}
           >
             <Typography.Text style={{ fontSize: 11, color: partenairePalette.textMuted, textTransform: "uppercase", fontWeight: 600, display: "block", marginBottom: 8 }}>
-              Récapitulatif
+              {t("partenaire_declarer_summary")}
             </Typography.Text>
-            <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 12 }}>
+              {docs.map((doc, idx) => {
+                const docType = findDocType(doc.typeId);
+                const typeLabel = docType?.nom || "—";
+                return (
+                  <div key={doc.typeId} style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                    <Typography.Text type="secondary">
+                      {t("partenaire_declarer_summary_doc", { n: idx + 1 })} — {typeLabel}
+                    </Typography.Text>
+                    <Typography.Text strong>{doc.ownerName || "—"}</Typography.Text>
+                  </div>
+                );
+              })}
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <Typography.Text type="secondary">Type</Typography.Text>
-                <Typography.Text strong>{selectedDoc?.nom || autreType || "—"}</Typography.Text>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <Typography.Text type="secondary">Localisation</Typography.Text>
+                <Typography.Text type="secondary">{t("partenaire_declarer_summary_location")}</Typography.Text>
                 <Typography.Text strong>{(location.arrondissement || location.department) || "—"}</Typography.Text>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <Typography.Text type="secondary">Date</Typography.Text>
+                <Typography.Text type="secondary">{t("partenaire_declarer_summary_date")}</Typography.Text>
                 <Typography.Text strong>
-                  {dateFound ? new Date(dateFound).toLocaleDateString("fr-FR") : "—"}
-                </Typography.Text>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <Typography.Text type="secondary">Photos</Typography.Text>
-                <Typography.Text strong style={{ color: partenairePalette.success }}>
-                  {[fileRecto, fileVerso].filter(Boolean).length}
+                  {dateFound ? new Date(dateFound).toLocaleDateString(localeTag) : "—"}
                 </Typography.Text>
               </div>
             </div>
           </div>
 
           <Checkbox checked={consent} onChange={(e) => setConsent(e.target.checked)} style={{ marginBottom: 16 }}>
-            Je certifie que les informations fournies sont exactes et que ce document a bien été trouvé.
+            {t("partenaire_declarer_consent")}
           </Checkbox>
 
           <div style={{ padding: "10px 14px", background: "#fff7e6", border: "1px solid #ffd591", borderRadius: 8, fontSize: 12, color: "#d46b08", marginBottom: 20 }}>
             <FileProtectOutlined style={{ marginRight: 8 }} />
-            La récompense financière (bonus de déclaration) sera créditée automatiquement sur votre portefeuille partenaire.
+            {t("partenaire_declarer_reward_note")}
           </div>
 
           <Space style={{ width: "100%", justifyContent: "space-between" }}>
             <Button onClick={() => setStep(3)} disabled={submitting}>
-              Retour
+              {t("partenaire_declarer_back")}
             </Button>
             <Button type="primary" loading={submitting} onClick={submitDeclaration} style={{ background: partenairePalette.success, height: 40, paddingInline: 32 }}>
-              {submitting ? "Publication..." : "Publier la déclaration"}
+              {submitting ? t("partenaire_declarer_publishing") : t("partenaire_declarer_publish")}
             </Button>
           </Space>
         </Card>

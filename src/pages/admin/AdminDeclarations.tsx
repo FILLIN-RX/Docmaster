@@ -23,6 +23,27 @@ type DetailData = Declaration & {
   reward_points?: number;
 };
 
+const PartnerBadge = () => (
+  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-50 text-cyan-700 border border-cyan-200">
+    <i className="fa-solid fa-building text-[9px]" /> Partenaire
+  </span>
+);
+
+const ReporterCell = ({ d }: { d: Declaration }) => {
+  const isPartner = d.reporter_type === "PARTENAIRE";
+  if (!isPartner && !d.reporter_id) return <span className="text-gray-400">—</span>;
+  if (isPartner) {
+    return (
+      <span className="flex items-center gap-1.5">
+        <i className="fa-solid fa-building text-cyan-600 text-[11px]" />
+        <span className="text-[12.5px] font-semibold text-cyan-800">{d.reporter_partenaire_nom || "Organisation partenaire"}</span>
+        <PartnerBadge />
+      </span>
+    );
+  }
+  return <span className="text-[12.5px] text-gray-600">Utilisateur</span>;
+};
+
 export default function AdminDeclarations() {
   const { t } = useI18n();
   const toast = useToast();
@@ -221,6 +242,7 @@ export default function AdminDeclarations() {
                 <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_declarations_photo")}</th>
                 <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_declarations_doc_type")}</th>
                 <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_declarations_doc_name")}</th>
+                <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Déclarant</th>
                 <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_declarations_type")}</th>
                 <th className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_status")}</th>
                 <th className="text-right px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("admin_actions")}</th>
@@ -228,7 +250,7 @@ export default function AdminDeclarations() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {declarations.length === 0 ? (
-                <EmptyState icon="fa-solid fa-folder-open" message={t("admin_no_declarations")} colSpan={8} />
+                <EmptyState icon="fa-solid fa-folder-open" message={t("admin_no_declarations")} colSpan={9} />
               ) : (
                 declarations.map((d) => {
                   const ref = d.identifiant_doc_dm || (d.id ? d.id.substring(0, 8) : "N/A");
@@ -253,6 +275,7 @@ export default function AdminDeclarations() {
                       </td>
                       <td className="px-4 py-3 text-[13px] font-semibold text-gray-800">{d.docTypeInfo?.nom || d.doc_type || "—"}</td>
                       <td className="px-4 py-3 text-[13px] text-gray-700">{d.owner_name || d.nom_complet || "N/A"}</td>
+                      <td className="px-4 py-3"><ReporterCell d={d} /></td>
                       <td className="px-4 py-3">
                         <span className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${d.declaration_type === "LOST" ? "bg-red-50 text-red-700 border-red-200" : "bg-green-50 text-green-700 border-green-200"}`}>
                           {d.declaration_type === "LOST" ? t("admin_lost") : t("admin_found")}
@@ -351,6 +374,9 @@ export default function AdminDeclarations() {
                         { label: "Référence", value: <code className="text-[11px] font-bold text-[#1E3A2F]">{selected.identifiant_doc_dm || selected.id?.substring(0, 8) || "—"}</code> },
                         { label: "Type de document", value: selected.docTypeInfo?.nom || selected.doc_type || "—" },
                         { label: "Propriétaire", value: selected.owner_name || selected.nom_complet || "—" },
+                        { label: "Déclarant", value: selected.reporter_type === "PARTENAIRE"
+                          ? (selected.reporter_partenaire_nom || "Organisation partenaire") + " (Partenaire)"
+                          : (selected.reporter_id ? "Utilisateur" : "—") },
                         { label: "N° document", value: <code className="text-[11px]">{selected.numero_document || selected.document_number || "—"}</code> },
                         { label: "Contact", value: selected.email_owner || selected.telephone_owner || "—" },
                         { label: "Date déclaration", value: selected.created_at ? new Date(selected.created_at).toLocaleDateString("fr-FR") : "—" },

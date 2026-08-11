@@ -11,6 +11,7 @@ import {
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { usePartenaire } from "../../context/PartenaireContext";
+import { useI18n } from "../../context/I18nContext";
 import { partenairePalette } from "../../theme/partenaires";
 
 interface PartenaireSidebarProps {
@@ -20,6 +21,7 @@ interface PartenaireSidebarProps {
 
 export default function PartenaireSidebar({ collapsed, onCollapse }: PartenaireSidebarProps) {
   const { partenaire, logout } = usePartenaire();
+  const { t, lang } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -32,11 +34,11 @@ export default function PartenaireSidebar({ collapsed, onCollapse }: PartenaireS
   })();
 
   const menuItems = [
-    { key: "dashboard", icon: <DashboardOutlined />, label: "Tableau de bord" },
-    { key: "declarer", icon: <PlusCircleOutlined />, label: "Déclarer une trouvaille" },
-    { key: "declarations", icon: <FileProtectOutlined />, label: "Mes déclarations" },
-    { key: "portefeuille", icon: <WalletOutlined />, label: "Portefeuille" },
-    { key: "profil", icon: <ProfileOutlined />, label: "Profil de l'organisation" },
+    { key: "dashboard", icon: <DashboardOutlined />, label: t("partenaire_sidebar_dashboard") },
+    { key: "declarer", icon: <PlusCircleOutlined />, label: t("partenaire_sidebar_declare") },
+    { key: "declarations", icon: <FileProtectOutlined />, label: t("partenaire_sidebar_declarations") },
+    { key: "portefeuille", icon: <WalletOutlined />, label: t("partenaire_sidebar_portefeuille") },
+    { key: "profil", icon: <ProfileOutlined />, label: t("partenaire_sidebar_profil") },
   ];
 
   const goTo = (key: string) => {
@@ -99,7 +101,7 @@ export default function PartenaireSidebar({ collapsed, onCollapse }: PartenaireS
               DocMaster
             </Typography.Text>
             <Typography.Text style={{ color: partenairePalette.primaryLight, fontSize: 11, display: "block" }}>
-              Espace Partenaire
+              {t("partenaire_sidebar_space")}
             </Typography.Text>
           </div>
         )}
@@ -147,17 +149,17 @@ export default function PartenaireSidebar({ collapsed, onCollapse }: PartenaireS
             strong
             style={{ color: "#fff", fontSize: 12, display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}
           >
-            <WalletOutlined /> Solde : {Number(partenaire.wallet_balance || 0).toLocaleString("fr-FR")} FCFA
+            <WalletOutlined /> {t("partenaire_sidebar_balance", { amount: Number(partenaire.wallet_balance || 0).toLocaleString(lang === "ar" ? "ar" : lang === "en" ? "en" : "fr-FR") })}
           </Typography.Text>
           <Button danger block size="small" icon={<LogoutOutlined />} onClick={() => logout()} style={{ fontWeight: 500 }}>
-            Se déconnecter
+            {t("partenaire_sidebar_logout")}
           </Button>
         </div>
       )}
 
       {collapsed && (
         <div style={{ padding: "0 0 16px", display: "flex", justifyContent: "center" }}>
-          <Tooltip title="Se déconnecter" placement="right">
+          <Tooltip title={t("partenaire_sidebar_logout")} placement="right">
             <Button danger type="text" icon={<LogoutOutlined />} onClick={() => logout()} />
           </Tooltip>
         </div>

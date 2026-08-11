@@ -217,6 +217,43 @@ export class PartenaireRepository {
   }
 
   /**
+   * Store a password reset token for a partner
+   */
+  async setPasswordResetToken(id: string, token: string, expires: Date): Promise<void> {
+    await pool.query(
+      `UPDATE partenaires
+       SET password_reset_token = $1, password_reset_expires = $2, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $3`,
+      [token, expires, id]
+    );
+  }
+
+  /**
+   * Find a partner by a valid (non-expired) password reset token
+   */
+  async findByResetToken(token: string): Promise<PartenaireProfile | null> {
+    const query = `
+      SELECT ${WITH_PASSWORD_COLUMNS}
+      FROM partenaires p
+      WHERE p.password_reset_token = $1 AND p.password_reset_expires > CURRENT_TIMESTAMP
+    `;
+    const { rows } = await pool.query(query, [token]);
+    return rows[0] || null;
+  }
+
+  /**
+   * Clear the password reset token after a successful reset
+   */
+  async clearPasswordResetToken(id: string): Promise<void> {
+    await pool.query(
+      `UPDATE partenaires
+       SET password_reset_token = NULL, password_reset_expires = NULL, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1`,
+      [id]
+    );
+  }
+
+  /**
    * Delete a partner profile (nothing else to cascade, fully standalone)
    */
   async delete(id: string): Promise<boolean> {

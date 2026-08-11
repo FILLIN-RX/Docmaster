@@ -3,9 +3,15 @@ import { Popover, Badge } from "antd";
 import { BellOutlined } from "@ant-design/icons";
 import { useNotifications } from "../../hooks/useNotifications";
 import { socketService } from "../../services/socket";
+import { useI18n } from "../../context/I18nContext";
 
 interface NotificationDropdownProps {
   accentColor: string;
+  service?: {
+    getAll: () => Promise<any>;
+    markAsRead: (id: string) => Promise<any>;
+    markAllAsRead: () => Promise<any>;
+  };
 }
 
 const TYPE_META: Record<string, { icon: string; bg: string; color: string }> = {
@@ -21,6 +27,14 @@ const TYPE_META: Record<string, { icon: string; bg: string; color: string }> = {
   payment_received: { icon: "fa-solid fa-money-bill-wave", bg: "#dcfce7", color: "#16a34a" },
   VAULT_MATCH_PENDING: { icon: "fa-solid fa-file-search", bg: "#fef3c7", color: "#d97706" },
   vault_match_pending: { icon: "fa-solid fa-file-search", bg: "#fef3c7", color: "#d97706" },
+  NEW_DECLARATION_ZONE: { icon: "fa-solid fa-location-dot", bg: "#dbeafe", color: "#2563eb" },
+  new_declaration_zone: { icon: "fa-solid fa-location-dot", bg: "#dbeafe", color: "#2563eb" },
+  CERTIFICATION_DONE: { icon: "fa-solid fa-certificate", bg: "#dcfce7", color: "#16a34a" },
+  certification_done: { icon: "fa-solid fa-certificate", bg: "#dcfce7", color: "#16a34a" },
+  DECLARATION_CERTIFIED: { icon: "fa-solid fa-certificate", bg: "#dcfce7", color: "#16a34a" },
+  declaration_certified: { icon: "fa-solid fa-certificate", bg: "#dcfce7", color: "#16a34a" },
+  WALLET_ADJUSTMENT: { icon: "fa-solid fa-wallet", bg: "#fef3c7", color: "#d97706" },
+  wallet_adjustment: { icon: "fa-solid fa-wallet", bg: "#fef3c7", color: "#d97706" },
 };
 
 const meta = (type?: string) => TYPE_META[type || ""] || { icon: "fa-solid fa-bell", bg: accentBg(), color: "#1f7a8c" };
@@ -29,20 +43,22 @@ function accentBg() {
   return "#E0F2F5";
 }
 
-function formatTimeAgo(dateString?: string) {
-  if (!dateString) return "récemment";
-  const diff = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
-  if (diff < 60) return "à l'instant";
-  if (diff < 3600) return `il y a ${Math.floor(diff / 60)} min`;
-  if (diff < 86400) return `il y a ${Math.floor(diff / 3600)} h`;
-  if (diff < 604800) return `il y a ${Math.floor(diff / 86400)} j`;
-  return new Date(dateString).toLocaleDateString("fr-FR");
-}
-
-export default function NotificationDropdown({ accentColor }: NotificationDropdownProps) {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+export default function NotificationDropdown({ accentColor, service }: NotificationDropdownProps) {
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(service);
+  const { t, lang } = useI18n();
+  const localeTag = lang === "ar" ? "ar" : lang === "en" ? "en" : "fr-FR";
   const [liveNotifs, setLiveNotifs] = useState<any[]>([]);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  const formatTimeAgo = (dateString?: string) => {
+    if (!dateString) return t("notification_recently");
+    const diff = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
+    if (diff < 60) return t("notification_just_now");
+    if (diff < 3600) return t("notification_time_min", { count: Math.floor(diff / 60) });
+    if (diff < 86400) return t("notification_time_hour", { count: Math.floor(diff / 3600) });
+    if (diff < 604800) return t("notification_time_day", { count: Math.floor(diff / 86400) });
+    return new Date(dateString).toLocaleDateString(localeTag);
+  };
 
   useEffect(() => {
     if (!socketService.connected) {
@@ -101,8 +117,8 @@ export default function NotificationDropdown({ accentColor }: NotificationDropdo
             <i className="fa-solid fa-bell" style={{ color: accentColor || "#D98A30", fontSize: 12 }} />
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 13, color: "#1A1A1A", lineHeight: 1.1 }}>Notifications</div>
-            <div style={{ fontSize: 10.5, color: "#6B7280" }}>{unreadCount} non lues</div>
+            <div style={{ fontWeight: 700, fontSize: 13, color: "#1A1A1A", lineHeight: 1.1 }}>{t("notification_title")}</div>
+            <div style={{ fontSize: 10.5, color: "#6B7280" }}>{t("notification_unread_count", { count: unreadCount })}</div>
           </div>
         </div>
         {unreadCount > 0 && (
@@ -117,7 +133,7 @@ export default function NotificationDropdown({ accentColor }: NotificationDropdo
               cursor: "pointer",
             }}
           >
-            Tout marquer
+            {t("notification_mark_all")}
           </button>
         )}
       </div>
@@ -125,7 +141,7 @@ export default function NotificationDropdown({ accentColor }: NotificationDropdo
         {allNotifs.length === 0 ? (
           <div style={{ padding: 32, textAlign: "center", color: "#6B7280" }}>
             <i className="fa-regular fa-bell-slash" style={{ fontSize: 24, opacity: 0.4, display: "block", marginBottom: 8 }} />
-            <div style={{ fontSize: 12, fontWeight: 500 }}>Aucune notification</div>
+            <div style={{ fontSize: 12, fontWeight: 500 }}>{t("notification_empty")}</div>
           </div>
         ) : (
           allNotifs.map((n: any, idx: number) => {
@@ -181,7 +197,7 @@ export default function NotificationDropdown({ accentColor }: NotificationDropdo
                     <strong>{n.title || n.titre || ""}</strong> {n.message || ""}
                   </div>
                   <div style={{ fontSize: 10.5, color: "#6B7280", marginTop: 4, fontStyle: "italic" }}>
-                    {n._live ? "à l'instant" : formatTimeAgo(n.created_at)}
+                    {n._live ? t("notification_just_now") : formatTimeAgo(n.created_at)}
                   </div>
                 </div>
               </div>
@@ -201,7 +217,7 @@ export default function NotificationDropdown({ accentColor }: NotificationDropdo
       destroyTooltipOnHide
     >
       <button
-        aria-label="Notifications"
+        aria-label={t("notification_title")}
         style={{
           width: 40,
           height: 40,

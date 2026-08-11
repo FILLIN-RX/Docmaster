@@ -130,7 +130,13 @@ export function createApp(): Application {
   if (process.env.FRONTEND_DOMAIN) allowedOrigins.push(process.env.FRONTEND_DOMAIN);
 
   const corsOptions = {
-    origin: allowedOrigins,
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      // Allow any localhost origin: flutter web / vite dev servers use random ports
+      if (!origin || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+        return callback(null, true);
+      }
+      callback(null, allowedOrigins.includes(origin));
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,

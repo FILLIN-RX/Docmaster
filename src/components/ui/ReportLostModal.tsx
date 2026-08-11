@@ -187,7 +187,7 @@ export default function ReportLostModal({ doc, catLabels, onClose }: ReportLostM
         urgence: urgencyLevels.find((u) => u.id === urgence)?.label || t("reportlost_urgency_medium"),
         telephone,
         email,
-        recompense: rewardEnabled ? reward : "",
+        certifie: false,
       });
     } catch (e: unknown) {
       const err = e as { response?: { data?: { error?: string } }; message?: string };
@@ -229,7 +229,7 @@ export default function ReportLostModal({ doc, catLabels, onClose }: ReportLostM
                 urgence: urgencyLevels.find((u) => u.id === urgence)?.label || t("reportlost_urgency_medium"),
                 telephone,
                 email,
-                recompense: rewardEnabled ? reward : "",
+                certifie: false,
               });
             }}
               className="flex-1 py-3 rounded-xl bg-primary text-white font-bold text-[13px] hover:bg-primary-dark transition-all flex items-center justify-center gap-2">

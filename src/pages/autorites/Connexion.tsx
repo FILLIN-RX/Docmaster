@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button, Card, Form, Input, Typography, Alert, Space } from "antd";
 import { LockOutlined, MailOutlined, SafetyCertificateOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAutorite } from "../../context/AutoriteContext";
 import { autoritePalette } from "../../theme/autorites";
 import AutoriteDesignProvider from "../../components/autorites/AutoriteDesignProvider";
@@ -149,6 +149,12 @@ export default function AutoriteConnexion() {
             Se connecter
           </Button>
         </Form>
+
+        <div style={{ textAlign: "center", marginTop: 16 }}>
+          <Link to="/autorite/mot-de-passe-oublie" style={{ fontSize: 13, color: autoritePalette.primaryDark, fontWeight: 500 }}>
+            Mot de passe oublié ?
+          </Link>
+        </div>
 
         <Space direction="vertical" size={4} style={{ width: "100%", textAlign: "center", marginTop: 20 }}>
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>

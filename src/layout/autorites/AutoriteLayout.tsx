@@ -8,21 +8,23 @@ import {
 } from "@ant-design/icons";
 import { Outlet, useLocation } from "react-router-dom";
 import { useAutorite } from "../../context/AutoriteContext";
+import { useI18n } from "../../context/I18nContext";
 import { autoritePalette } from "../../theme/autorites";
 import AutoriteDesignProvider from "../../components/autorites/AutoriteDesignProvider";
 import AutoriteSidebar from "../../components/autorites/AutoriteSidebar";
 import NotificationDropdown from "../../components/ui/NotificationDropdown";
+import { autoritesService } from "../../services/autoritesService";
 
-const PAGE_TITLES: Record<string, string> = {
-  dashboard: "Tableau de bord",
-  declarations: "Gestion des déclarations",
-  autorites: "Gestion des autorités",
-  journal: "Journal d'activité",
+const AUTORITE_NOTIF_SERVICE = {
+  getAll: () => autoritesService.getNotifications().then((r) => r.data),
+  markAsRead: (id: string) => autoritesService.markNotificationRead(id),
+  markAllAsRead: () => autoritesService.markAllNotificationsRead(),
 };
 
 export default function AutoriteLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const { autorite, logout } = useAutorite();
+  const { t } = useI18n();
   const location = useLocation();
 
   const selectedKey = (() => {
@@ -32,12 +34,21 @@ export default function AutoriteLayout() {
     return "dashboard";
   })();
 
+  const pageTitle = (() => {
+    switch (selectedKey) {
+      case "declarations": return t("autorite_layout_title_declarations");
+      case "autorites": return t("autorite_layout_title_autorites");
+      case "journal": return t("autorite_layout_title_journal");
+      default: return t("autorite_layout_title_dashboard");
+    }
+  })();
+
   const userMenu = {
     items: [
       {
         key: "logout",
         icon: <LogoutOutlined />,
-        label: "Se déconnecter",
+        label: t("autorite_layout_logout"),
         danger: true,
         onClick: () => logout(),
       },
@@ -127,12 +138,12 @@ export default function AutoriteLayout() {
                 style={{ color: autoritePalette.textMain }}
               />
               <Typography.Title level={5} style={{ margin: 0, color: autoritePalette.greenDark }}>
-                {PAGE_TITLES[selectedKey] || "Tableau de bord"}
+                {pageTitle}
               </Typography.Title>
             </Space>
 
             <Space size={12}>
-              <NotificationDropdown accentColor={autoritePalette.primary} />
+              <NotificationDropdown accentColor={autoritePalette.primary} service={AUTORITE_NOTIF_SERVICE} />
 
               <Dropdown menu={userMenu} placement="bottomRight">
                 <Space style={{ cursor: "pointer" }} size={10}>

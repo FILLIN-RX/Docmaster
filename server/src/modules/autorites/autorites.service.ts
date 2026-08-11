@@ -139,6 +139,58 @@ export class AutoriteService {
   }
 
   /**
+   * Forgot password: generate a reset token and send the reset link by email
+   */
+  async requestPasswordReset(email: string) {
+    const autorite = await this.repository.findByEmail(email);
+    if (!autorite) {
+      throw new Error('Aucun compte autorité avec cet email');
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date();
+    expires.setHours(expires.getHours() + 24);
+
+    await this.repository.setPasswordResetToken(autorite.id, token, expires);
+
+    try {
+      await this.mailService.sendPortalPasswordResetEmail(
+        autorite.email,
+        token,
+        'autorite'
+      );
+    } catch (err: any) {
+      console.error('❌ [Autorites] Email réinitialisation échoué:', err.message);
+    }
+
+    return { success: true, message: 'Email de réinitialisation envoyé si un compte existe' };
+  }
+
+  /**
+   * Reset the password with a valid token
+   */
+  async resetPassword(token: string, nouveauMotDePasse: string) {
+    if (!nouveauMotDePasse || nouveauMotDePasse.length < 8) {
+      throw new Error('Le nouveau mot de passe doit contenir au moins 8 caractères');
+    }
+
+    const autorite = await this.repository.findByResetToken(token);
+    if (!autorite) {
+      throw new Error('Lien de réinitialisation invalide ou expiré');
+    }
+
+    const hashed = await argon2.hash(nouveauMotDePasse);
+    await this.repository.updatePassword(autorite.id, hashed);
+    await this.repository.clearPasswordResetToken(autorite.id);
+
+    return {
+      success: true,
+      message: 'Mot de passe réinitialisé avec succès',
+      autorite: { id: autorite.id, email: autorite.email },
+    };
+  }
+
+  /**
    * List authorities (admin / haute)
    */
   async findAll(filters?: any) {
@@ -214,12 +266,27 @@ export class AutoriteService {
       params.push(`%${autorite.ville}%`);
     }
 
-    if (filters?.declaration_type) {
-      let declType = String(filters.declaration_type).toUpperCase();
-      if (declType === 'PERDU') declType = 'LOST';
-      if (declType === 'TROUVE') declType = 'FOUND';
-      conditions.push(`d.declaration_type = $${idx++}`);
-      params.push(declType);
+    // Autorités : accès uniquement aux déclarations de perte
+    conditions.push(`d.declaration_type = 'LOST'`);
+
+    if (filters?.pays) {
+      conditions.push(`d.pays ILIKE $${idx++}`);
+      params.push(`%${String(filters.pays)}%`);
+    }
+
+    if (filters?.region) {
+      conditions.push(`d.region ILIKE $${idx++}`);
+      params.push(`%${String(filters.region)}%`);
+    }
+
+    if (filters?.date_from) {
+      conditions.push(`d.created_at >= $${idx++}`);
+      params.push(String(filters.date_from));
+    }
+
+    if (filters?.date_to) {
+      conditions.push(`d.created_at < ($${idx++}::date + INTERVAL '1 day')`);
+      params.push(String(filters.date_to));
     }
 
     if (filters?.status) {
@@ -244,28 +311,34 @@ export class AutoriteService {
 
     const limit = Math.min(parseInt(filters?.limit) || 50, 100);
     const offset = Math.max(parseInt(filters?.offset) || 0, 0);
+    const sortOrder = String(filters?.sort || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
 
     const query = `
       SELECT d.*,
+        d.reporter_type,
+        d.found_location->>'city' AS found_location_label,
         dt.nom AS doc_type_nom,
         a.nom AS certified_by_nom,
         a.prenom AS certified_by_prenom,
         u.nom AS reporter_nom,
         u.prenom AS reporter_prenom,
+        p.nom_organisation AS reporter_partenaire_nom,
         (
-          SELECT CONCAT(fu.prenom, ' ', fu.nom)
+          SELECT COALESCE(CONCAT(fu.prenom, ' ', fu.nom), fp.nom_organisation)
           FROM matches m
           LEFT JOIN declarations fd ON fd.id = m.found_declaration_id
           LEFT JOIN users fu ON fu.id = fd.reporter_id
+          LEFT JOIN partenaires fp ON fp.id = fd.reporter_id AND fd.reporter_type = 'PARTENAIRE'
           WHERE m.lost_declaration_id = d.id
             AND m.status IN ('PENDING', 'CONFIRMED')
           LIMIT 1
         ) AS finder_name,
         (
-          SELECT CONCAT(lu.prenom, ' ', lu.nom)
+          SELECT COALESCE(CONCAT(lu.prenom, ' ', lu.nom), lp.nom_organisation)
           FROM matches m
           LEFT JOIN declarations ld ON ld.id = m.lost_declaration_id
           LEFT JOIN users lu ON lu.id = ld.reporter_id
+          LEFT JOIN partenaires lp ON lp.id = ld.reporter_id AND ld.reporter_type = 'PARTENAIRE'
           WHERE m.found_declaration_id = d.id
             AND m.status IN ('PENDING', 'CONFIRMED')
           LIMIT 1
@@ -276,14 +349,51 @@ export class AutoriteService {
         OR dt.code = d.doc_type
       LEFT JOIN autorites a ON a.id = d.certified_by
       LEFT JOIN users u ON u.id = d.reporter_id
+      LEFT JOIN partenaires p ON p.id = d.reporter_id AND d.reporter_type = 'PARTENAIRE'
       WHERE ${conditions.join(' AND ')}
-      ORDER BY d.created_at DESC
+      ORDER BY d.created_at ${sortOrder}
       LIMIT $${idx++} OFFSET $${idx++}
     `;
     params.push(limit, offset);
 
     const { rows } = await pool.query(query, params);
     return rows;
+  }
+
+  /**
+   * Distinct pays / regions visible to the authority (zone-restricted)
+   * for the filter dropdowns
+   */
+  async getFilterOptions(autorite: any) {
+    const conditions: string[] = [`declaration_type = 'LOST'`, 'deleted_at IS NULL'];
+    const params: any[] = [];
+    let idx = 1;
+
+    if (autorite.niveau === 'NORMAL' && autorite.ville) {
+      conditions.push(`ville ILIKE $${idx++}`);
+      params.push(`%${autorite.ville}%`);
+    }
+
+    const where = conditions.join(' AND ');
+    const [paysRes, regionRes] = await Promise.all([
+      pool.query(
+        `SELECT DISTINCT pays FROM declarations
+         WHERE ${where} AND pays IS NOT NULL AND pays <> ''
+         ORDER BY pays`,
+        params
+      ),
+      pool.query(
+        `SELECT DISTINCT region FROM declarations
+         WHERE ${where} AND region IS NOT NULL AND region <> ''
+         ORDER BY region`,
+        params
+      ),
+    ]);
+
+    return {
+      pays: paysRes.rows.map((r) => r.pays),
+      regions: regionRes.rows.map((r) => r.region),
+    };
   }
 
   /**
@@ -561,7 +671,7 @@ export class AutoriteService {
    * Stats for authority dashboard
    */
   async getStats(autorite: any) {
-    const where: string[] = ['deleted_at IS NULL'];
+    const where: string[] = ['deleted_at IS NULL', `declaration_type = 'LOST'`];
     const params: any[] = [];
     let idx = 1;
 

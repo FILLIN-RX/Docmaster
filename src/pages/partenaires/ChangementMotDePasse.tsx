@@ -3,13 +3,16 @@ import { Button, Card, Form, Input, Typography, Alert, Space } from "antd";
 import { LockOutlined, KeyOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { usePartenaire } from "../../context/PartenaireContext";
+import { useI18n } from "../../context/I18nContext";
 import { partenairesService } from "../../services/partenairesService";
 import { partenairePalette } from "../../theme/partenaires";
 import PartenaireDesignProvider from "../../components/partenaires/PartenaireDesignProvider";
+import LanguageSwitcher from "../../components/ui/LanguageSwitcher";
 
 export default function ChangementMotDePasse() {
   const { partenaire, refresh } = usePartenaire();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
@@ -23,7 +26,7 @@ export default function ChangementMotDePasse() {
       await refresh();
       setTimeout(() => navigate("/partenaire/dashboard", { replace: true }), 1200);
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Impossible de changer le mot de passe.");
+      setError(err?.response?.data?.message || t("pwd_error_default"));
     } finally {
       setLoading(false);
     }
@@ -41,6 +44,10 @@ export default function ChangementMotDePasse() {
           background: `linear-gradient(135deg, ${partenairePalette.greenDark} 0%, ${partenairePalette.greenMid} 60%, ${partenairePalette.primaryDark} 100%)`,
         }}
       >
+        <div style={{ position: "absolute", top: 16, right: 16 }}>
+          <LanguageSwitcher onDark accentColor={partenairePalette.primary} />
+        </div>
+
         <Card style={{ width: 440, maxWidth: "100%", boxShadow: "0 12px 40px rgba(18,18,18,0.25)" }} styles={{ body: { padding: 36 } }}>
           <div style={{ textAlign: "center", marginBottom: 22 }}>
             <div
@@ -58,11 +65,10 @@ export default function ChangementMotDePasse() {
               <KeyOutlined style={{ color: "#fff", fontSize: 26 }} />
             </div>
             <Typography.Title level={4} style={{ margin: 0, color: partenairePalette.greenDark }}>
-              Changez votre mot de passe
+              {t("pwd_title")}
             </Typography.Title>
             <Typography.Text type="secondary" style={{ display: "block", marginTop: 6 }}>
-              {partenaire ? `${partenaire.nom_organisation}` : ""} — pour des raisons de sécurité, vous devez
-              définir un nouveau mot de passe avant de continuer.
+              {partenaire && `${partenaire.nom_organisation} — `}{t("pwd_desc").replace(/^—\s*/, "")}
             </Typography.Text>
           </div>
 
@@ -70,8 +76,8 @@ export default function ChangementMotDePasse() {
             <Alert
               type="success"
               icon={<CheckCircleOutlined />}
-              message="Mot de passe mis à jour"
-              description="Redirection vers votre espace..."
+              message={t("pwd_updated")}
+              description={t("pwd_redirect")}
               showIcon
               style={{ marginBottom: 16 }}
             />
@@ -84,36 +90,36 @@ export default function ChangementMotDePasse() {
           <Form layout="vertical" onFinish={onFinish} requiredMark={false} size="large">
             <Form.Item
               name="ancien_mot_de_passe"
-              label="Mot de passe temporaire"
-              rules={[{ required: true, message: "Veuillez saisir votre mot de passe actuel" }]}
+              label={t("pwd_temp_label")}
+              rules={[{ required: true, message: t("pwd_temp_required") }]}
             >
               <Input.Password prefix={<LockOutlined style={{ color: partenairePalette.textMuted }} />} placeholder="••••••••" />
             </Form.Item>
 
             <Form.Item
               name="nouveau_mot_de_passe"
-              label="Nouveau mot de passe"
+              label={t("pwd_new_label")}
               rules={[
-                { required: true, message: "Veuillez saisir un nouveau mot de passe" },
-                { min: 8, message: "Au moins 8 caractères" },
+                { required: true, message: t("pwd_new_required") },
+                { min: 8, message: t("pwd_min_length") },
               ]}
-              extra="Minimum 8 caractères."
+              extra={t("pwd_min_extra")}
             >
               <Input.Password prefix={<LockOutlined style={{ color: partenairePalette.textMuted }} />} placeholder="••••••••" />
             </Form.Item>
 
             <Form.Item
               name="confirmation"
-              label="Confirmer le nouveau mot de passe"
+              label={t("pwd_confirm_label")}
               dependencies={["nouveau_mot_de_passe"]}
               rules={[
-                { required: true, message: "Veuillez confirmer le mot de passe" },
+                { required: true, message: t("pwd_confirm_required") },
                 ({ getFieldValue }) => ({
                   validator(_, value) {
                     if (!value || getFieldValue("nouveau_mot_de_passe") === value) {
                       return Promise.resolve();
                     }
-                    return Promise.reject(new Error("Les deux mots de passe ne correspondent pas"));
+                    return Promise.reject(new Error(t("pwd_mismatch")));
                   },
                 }),
               ]}
@@ -122,13 +128,13 @@ export default function ChangementMotDePasse() {
             </Form.Item>
 
             <Button type="primary" htmlType="submit" block loading={loading} style={{ height: 46, fontWeight: 600 }}>
-              Enregistrer le nouveau mot de passe
+              {t("pwd_submit")}
             </Button>
           </Form>
 
           <Space direction="vertical" size={4} style={{ width: "100%", textAlign: "center", marginTop: 18 }}>
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              Le mot de passe ne pourra être changé que depuis votre espace.
+              {t("pwd_footer")}
             </Typography.Text>
           </Space>
         </Card>

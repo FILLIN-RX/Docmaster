@@ -14,6 +14,10 @@ const controller = new PartenaireController();
 router.post('/login', controller.login);
 // POST /api/partenaires/logout — partner logout
 router.post('/logout', controller.logout);
+// POST /api/partenaires/forgot-password — send password reset link
+router.post('/forgot-password', controller.forgotPassword);
+// POST /api/partenaires/reset-password — reset password with token
+router.post('/reset-password', controller.resetPassword);
 
 /**
  * ── PARTNER (JWT utilisateur role PARTNER) ──

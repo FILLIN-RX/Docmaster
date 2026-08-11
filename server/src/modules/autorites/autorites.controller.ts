@@ -2,11 +2,14 @@ import { Request, Response } from 'express';
 import { AutoriteService } from './autorites.service.ts';
 import { PdfService } from '../../services/pdf.service.ts';
 import { DeclarationService } from '../../services/declaration.service.ts';
+import { NotificationService } from '../../services/notification.service.ts';
 import { validateDTO } from '../../utils/validation.utils.ts';
 import {
   CreateAutoriteDTO,
   LoginAutoriteDTO,
   ChangePasswordAutoriteDTO,
+  ForgotPasswordAutoriteDTO,
+  ResetPasswordAutoriteDTO,
   UpdateAutoriteDTO,
 } from './autorites.dto.ts';
 
@@ -14,6 +17,7 @@ export class AutoriteController {
   private service = new AutoriteService();
   private pdfService = new PdfService();
   private declarationService = new DeclarationService();
+  private notificationService = new NotificationService();
 
   /**
    * POST /api/autorites  (ADMIN) — create an authority
@@ -59,6 +63,41 @@ export class AutoriteController {
   logout = async (_req: Request, res: Response) => {
     res.clearCookie('autorite_token', { httpOnly: true, sameSite: 'lax' });
     res.json({ success: true, message: 'Déconnecté' });
+  };
+
+  /**
+   * POST /api/autorites/forgot-password  (PUBLIC) — send password reset link
+   */
+  forgotPassword = async (req: Request, res: Response) => {
+    try {
+      const errors = await validateDTO(req.body, ForgotPasswordAutoriteDTO);
+      if (errors) {
+        return res.status(400).json({ success: false, errors });
+      }
+      const result = await this.service.requestPasswordReset(req.body.email);
+      res.json(result);
+    } catch (error: any) {
+      res.status(404).json({ success: false, message: error.message });
+    }
+  };
+
+  /**
+   * POST /api/autorites/reset-password  (PUBLIC) — reset password with token
+   */
+  resetPassword = async (req: Request, res: Response) => {
+    try {
+      const errors = await validateDTO(req.body, ResetPasswordAutoriteDTO);
+      if (errors) {
+        return res.status(400).json({ success: false, errors });
+      }
+      const result = await this.service.resetPassword(
+        req.body.token,
+        req.body.nouveau_mot_de_passe
+      );
+      res.json(result);
+    } catch (error: any) {
+      res.status(400).json({ success: false, message: error.message });
+    }
   };
 
   /**
@@ -174,6 +213,19 @@ export class AutoriteController {
   };
 
   /**
+   * GET /api/autorites/declarations/options  (AUTORITE) — distinct pays/regions for filters
+   */
+  getFilterOptions = async (req: Request, res: Response) => {
+    try {
+      const autorite = (req as any).autorite;
+      const options = await this.service.getFilterOptions(autorite);
+      res.json({ success: true, data: options });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
+
+  /**
    * POST /api/autorites/declarations/:id/certify  (AUTORITE) — certify a declaration
    */
   certify = async (req: Request, res: Response) => {
@@ -262,6 +314,49 @@ export class AutoriteController {
       const autorite = (req as any).autorite;
       const stats = await this.service.getStats(autorite);
       res.json({ success: true, data: stats });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
+
+  /**
+   * GET /api/autorites/notifications  (AUTORITE) — own notifications only
+   */
+  getNotifications = async (req: Request, res: Response) => {
+    try {
+      const autorite = (req as any).autorite;
+      const notifications = await this.notificationService.getDestinataireNotifications('AUTORITE', autorite.id);
+      res.json({
+        success: true,
+        data: notifications,
+        count: notifications.length,
+        unreadCount: notifications.filter((n) => !n.is_read).length,
+      });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
+
+  /**
+   * PATCH /api/autorites/notifications/:id/read  (AUTORITE) — mark one as read
+   */
+  markNotificationRead = async (req: Request, res: Response) => {
+    try {
+      const ok = await this.notificationService.markAsRead(String(req.params.id));
+      res.json({ success: ok, message: ok ? 'Notification marquée comme lue.' : 'Notification introuvable.' });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
+
+  /**
+   * PATCH /api/autorites/notifications/read-all  (AUTORITE) — mark all as read
+   */
+  markAllNotificationsRead = async (req: Request, res: Response) => {
+    try {
+      const autorite = (req as any).autorite;
+      await this.notificationService.markAllAsRead('AUTORITE', autorite.id);
+      res.json({ success: true, message: 'Toutes les notifications ont été marquées comme lues.' });
     } catch (error: any) {
       res.status(500).json({ success: false, message: error.message });
     }

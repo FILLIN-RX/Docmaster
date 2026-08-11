@@ -20,9 +20,16 @@ i18n.use(initReactI18next).init({
   debug: true, // Log i18next info to console for debugging
 });
 
+const applyDir = (lng: string) => {
+  document.documentElement.dir = lng === "ar" ? "rtl" : "ltr";
+};
+
+applyDir(defaultLang);
+
 i18n.on("languageChanged", (lng) => {
   localStorage.setItem("lang", lng);
   document.documentElement.lang = lng;
+  applyDir(lng);
 });
 
 export default i18n;

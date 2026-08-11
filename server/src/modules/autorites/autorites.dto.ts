@@ -87,6 +87,29 @@ export class ChangePasswordAutoriteDTO {
 }
 
 /**
+ * DTO for requesting a password reset link
+ */
+export class ForgotPasswordAutoriteDTO {
+  @IsEmail({}, { message: 'Email invalide' })
+  @IsNotEmpty({ message: 'L\'email est requis' })
+  email!: string;
+}
+
+/**
+ * DTO for resetting the password with a token
+ */
+export class ResetPasswordAutoriteDTO {
+  @IsString()
+  @IsNotEmpty({ message: 'Le token est requis' })
+  token!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Le nouveau mot de passe est requis' })
+  @MinLength(8, { message: 'Le mot de passe doit contenir au moins 8 caractères' })
+  nouveau_mot_de_passe!: string;
+}
+
+/**
  * DTO for admin updating an authority
  */
 export class UpdateAutoriteDTO {

@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import apiClient from "../../services/api";
 import { saveToken } from "../../utils/cookie";
 import { useI18n } from "../../context/I18nContext";
+import { checkAdminAuth } from "../../utils/adminAuth";
 
 export default function AdminLogin() {
   const { t } = useI18n();
@@ -11,10 +12,8 @@ export default function AdminLogin() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const adminLoggedIn = localStorage.getItem("docmaster_admin_login");
-  if (adminLoggedIn) {
-    navigate("/admin", { replace: true });
-    return null;
+  if (checkAdminAuth()) {
+    return <Navigate to="/admin" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

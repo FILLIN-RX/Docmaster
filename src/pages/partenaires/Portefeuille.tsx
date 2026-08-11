@@ -2,28 +2,31 @@ import { useCallback, useEffect, useState } from "react";
 import { Card, Col, Row, Space, Spin, Statistic, Table, Tag, Typography } from "antd";
 import { ArrowDownOutlined, ArrowUpOutlined, WalletOutlined } from "@ant-design/icons";
 import { partenairesService, type PartenaireWalletTransaction } from "../../services/partenairesService";
+import { useI18n } from "../../context/I18nContext";
 import { partenairePalette } from "../../theme/partenaires";
 
-const formatDate = (v?: string | null) => {
-  if (!v) return "—";
-  try {
-    return new Date(v).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-  } catch {
-    return v;
-  }
-};
-
-const REASON_LABELS: Record<string, string> = {
-  ADMIN_ADJUSTMENT: "Ajustement administrateur",
-  DECLARATION_REWARD: "Récompense de trouvaille",
-  CLAIM_FEE: "Frais de réclamation",
-  OTHER: "Autre",
+const REASON_LABEL_KEYS: Record<string, string> = {
+  ADMIN_ADJUSTMENT: "partenaire_portefeuille_reason_admin",
+  DECLARATION_REWARD: "partenaire_portefeuille_reason_reward",
+  CLAIM_FEE: "partenaire_portefeuille_reason_claim",
+  OTHER: "partenaire_portefeuille_reason_other",
 };
 
 export default function Portefeuille() {
+  const { t, lang } = useI18n();
+  const localeTag = lang === "ar" ? "ar" : lang === "en" ? "en" : "fr-FR";
   const [balance, setBalance] = useState<number>(0);
   const [history, setHistory] = useState<PartenaireWalletTransaction[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const formatDate = (v?: string | null) => {
+    if (!v) return "—";
+    try {
+      return new Date(v).toLocaleDateString(localeTag, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return v;
+    }
+  };
 
   const fetchWallet = useCallback(async () => {
     setLoading(true);
@@ -45,30 +48,30 @@ export default function Portefeuille() {
 
   const columns = [
     {
-      title: "Date",
+      title: t("partenaire_portefeuille_col_date"),
       dataIndex: "created_at",
       key: "created_at",
       width: 160,
       render: formatDate,
     },
     {
-      title: "Type",
+      title: t("partenaire_portefeuille_col_type"),
       dataIndex: "type",
       key: "type",
       width: 110,
-      render: (t: string) =>
-        t === "CREDIT" ? (
+      render: (typeVal: string) =>
+        typeVal === "CREDIT" ? (
           <Tag icon={<ArrowUpOutlined />} color="green">
-            Crédit
+            {t("partenaire_portefeuille_credit")}
           </Tag>
         ) : (
           <Tag icon={<ArrowDownOutlined />} color="red">
-            Débit
+            {t("partenaire_portefeuille_debit")}
           </Tag>
         ),
     },
     {
-      title: "Montant",
+      title: t("partenaire_portefeuille_col_amount"),
       dataIndex: "amount",
       key: "amount",
       width: 140,
@@ -77,24 +80,25 @@ export default function Portefeuille() {
           strong
           style={{ color: row.type === "CREDIT" ? partenairePalette.success : partenairePalette.danger }}
         >
-          {row.type === "CREDIT" ? "+" : "−"} {Number(v).toLocaleString("fr-FR")} FCFA
+          {row.type === "CREDIT" ? "+" : "−"} {Number(v).toLocaleString(localeTag)} FCFA
         </Typography.Text>
       ),
     },
     {
-      title: "Motif",
+      title: t("partenaire_portefeuille_col_reason"),
       key: "reason",
       render: (_: any, row: PartenaireWalletTransaction) => {
         const motif = (row.metadata as any)?.motif;
-        return <Typography.Text>{motif || REASON_LABELS[row.reason] || row.reason}</Typography.Text>;
+        const reasonKey = REASON_LABEL_KEYS[row.reason];
+        return <Typography.Text>{motif || (reasonKey ? t(reasonKey) : row.reason)}</Typography.Text>;
       },
     },
     {
-      title: "Solde après",
+      title: t("partenaire_portefeuille_col_balance"),
       dataIndex: "balance_after",
       key: "balance_after",
       width: 140,
-      render: (v: string) => `${Number(v).toLocaleString("fr-FR")} FCFA`,
+      render: (v: string) => `${Number(v).toLocaleString(localeTag)} FCFA`,
     },
   ];
 
@@ -130,17 +134,17 @@ export default function Portefeuille() {
               </div>
               <div>
                 <Typography.Text style={{ color: "rgba(255,255,255,0.75)", display: "block", fontSize: 12 }}>
-                  Solde actuel du portefeuille
+                  {t("partenaire_portefeuille_balance_label")}
                 </Typography.Text>
                 <Typography.Title level={2} style={{ margin: 0, color: "#FFFFFF", fontWeight: 700 }}>
-                  {balance.toLocaleString("fr-FR")} FCFA
+                  {balance.toLocaleString(localeTag)} FCFA
                 </Typography.Title>
               </div>
             </Space>
           </Col>
           <Col xs={24} md={10}>
             <Statistic
-              title={<span style={{ color: "rgba(255,255,255,0.75)" }}>Opérations</span>}
+              title={<span style={{ color: "rgba(255,255,255,0.75)" }}>{t("partenaire_portefeuille_operations")}</span>}
               value={history.length}
               valueStyle={{ color: "#FFFFFF" }}
             />
@@ -151,7 +155,7 @@ export default function Portefeuille() {
       <Card
         title={
           <Typography.Text strong style={{ color: partenairePalette.greenDark }}>
-            Historique des opérations
+            {t("partenaire_portefeuille_history_title")}
           </Typography.Text>
         }
         style={{ borderRadius: 10, border: `1px solid ${partenairePalette.border}` }}
@@ -162,8 +166,13 @@ export default function Portefeuille() {
           dataSource={history}
           columns={columns}
           scroll={{ x: 760 }}
-          pagination={{ pageSize: 10, showSizeChanger: true, pageSizeOptions: [10, 20, 50], showTotal: (t) => `${t} opération(s)` }}
-          locale={{ emptyText: "Aucune opération pour le moment" }}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            pageSizeOptions: [10, 20, 50],
+            showTotal: (tt) => `${tt === 1 ? t("partenaire_portefeuille_total", { count: tt }) : t("partenaire_portefeuille_total_other", { count: tt })}`,
+          }}
+          locale={{ emptyText: t("partenaire_portefeuille_empty") }}
         />
       </Card>
     </div>
